@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { loadPens } from '$data/lib/drawtab-loader.js';
+	import { loadPensFromURL } from '$data/lib/drawtab-loader.js';
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS, PEN_DEFAULT_COLUMNS, PEN_DEFAULT_VIEW } from '$data/lib/entities/pen-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
@@ -8,7 +8,7 @@
 	let data: Pen[] = $state([]);
 
 	onMount(async () => {
-		data = (await loadPens('')) as Pen[];
+		data = (await loadPensFromURL('')) as Pen[];
 	});
 </script>
 

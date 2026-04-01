@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadTabletFamilies, loadTablets, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadTabletFamiliesFromURL, loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS } from '$data/lib/entities/tablet-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 
@@ -12,8 +12,8 @@
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
 		const [allFamilies, allTablets] = await Promise.all([
-			loadTabletFamilies('') as Promise<TabletFamily[]>,
-			loadTablets(''),
+			loadTabletFamiliesFromURL('') as Promise<TabletFamily[]>,
+			loadTabletsFromURL(''),
 		]);
 
 		const found = allFamilies.find((f) => f.EntityId === entityId);

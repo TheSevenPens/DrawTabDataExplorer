@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadPenFamilies } from '$data/lib/drawtab-loader.js';
+	import { loadPenFamiliesFromURL } from '$data/lib/drawtab-loader.js';
 	import { type PenFamily, PEN_FAMILY_FIELDS, PEN_FAMILY_FIELD_GROUPS } from '$data/lib/entities/pen-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 
@@ -10,7 +10,7 @@
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
-		const all = (await loadPenFamilies('')) as PenFamily[];
+		const all = (await loadPenFamiliesFromURL('')) as PenFamily[];
 		const found = all.find((f) => f.EntityId === entityId);
 		if (found) { item = found; } else { notFound = true; }
 	});

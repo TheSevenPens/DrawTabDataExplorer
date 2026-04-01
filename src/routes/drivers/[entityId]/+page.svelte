@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadDrivers } from '$data/lib/drawtab-loader.js';
+	import { loadDriversFromURL } from '$data/lib/drawtab-loader.js';
 	import { type Driver, DRIVER_FIELDS, DRIVER_FIELD_GROUPS } from '$data/lib/entities/driver-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 
@@ -10,7 +10,7 @@
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
-		const all = (await loadDrivers('')) as Driver[];
+		const all = (await loadDriversFromURL('')) as Driver[];
 		const found = all.find((d) => d.EntityId === entityId);
 		if (found) {
 			driver = found;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadTablets, loadPenCompat, loadPens, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadTabletsFromURL, loadPenCompatFromURL, loadPensFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
@@ -14,9 +14,9 @@
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
 		const [allTablets, allCompat, allPens] = await Promise.all([
-			loadTablets(''),
-			loadPenCompat('') as Promise<PenCompat[]>,
-			loadPens('') as Promise<Pen[]>,
+			loadTabletsFromURL(''),
+			loadPenCompatFromURL('') as Promise<PenCompat[]>,
+			loadPensFromURL('') as Promise<Pen[]>,
 		]);
 
 		const found = allTablets.find((t) => t.EntityId === entityId);

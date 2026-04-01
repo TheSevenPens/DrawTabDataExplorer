@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { loadTablets, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
 	import {
 		TABLET_FIELDS,
 		TABLET_FIELD_GROUPS,
@@ -13,7 +13,7 @@
 	let data: Tablet[] = $state([]);
 
 	onMount(async () => {
-		data = await loadTablets('');
+		data = await loadTabletsFromURL('');
 	});
 </script>
 
