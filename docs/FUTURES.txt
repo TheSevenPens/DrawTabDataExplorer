@@ -1,0 +1,29 @@
+# FUTURES
+
+## FEATURES
+
+### Aggregation in the pipeline (summarize step)
+KQL-style summarize: count, min, max, avg grouped by a field.
+e.g. count tablets by brand, average pressure levels by type.
+
+### Export results
+Export the current pipeline results as CSV or JSON.
+
+### URL-encoded pipeline state
+Encode the current pipeline steps into the URL so views can be shared
+via links without needing localStorage.
+
+### Text-based KQL input
+Complement the visual pipeline builder with a text input that accepts
+KQL-like syntax, parsed into pipeline steps.
+
+### Data editing
+Allow editing field values directly in the table, with validation and
+write-back to the JSON files (dev mode only).
+
+### Static site deployment
+Build and deploy to GitHub Pages.
+
+## KNOWN ISSUES
+
+None currently.
