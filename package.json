@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Data explorer for DrawTabData",
   "scripts": {
+    "update-data": "cd data-repo && git pull origin master",
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview"

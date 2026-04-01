@@ -22,8 +22,10 @@
 	let issues: Issue[] = $state([]);
 	let tabletCompletion: CompletionStat[] = $state([]);
 	let penCompletion: CompletionStat[] = $state([]);
+	let driverCompletion: CompletionStat[] = $state([]);
 	let orphanedCompat: { type: string; id: string }[] = $state([]);
 	let entityCounts: { entity: string; count: number }[] = $state([]);
+	let activeTab: 'summary' | 'compatibility' | 'completion' = $state('summary');
 
 	function checkRequired(records: Record<string, any>[], entity: string, requiredFields: string[]): Issue[] {
 		const found: Issue[] = [];
@@ -83,6 +85,10 @@
 		return orphans;
 	}
 
+	// Tablets with no compatible pens and pens with no compatible tablets
+	let tabletsNoCompat: { id: string; name: string }[] = $state([]);
+	let pensNoCompat: { id: string; name: string }[] = $state([]);
+
 	onMount(async () => {
 		ds = await loadAllFromURL('');
 		const allIssues: Issue[] = [];
@@ -115,6 +121,10 @@
 
 		penCompletion = computeCompletion(ds.pens, ['PenName', 'PenFamily', 'PenYear']);
 
+		driverCompletion = computeCompletion(ds.drivers, [
+			'DriverURLWacom', 'DriverURLArchiveDotOrg', 'ReleaseNotesURL',
+		]);
+
 		// Orphaned compat references
 		orphanedCompat = findOrphanedCompat(ds);
 
@@ -127,6 +137,16 @@
 			{ entity: 'Tablet Families', count: ds.tabletFamilies.length },
 			{ entity: 'Drivers', count: ds.drivers.length },
 		];
+
+		// Compat coverage
+		const wacomTablets = ds.tablets.filter(t => t.Brand === 'WACOM');
+		tabletsNoCompat = wacomTablets
+			.filter(t => !ds!.tabletToPens.has(t.ModelId))
+			.map(t => ({ id: t.ModelId, name: t.ModelName }));
+
+		pensNoCompat = ds.pens
+			.filter(p => !ds!.penToTablets.has(p.PenId))
+			.map(p => ({ id: p.PenId, name: p.PenName }));
 	});
 </script>
 
@@ -137,110 +157,206 @@
 	<p>Loading...</p>
 {:else}
 
-	<!-- Entity Counts -->
-	<section class="section">
-		<h2>Entity Counts</h2>
-		<table class="compact">
-			<thead><tr><th>Entity</th><th>Count</th></tr></thead>
-			<tbody>
-				{#each entityCounts as row}
-					<tr><td>{row.entity}</td><td>{row.count}</td></tr>
-				{/each}
-			</tbody>
-		</table>
-	</section>
+	<!-- Sub-tabs -->
+	<div class="tabs">
+		<button class:active={activeTab === 'summary'} onclick={() => activeTab = 'summary'}>Summary</button>
+		<button class:active={activeTab === 'compatibility'} onclick={() => activeTab = 'compatibility'}>Compatibility</button>
+		<button class:active={activeTab === 'completion'} onclick={() => activeTab = 'completion'}>Field Completion</button>
+	</div>
 
-	<!-- Issues -->
-	<section class="section">
-		<h2>Issues ({issues.length})</h2>
-		{#if issues.length === 0}
-			<p class="good">No issues found.</p>
-		{:else}
-			<table>
-				<thead><tr><th>Entity</th><th>Entity ID</th><th>Field</th><th>Issue</th><th>Value</th></tr></thead>
+	<!-- SUMMARY TAB -->
+	{#if activeTab === 'summary'}
+
+		<section class="section">
+			<h2>Entity Counts</h2>
+			<table class="compact">
+				<thead><tr><th>Entity</th><th>Count</th></tr></thead>
 				<tbody>
-					{#each issues as issue}
+					{#each entityCounts as row}
+						<tr><td>{row.entity}</td><td>{row.count}</td></tr>
+					{/each}
+				</tbody>
+			</table>
+		</section>
+
+		<section class="section">
+			<h2>Issues ({issues.length})</h2>
+			{#if issues.length === 0}
+				<p class="good">No issues found.</p>
+			{:else}
+				<table>
+					<thead><tr><th>Entity</th><th>Entity ID</th><th>Field</th><th>Issue</th><th>Value</th></tr></thead>
+					<tbody>
+						{#each issues as issue}
+							<tr>
+								<td>{issue.entity}</td>
+								<td class="mono">{issue.entityId}</td>
+								<td>{issue.field}</td>
+								<td>{issue.issue}</td>
+								<td class="mono">{issue.value ?? ''}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</section>
+
+	<!-- COMPATIBILITY TAB -->
+	{:else if activeTab === 'compatibility'}
+
+		<section class="section">
+			<h2>Orphaned Compat References ({orphanedCompat.length})</h2>
+			<p class="description">IDs in pen-compat that don't match any record in the referenced entity.</p>
+			{#if orphanedCompat.length === 0}
+				<p class="good">No orphaned references.</p>
+			{:else}
+				<table class="compact">
+					<thead><tr><th>Type</th><th>ID</th></tr></thead>
+					<tbody>
+						{#each orphanedCompat as orphan}
+							<tr><td>{orphan.type}</td><td class="mono">{orphan.id}</td></tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</section>
+
+		<section class="section">
+			<h2>Wacom Tablets with No Pen Compatibility Data ({tabletsNoCompat.length})</h2>
+			<p class="description">Wacom tablets that have no entries in pen-compat.</p>
+			{#if tabletsNoCompat.length === 0}
+				<p class="good">All Wacom tablets have compatibility data.</p>
+			{:else}
+				<table class="compact">
+					<thead><tr><th>Model ID</th><th>Name</th></tr></thead>
+					<tbody>
+						{#each tabletsNoCompat as t}
+							<tr><td class="mono">{t.id}</td><td>{t.name}</td></tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</section>
+
+		<section class="section">
+			<h2>Pens with No Tablet Compatibility Data ({pensNoCompat.length})</h2>
+			<p class="description">Pens that have no entries in pen-compat.</p>
+			{#if pensNoCompat.length === 0}
+				<p class="good">All pens have compatibility data.</p>
+			{:else}
+				<table class="compact">
+					<thead><tr><th>Pen ID</th><th>Name</th></tr></thead>
+					<tbody>
+						{#each pensNoCompat as p}
+							<tr><td class="mono">{p.id}</td><td>{p.name}</td></tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</section>
+
+	<!-- FIELD COMPLETION TAB -->
+	{:else if activeTab === 'completion'}
+
+		<section class="section">
+			<h2>Tablet Field Completion</h2>
+			<p class="description">How many of the {ds.tablets.length} tablets have each optional field populated.</p>
+			<table class="compact">
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<tbody>
+					{#each tabletCompletion as stat}
 						<tr>
-							<td>{issue.entity}</td>
-							<td class="mono">{issue.entityId}</td>
-							<td>{issue.field}</td>
-							<td>{issue.issue}</td>
-							<td class="mono">{issue.value ?? ''}</td>
+							<td>{stat.field}</td>
+							<td>{stat.populated} / {stat.total}</td>
+							<td>{stat.percent}%</td>
+							<td>
+								<div class="bar-bg">
+									<div class="bar-fill" style="width: {stat.percent}%"></div>
+								</div>
+							</td>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
-		{/if}
-	</section>
+		</section>
 
-	<!-- Orphaned Compat References -->
-	<section class="section">
-		<h2>Orphaned Compat References ({orphanedCompat.length})</h2>
-		<p class="description">IDs in pen-compat that don't match any record in the referenced entity.</p>
-		{#if orphanedCompat.length === 0}
-			<p class="good">No orphaned references.</p>
-		{:else}
+		<section class="section">
+			<h2>Pen Field Completion</h2>
+			<p class="description">How many of the {ds.pens.length} pens have each optional field populated.</p>
 			<table class="compact">
-				<thead><tr><th>Type</th><th>ID</th></tr></thead>
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
 				<tbody>
-					{#each orphanedCompat as orphan}
-						<tr><td>{orphan.type}</td><td class="mono">{orphan.id}</td></tr>
+					{#each penCompletion as stat}
+						<tr>
+							<td>{stat.field}</td>
+							<td>{stat.populated} / {stat.total}</td>
+							<td>{stat.percent}%</td>
+							<td>
+								<div class="bar-bg">
+									<div class="bar-fill" style="width: {stat.percent}%"></div>
+								</div>
+							</td>
+						</tr>
 					{/each}
 				</tbody>
 			</table>
-		{/if}
-	</section>
+		</section>
 
-	<!-- Tablet Field Completion -->
-	<section class="section">
-		<h2>Tablet Field Completion</h2>
-		<p class="description">How many of the {ds.tablets.length} tablets have each optional field populated.</p>
-		<table class="compact">
-			<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
-			<tbody>
-				{#each tabletCompletion as stat}
-					<tr>
-						<td>{stat.field}</td>
-						<td>{stat.populated} / {stat.total}</td>
-						<td>{stat.percent}%</td>
-						<td>
-							<div class="bar-bg">
-								<div class="bar-fill" style="width: {stat.percent}%"></div>
-							</div>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</section>
+		<section class="section">
+			<h2>Driver Field Completion</h2>
+			<p class="description">How many of the {ds.drivers.length} drivers have each optional field populated.</p>
+			<table class="compact">
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<tbody>
+					{#each driverCompletion as stat}
+						<tr>
+							<td>{stat.field}</td>
+							<td>{stat.populated} / {stat.total}</td>
+							<td>{stat.percent}%</td>
+							<td>
+								<div class="bar-bg">
+									<div class="bar-fill" style="width: {stat.percent}%"></div>
+								</div>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</section>
 
-	<!-- Pen Field Completion -->
-	<section class="section">
-		<h2>Pen Field Completion</h2>
-		<p class="description">How many of the {ds.pens.length} pens have each optional field populated.</p>
-		<table class="compact">
-			<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
-			<tbody>
-				{#each penCompletion as stat}
-					<tr>
-						<td>{stat.field}</td>
-						<td>{stat.populated} / {stat.total}</td>
-						<td>{stat.percent}%</td>
-						<td>
-							<div class="bar-bg">
-								<div class="bar-fill" style="width: {stat.percent}%"></div>
-							</div>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</section>
+	{/if}
 
 {/if}
 
 <style>
 	h1 { margin-bottom: 16px; }
+
+	.tabs {
+		display: flex;
+		gap: 4px;
+		margin-bottom: 20px;
+	}
+
+	.tabs button {
+		padding: 7px 16px;
+		font-size: 13px;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		background: #fff;
+		color: #555;
+		cursor: pointer;
+	}
+
+	.tabs button:hover {
+		border-color: #2563eb;
+		color: #2563eb;
+	}
+
+	.tabs button.active {
+		background: #2563eb;
+		color: #fff;
+		border-color: #2563eb;
+	}
 
 	.section {
 		margin-bottom: 32px;
