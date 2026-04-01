@@ -1,0 +1,23 @@
+{
+  "name": "drawtabdata-explorer",
+  "version": "1.0.0",
+  "description": "Data explorer for DrawTabData",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.55.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@types/node": "^25.5.0",
+    "svelte": "^5.55.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.3"
+  }
+}

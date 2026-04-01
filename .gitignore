@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.svelte-kit/
+static/tablets/
+static/drivers/
+static/pens/
+static/pen-families/
+static/tablet-families/
+static/pen-compat/
