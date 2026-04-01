@@ -1,12 +1,13 @@
 <script lang="ts">
 	import type { FieldDef, SelectStep } from '$data/lib/pipeline/index.js';
 
-	let { step = $bindable(), fields, fieldGroups, onchange, onremove }: {
+	let { step = $bindable(), fields, fieldGroups, onchange, onremove, removable = true }: {
 		step: SelectStep;
 		fields: FieldDef<any>[];
 		fieldGroups: string[];
 		onchange: () => void;
 		onremove: () => void;
+		removable?: boolean;
 	} = $props();
 
 	let collapsed = $state(false);
@@ -82,7 +83,9 @@
 	</div>
 	<div class="step-actions">
 		<button class="step-collapse" onclick={() => collapsed = !collapsed}>{collapsed ? '▼' : '▲'}</button>
-		<button class="step-remove" onclick={onremove}>&times;</button>
+		{#if removable}
+			<button class="step-remove" onclick={onremove}>&times;</button>
+		{/if}
 	</div>
 </div>
 
@@ -100,7 +103,7 @@
 	.group-header {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: 0;
 		font-size: 13px;
 		cursor: pointer;
 		margin-bottom: 4px;
@@ -119,8 +122,15 @@
 		font-size: 13px;
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: 0;
 		cursor: pointer;
+	}
+
+	:global(.group-fields input[type="checkbox"]),
+	:global(.group-header input[type="checkbox"]) {
+		margin: 0 2px 0 0 !important;
+		width: 14px;
+		height: 14px;
 	}
 
 	.collapsed-summary {

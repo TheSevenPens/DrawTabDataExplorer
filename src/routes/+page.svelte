@@ -34,10 +34,10 @@
 />
 
 <style>
-	:global(*) { box-sizing: border-box; margin: 0; padding: 0; }
+	:global(*) { box-sizing: border-box; margin: 0; padding: 0; font-family: inherit; }
 
 	:global(body) {
-		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		font-family: "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 		padding: 24px;
 		background: #f5f5f5;
 		color: #222;

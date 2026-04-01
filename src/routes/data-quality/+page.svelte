@@ -115,7 +115,7 @@
 			'DigitizerType', 'DigitizerPressureLevels', 'DigitizerDimensions', 'DigitizerDensity',
 			'DigitizerReportRate', 'DigitizerTilt', 'DigitizerAccuracyCenter', 'DigitizerAccuracyCorner',
 			'DigitizerMaxHover', 'DigitizerSupportsTouch',
-			'DisplayResolution', 'DisplayPanelTech', 'DisplayBrightness', 'DisplayContrast',
+			'DisplayPixelDimensions', 'DisplayPanelTech', 'DisplayBrightness', 'DisplayContrast',
 			'DisplayColorBitDepth', 'DisplayColorGamuts', 'DisplayLamination',
 			'PhysicalDimensions', 'PhysicalWeight', 'ModelProductLink',
 		]);
