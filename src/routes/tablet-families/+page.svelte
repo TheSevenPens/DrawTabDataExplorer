@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadTabletFamiliesFromURL } from '$data/lib/drawtab-loader.js';
 	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS, TABLET_FAMILY_DEFAULT_COLUMNS, TABLET_FAMILY_DEFAULT_VIEW } from '$data/lib/entities/tablet-family-fields.js';
@@ -8,7 +9,7 @@
 	let data: TabletFamily[] = $state([]);
 
 	onMount(async () => {
-		data = (await loadTabletFamiliesFromURL('')) as TabletFamily[];
+		data = (await loadTabletFamiliesFromURL(base)) as TabletFamily[];
 	});
 </script>
 

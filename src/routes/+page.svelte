@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
 	import {
@@ -13,7 +14,7 @@
 	let data: Tablet[] = $state([]);
 
 	onMount(async () => {
-		data = await loadTabletsFromURL('');
+		data = await loadTabletsFromURL(base);
 	});
 </script>
 

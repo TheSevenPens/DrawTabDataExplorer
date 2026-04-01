@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadPenFamiliesFromURL } from '$data/lib/drawtab-loader.js';
 	import { type PenFamily, PEN_FAMILY_FIELDS, PEN_FAMILY_FIELD_GROUPS, PEN_FAMILY_DEFAULT_COLUMNS, PEN_FAMILY_DEFAULT_VIEW } from '$data/lib/entities/pen-family-fields.js';
@@ -8,7 +9,7 @@
 	let data: PenFamily[] = $state([]);
 
 	onMount(async () => {
-		data = (await loadPenFamiliesFromURL('')) as PenFamily[];
+		data = (await loadPenFamiliesFromURL(base)) as PenFamily[];
 	});
 </script>
 

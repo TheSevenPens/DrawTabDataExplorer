@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadDriversFromURL } from '$data/lib/drawtab-loader.js';
@@ -10,7 +11,7 @@
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
-		const all = (await loadDriversFromURL('')) as Driver[];
+		const all = (await loadDriversFromURL(base)) as Driver[];
 		const found = all.find((d) => d.EntityId === entityId);
 		if (found) {
 			driver = found;
@@ -22,7 +23,7 @@
 
 {#if notFound}
 	<h1>Driver not found</h1>
-	<p><a href="/drivers">Back to drivers</a></p>
+	<p><a href="{base}/drivers">Back to drivers</a></p>
 {:else}
 	<h1>{driver?.DriverName ?? 'Loading...'}</h1>
 	<DetailView

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type FieldDef, getFieldDef } from '$data/lib/pipeline/index.js';
+	import { base } from '$app/paths';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
@@ -37,7 +38,7 @@
 						{@const val = f.getValue(item)}
 						{@const displayVal = formatValue(val, f.unit, $unitPreference)}
 						{#if f.key === 'EntityId' && detailBasePath && val}
-							<td><a class="entity-link" href="{detailBasePath}/{encodeURIComponent(val)}">{val}</a></td>
+							<td><a class="entity-link" href="{base}{detailBasePath}/{encodeURIComponent(val)}">{val}</a></td>
 						{:else}
 							<td class:dim={!val}>{displayVal}</td>
 						{/if}

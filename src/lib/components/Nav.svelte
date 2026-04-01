@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { base } from '$app/paths';
 	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
 
 	const links = [
@@ -16,7 +17,7 @@
 <nav>
 	<div class="nav-links">
 		{#each links as link}
-			<a href={link.href} class:active={page.url.pathname === link.href}>{link.label}</a>
+			<a href="{base}{link.href}" class:active={page.url.pathname === base + link.href}>{link.label}</a>
 		{/each}
 	</div>
 	<button class="unit-toggle" onclick={toggleUnits}>

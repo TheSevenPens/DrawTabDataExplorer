@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadPenCompatFromURL } from '$data/lib/drawtab-loader.js';
 	import { type PenCompat, PEN_COMPAT_FIELDS, PEN_COMPAT_FIELD_GROUPS, PEN_COMPAT_DEFAULT_COLUMNS, PEN_COMPAT_DEFAULT_VIEW } from '$data/lib/entities/pen-compat-fields.js';
@@ -8,7 +9,7 @@
 	let data: PenCompat[] = $state([]);
 
 	onMount(async () => {
-		data = (await loadPenCompatFromURL('')) as PenCompat[];
+		data = (await loadPenCompatFromURL(base)) as PenCompat[];
 	});
 </script>
 

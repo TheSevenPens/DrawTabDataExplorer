@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadAllFromURL, type DrawTabDataAll } from '$data/lib/drawtab-all.js';
 	import Nav from '$lib/components/Nav.svelte';
@@ -90,7 +91,7 @@
 	let pensNoCompat: { id: string; name: string }[] = $state([]);
 
 	onMount(async () => {
-		ds = await loadAllFromURL('');
+		ds = await loadAllFromURL(base);
 		const allIssues: Issue[] = [];
 
 		// Required field checks

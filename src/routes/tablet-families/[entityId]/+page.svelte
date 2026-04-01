@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadTabletFamiliesFromURL, loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
@@ -12,8 +13,8 @@
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
 		const [allFamilies, allTablets] = await Promise.all([
-			loadTabletFamiliesFromURL('') as Promise<TabletFamily[]>,
-			loadTabletsFromURL(''),
+			loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
+			loadTabletsFromURL(base),
 		]);
 
 		const found = allFamilies.find((f) => f.EntityId === entityId);
@@ -29,7 +30,7 @@
 
 {#if notFound}
 	<h1>Tablet family not found</h1>
-	<p><a href="/tablet-families">Back to tablet families</a></p>
+	<p><a href="{base}/tablet-families">Back to tablet families</a></p>
 {:else}
 	<h1>{item?.FamilyName ?? 'Loading...'}</h1>
 
@@ -52,7 +53,7 @@
 					<tbody>
 						{#each familyTablets as tablet}
 							<tr>
-								<td><a href="/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
+								<td><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
 								<td>{tablet.ModelName}</td>
 								<td>{tablet.ModelType}</td>
 								<td>{tablet.ModelLaunchYear || ''}</td>

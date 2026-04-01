@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { FieldDef } from '$data/lib/pipeline/index.js';
+	import { base } from '$app/paths';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
@@ -19,7 +20,7 @@
 {#if item === null}
 	<p>Loading...</p>
 {:else}
-	<p class="back"><a href={backHref}>&larr; {backLabel}</a></p>
+	<p class="back"><a href="{base}{backHref}">&larr; {backLabel}</a></p>
 
 	{#each fieldGroups as group}
 		{@const groupFields = fields.filter((f) => f.group === group)}

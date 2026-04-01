@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadPensFromURL, loadPenCompatFromURL, loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
@@ -14,9 +15,9 @@
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
 		const [allPens, allCompat, allTablets] = await Promise.all([
-			loadPensFromURL('') as Promise<Pen[]>,
-			loadPenCompatFromURL('') as Promise<PenCompat[]>,
-			loadTabletsFromURL(''),
+			loadPensFromURL(base) as Promise<Pen[]>,
+			loadPenCompatFromURL(base) as Promise<PenCompat[]>,
+			loadTabletsFromURL(base),
 		]);
 
 		const found = allPens.find((p) => p.EntityId === entityId);
@@ -44,7 +45,7 @@
 
 {#if notFound}
 	<h1>Pen not found</h1>
-	<p><a href="/pens">Back to pens</a></p>
+	<p><a href="{base}/pens">Back to pens</a></p>
 {:else}
 	<h1>{pen?.PenName ?? 'Loading...'}</h1>
 
@@ -66,7 +67,7 @@
 					<tbody>
 						{#each compatibleTablets as tablet}
 							<tr>
-								<td><a href="/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
+								<td><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
 								<td>{tablet.ModelName}</td>
 								<td>{tablet.ModelType}</td>
 								<td>{tablet.ModelLaunchYear || ''}</td>
@@ -94,7 +95,7 @@
 					<tbody>
 						{#each includedWithTablets as tablet}
 							<tr>
-								<td><a href="/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
+								<td><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
 								<td>{tablet.ModelName}</td>
 								<td>{tablet.ModelType}</td>
 								<td>{tablet.ModelLaunchYear || ''}</td>

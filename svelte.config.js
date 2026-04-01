@@ -5,7 +5,13 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter({ fallback: 'index.html' }),
+		adapter: adapter({ fallback: '404.html' }),
+		prerender: {
+			handleUnseenRoutes: 'ignore',
+		},
+		paths: {
+			base: process.env.NODE_ENV === 'production' ? '/DrawTabDataExplorer' : '',
+		},
 		files: {
 			routes: 'src/routes',
 			lib: 'src/lib',
