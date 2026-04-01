@@ -17,7 +17,10 @@ DrawTabDataExplorer/
 │   │   ├── pen-families/         # Pen families list + detail
 │   │   ├── tablet-families/      # Tablet families list + detail
 │   │   ├── pen-compat/           # Pen compatibility list
-│   │   └── drivers/              # Drivers list + detail
+│   │   ├── drivers/              # Drivers list + detail
+│   │   ├── pressure-response/    # Pressure response sessions
+│   │   ├── inventory/            # Inventory (pens/tablets sub-tabs)
+│   │   └── data-quality/         # Data quality dashboard
 │   └── lib/
 │       ├── components/           # Reusable Svelte components
 │       │   ├── EntityExplorer.svelte   # Generic entity page
