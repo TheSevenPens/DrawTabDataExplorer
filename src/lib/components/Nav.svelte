@@ -11,6 +11,7 @@
 		{ href: '/pen-compat', label: 'Pen Compat' },
 		{ href: '/drivers', label: 'Drivers' },
 		{ href: '/pressure-response', label: 'Pressure Response' },
+		{ href: '/inventory', label: 'Inventory' },
 		{ href: '/data-quality', label: 'Data Quality' },
 	];
 </script>
