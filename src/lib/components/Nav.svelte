@@ -10,6 +10,7 @@
 		{ href: '/tablet-families', label: 'Tablet Families' },
 		{ href: '/pen-compat', label: 'Pen Compat' },
 		{ href: '/drivers', label: 'Drivers' },
+		{ href: '/pressure-response', label: 'Pressure Response' },
 		{ href: '/data-quality', label: 'Data Quality' },
 	];
 </script>

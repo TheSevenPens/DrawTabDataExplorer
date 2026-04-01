@@ -41,6 +41,7 @@ jobs:
           cp -r data-repo/data/pen-families static/
           cp -r data-repo/data/tablet-families static/
           cp -r data-repo/data/pen-compat static/
+          cp -r data-repo/data/pressure-response static/
 
       - name: Build
         run: npm run build
