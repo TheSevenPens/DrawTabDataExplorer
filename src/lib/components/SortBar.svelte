@@ -155,7 +155,7 @@
 		padding: 8px 12px;
 		font-size: 14px;
 		min-height: 40px;
-		margin-bottom: 16px;
+		margin-bottom: 4px;
 	}
 
 	.sort-label {

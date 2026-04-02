@@ -118,7 +118,7 @@
 
 <style>
 	.saved-views {
-		margin-bottom: 20px;
+		margin-bottom: 0;
 	}
 
 	.views-row {

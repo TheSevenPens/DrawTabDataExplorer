@@ -136,18 +136,18 @@
 	h1 { margin-bottom: 8px; }
 
 	.views-section {
-		margin-bottom: 16px;
+		margin-bottom: 12px;
 		border: 1px solid #ddd;
 		border-radius: 6px;
-		padding: 12px 14px;
+		padding: 6px 10px;
 		background: #fff;
 	}
 
 	.views-section h2 {
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 600;
 		color: #555;
-		margin-bottom: 6px;
+		margin-bottom: 4px;
 	}
 
 	.results-count {

@@ -163,6 +163,7 @@
 		font-size: 14px;
 		min-height: 40px;
 		margin-bottom: 4px;
+
 	}
 
 	.filter-label {
