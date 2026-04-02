@@ -22,6 +22,8 @@
 	let ds: DrawTabDataAll | null = $state(null);
 	let issues: Issue[] = $state([]);
 	let tabletCompletion: CompletionStat[] = $state([]);
+	let displayCompletion: CompletionStat[] = $state([]);
+	let displayTabletCount = $state(0);
 	let penCompletion: CompletionStat[] = $state([]);
 	let driverCompletion: CompletionStat[] = $state([]);
 	let orphanedCompat: { type: string; id: string }[] = $state([]);
@@ -115,9 +117,14 @@
 			'DigitizerType', 'DigitizerPressureLevels', 'DigitizerDimensions', 'DigitizerDensity',
 			'DigitizerReportRate', 'DigitizerTilt', 'DigitizerAccuracyCenter', 'DigitizerAccuracyCorner',
 			'DigitizerMaxHover', 'DigitizerSupportsTouch',
+			'PhysicalDimensions', 'PhysicalWeight', 'ModelProductLink',
+		]);
+
+		const displayTablets = ds.tablets.filter(t => t.ModelType === 'PENDISPLAY' || t.ModelType === 'STANDALONE');
+		displayTabletCount = displayTablets.length;
+		displayCompletion = computeCompletion(displayTablets, [
 			'DisplayPixelDimensions', 'DisplayPanelTech', 'DisplayBrightness', 'DisplayContrast',
 			'DisplayColorBitDepth', 'DisplayColorGamuts', 'DisplayLamination',
-			'PhysicalDimensions', 'PhysicalWeight', 'ModelProductLink',
 		]);
 
 		penCompletion = computeCompletion(ds.pens, ['PenName', 'PenFamily', 'PenYear']);
@@ -261,11 +268,33 @@
 
 		<section class="section">
 			<h2>Tablet Field Completion</h2>
-			<p class="description">How many of the {ds.tablets.length} tablets have each optional field populated.</p>
+			<p class="description">How many of the {ds.tablets.length} tablets have each field populated.</p>
 			<table class="compact">
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
 				<tbody>
 					{#each tabletCompletion as stat}
+						<tr>
+							<td>{stat.field}</td>
+							<td>{stat.populated} / {stat.total}</td>
+							<td>{stat.percent}%</td>
+							<td>
+								<div class="bar-bg">
+									<div class="bar-fill" style="width: {stat.percent}%"></div>
+								</div>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</section>
+
+		<section class="section">
+			<h2>Display Field Completion</h2>
+			<p class="description">How many of the {displayTabletCount} pen displays and standalone tablets have each display field populated.</p>
+			<table class="compact">
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<tbody>
+					{#each displayCompletion as stat}
 						<tr>
 							<td>{stat.field}</td>
 							<td>{stat.populated} / {stat.total}</td>
