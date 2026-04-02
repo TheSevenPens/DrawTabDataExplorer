@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { type Step, type FilterStep as FilterStepType, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import SortBar from '$lib/components/SortBar.svelte';
 	import ColumnBar from '$lib/components/ColumnBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
 	import SavedViews from '$lib/components/SavedViews.svelte';
+	import { loadColumnWidths, saveColumnWidths } from '$lib/column-widths.js';
 
 	let {
 		title,
@@ -75,7 +77,16 @@
 	let filters: FilterItem[] = $state(getInitialFilters());
 	let sorts: SortItem[] = $state(getInitialSorts());
 	let selectedColumns: string[] = $state(getInitialColumns());
+	let columnWidths: Record<string, number> = $state({});
 	let tick = $state(0);
+
+	onMount(() => {
+		columnWidths = loadColumnWidths(entityType);
+	});
+
+	function onWidthChange() {
+		saveColumnWidths(entityType, columnWidths);
+	}
 
 	let allSteps = $derived.by((): Step[] => {
 		void tick;
@@ -145,7 +156,7 @@
 
 <ColumnBar bind:columns={selectedColumns} {fields} {fieldGroups} onchange={refresh} />
 
-<ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} />
+<ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} bind:columnWidths onwidthchange={onWidthChange} />
 
 <style>
 	.title-row {
