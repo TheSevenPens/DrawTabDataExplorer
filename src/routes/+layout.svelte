@@ -92,10 +92,12 @@
 	}
 
 	:global(th) {
-		background: #333;
-		color: #fff;
+		background: #f3f4f6;
+		color: #555;
+		font-weight: 600;
 		position: sticky;
 		top: 0;
+		border-bottom: 2px solid #e0e0e0;
 	}
 
 	:global(tr:hover td) { background: #f0f7ff; }
