@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadAllFromURL, type DrawTabDataAll } from '$data/lib/drawtab-all.js';
+	import { loadInventoryPensFromURL, loadInventoryTabletsFromURL } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 
 	interface Issue {
@@ -26,9 +27,15 @@
 	let displayTabletCount = $state(0);
 	let penCompletion: CompletionStat[] = $state([]);
 	let driverCompletion: CompletionStat[] = $state([]);
+	let pressureResponseCompletion: CompletionStat[] = $state([]);
+	let inventoryPenCompletion: CompletionStat[] = $state([]);
+	let inventoryTabletCompletion: CompletionStat[] = $state([]);
 	let orphanedCompat: { type: string; id: string }[] = $state([]);
+	let orphanedFamilies: { type: string; id: string; referencedBy: string }[] = $state([]);
 	let entityCounts: { entity: string; count: number }[] = $state([]);
 	let activeTab: 'summary' | 'compatibility' | 'completion' = $state('summary');
+	let inventoryPenCount = $state(0);
+	let inventoryTabletCount = $state(0);
 
 	function checkRequired(records: Record<string, any>[], entity: string, requiredFields: string[]): Issue[] {
 		const found: Issue[] = [];
@@ -93,7 +100,14 @@
 	let pensNoCompat: { id: string; name: string }[] = $state([]);
 
 	onMount(async () => {
-		ds = await loadAllFromURL(base);
+		const [dsResult, invPens, invTablets] = await Promise.all([
+			loadAllFromURL(base),
+			loadInventoryPensFromURL(base, 'sevenpens'),
+			loadInventoryTabletsFromURL(base, 'sevenpens'),
+		]);
+		ds = dsResult;
+		inventoryPenCount = invPens.length;
+		inventoryTabletCount = invTablets.length;
 		const allIssues: Issue[] = [];
 
 		// Required field checks
@@ -104,10 +118,14 @@
 		allIssues.push(...checkRequired(ds.tabletFamilies, 'TabletFamily', ['EntityId', 'Brand', 'FamilyId', 'FamilyName']));
 		allIssues.push(...checkRequired(ds.penCompat, 'PenCompat', ['Brand', 'TabletId', 'PenId']));
 
+		// Pressure response checks
+		allIssues.push(...checkRequired(ds.pressureResponse, 'PressureResponse', ['Brand', 'PenEntityId', 'InventoryId', 'Date', 'TabletEntityId']));
+
 		// Whitespace checks
 		allIssues.push(...checkWhitespace(ds.tablets, 'Tablet'));
 		allIssues.push(...checkWhitespace(ds.pens, 'Pen'));
 		allIssues.push(...checkWhitespace(ds.drivers, 'Driver'));
+		allIssues.push(...checkWhitespace(ds.pressureResponse, 'PressureResponse'));
 
 		issues = allIssues;
 
@@ -133,8 +151,36 @@
 			'DriverURLWacom', 'DriverURLArchiveDotOrg', 'ReleaseNotesURL',
 		]);
 
+		pressureResponseCompletion = computeCompletion(ds.pressureResponse, [
+			'PenFamily', 'Notes',
+		]);
+
+		inventoryPenCompletion = computeCompletion(invPens, [
+			'PenEntityId', 'PenTech', 'WithTabletEntityId',
+		]);
+
+		inventoryTabletCompletion = computeCompletion(invTablets, [
+			'TabletEntityId', 'Vendor', 'OrderDate',
+		]);
+
 		// Orphaned compat references
 		orphanedCompat = findOrphanedCompat(ds);
+
+		// Orphaned family references
+		const penFamilyIds = new Set(ds.penFamilies.map(f => (f as any).FamilyId));
+		const tabletFamilyIds = new Set(ds.tabletFamilies.map(f => (f as any).FamilyId));
+		const orphFamilies: typeof orphanedFamilies = [];
+		for (const pen of ds.pens) {
+			if (pen.PenFamily && !penFamilyIds.has(pen.PenFamily)) {
+				orphFamilies.push({ type: 'PenFamily', id: pen.PenFamily, referencedBy: pen.PenId });
+			}
+		}
+		for (const tab of ds.tablets) {
+			if (tab.ModelFamily && !tabletFamilyIds.has(tab.ModelFamily)) {
+				orphFamilies.push({ type: 'TabletFamily', id: tab.ModelFamily, referencedBy: tab.ModelId });
+			}
+		}
+		orphanedFamilies = orphFamilies;
 
 		// Entity counts
 		entityCounts = [
@@ -144,6 +190,9 @@
 			{ entity: 'Pen Families', count: ds.penFamilies.length },
 			{ entity: 'Tablet Families', count: ds.tabletFamilies.length },
 			{ entity: 'Drivers', count: ds.drivers.length },
+			{ entity: 'Pressure Response Sessions', count: ds.pressureResponse.length },
+			{ entity: 'Inventory Pens', count: inventoryPenCount },
+			{ entity: 'Inventory Tablets', count: inventoryTabletCount },
 		];
 
 		// Compat coverage
@@ -263,6 +312,23 @@
 			{/if}
 		</section>
 
+		<section class="section">
+			<h2>Orphaned Family References ({orphanedFamilies.length})</h2>
+			<p class="description">Family IDs referenced by pens or tablets that don't exist in the family entities.</p>
+			{#if orphanedFamilies.length === 0}
+				<p class="good">No orphaned family references.</p>
+			{:else}
+				<table class="compact">
+					<thead><tr><th>Type</th><th>Family ID</th><th>Referenced By</th></tr></thead>
+					<tbody>
+						{#each orphanedFamilies as o}
+							<tr><td>{o.type}</td><td class="mono">{o.id}</td><td class="mono">{o.referencedBy}</td></tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</section>
+
 	<!-- FIELD COMPLETION TAB -->
 	{:else if activeTab === 'completion'}
 
@@ -339,6 +405,72 @@
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
 				<tbody>
 					{#each driverCompletion as stat}
+						<tr>
+							<td>{stat.field}</td>
+							<td>{stat.populated} / {stat.total}</td>
+							<td>{stat.percent}%</td>
+							<td>
+								<div class="bar-bg">
+									<div class="bar-fill" style="width: {stat.percent}%"></div>
+								</div>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</section>
+
+		<section class="section">
+			<h2>Pressure Response Field Completion</h2>
+			<p class="description">How many of the {ds.pressureResponse.length} sessions have each optional field populated.</p>
+			<table class="compact">
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<tbody>
+					{#each pressureResponseCompletion as stat}
+						<tr>
+							<td>{stat.field}</td>
+							<td>{stat.populated} / {stat.total}</td>
+							<td>{stat.percent}%</td>
+							<td>
+								<div class="bar-bg">
+									<div class="bar-fill" style="width: {stat.percent}%"></div>
+								</div>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</section>
+
+		<section class="section">
+			<h2>Inventory Pen Field Completion</h2>
+			<p class="description">How many of the {inventoryPenCount} inventory pens have each optional field populated.</p>
+			<table class="compact">
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<tbody>
+					{#each inventoryPenCompletion as stat}
+						<tr>
+							<td>{stat.field}</td>
+							<td>{stat.populated} / {stat.total}</td>
+							<td>{stat.percent}%</td>
+							<td>
+								<div class="bar-bg">
+									<div class="bar-fill" style="width: {stat.percent}%"></div>
+								</div>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</section>
+
+		<section class="section">
+			<h2>Inventory Tablet Field Completion</h2>
+			<p class="description">How many of the {inventoryTabletCount} inventory tablets have each optional field populated.</p>
+			<table class="compact">
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<tbody>
+					{#each inventoryTabletCompletion as stat}
 						<tr>
 							<td>{stat.field}</td>
 							<td>{stat.populated} / {stat.total}</td>
