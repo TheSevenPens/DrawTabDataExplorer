@@ -36,7 +36,7 @@
 						{#if f.key === 'EntityId' && detailBasePath && val}
 							<td><a class="entity-link" href="{base}{detailBasePath}/{encodeURIComponent(val)}">{val}</a></td>
 						{:else}
-							<td class:dim={!val}>{displayVal}</td>
+							<td class:dim={!val || val === '-'}>{displayVal}</td>
 						{/if}
 					{/each}
 				</tr>
