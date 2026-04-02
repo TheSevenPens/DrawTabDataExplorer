@@ -125,9 +125,9 @@
 	<SavedViews steps={stepsForSave} {entityType} {defaultView} onload={loadView} />
 </section>
 
-<FilterBar bind:filters {fields} onchange={refresh} />
+<FilterBar bind:filters {fields} {fieldGroups} onchange={refresh} />
 
-<SortBar bind:sorts {fields} onchange={refresh} />
+<SortBar bind:sorts {fields} {fieldGroups} onchange={refresh} />
 
 <ColumnBar bind:columns={selectedColumns} {fields} {fieldGroups} onchange={refresh} />
 

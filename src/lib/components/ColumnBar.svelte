@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { FieldDef } from '$data/lib/pipeline/index.js';
+	import FieldPicker from '$lib/components/FieldPicker.svelte';
 
 	let { columns = $bindable(), fields, fieldGroups, onchange }: {
 		columns: string[];
@@ -119,18 +120,13 @@
 		<div class="add-wrapper">
 			<button class="add-btn" onclick={() => showPicker = !showPicker}>+</button>
 			{#if showPicker}
-				<div class="picker">
-					{#if availableByGroup.length === 0}
-						<div class="picker-empty">All fields added</div>
-					{:else}
-						{#each availableByGroup as { group, fields: groupFields }}
-							<div class="picker-group-label">{group}</div>
-							{#each groupFields as f}
-								<button class="picker-item" onclick={() => addField(f.key)}>{f.label}</button>
-							{/each}
-						{/each}
-					{/if}
-				</div>
+				<FieldPicker
+					{fields}
+					{fieldGroups}
+					exclude={columns}
+					onselect={(key) => { addField(key); }}
+					onclose={() => showPicker = false}
+				/>
 			{/if}
 		</div>
 	</div>

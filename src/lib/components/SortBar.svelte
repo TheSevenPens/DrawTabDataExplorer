@@ -1,14 +1,16 @@
 <script lang="ts">
 	import type { FieldDef } from '$data/lib/pipeline/index.js';
+	import FieldPicker from '$lib/components/FieldPicker.svelte';
 
 	interface SortItem {
 		field: string;
 		direction: 'asc' | 'desc';
 	}
 
-	let { sorts = $bindable(), fields, onchange }: {
+	let { sorts = $bindable(), fields, fieldGroups, onchange }: {
 		sorts: SortItem[];
 		fields: FieldDef<any>[];
+		fieldGroups: string[];
 		onchange: () => void;
 	} = $props();
 
@@ -136,15 +138,13 @@
 		<div class="add-wrapper">
 			<button class="add-btn" onclick={() => showPicker = !showPicker}>+</button>
 			{#if showPicker}
-				<div class="picker">
-					{#if availableFields.length === 0}
-						<div class="picker-empty">All fields added</div>
-					{:else}
-						{#each availableFields as f}
-							<button class="picker-item" onclick={() => addField(f.key)}>{f.label}</button>
-						{/each}
-					{/if}
-				</div>
+				<FieldPicker
+					{fields}
+					{fieldGroups}
+					exclude={sorts.map(s => s.field)}
+					onselect={(key) => { addField(key); }}
+					onclose={() => showPicker = false}
+				/>
 			{/if}
 		</div>
 	</div>

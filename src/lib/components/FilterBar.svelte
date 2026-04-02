@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type FieldDef, type FilterStep, getFieldDef, getOperatorsForField } from '$data/lib/pipeline/index.js';
+	import FieldPicker from '$lib/components/FieldPicker.svelte';
 
 	interface FilterItem {
 		field: string;
@@ -8,13 +9,15 @@
 		disabled?: boolean;
 	}
 
-	let { filters = $bindable(), fields, onchange }: {
+	let { filters = $bindable(), fields, fieldGroups, onchange }: {
 		filters: FilterItem[];
 		fields: FieldDef<any>[];
+		fieldGroups: string[];
 		onchange: () => void;
 	} = $props();
 
 	let editingIndex: number | null = $state(null);
+	let showFieldPicker = $state(false);
 	let contextMenu: { index: number; x: number; y: number } | null = $state(null);
 
 	function getLabel(key: string): string {
@@ -122,11 +125,20 @@
 	{@const operators = fieldDef ? getOperatorsForField(fieldDef) : []}
 	{@const needsValue = filter.operator !== 'empty' && filter.operator !== 'notempty'}
 	<div class="editor">
-		<select value={filter.field} onchange={(e) => onFieldChange(editingIndex!, (e.target as HTMLSelectElement).value)}>
-			{#each fields as f}
-				<option value={f.key} selected={f.key === filter.field}>{f.label}</option>
-			{/each}
-		</select>
+		<div class="field-select-wrapper">
+			<button class="field-select-btn" onclick={() => showFieldPicker = !showFieldPicker}>
+				{getLabel(filter.field)} ▾
+			</button>
+			{#if showFieldPicker}
+				<FieldPicker
+					{fields}
+					{fieldGroups}
+					selected={filter.field}
+					onselect={(key) => { onFieldChange(editingIndex!, key); showFieldPicker = false; }}
+					onclose={() => showFieldPicker = false}
+				/>
+			{/if}
+		</div>
 
 		<select value={filter.operator} onchange={(e) => onOpChange(editingIndex!, (e.target as HTMLSelectElement).value)}>
 			{#each operators as op}
@@ -265,6 +277,24 @@
 
 	.editor input {
 		width: 160px;
+	}
+
+	.field-select-wrapper {
+		position: relative;
+	}
+
+	.field-select-btn {
+		padding: 4px 10px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+		cursor: pointer;
+	}
+
+	.field-select-btn:hover {
+		border-color: var(--link);
 	}
 
 	.done-btn {
