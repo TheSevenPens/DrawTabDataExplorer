@@ -448,18 +448,8 @@
 
 	.size-comparison {
 		display: flex;
-		gap: 24px;
-		align-items: flex-start;
-	}
-
-	.size-comparison > :first-child {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.range-legend {
-		flex-shrink: 0;
-		min-width: 180px;
+		flex-direction: column;
+		gap: 12px;
 	}
 
 	.range-legend h3 {
