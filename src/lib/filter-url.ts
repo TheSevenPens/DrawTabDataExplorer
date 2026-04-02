@@ -4,11 +4,8 @@ export function buildFilterUrl(
   entityPath: string,
   filters: { field: string; operator: string; value: string }[],
 ): string {
-  const params = new URLSearchParams();
-  for (const f of filters) {
-    params.append('filter', `${f.field}:${f.operator}:${f.value}`);
-  }
-  return `${base}${entityPath}?${params.toString()}`;
+  const parts = filters.map(f => `filter=${f.field}:${f.operator}:${f.value}`);
+  return `${base}${entityPath}?${parts.join('&')}`;
 }
 
 export function buildFilterUrlForValues(
