@@ -349,7 +349,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -372,7 +372,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -395,7 +395,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/pens', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/pens', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -418,7 +418,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/drivers', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/drivers', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -441,7 +441,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/pressure-response', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/pressure-response', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
