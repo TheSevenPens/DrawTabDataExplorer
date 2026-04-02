@@ -22,8 +22,8 @@
 	let chartW = $derived(width - padLeft - padRight);
 	let chartH = $derived(chartHeight - padTop - padBottom);
 
-	let scaleMin = $derived(Math.min(...ranges.map(r => r.min)) - 1);
-	let scaleMax = $derived(Math.max(...ranges.map(r => r.max)) + 1);
+	let scaleMin = 2;
+	let scaleMax = 34;
 
 	function xScale(val: number): number {
 		return padLeft + ((val - scaleMin) / (scaleMax - scaleMin)) * chartW;
@@ -42,7 +42,7 @@
 	let maxCount = $derived(Math.max(...bins, 1));
 	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
 
-	const rangeColors = ['#dbeafe', '#bbf7d0', '#fef3c7', '#fecaca'];
+	const rangeOpacities = [0.2, 0.35, 0.2, 0.35];
 </script>
 
 {#if currentValue !== null}
@@ -55,8 +55,8 @@
 					y={padTop}
 					width={xScale(range.max) - xScale(range.min)}
 					height={chartH}
-					fill={rangeColors[i % rangeColors.length]}
-					opacity="0.4"
+					fill="#3b82f6"
+					opacity={rangeOpacities[i % rangeOpacities.length]}
 				/>
 				<text
 					x={(xScale(range.min) + xScale(range.max)) / 2}
@@ -119,8 +119,8 @@
 						y={padTop + chartH - barH}
 						width={barW}
 						height={barH}
-						fill="var(--text-dim)"
-						opacity="0.5"
+						fill="#1e3a5f"
+						opacity="0.85"
 						rx="1"
 					/>
 				{/if}
