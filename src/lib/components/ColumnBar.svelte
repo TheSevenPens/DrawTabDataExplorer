@@ -92,10 +92,11 @@
 	<span class="column-label">columns</span>
 	<div class="pills">
 		{#each columns as col, i}
+			{#if dragIndex !== null && dragOverIndex === i && dragOverSide === 'left' && dragIndex !== i}
+				<div class="drop-indicator"></div>
+			{/if}
 			<button
 				class="pill"
-				class:drag-over-left={dragOverIndex === i && dragIndex !== i && dragOverSide === 'left'}
-				class:drag-over-right={dragOverIndex === i && dragIndex !== i && dragOverSide === 'right'}
 				class:dragging={dragIndex === i}
 				draggable="true"
 				oncontextmenu={(e) => onContextMenu(e, i)}
@@ -108,6 +109,9 @@
 			>
 				{getLabel(col)}
 			</button>
+			{#if dragIndex !== null && dragOverIndex === i && dragOverSide === 'right' && dragIndex !== i}
+				<div class="drop-indicator"></div>
+			{/if}
 		{/each}
 		<div class="add-wrapper">
 			<button class="add-btn" onclick={() => showPicker = !showPicker}>+</button>
@@ -186,12 +190,12 @@
 		opacity: 0.4;
 	}
 
-	.pill.drag-over-left {
-		box-shadow: -3px 0 0 0 #16a34a;
-	}
-
-	.pill.drag-over-right {
-		box-shadow: 3px 0 0 0 #16a34a;
+	.drop-indicator {
+		width: 3px;
+		height: 24px;
+		background: #16a34a;
+		border-radius: 2px;
+		flex-shrink: 0;
 	}
 
 	.add-wrapper {
