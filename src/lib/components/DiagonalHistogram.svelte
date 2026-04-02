@@ -51,7 +51,7 @@
 
 	// Chart dimensions
 	const width = 600;
-	const height = 140;
+	const height = 280;
 	const padLeft = 30;
 	const padRight = 20;
 	const padTop = 30;
