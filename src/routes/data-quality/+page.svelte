@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { loadAllFromURL, type DrawTabDataAll } from '$data/lib/drawtab-all.js';
 	import { loadInventoryPensFromURL, loadInventoryTabletsFromURL } from '$data/lib/drawtab-loader.js';
+	import { buildFilterUrl } from '$lib/filter-url.js';
 	import Nav from '$lib/components/Nav.svelte';
 
 	interface Issue {
@@ -336,7 +337,7 @@
 			<h2>Tablet Field Completion</h2>
 			<p class="description">How many of the {ds.tablets.length} tablets have each field populated.</p>
 			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 				<tbody>
 					{#each tabletCompletion as stat}
 						<tr>
@@ -348,6 +349,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -358,7 +360,7 @@
 			<h2>Display Field Completion</h2>
 			<p class="description">How many of the {displayTabletCount} pen displays and standalone tablets have each display field populated.</p>
 			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 				<tbody>
 					{#each displayCompletion as stat}
 						<tr>
@@ -370,6 +372,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -380,7 +383,7 @@
 			<h2>Pen Field Completion</h2>
 			<p class="description">How many of the {ds.pens.length} pens have each optional field populated.</p>
 			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 				<tbody>
 					{#each penCompletion as stat}
 						<tr>
@@ -392,6 +395,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/pens', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -402,7 +406,7 @@
 			<h2>Driver Field Completion</h2>
 			<p class="description">How many of the {ds.drivers.length} drivers have each optional field populated.</p>
 			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 				<tbody>
 					{#each driverCompletion as stat}
 						<tr>
@@ -414,6 +418,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/drivers', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -424,7 +429,7 @@
 			<h2>Pressure Response Field Completion</h2>
 			<p class="description">How many of the {ds.pressureResponse.length} sessions have each optional field populated.</p>
 			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 				<tbody>
 					{#each pressureResponseCompletion as stat}
 						<tr>
@@ -436,6 +441,7 @@
 									<div class="bar-fill" style="width: {stat.percent}%"></div>
 								</div>
 							</td>
+							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/pressure-response', [{field: stat.field, operator: 'empty', value: ''}])}>view missing</a>{/if}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -587,4 +593,13 @@
 		border-radius: 3px;
 		transition: width 0.3s;
 	}
+
+	.view-link {
+		font-size: 12px;
+		color: var(--link);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.view-link:hover { text-decoration: underline; }
 </style>

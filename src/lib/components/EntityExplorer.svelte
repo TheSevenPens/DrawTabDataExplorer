@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type Step, type FilterStep as FilterStepType, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
+	import { page } from '$app/state';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import SortBar from '$lib/components/SortBar.svelte';
 	import ColumnBar from '$lib/components/ColumnBar.svelte';
@@ -46,6 +47,18 @@
 	}
 
 	function getInitialFilters(): FilterItem[] {
+		// Check URL for ?filter=Field:operator:value params
+		const urlFilters = page.url.searchParams.getAll('filter');
+		if (urlFilters.length > 0) {
+			return urlFilters.map(f => {
+				const parts = f.split(':');
+				return {
+					field: parts[0] ?? '',
+					operator: parts[1] ?? '==',
+					value: parts.slice(2).join(':'),
+				};
+			}).filter(f => f.field);
+		}
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
 		return parsed
 			.filter((s): s is FilterStepType => s.kind === 'filter')
