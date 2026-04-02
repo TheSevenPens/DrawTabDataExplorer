@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadTabletsFromURL, loadPenCompatFromURL, loadPensFromURL, brandName, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadTabletsFromURL, loadPenCompatFromURL, loadPensFromURL, brandName, getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
@@ -12,6 +12,7 @@
 
 	let tablet: Tablet | null = $state(null);
 	let compatiblePens: Pen[] = $state([]);
+	let similarTablets: { tablet: Tablet; diag: number }[] = $state([]);
 	let notFound = $state(false);
 
 	const col1Groups = ['Model', 'Physical'];
@@ -47,6 +48,19 @@
 				.map((c) => c.PenId)
 		);
 		compatiblePens = allPens.filter((p) => compatPenIds.has(p.PenId));
+
+		// Find tablets with similar digitizer diagonal (within 10%)
+		const thisDiag = getDiagonal(found.DigitizerDimensions);
+		if (thisDiag) {
+			const tolerance = thisDiag * 0.1;
+			similarTablets = allTablets
+				.filter(t => t.EntityId !== found.EntityId)
+				.map(t => ({ tablet: t, diag: getDiagonal(t.DigitizerDimensions) }))
+				.filter((item): item is { tablet: Tablet; diag: number } =>
+					item.diag !== null && Math.abs(item.diag - thisDiag) <= tolerance
+				)
+				.sort((a, b) => Math.abs(a.diag - thisDiag) - Math.abs(b.diag - thisDiag));
+		}
 	});
 </script>
 
@@ -112,6 +126,20 @@
 				<p class="no-data">No pen compatibility data available for this tablet.</p>
 			{/if}
 		</section>
+
+		{#if similarTablets.length > 0}
+			<section class="compat-section">
+				<h2>Similar Digitizer Size</h2>
+				<ul class="entity-list">
+					{#each similarTablets as { tablet: t, diag }}
+						<li>
+							<a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a>
+							<span class="similar-diag">{diag.toFixed(1)} mm</span>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 	{/if}
 {/if}
 
@@ -250,6 +278,12 @@
 	}
 
 	.entity-list a:hover { text-decoration: underline; }
+
+	.similar-diag {
+		font-size: 12px;
+		color: var(--text-dim);
+		margin-left: 6px;
+	}
 
 	.no-data {
 		font-size: 13px;
