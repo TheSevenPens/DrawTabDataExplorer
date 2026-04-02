@@ -111,7 +111,7 @@
 <svelte:window onclick={closeContextMenu} />
 
 <div class="sort-bar">
-	<span class="sort-label">sort by</span>
+	<span class="sort-label">sort</span>
 	<div class="pills">
 		{#each sorts as sort, i}
 			<button

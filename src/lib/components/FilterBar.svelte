@@ -88,7 +88,7 @@
 <svelte:window onclick={closeContextMenu} />
 
 <div class="filter-bar">
-	<span class="filter-label">where</span>
+	<span class="filter-label">filter</span>
 	<div class="pills">
 		{#each filters as filter, i}
 			<button
