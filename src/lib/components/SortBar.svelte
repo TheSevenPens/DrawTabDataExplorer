@@ -16,6 +16,7 @@
 	let contextMenu: { index: number; x: number; y: number } | null = $state(null);
 	let dragIndex: number | null = $state(null);
 	let dragOverIndex: number | null = $state(null);
+	let dragOverSide: 'left' | 'right' = $state('left');
 
 	function getLabel(key: string): string {
 		return fields.find(f => f.key === key)?.label ?? key;
@@ -68,6 +69,8 @@
 	function onDragOver(e: DragEvent, index: number) {
 		e.preventDefault();
 		dragOverIndex = index;
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		dragOverSide = e.clientX < rect.left + rect.width / 2 ? 'left' : 'right';
 	}
 
 	function onDragLeave() {
@@ -77,7 +80,9 @@
 	function onDrop(index: number) {
 		if (dragIndex !== null && dragIndex !== index) {
 			const item = sorts.splice(dragIndex, 1)[0]!;
-			sorts.splice(index, 0, item);
+			let insertAt = dragOverSide === 'right' ? index + 1 : index;
+			if (dragIndex < index) insertAt--;
+			sorts.splice(Math.max(0, insertAt), 0, item);
 			onchange();
 		}
 		dragIndex = null;
@@ -102,7 +107,8 @@
 		{#each sorts as sort, i}
 			<button
 				class="pill"
-				class:drag-over={dragOverIndex === i && dragIndex !== i}
+				class:drag-over-left={dragOverIndex === i && dragIndex !== i && dragOverSide === 'left'}
+				class:drag-over-right={dragOverIndex === i && dragIndex !== i && dragOverSide === 'right'}
 				class:dragging={dragIndex === i}
 				draggable="true"
 				onclick={() => toggleDirection(i)}
@@ -195,9 +201,12 @@
 		opacity: 0.4;
 	}
 
-	.pill.drag-over {
-		border-color: #2563eb;
-		box-shadow: -2px 0 0 0 #2563eb;
+	.pill.drag-over-left {
+		box-shadow: -3px 0 0 0 var(--link);
+	}
+
+	.pill.drag-over-right {
+		box-shadow: 3px 0 0 0 var(--link);
 	}
 
 	.pill .arrow {
