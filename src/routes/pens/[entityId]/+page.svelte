@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadPensFromURL, loadPenCompatFromURL, loadTabletsFromURL, loadPressureResponseFromURL, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
+	import { loadPensFromURL, loadPenCompatFromURL, loadTabletsFromURL, loadPressureResponseFromURL, brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
@@ -62,7 +62,7 @@
 			{#if compatibleTablets.length > 0}
 				<ul class="entity-list">
 					{#each compatibleTablets as tablet}
-						<li><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.Brand} {tablet.ModelName} ({tablet.ModelId})</a></li>
+						<li><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{brandName(tablet.Brand)} {tablet.ModelName} ({tablet.ModelId})</a></li>
 					{/each}
 				</ul>
 			{:else}
@@ -75,7 +75,7 @@
 			{#if includedWithTablets.length > 0}
 				<ul class="entity-list">
 					{#each includedWithTablets as tablet}
-						<li><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.Brand} {tablet.ModelName} ({tablet.ModelId})</a></li>
+						<li><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{brandName(tablet.Brand)} {tablet.ModelName} ({tablet.ModelId})</a></li>
 					{/each}
 				</ul>
 			{:else}
