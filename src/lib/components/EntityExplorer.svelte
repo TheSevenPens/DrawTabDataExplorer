@@ -72,9 +72,6 @@
 			case 'sort':
 				steps.push({ kind: 'sort', field: defaultSortField, direction: 'asc' });
 				break;
-			case 'take':
-				steps.push({ kind: 'take', count: 50 });
-				break;
 		}
 	}
 
@@ -129,8 +126,6 @@
 			<FilterStep bind:step={steps[i]} {fields} onchange={refresh} onremove={() => removeStep(i)} />
 		{:else if step.kind === 'sort'}
 			<SortStep bind:step={steps[i]} {fields} onchange={refresh} onremove={() => removeStep(i)} />
-		{:else if step.kind === 'take'}
-			<TakeStep bind:step={steps[i]} onchange={refresh} onremove={() => removeStep(i)} />
 		{/if}
 	{/each}
 </div>
@@ -138,7 +133,6 @@
 <div class="add-step">
 	<button onclick={() => addStep('filter')}>+ Filter</button>
 	<button onclick={() => addStep('sort')}>+ Sort</button>
-	<button onclick={() => addStep('take')}>+ Limit</button>
 </div>
 
 <section class="columns-section">
