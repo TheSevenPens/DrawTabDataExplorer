@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadPensFromURL, loadPenCompatFromURL, loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadPensFromURL, loadPenCompatFromURL, loadTabletsFromURL, loadPressureResponseFromURL, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
@@ -10,14 +10,16 @@
 	let pen: Pen | null = $state(null);
 	let compatibleTablets: Tablet[] = $state([]);
 	let includedWithTablets: Tablet[] = $state([]);
+	let pressureSessionCount = $state(0);
 	let notFound = $state(false);
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
-		const [allPens, allCompat, allTablets] = await Promise.all([
+		const [allPens, allCompat, allTablets, allPressure] = await Promise.all([
 			loadPensFromURL(base) as Promise<Pen[]>,
 			loadPenCompatFromURL(base) as Promise<PenCompat[]>,
 			loadTabletsFromURL(base),
+			loadPressureResponseFromURL(base),
 		]);
 
 		const found = allPens.find((p) => p.EntityId === entityId);
@@ -34,6 +36,9 @@
 		);
 
 		compatibleTablets = allTablets.filter((t) => compatTabletIds.has(t.ModelId));
+
+		// Pressure response data
+		pressureSessionCount = allPressure.filter(s => s.PenEntityId === found.EntityId).length;
 
 		// Find tablets that include this pen
 		includedWithTablets = allTablets.filter((t) => {
@@ -77,6 +82,15 @@
 				<p class="no-data">No tablets list this pen as included.</p>
 			{/if}
 		</section>
+
+		<section class="compat-section">
+			<h2>Pressure Response Data</h2>
+			{#if pressureSessionCount > 0}
+				<p class="pr-link"><a href="{base}/pressure-response/{encodeURIComponent(pen.EntityId)}">{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} available</a></p>
+			{:else}
+				<p class="no-data">No pressure response data available for this pen model.</p>
+			{/if}
+		</section>
 	{/if}
 {/if}
 
@@ -110,6 +124,17 @@
 	}
 
 	.entity-list a:hover { text-decoration: underline; }
+
+	.pr-link {
+		font-size: 13px;
+	}
+
+	.pr-link a {
+		color: #2563eb;
+		text-decoration: none;
+	}
+
+	.pr-link a:hover { text-decoration: underline; }
 
 	.no-data {
 		font-size: 13px;
