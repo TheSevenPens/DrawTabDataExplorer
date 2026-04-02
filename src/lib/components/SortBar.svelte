@@ -211,12 +211,12 @@
 	}
 
 	.pill.gap-left {
-		margin-left: 40px;
+		margin-left: 80px;
 		transition: margin 0.15s ease;
 	}
 
 	.pill.gap-right {
-		margin-right: 40px;
+		margin-right: 80px;
 		transition: margin 0.15s ease;
 	}
 
