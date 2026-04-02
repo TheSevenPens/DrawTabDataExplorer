@@ -62,7 +62,7 @@
 					x={(xScale(range.min) + xScale(range.max)) / 2}
 					y={padTop - 6}
 					text-anchor="middle"
-					font-size="10"
+					font-size="12"
 					fill="var(--text-muted)"
 				>{range.label}</text>
 			{/each}
@@ -91,7 +91,7 @@
 						x={xScale(val)}
 						y={padTop + chartH + 15}
 						text-anchor="middle"
-						font-size="9"
+						font-size="11"
 						fill="var(--text-dim)"
 					>{val}{unit}</text>
 				{/if}
@@ -103,7 +103,7 @@
 					x={(xScale(range.min) + xScale(range.max)) / 2}
 					y={chartHeight - 4}
 					text-anchor="middle"
-					font-size="9"
+					font-size="11"
 					fill="var(--text-dim)"
 				>{range.min}{unit}–{range.max}{unit}</text>
 			{/each}
@@ -143,7 +143,7 @@
 				x={tx}
 				y={padTop - 10}
 				text-anchor="middle"
-				font-size="10"
+				font-size="12"
 				font-weight="bold"
 				fill="#e11d48"
 			>{currentValue.toFixed(1)}{unit}</text>
