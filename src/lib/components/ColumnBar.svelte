@@ -68,8 +68,7 @@
 		dragOverIndex = null;
 	}
 
-	// Group available fields by fieldGroup
-	let availableByGroup = $derived(() => {
+	let availableByGroup = $derived.by(() => {
 		const inColumns = new Set(columns);
 		const groups: { group: string; fields: FieldDef<any>[] }[] = [];
 		for (const group of fieldGroups) {
@@ -108,11 +107,10 @@
 			<button class="add-btn" onclick={() => showPicker = !showPicker}>+</button>
 			{#if showPicker}
 				<div class="picker">
-					{@const groups = availableByGroup()}
-					{#if groups.length === 0}
+					{#if availableByGroup.length === 0}
 						<div class="picker-empty">All fields added</div>
 					{:else}
-						{#each groups as { group, fields: groupFields }}
+						{#each availableByGroup as { group, fields: groupFields }}
 							<div class="picker-group-label">{group}</div>
 							{#each groupFields as f}
 								<button class="picker-item" onclick={() => addField(f.key)}>{f.label}</button>
