@@ -55,7 +55,7 @@
 	const padLeft = 30;
 	const padRight = 20;
 	const padTop = 30;
-	const padBottom = 35;
+	const padBottom = 50;
 	const chartW = width - padLeft - padRight;
 	const chartH = height - padTop - padBottom;
 
@@ -115,6 +115,36 @@
 					font-size="9"
 					fill="var(--text-dim)"
 				>{range.min}″–{range.max}″</text>
+			{/each}
+
+			<!-- X axis -->
+			<line
+				x1={padLeft}
+				y1={padTop + chartH}
+				x2={padLeft + chartW}
+				y2={padTop + chartH}
+				stroke="var(--text-dim)"
+				stroke-width="1"
+			/>
+			{#each Array(Math.floor(scaleMax - scaleMin) + 1) as _, i}
+				{@const val = scaleMin + i}
+				{#if val >= scaleMin && val <= scaleMax}
+					<line
+						x1={xScale(val)}
+						y1={padTop + chartH}
+						x2={xScale(val)}
+						y2={padTop + chartH + 4}
+						stroke="var(--text-dim)"
+						stroke-width="1"
+					/>
+					<text
+						x={xScale(val)}
+						y={padTop + chartH + 15}
+						text-anchor="middle"
+						font-size="9"
+						fill="var(--text-dim)"
+					>{val}″</text>
+				{/if}
 			{/each}
 
 			<!-- Histogram bars -->
