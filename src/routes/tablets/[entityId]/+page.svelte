@@ -29,17 +29,17 @@
 		if (!tablet) return [];
 		if (tablet.ModelType === 'PENTABLET') {
 			return [
-				{ label: 'SMALL', min: 6, max: 9 },
-				{ label: 'MEDIUM', min: 10, max: 13 },
-				{ label: 'LARGE', min: 14, max: 19 },
+				{ label: 'SMALL', min: 6, max: 10 },
+				{ label: 'MEDIUM', min: 10, max: 14 },
+				{ label: 'LARGE', min: 14, max: 20 },
 				{ label: 'EXTRA LARGE', min: 20, max: 29 },
 			];
 		}
 		return [
-			{ label: 'SMALL', min: 11, max: 14 },
-			{ label: 'MEDIUM', min: 15, max: 19 },
-			{ label: 'LARGE', min: 20, max: 29 },
-			{ label: 'EXTRA LARGE', min: 30, max: 33 },
+			{ label: 'SMALL', min: 11, max: 15 },
+			{ label: 'MEDIUM', min: 15, max: 20 },
+			{ label: 'LARGE', min: 20, max: 30 },
+			{ label: 'EXTRA LARGE', min: 30, max: 34 },
 		];
 	});
 
