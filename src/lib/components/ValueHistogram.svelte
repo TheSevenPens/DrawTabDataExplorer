@@ -5,7 +5,7 @@
 		max: number;
 	}
 
-	let { values, currentValue, ranges, unit = '"', binSize = 0.5, chartHeight = 560 }: {
+	let { values, currentValue, ranges, unit = '"', binSize = 0.5, chartHeight = 280 }: {
 		values: number[];
 		currentValue: number | null;
 		ranges: HistogramRange[];
@@ -14,7 +14,7 @@
 		chartHeight?: number;
 	} = $props();
 
-	const width = 1200;
+	const width = 600;
 	const padLeft = 30;
 	const padRight = 20;
 	const padTop = 30;
@@ -154,6 +154,7 @@
 <style>
 	.histogram-container {
 		margin: 16px 0;
+		max-width: 600px;
 	}
 
 	.histogram {
