@@ -14,6 +14,8 @@
 
 	let showPicker = $state(false);
 	let contextMenu: { index: number; x: number; y: number } | null = $state(null);
+	let dragIndex: number | null = $state(null);
+	let dragOverIndex: number | null = $state(null);
 
 	function getLabel(key: string): string {
 		return fields.find(f => f.key === key)?.label ?? key;
@@ -59,7 +61,34 @@
 		contextMenu = null;
 	}
 
-	// Available fields not yet in sorts
+	function onDragStart(index: number) {
+		dragIndex = index;
+	}
+
+	function onDragOver(e: DragEvent, index: number) {
+		e.preventDefault();
+		dragOverIndex = index;
+	}
+
+	function onDragLeave() {
+		dragOverIndex = null;
+	}
+
+	function onDrop(index: number) {
+		if (dragIndex !== null && dragIndex !== index) {
+			const item = sorts.splice(dragIndex, 1)[0]!;
+			sorts.splice(index, 0, item);
+			onchange();
+		}
+		dragIndex = null;
+		dragOverIndex = null;
+	}
+
+	function onDragEnd() {
+		dragIndex = null;
+		dragOverIndex = null;
+	}
+
 	let availableFields = $derived(
 		fields.filter(f => !sorts.some(s => s.field === f.key))
 	);
@@ -73,9 +102,17 @@
 		{#each sorts as sort, i}
 			<button
 				class="pill"
+				class:drag-over={dragOverIndex === i && dragIndex !== i}
+				class:dragging={dragIndex === i}
+				draggable="true"
 				onclick={() => toggleDirection(i)}
 				oncontextmenu={(e) => onContextMenu(e, i)}
-				title="Click to toggle direction. Right-click for options."
+				ondragstart={() => onDragStart(i)}
+				ondragover={(e) => onDragOver(e, i)}
+				ondragleave={onDragLeave}
+				ondrop={() => onDrop(i)}
+				ondragend={onDragEnd}
+				title="Click to toggle. Right-click for options. Drag to reorder."
 			>
 				{getLabel(sort.field)}
 				<span class="arrow">{sort.direction === 'asc' ? '▲' : '▼'}</span>
@@ -118,6 +155,7 @@
 		padding: 8px 12px;
 		font-size: 14px;
 		min-height: 40px;
+		margin-bottom: 16px;
 	}
 
 	.sort-label {
@@ -142,14 +180,24 @@
 		background: #eef2ff;
 		border: 1px solid #c7d2fe;
 		border-radius: 16px;
-		cursor: pointer;
+		cursor: grab;
 		color: #333;
 		user-select: none;
+		transition: opacity 0.15s, border-color 0.15s;
 	}
 
 	.pill:hover {
 		background: #dbeafe;
 		border-color: #93c5fd;
+	}
+
+	.pill.dragging {
+		opacity: 0.4;
+	}
+
+	.pill.drag-over {
+		border-color: #2563eb;
+		box-shadow: -2px 0 0 0 #2563eb;
 	}
 
 	.pill .arrow {
