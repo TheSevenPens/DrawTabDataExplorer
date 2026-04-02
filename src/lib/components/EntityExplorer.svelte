@@ -68,7 +68,8 @@
 		void tick;
 		const steps: Step[] = [];
 		for (const f of filters) {
-			if (!f.disabled) {
+			const needsValue = f.operator !== 'empty' && f.operator !== 'notempty';
+			if (!f.disabled && (!needsValue || f.value !== '')) {
 				steps.push({ kind: 'filter', field: f.field, operator: f.operator, value: f.value });
 			}
 		}
