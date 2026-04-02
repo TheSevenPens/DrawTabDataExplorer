@@ -55,26 +55,11 @@
 		<section class="compat-section">
 			<h2>Compatible Tablets</h2>
 			{#if compatibleTablets.length > 0}
-				<table>
-					<thead>
-						<tr>
-							<th>Model ID</th>
-							<th>Name</th>
-							<th>Type</th>
-							<th>Year</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each compatibleTablets as tablet}
-							<tr>
-								<td><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
-								<td>{tablet.ModelName}</td>
-								<td>{tablet.ModelType}</td>
-								<td>{tablet.ModelLaunchYear || ''}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+				<ul class="entity-list">
+					{#each compatibleTablets as tablet}
+						<li><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.Brand} {tablet.ModelName} ({tablet.ModelId})</a></li>
+					{/each}
+				</ul>
 			{:else}
 				<p class="no-data">No tablet compatibility data available for this pen.</p>
 			{/if}
@@ -83,26 +68,11 @@
 		<section class="compat-section">
 			<h2>Included With Tablets</h2>
 			{#if includedWithTablets.length > 0}
-				<table>
-					<thead>
-						<tr>
-							<th>Model ID</th>
-							<th>Name</th>
-							<th>Type</th>
-							<th>Year</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each includedWithTablets as tablet}
-							<tr>
-								<td><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
-								<td>{tablet.ModelName}</td>
-								<td>{tablet.ModelType}</td>
-								<td>{tablet.ModelLaunchYear || ''}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+				<ul class="entity-list">
+					{#each includedWithTablets as tablet}
+						<li><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.Brand} {tablet.ModelName} ({tablet.ModelId})</a></li>
+					{/each}
+				</ul>
 			{:else}
 				<p class="no-data">No tablets list this pen as included.</p>
 			{/if}
@@ -124,32 +94,22 @@
 		border-bottom: 2px solid #e0e0e0;
 	}
 
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		background: #fff;
+	.entity-list {
+		list-style: none;
+		padding: 0;
+	}
+
+	.entity-list li {
+		padding: 4px 0;
 		font-size: 13px;
 	}
 
-	th, td {
-		text-align: left;
-		padding: 6px 10px;
-		border-bottom: 1px solid #e0e0e0;
-	}
-
-	th {
-		background: #333;
-		color: #fff;
-	}
-
-	tr:hover td { background: #f0f7ff; }
-
-	td a {
+	.entity-list a {
 		color: #2563eb;
 		text-decoration: none;
 	}
 
-	td a:hover { text-decoration: underline; }
+	.entity-list a:hover { text-decoration: underline; }
 
 	.no-data {
 		font-size: 13px;
