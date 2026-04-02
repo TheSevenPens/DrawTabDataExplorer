@@ -32,6 +32,7 @@
 		if (!tablet) return [];
 		if (tablet.ModelType === 'PENTABLET') {
 			return [
+				{ label: 'TINY', min: 3, max: 6 },
 				{ label: 'SMALL', min: 6, max: 10 },
 				{ label: 'MEDIUM', min: 10, max: 14 },
 				{ label: 'LARGE', min: 14, max: 20 },
