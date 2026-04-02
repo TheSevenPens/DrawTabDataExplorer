@@ -57,8 +57,7 @@
 
 	let similarTablets = $derived.by(() => {
 		if (!tablet) return [];
-		const others = allTablets.filter(t => t.EntityId !== tablet!.EntityId);
-		let results = others;
+		let results = allTablets.filter(t => t.EntityId !== tablet!.EntityId && t.ModelType === tablet!.ModelType);
 
 		if (filterSimilarSize) {
 			const thisDiag = getDiagonal(tablet.DigitizerDimensions);
