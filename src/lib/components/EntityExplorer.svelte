@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { type Step, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
+	import { type Step, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
 	import FilterStep from '$lib/components/FilterStep.svelte';
-	import SortStep from '$lib/components/SortStep.svelte';
+	import SortBar from '$lib/components/SortBar.svelte';
 	import SelectStep from '$lib/components/SelectStep.svelte';
-	import TakeStep from '$lib/components/TakeStep.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
 	import SavedViews from '$lib/components/SavedViews.svelte';
 
@@ -18,7 +17,6 @@
 		defaultView,
 		detailBasePath = "",
 		defaultFilterField = "Brand",
-		defaultSortField = "Brand",
 	}: {
 		title: string;
 		entityType: string;
@@ -30,30 +28,46 @@
 		defaultView: Step[];
 		detailBasePath?: string;
 		defaultFilterField?: string;
-		defaultSortField?: string;
 	} = $props();
 
-	// Extract initial column selection from default view, or use defaultColumns
+	interface SortItem {
+		field: string;
+		direction: 'asc' | 'desc';
+	}
+
+	// Extract initial state from default view
 	function getInitialColumns(): string[] {
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
 		const selectStep = parsed.find((s): s is SelectStepType => s.kind === 'select');
 		return selectStep ? selectStep.fields : [...defaultColumns];
 	}
 
-	// Extract initial pipeline steps (everything except select)
-	function getInitialSteps(): Step[] {
+	function getInitialFilters(): Step[] {
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
-		return parsed.filter(s => s.kind !== 'select');
+		return parsed.filter(s => s.kind === 'filter');
 	}
 
-	let steps: Step[] = $state(getInitialSteps());
+	function getInitialSorts(): SortItem[] {
+		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
+		return parsed
+			.filter((s): s is SortStepType => s.kind === 'sort')
+			.map(s => ({ field: s.field, direction: s.direction }));
+	}
+
+	let filterSteps: Step[] = $state(getInitialFilters());
+	let sorts: SortItem[] = $state(getInitialSorts());
 	let selectedColumns: string[] = $state(getInitialColumns());
 	let tick = $state(0);
 
-	// Build combined steps for execution (pipeline steps + column selection)
+	// Build combined steps for execution
 	let allSteps = $derived.by((): Step[] => {
 		void tick;
-		return [...steps, { kind: 'select' as const, fields: selectedColumns }];
+		const steps: Step[] = [...filterSteps];
+		for (const sort of sorts) {
+			steps.push({ kind: 'sort', field: sort.field, direction: sort.direction });
+		}
+		steps.push({ kind: 'select' as const, fields: selectedColumns });
+		return steps;
 	});
 
 	let result = $derived.by(() => {
@@ -64,36 +78,36 @@
 		tick++;
 	}
 
-	function addStep(kind: 'filter' | 'sort' | 'take') {
-		switch (kind) {
-			case 'filter':
-				steps.push({ kind: 'filter', field: defaultFilterField, operator: '==', value: '' });
-				break;
-			case 'sort':
-				steps.push({ kind: 'sort', field: defaultSortField, direction: 'asc' });
-				break;
-		}
+	function addFilter() {
+		filterSteps.push({ kind: 'filter', field: defaultFilterField, operator: '==', value: '' });
 	}
 
-	function removeStep(index: number) {
-		steps.splice(index, 1);
+	function removeFilter(index: number) {
+		filterSteps.splice(index, 1);
 	}
 
 	function loadView(loaded: Step[]) {
-		// Separate column selection from pipeline steps
 		const selectStep = loaded.find((s): s is SelectStepType => s.kind === 'select');
 		selectedColumns = selectStep ? [...selectStep.fields] : [...defaultColumns];
-		steps = loaded.filter(s => s.kind !== 'select');
+		filterSteps = loaded.filter(s => s.kind === 'filter');
+		sorts = loaded
+			.filter((s): s is SortStepType => s.kind === 'sort')
+			.map(s => ({ field: s.field, direction: s.direction }));
 		refresh();
 	}
 
-	// For saving views, combine pipeline steps + column selection
+	// For saving views, combine all state into steps
 	let stepsForSave = $derived.by((): Step[] => {
 		void tick;
-		return [...steps, { kind: 'select' as const, fields: selectedColumns }];
+		const steps: Step[] = [...filterSteps];
+		for (const sort of sorts) {
+			steps.push({ kind: 'sort' as const, field: sort.field, direction: sort.direction });
+		}
+		steps.push({ kind: 'select' as const, fields: selectedColumns });
+		return steps;
 	});
 
-	// Column selection as a bindable step object for SelectStep component
+	// Column selection
 	let columnStep = $derived.by((): SelectStepType => {
 		void tick;
 		return { kind: 'select', fields: selectedColumns };
@@ -119,21 +133,17 @@
 		{title} <span class="count">({data.length} records)</span>
 	</div>
 
-	{#each steps as step, i (i)}
+	{#each filterSteps as step, i (i)}
 		<div class="pipe-connector">|</div>
-
-		{#if step.kind === 'filter'}
-			<FilterStep bind:step={steps[i]} {fields} onchange={refresh} onremove={() => removeStep(i)} />
-		{:else if step.kind === 'sort'}
-			<SortStep bind:step={steps[i]} {fields} onchange={refresh} onremove={() => removeStep(i)} />
-		{/if}
+		<FilterStep bind:step={filterSteps[i]} {fields} onchange={refresh} onremove={() => removeFilter(i)} />
 	{/each}
 </div>
 
 <div class="add-step">
-	<button onclick={() => addStep('filter')}>+ Filter</button>
-	<button onclick={() => addStep('sort')}>+ Sort</button>
+	<button onclick={addFilter}>+ Filter</button>
 </div>
+
+<SortBar bind:sorts {fields} onchange={refresh} />
 
 <section class="columns-section">
 	<SelectStep step={columnStep} {fields} {fieldGroups} onchange={onColumnsChange} onremove={() => {}} removable={false} />
@@ -181,7 +191,7 @@
 
 	.add-step {
 		margin-top: 8px;
-		margin-bottom: 20px;
+		margin-bottom: 16px;
 		display: flex;
 		gap: 6px;
 	}
