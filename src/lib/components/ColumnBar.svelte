@@ -47,13 +47,20 @@
 
 	function onDragOver(e: DragEvent, index: number) {
 		e.preventDefault();
-		dragOverIndex = index;
 		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-		dragOverSide = e.clientX < rect.left + rect.width / 2 ? 'left' : 'right';
+		const pct = (e.clientX - rect.left) / rect.width;
+		if (pct < 0.35) {
+			dragOverIndex = index;
+			dragOverSide = 'left';
+		} else if (pct > 0.65) {
+			dragOverIndex = index;
+			dragOverSide = 'right';
+		} else if (dragOverIndex !== index) {
+			dragOverIndex = index;
+		}
 	}
 
 	function onDragLeave() {
-		dragOverIndex = null;
 	}
 
 	function onDrop(index: number) {

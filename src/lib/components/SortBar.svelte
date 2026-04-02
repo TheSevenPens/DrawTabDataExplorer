@@ -68,13 +68,22 @@
 
 	function onDragOver(e: DragEvent, index: number) {
 		e.preventDefault();
-		dragOverIndex = index;
 		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-		dragOverSide = e.clientX < rect.left + rect.width / 2 ? 'left' : 'right';
+		const pct = (e.clientX - rect.left) / rect.width;
+		// Only update side in the outer 35% zones, ignore the middle to prevent flicker
+		if (pct < 0.35) {
+			dragOverIndex = index;
+			dragOverSide = 'left';
+		} else if (pct > 0.65) {
+			dragOverIndex = index;
+			dragOverSide = 'right';
+		} else if (dragOverIndex !== index) {
+			dragOverIndex = index;
+		}
 	}
 
 	function onDragLeave() {
-		dragOverIndex = null;
+		// Don't clear immediately — let onDragOver on the next pill handle it
 	}
 
 	function onDrop(index: number) {
