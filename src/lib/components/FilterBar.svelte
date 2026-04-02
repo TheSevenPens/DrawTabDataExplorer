@@ -5,6 +5,7 @@
 		field: string;
 		operator: string;
 		value: string;
+		disabled?: boolean;
 	}
 
 	let { filters = $bindable(), fields, onchange }: {
@@ -39,6 +40,15 @@
 	function addFilter() {
 		filters.push({ field: fields[0]?.key ?? '', operator: '==', value: '' });
 		editingIndex = filters.length - 1;
+	}
+
+	function toggleDisabled(index: number) {
+		const f = filters[index];
+		if (f) {
+			f.disabled = !f.disabled;
+			onchange();
+		}
+		contextMenu = null;
 	}
 
 	function removeFilter(index: number) {
@@ -94,9 +104,10 @@
 			<button
 				class="pill"
 				class:active={editingIndex === i}
+				class:disabled={filter.disabled}
 				onclick={() => editingIndex = editingIndex === i ? null : i}
 				oncontextmenu={(e) => onContextMenu(e, i)}
-				title="Click to edit. Right-click to remove."
+				title="Click to edit. Right-click for options."
 			>
 				{pillText(filter)}
 			</button>
@@ -146,6 +157,9 @@
 {#if contextMenu}
 	<div class="context-menu" style="left: {contextMenu.x}px; top: {contextMenu.y}px;">
 		<button onclick={() => { editingIndex = contextMenu!.index; contextMenu = null; }}>Edit</button>
+		<button onclick={() => toggleDisabled(contextMenu!.index)}>
+			{filters[contextMenu.index]?.disabled ? 'Enable' : 'Disable'}
+		</button>
 		<hr />
 		<button class="delete" onclick={() => removeFilter(contextMenu!.index)}>Remove</button>
 	</div>
@@ -200,6 +214,11 @@
 	.pill.active {
 		border-color: #d97706;
 		box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+	}
+
+	.pill.disabled {
+		opacity: 0.45;
+		text-decoration: line-through;
 	}
 
 	.add-btn {

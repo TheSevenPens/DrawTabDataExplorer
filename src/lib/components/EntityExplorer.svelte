@@ -68,7 +68,9 @@
 		void tick;
 		const steps: Step[] = [];
 		for (const f of filters) {
-			steps.push({ kind: 'filter', field: f.field, operator: f.operator, value: f.value });
+			if (!f.disabled) {
+				steps.push({ kind: 'filter', field: f.field, operator: f.operator, value: f.value });
+			}
 		}
 		for (const s of sorts) {
 			steps.push({ kind: 'sort', field: s.field, direction: s.direction });
