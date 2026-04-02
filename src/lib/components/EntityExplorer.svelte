@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { type Step, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
+	// SelectStepType still needed for loadView and stepsForSave
 	import FilterStep from '$lib/components/FilterStep.svelte';
 	import SortBar from '$lib/components/SortBar.svelte';
-	import SelectStep from '$lib/components/SelectStep.svelte';
+	import ColumnBar from '$lib/components/ColumnBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
 	import SavedViews from '$lib/components/SavedViews.svelte';
 
@@ -107,14 +108,7 @@
 		return steps;
 	});
 
-	// Column selection
-	let columnStep = $derived.by((): SelectStepType => {
-		void tick;
-		return { kind: 'select', fields: selectedColumns };
-	});
-
 	function onColumnsChange() {
-		selectedColumns = [...columnStep.fields];
 		refresh();
 	}
 </script>
@@ -145,9 +139,7 @@
 
 <SortBar bind:sorts {fields} onchange={refresh} />
 
-<section class="columns-section">
-	<SelectStep step={columnStep} {fields} {fieldGroups} onchange={onColumnsChange} onremove={() => {}} removable={false} />
-</section>
+<ColumnBar bind:columns={selectedColumns} {fields} {fieldGroups} onchange={onColumnsChange} />
 
 <ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} />
 
@@ -211,7 +203,4 @@
 		color: #2563eb;
 	}
 
-	.columns-section {
-		margin-bottom: 20px;
-	}
 </style>
