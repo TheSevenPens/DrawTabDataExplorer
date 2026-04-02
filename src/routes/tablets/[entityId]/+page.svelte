@@ -9,6 +9,7 @@
 	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 	import { getFieldDef } from '$data/lib/pipeline/index.js';
+	import DiagonalHistogram from '$lib/components/DiagonalHistogram.svelte';
 
 	let tablet: Tablet | null = $state(null);
 	let allTablets: Tablet[] = $state([]);
@@ -142,6 +143,11 @@
 				</div>
 			{/each}
 		</div>
+
+		<section class="compat-section">
+			<h2>Size Comparison</h2>
+			<DiagonalHistogram {tablet} {allTablets} />
+		</section>
 
 		<section class="compat-section">
 			<h2>Compatible Pens</h2>
