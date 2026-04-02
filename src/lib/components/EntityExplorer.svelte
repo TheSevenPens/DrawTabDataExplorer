@@ -126,10 +126,6 @@
 
 <ColumnBar bind:columns={selectedColumns} {fields} {fieldGroups} onchange={refresh} />
 
-<div class="results-count">
-	Showing {result.data.length} of {data.length} {entityLabel}
-</div>
-
 <ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} />
 
 <style>
@@ -150,9 +146,4 @@
 		margin-bottom: 4px;
 	}
 
-	.results-count {
-		font-size: 14px;
-		color: #666;
-		margin-bottom: 10px;
-	}
 </style>
