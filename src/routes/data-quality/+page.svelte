@@ -34,7 +34,27 @@
 	let orphanedCompat: { type: string; id: string }[] = $state([]);
 	let orphanedFamilies: { type: string; id: string; referencedBy: string }[] = $state([]);
 	let entityCounts: { entity: string; count: number }[] = $state([]);
-	let activeTab: 'summary' | 'compatibility' | 'completion' = $state('summary');
+	type TabName = 'summary' | 'compatibility' | 'completion';
+	const validTabs: TabName[] = ['summary', 'compatibility', 'completion'];
+
+	function getTabFromHash(): TabName {
+		if (typeof window === 'undefined') return 'summary';
+		const hash = window.location.hash.slice(1);
+		return validTabs.includes(hash as TabName) ? hash as TabName : 'summary';
+	}
+
+	let activeTab: TabName = $state(getTabFromHash());
+
+	function setTab(tab: TabName) {
+		activeTab = tab;
+		window.location.hash = tab;
+	}
+
+	$effect(() => {
+		const onHashChange = () => { activeTab = getTabFromHash(); };
+		window.addEventListener('hashchange', onHashChange);
+		return () => window.removeEventListener('hashchange', onHashChange);
+	});
 	let inventoryPenCount = $state(0);
 	let inventoryTabletCount = $state(0);
 
@@ -217,9 +237,9 @@
 
 	<!-- Sub-tabs -->
 	<div class="tabs">
-		<button class:active={activeTab === 'summary'} onclick={() => activeTab = 'summary'}>Summary</button>
-		<button class:active={activeTab === 'compatibility'} onclick={() => activeTab = 'compatibility'}>Compatibility</button>
-		<button class:active={activeTab === 'completion'} onclick={() => activeTab = 'completion'}>Field Completion</button>
+		<button class:active={activeTab === 'summary'} onclick={() => setTab('summary')}>Summary</button>
+		<button class:active={activeTab === 'compatibility'} onclick={() => setTab('compatibility')}>Compatibility</button>
+		<button class:active={activeTab === 'completion'} onclick={() => setTab('completion')}>Field Completion</button>
 	</div>
 
 	<!-- SUMMARY TAB -->
