@@ -162,6 +162,7 @@
 				<label><input type="checkbox" bind:checked={filterSameBrand} /> Same brand</label>
 				<label><input type="checkbox" bind:checked={filterSameYearOrLater} /> Same year or later</label>
 			</div>
+			{@const hasDisplay = tablet.ModelType === 'PENDISPLAY' || tablet.ModelType === 'STANDALONE'}
 			{#if similarTablets.length > 0}
 				<table class="similar-table">
 					<thead>
@@ -170,6 +171,11 @@
 							<th>Year</th>
 							<th>Dimensions</th>
 							<th>Diagonal</th>
+							{#if hasDisplay}
+								<th>Pixels</th>
+								<th>Category</th>
+								<th>Density</th>
+							{/if}
 							<th>Included Pen</th>
 						</tr>
 					</thead>
@@ -177,11 +183,19 @@
 						{#each similarTablets as t}
 							{@const d = t.DigitizerDimensions}
 							{@const diag = getDiagonal(t.DigitizerDimensions)}
+							{@const px = t.DisplayPixelDimensions}
+							{@const pxDensity = (px && d && px.Width && d.Width) ? (px.Width / d.Width).toFixed(2) : ''}
+							{@const pxCat = (() => { if (!px || !px.Width || !px.Height) return ''; const w = px.Width, h = px.Height; if (w === 1920 && h === 1080) return 'Full HD'; if ((w === 2560 && h === 1440) || (w === 2560 && h === 1600)) return '2.5K'; if (w === 2880 && h === 1800) return '3K'; if (w === 3840 && h === 2160) return '4K'; return 'Other'; })()}
 							<tr>
 								<td><a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a></td>
 								<td>{t.ModelLaunchYear || ''}</td>
 								<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
 								<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>
+								{#if hasDisplay}
+									<td>{px ? `${px.Width} x ${px.Height}` : ''}</td>
+									<td>{pxCat}</td>
+									<td>{pxDensity ? `${pxDensity} px/mm` : ''}</td>
+								{/if}
 								<td>{t.ModelIncludedPen || ''}</td>
 							</tr>
 						{/each}
