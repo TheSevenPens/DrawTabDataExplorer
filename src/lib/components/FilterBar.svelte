@@ -156,8 +156,8 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		background: #fff;
-		border: 1px solid #ddd;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		padding: 8px 12px;
 		font-size: 14px;
@@ -184,16 +184,16 @@
 		align-items: center;
 		padding: 3px 10px;
 		font-size: 13px;
-		background: #fef3c7;
-		border: 1px solid #fcd34d;
+		background: var(--pill-filter-bg);
+		border: 1px solid var(--pill-filter-border);
 		border-radius: 16px;
 		cursor: pointer;
-		color: #333;
+		color: var(--text);
 		user-select: none;
 	}
 
 	.pill:hover {
-		background: #fde68a;
+		background: var(--pill-filter-hover);
 		border-color: #f59e0b;
 	}
 
@@ -205,12 +205,12 @@
 	.add-btn {
 		width: 26px;
 		height: 26px;
-		border: 1px dashed #aaa;
+		border: 1px dashed var(--border);
 		border-radius: 50%;
-		background: #fff;
+		background: var(--bg-card);
 		cursor: pointer;
 		font-size: 14px;
-		color: #555;
+		color: var(--text-muted);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -226,8 +226,8 @@
 		align-items: center;
 		gap: 6px;
 		padding: 8px 12px;
-		background: #fffbeb;
-		border: 1px solid #fcd34d;
+		background: var(--editor-bg);
+		border: 1px solid var(--pill-filter-border);
 		border-top: none;
 		border-radius: 0 0 6px 6px;
 		margin-bottom: 12px;
@@ -238,8 +238,10 @@
 	.editor input {
 		padding: 4px 8px;
 		font-size: 13px;
-		border: 1px solid #ccc;
+		border: 1px solid var(--border);
 		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	.editor input {
@@ -250,7 +252,7 @@
 		padding: 4px 10px;
 		font-size: 13px;
 		border: 1px solid #d97706;
-		background: #fff;
+		background: var(--bg-card);
 		border-radius: 4px;
 		cursor: pointer;
 		color: #d97706;
@@ -263,8 +265,8 @@
 
 	.context-menu {
 		position: fixed;
-		background: #fff;
-		border: 1px solid #ddd;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 		z-index: 200;
@@ -280,11 +282,11 @@
 		border: none;
 		background: none;
 		cursor: pointer;
-		color: #333;
+		color: var(--text);
 	}
 
 	.context-menu button:hover {
-		background: #f0f7ff;
+		background: var(--hover-bg);
 	}
 
 	.context-menu button.delete {

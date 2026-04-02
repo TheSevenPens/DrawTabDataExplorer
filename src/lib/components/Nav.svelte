@@ -52,11 +52,11 @@
 	a {
 		padding: 5px 12px;
 		font-size: 13px;
-		border: 1px solid #ddd;
+		border: 1px solid var(--border-light);
 		border-radius: 4px;
-		color: #555;
+		color: var(--text-muted);
 		text-decoration: none;
-		background: #fff;
+		background: var(--bg-card);
 	}
 
 	a:hover {
@@ -75,7 +75,7 @@
 		font-size: 13px;
 		border: 1px solid #16a34a;
 		border-radius: 4px;
-		background: #fff;
+		background: var(--bg-card);
 		color: #16a34a;
 		cursor: pointer;
 		font-weight: 600;
@@ -96,7 +96,7 @@
 		font-size: 13px;
 		border: 1px solid #6b7280;
 		border-radius: 4px;
-		background: #fff;
+		background: var(--bg-card);
 		color: #6b7280;
 		cursor: pointer;
 		font-weight: 600;

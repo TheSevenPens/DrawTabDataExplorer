@@ -143,21 +143,21 @@
 
 	.results-count {
 		font-size: 14px;
-		color: #888;
+		color: var(--text-dim);
 	}
 
 	.views-section {
 		margin-bottom: 12px;
-		border: 1px solid #ddd;
+		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		padding: 6px 10px;
-		background: #fff;
+		background: var(--bg-card);
 	}
 
 	.views-section h2 {
 		font-size: 13px;
 		font-weight: 600;
-		color: #555;
+		color: var(--text-muted);
 		margin-bottom: 4px;
 	}
 

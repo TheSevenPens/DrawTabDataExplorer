@@ -149,8 +149,8 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		background: #fff;
-		border: 1px solid #ddd;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		padding: 8px 12px;
 		font-size: 14px;
@@ -177,17 +177,17 @@
 		gap: 4px;
 		padding: 3px 10px;
 		font-size: 13px;
-		background: #eef2ff;
-		border: 1px solid #c7d2fe;
+		background: var(--pill-sort-bg);
+		border: 1px solid var(--pill-sort-border);
 		border-radius: 16px;
 		cursor: grab;
-		color: #333;
+		color: var(--text);
 		user-select: none;
 		transition: opacity 0.15s, border-color 0.15s;
 	}
 
 	.pill:hover {
-		background: #dbeafe;
+		background: var(--pill-sort-hover);
 		border-color: #93c5fd;
 	}
 
@@ -212,12 +212,12 @@
 	.add-btn {
 		width: 26px;
 		height: 26px;
-		border: 1px dashed #aaa;
+		border: 1px dashed var(--border);
 		border-radius: 50%;
-		background: #fff;
+		background: var(--bg-card);
 		cursor: pointer;
 		font-size: 14px;
-		color: #555;
+		color: var(--text-muted);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -232,8 +232,8 @@
 		position: absolute;
 		top: 32px;
 		left: 0;
-		background: #fff;
-		border: 1px solid #ddd;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 		z-index: 100;
@@ -251,23 +251,23 @@
 		border: none;
 		background: none;
 		cursor: pointer;
-		color: #333;
+		color: var(--text);
 	}
 
 	.picker-item:hover {
-		background: #f0f7ff;
+		background: var(--hover-bg);
 	}
 
 	.picker-empty {
 		padding: 8px 12px;
 		font-size: 13px;
-		color: #999;
+		color: var(--text-dim);
 	}
 
 	.context-menu {
 		position: fixed;
-		background: #fff;
-		border: 1px solid #ddd;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 		z-index: 200;
@@ -283,11 +283,11 @@
 		border: none;
 		background: none;
 		cursor: pointer;
-		color: #333;
+		color: var(--text);
 	}
 
 	.context-menu button:hover {
-		background: #f0f7ff;
+		background: var(--hover-bg);
 	}
 
 	.context-menu button.delete {

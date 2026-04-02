@@ -131,15 +131,17 @@
 	.views-row select {
 		padding: 5px 10px;
 		font-size: 13px;
-		border: 1px solid #ccc;
+		border: 1px solid var(--border);
 		border-radius: 4px;
 		min-width: 180px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	.views-row input {
 		padding: 5px 10px;
 		font-size: 13px;
-		border: 1px solid #ccc;
+		border: 1px solid var(--border);
 		border-radius: 4px;
 		width: 160px;
 	}
@@ -151,23 +153,23 @@
 	.separator {
 		width: 1px;
 		height: 24px;
-		background: #ddd;
+		background: var(--separator-color);
 		margin: 0 4px;
 	}
 
 	.action-btn {
 		padding: 5px 10px;
 		font-size: 13px;
-		border: 1px solid #ccc;
-		background: #fff;
+		border: 1px solid var(--border);
+		background: var(--bg-card);
 		border-radius: 4px;
 		cursor: pointer;
-		color: #555;
+		color: var(--text-muted);
 	}
 
 	.action-btn:hover:not(:disabled) {
-		border-color: #999;
-		color: #222;
+		border-color: var(--text-dim);
+		color: var(--text);
 	}
 
 	.action-btn:disabled {

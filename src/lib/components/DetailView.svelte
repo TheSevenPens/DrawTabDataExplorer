@@ -77,7 +77,7 @@
 		color: #6b21a8;
 		margin-bottom: 8px;
 		padding-bottom: 4px;
-		border-bottom: 2px solid #e0e0e0;
+		border-bottom: 2px solid var(--border);
 	}
 
 	dl {
@@ -90,19 +90,19 @@
 		display: flex;
 		gap: 16px;
 		padding: 6px 0;
-		border-bottom: 1px solid #f0f0f0;
+		border-bottom: 1px solid var(--border);
 	}
 
 	dt {
 		min-width: 180px;
 		font-weight: 600;
 		font-size: 13px;
-		color: #555;
+		color: var(--text-muted);
 	}
 
 	dd {
 		font-size: 13px;
-		color: #222;
+		color: var(--text);
 		word-break: break-all;
 	}
 
@@ -118,8 +118,8 @@
 		margin-left: 6px;
 		padding: 1px 5px;
 		font-size: 10px;
-		color: #888;
-		border: 1px solid #ddd;
+		color: var(--text-dim);
+		border: 1px solid var(--border-light);
 		border-radius: 3px;
 		vertical-align: middle;
 	}

@@ -36,6 +36,31 @@
 		--th-text: #c0c0c0;
 		--hover-bg: #1e2a45;
 		--link: #60a5fa;
+		--pill-filter-bg: #4a3728;
+		--pill-filter-border: #78591f;
+		--pill-filter-hover: #5a4530;
+		--pill-sort-bg: #1e2a45;
+		--pill-sort-border: #3b5998;
+		--pill-sort-hover: #253555;
+		--pill-col-bg: #1a3328;
+		--pill-col-border: #2d6b4f;
+		--pill-col-hover: #234538;
+		--editor-bg: #2a2218;
+		--separator-color: #3a3a5a;
+	}
+
+	:global(:root) {
+		--pill-filter-bg: #fef3c7;
+		--pill-filter-border: #fcd34d;
+		--pill-filter-hover: #fde68a;
+		--pill-sort-bg: #eef2ff;
+		--pill-sort-border: #c7d2fe;
+		--pill-sort-hover: #dbeafe;
+		--pill-col-bg: #f0fdf4;
+		--pill-col-border: #bbf7d0;
+		--pill-col-hover: #dcfce7;
+		--editor-bg: #fffbeb;
+		--separator-color: #ddd;
 	}
 
 	:global(*) { box-sizing: border-box; margin: 0; padding: 0; font-family: inherit; }
