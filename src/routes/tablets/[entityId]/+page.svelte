@@ -157,11 +157,28 @@
 				<label><input type="checkbox" bind:checked={filterSameBrand} /> Same brand</label>
 			</div>
 			{#if similarTablets.length > 0}
-				<ul class="entity-list">
-					{#each similarTablets as t}
-						<li><a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a></li>
-					{/each}
-				</ul>
+				<table class="similar-table">
+					<thead>
+						<tr>
+							<th>Tablet</th>
+							<th>Dimensions</th>
+							<th>Diagonal</th>
+							<th>Included Pen</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each similarTablets as t}
+							{@const d = t.DigitizerDimensions}
+							{@const diag = getDiagonal(t.DigitizerDimensions)}
+							<tr>
+								<td><a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a></td>
+								<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
+								<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>
+								<td>{t.ModelIncludedPen || ''}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			{:else}
 				<p class="no-data">No matching tablets found. Try adjusting the filters.</p>
 			{/if}
@@ -319,6 +336,34 @@
 		cursor: pointer;
 		color: var(--text);
 	}
+
+	.similar-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 13px;
+		background: var(--bg-card);
+	}
+
+	.similar-table th, .similar-table td {
+		text-align: left;
+		padding: 5px 10px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.similar-table th {
+		background: var(--th-bg);
+		color: var(--th-text);
+		font-weight: 600;
+	}
+
+	.similar-table tr:hover td { background: var(--hover-bg); }
+
+	.similar-table a {
+		color: var(--link);
+		text-decoration: none;
+	}
+
+	.similar-table a:hover { text-decoration: underline; }
 
 	.no-data {
 		font-size: 13px;
