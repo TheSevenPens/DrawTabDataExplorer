@@ -19,6 +19,8 @@
 	let editingIndex: number | null = $state(null);
 	let showFieldPicker = $state(false);
 	let contextMenu: { index: number; x: number; y: number } | null = $state(null);
+	let dragIndex: number | null = $state(null);
+	let droppedInside = false;
 
 	function getLabel(key: string): string {
 		return fields.find(f => f.key === key)?.label ?? key;
@@ -96,6 +98,18 @@
 	function closeContextMenu() {
 		contextMenu = null;
 	}
+
+	function onFilterDragStart(index: number) {
+		dragIndex = index;
+		droppedInside = false;
+	}
+
+	function onFilterDragEnd() {
+		if (!droppedInside && dragIndex !== null) {
+			removeFilter(dragIndex);
+		}
+		dragIndex = null;
+	}
 </script>
 
 <svelte:window onclick={closeContextMenu} />
@@ -108,9 +122,13 @@
 				class="pill"
 				class:active={editingIndex === i}
 				class:disabled={filter.disabled}
+				class:dragging={dragIndex === i}
+				draggable="true"
 				onclick={() => editingIndex = editingIndex === i ? null : i}
 				oncontextmenu={(e) => onContextMenu(e, i)}
-				title="Click to edit. Right-click for options."
+				ondragstart={() => onFilterDragStart(i)}
+				ondragend={onFilterDragEnd}
+				title="Click to edit. Right-click for options. Drag out to remove."
 			>
 				{pillText(filter)}
 			</button>
@@ -226,6 +244,10 @@
 	.pill.active {
 		border-color: #d97706;
 		box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+	}
+
+	.pill.dragging {
+		opacity: 0.3;
 	}
 
 	.pill.disabled {

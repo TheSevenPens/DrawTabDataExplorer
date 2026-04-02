@@ -19,6 +19,7 @@
 	let dragIndex: number | null = $state(null);
 	let dragOverIndex: number | null = $state(null);
 	let dragOverSide: 'left' | 'right' = $state('left');
+	let droppedInside = false;
 
 	function getLabel(key: string): string {
 		return fields.find(f => f.key === key)?.label ?? key;
@@ -66,6 +67,7 @@
 
 	function onDragStart(index: number) {
 		dragIndex = index;
+		droppedInside = false;
 	}
 
 	function onDragOver(e: DragEvent, index: number) {
@@ -89,6 +91,7 @@
 	}
 
 	function onDrop(index: number) {
+		droppedInside = true;
 		if (dragIndex !== null && dragIndex !== index) {
 			const item = sorts.splice(dragIndex, 1)[0]!;
 			let insertAt = dragOverSide === 'right' ? index + 1 : index;
@@ -101,6 +104,10 @@
 	}
 
 	function onDragEnd() {
+		if (!droppedInside && dragIndex !== null) {
+			sorts.splice(dragIndex, 1);
+			onchange();
+		}
 		dragIndex = null;
 		dragOverIndex = null;
 	}
