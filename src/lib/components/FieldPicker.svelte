@@ -36,9 +36,9 @@
 		{#each fieldGroups as group}
 			{@const allGroupFields = fields.filter(f => f.group === group)}
 			{@const availableGroupFields = allGroupFields.filter(f => !excludeSet.has(f.key))}
+			{@const allChosen = allGroupFields.every(f => excludeSet.has(f.key))}
 			{#if allGroupFields.length > 0}
 				<div class="group">
-					{@const allChosen = allGroupFields.every(f => excludeSet.has(f.key))}
 					<div class="group-header">
 						<span class="group-label">{group}</span>
 						{#if onselectgroup}
