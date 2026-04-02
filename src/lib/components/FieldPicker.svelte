@@ -1,13 +1,14 @@
 <script lang="ts">
 	import type { FieldDef } from '$data/lib/pipeline/index.js';
 
-	let { fields, fieldGroups, selected = '', exclude = [], onselect, onselectgroup, onclose }: {
+	let { fields, fieldGroups, selected = '', exclude = [], onselect, onselectgroup, onremovegroup, onclose }: {
 		fields: FieldDef<any>[];
 		fieldGroups: string[];
 		selected?: string;
 		exclude?: string[];
 		onselect: (key: string) => void;
 		onselectgroup?: (keys: string[]) => void;
+		onremovegroup?: (keys: string[]) => void;
 		onclose: () => void;
 	} = $props();
 
@@ -17,9 +18,14 @@
 		onselect(key);
 	}
 
-	function pickGroup(groupFields: FieldDef<any>[]) {
-		if (onselectgroup) {
-			onselectgroup(groupFields.map(f => f.key));
+	function toggleGroup(allGroupFields: FieldDef<any>[]) {
+		const allKeys = allGroupFields.map(f => f.key);
+		const allChosen = allKeys.every(k => excludeSet.has(k));
+		if (allChosen && onremovegroup) {
+			onremovegroup(allKeys);
+		} else if (onselectgroup) {
+			const available = allKeys.filter(k => !excludeSet.has(k));
+			onselectgroup(available);
 		}
 	}
 </script>
@@ -32,10 +38,13 @@
 			{@const availableGroupFields = allGroupFields.filter(f => !excludeSet.has(f.key))}
 			{#if allGroupFields.length > 0}
 				<div class="group">
+					{@const allChosen = allGroupFields.every(f => excludeSet.has(f.key))}
 					<div class="group-header">
 						<span class="group-label">{group}</span>
-						{#if onselectgroup && availableGroupFields.length > 0}
-							<button class="group-add" onclick={() => pickGroup(availableGroupFields)} title="Add all {group} fields">all</button>
+						{#if onselectgroup}
+							<button class="group-toggle" class:remove={allChosen} onclick={() => toggleGroup(allGroupFields)} title={allChosen ? `Remove all ${group}` : `Add all ${group}`}>
+								{allChosen ? 'none' : 'all'}
+							</button>
 						{/if}
 					</div>
 					{#each allGroupFields as f}
@@ -106,7 +115,7 @@
 		letter-spacing: 0.5px;
 	}
 
-	.group-add {
+	.group-toggle {
 		font-size: 10px;
 		border: 1px solid var(--border);
 		border-radius: 3px;
@@ -116,8 +125,12 @@
 		padding: 1px 5px;
 	}
 
-	.group-add:hover {
+	.group-toggle:hover {
 		background: var(--hover-bg);
+	}
+
+	.group-toggle.remove {
+		color: #e11d48;
 	}
 
 	.field-item {

@@ -149,6 +149,7 @@
 					exclude={columns}
 					onselect={(key) => { addField(key); }}
 					onselectgroup={(keys) => { for (const k of keys) addField(k); }}
+				onremovegroup={(keys) => { const removeSet = new Set(keys); columns = columns.filter(c => !removeSet.has(c)); onchange(); }}
 					onclose={() => showPicker = false}
 				/>
 			{/if}

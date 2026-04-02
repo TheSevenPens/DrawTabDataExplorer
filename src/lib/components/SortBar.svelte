@@ -151,6 +151,7 @@
 					exclude={sorts.map(s => s.field)}
 					onselect={(key) => { addField(key); }}
 					onselectgroup={(keys) => { for (const k of keys) addField(k); }}
+				onremovegroup={(keys) => { const removeSet = new Set(keys); sorts = sorts.filter(s => !removeSet.has(s.field)); onchange(); }}
 					onclose={() => showPicker = false}
 				/>
 			{/if}
