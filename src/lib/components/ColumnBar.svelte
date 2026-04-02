@@ -34,6 +34,22 @@
 		contextMenu = null;
 	}
 
+	function removeGroup(index: number) {
+		const col = columns[index];
+		const field = fields.find(f => f.key === col);
+		if (!field) return;
+		const groupKeys = new Set(fields.filter(f => f.group === field.group).map(f => f.key));
+		columns = columns.filter(c => !groupKeys.has(c));
+		onchange();
+		contextMenu = null;
+	}
+
+	function getGroupName(index: number): string {
+		const col = columns[index];
+		const field = fields.find(f => f.key === col);
+		return field?.group ?? '';
+	}
+
 	function onContextMenu(e: MouseEvent, index: number) {
 		e.preventDefault();
 		contextMenu = { index, x: e.clientX, y: e.clientY };
@@ -132,6 +148,7 @@
 					{fieldGroups}
 					exclude={columns}
 					onselect={(key) => { addField(key); }}
+					onselectgroup={(keys) => { for (const k of keys) addField(k); }}
 					onclose={() => showPicker = false}
 				/>
 			{/if}
@@ -142,6 +159,8 @@
 {#if contextMenu}
 	<div class="context-menu" style="left: {contextMenu.x}px; top: {contextMenu.y}px;">
 		<button class="delete" onclick={() => removeColumn(contextMenu!.index)}>Remove</button>
+		<hr />
+		<button class="delete" onclick={() => removeGroup(contextMenu!.index)}>Remove all {getGroupName(contextMenu.index)}</button>
 	</div>
 {/if}
 
@@ -301,5 +320,11 @@
 
 	.context-menu button.delete:hover {
 		background: #fef2f2;
+	}
+
+	.context-menu hr {
+		border: none;
+		border-top: 1px solid var(--border);
+		margin: 2px 0;
 	}
 </style>
