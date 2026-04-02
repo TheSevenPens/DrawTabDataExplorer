@@ -11,9 +11,13 @@
 	import { getFieldDef } from '$data/lib/pipeline/index.js';
 
 	let tablet: Tablet | null = $state(null);
+	let allTablets: Tablet[] = $state([]);
 	let compatiblePens: Pen[] = $state([]);
-	let similarTablets: { tablet: Tablet; diag: number }[] = $state([]);
 	let notFound = $state(false);
+
+	let filterSimilarSize = $state(true);
+	let filterSamePen = $state(false);
+	let filterSameBrand = $state(false);
 
 	const col1Groups = ['Model', 'Physical'];
 	const col2Groups = ['Digitizer'];
@@ -29,13 +33,13 @@
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId);
-		const [allTablets, allCompat, allPens] = await Promise.all([
+		const [allT, allCompat, allPens] = await Promise.all([
 			loadTabletsFromURL(base),
 			loadPenCompatFromURL(base) as Promise<PenCompat[]>,
 			loadPensFromURL(base) as Promise<Pen[]>,
 		]);
 
-		const found = allTablets.find((t) => t.EntityId === entityId);
+		const found = allT.find((t) => t.EntityId === entityId);
 		if (!found) {
 			notFound = true;
 			return;
@@ -48,19 +52,38 @@
 				.map((c) => c.PenId)
 		);
 		compatiblePens = allPens.filter((p) => compatPenIds.has(p.PenId));
+		allTablets = allT;
+	});
 
-		// Find tablets with similar digitizer diagonal (within 10%)
-		const thisDiag = getDiagonal(found.DigitizerDimensions);
-		if (thisDiag) {
-			const tolerance = thisDiag * 0.1;
-			similarTablets = allTablets
-				.filter(t => t.EntityId !== found.EntityId)
-				.map(t => ({ tablet: t, diag: getDiagonal(t.DigitizerDimensions) }))
-				.filter((item): item is { tablet: Tablet; diag: number } =>
-					item.diag !== null && Math.abs(item.diag - thisDiag) <= tolerance
-				)
-				.sort((a, b) => Math.abs(a.diag - thisDiag) - Math.abs(b.diag - thisDiag));
+	let similarTablets = $derived.by(() => {
+		if (!tablet) return [];
+		const others = allTablets.filter(t => t.EntityId !== tablet!.EntityId);
+		let results = others;
+
+		if (filterSimilarSize) {
+			const thisDiag = getDiagonal(tablet.DigitizerDimensions);
+			if (thisDiag) {
+				const tolerance = thisDiag * 0.1;
+				results = results.filter(t => {
+					const d = getDiagonal(t.DigitizerDimensions);
+					return d !== null && Math.abs(d - thisDiag) <= tolerance;
+				});
+			}
 		}
+
+		if (filterSamePen && tablet.ModelIncludedPen) {
+			const pens = new Set(tablet.ModelIncludedPen.split(',').map(p => p.trim()));
+			results = results.filter(t => {
+				if (!t.ModelIncludedPen) return false;
+				return t.ModelIncludedPen.split(',').some(p => pens.has(p.trim()));
+			});
+		}
+
+		if (filterSameBrand) {
+			results = results.filter(t => t.Brand === tablet!.Brand);
+		}
+
+		return results;
 	});
 </script>
 
@@ -127,19 +150,23 @@
 			{/if}
 		</section>
 
-		{#if similarTablets.length > 0}
-			<section class="compat-section">
-				<h2>Similar Digitizer Size</h2>
+		<section class="compat-section">
+			<h2>Similar Tablets</h2>
+			<div class="similar-filters">
+				<label><input type="checkbox" bind:checked={filterSimilarSize} /> Similar size</label>
+				<label><input type="checkbox" bind:checked={filterSamePen} /> Same included pen</label>
+				<label><input type="checkbox" bind:checked={filterSameBrand} /> Same brand</label>
+			</div>
+			{#if similarTablets.length > 0}
 				<ul class="entity-list">
-					{#each similarTablets as { tablet: t, diag }}
-						<li>
-							<a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a>
-							<span class="similar-diag">{diag.toFixed(1)} mm</span>
-						</li>
+					{#each similarTablets as t}
+						<li><a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a></li>
 					{/each}
 				</ul>
-			</section>
-		{/if}
+			{:else}
+				<p class="no-data">No matching tablets found. Try adjusting the filters.</p>
+			{/if}
+		</section>
 	{/if}
 {/if}
 
@@ -279,10 +306,19 @@
 
 	.entity-list a:hover { text-decoration: underline; }
 
-	.similar-diag {
-		font-size: 12px;
-		color: var(--text-dim);
-		margin-left: 6px;
+	.similar-filters {
+		display: flex;
+		gap: 14px;
+		margin-bottom: 10px;
+	}
+
+	.similar-filters label {
+		font-size: 13px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		cursor: pointer;
+		color: var(--text);
 	}
 
 	.no-data {
