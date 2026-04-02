@@ -179,7 +179,26 @@
 
 		<section class="compat-section">
 			<h2>Size Comparison</h2>
-			<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} />
+			<div class="size-comparison">
+				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} />
+				<div class="range-legend">
+					<h3>Size Ranges ({tablet.ModelType === 'PENTABLET' ? 'Pen Tablet' : 'Pen Display'})</h3>
+					<table class="range-table">
+						<thead><tr><th>Category</th><th>Range</th></tr></thead>
+						<tbody>
+							{#each histogramRanges as range}
+								<tr>
+									<td>{range.label}</td>
+									<td>{range.min}″ – {range.max}″</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+					{#if histogramCurrentValue}
+						<p class="current-size">This tablet: <strong>{histogramCurrentValue.toFixed(1)}″</strong></p>
+					{/if}
+				</div>
+			</div>
 		</section>
 
 		<section class="compat-section">
@@ -426,6 +445,46 @@
 	}
 
 	.similar-table a:hover { text-decoration: underline; }
+
+	.size-comparison {
+		display: flex;
+		gap: 24px;
+		align-items: flex-start;
+	}
+
+	.range-legend {
+		flex-shrink: 0;
+	}
+
+	.range-legend h3 {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-muted);
+		margin-bottom: 6px;
+	}
+
+	.range-table {
+		border-collapse: collapse;
+		font-size: 13px;
+	}
+
+	.range-table th, .range-table td {
+		padding: 3px 10px;
+		text-align: left;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.range-table th {
+		font-weight: 600;
+		color: var(--th-text);
+		background: var(--th-bg);
+	}
+
+	.current-size {
+		margin-top: 8px;
+		font-size: 13px;
+		color: #e11d48;
+	}
 
 	.no-data {
 		font-size: 13px;
