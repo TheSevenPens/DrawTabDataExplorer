@@ -194,7 +194,7 @@
 				<label><input type="checkbox" bind:checked={excludeOldTablets} /> Exclude tablets older than 15 years</label>
 			</div>
 			<div class="size-comparison">
-				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} />
+				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} unitPref={$unitPreference} />
 				<div class="range-legend">
 					<h3>Size Ranges ({tablet.ModelType === 'PENTABLET' ? 'Pen Tablet' : 'Pen Display'})</h3>
 					<table class="range-table">
@@ -203,13 +203,21 @@
 							{#each histogramRanges as range}
 								<tr>
 									<td>{range.label}</td>
-									<td>{range.min}″ – {range.max}″</td>
+									{#if $unitPreference === 'metric'}
+										<td>{(range.min * 2.54).toFixed(1)} cm – {(range.max * 2.54).toFixed(1)} cm</td>
+									{:else}
+										<td>{range.min}″ – {range.max}″</td>
+									{/if}
 								</tr>
 							{/each}
 						</tbody>
 					</table>
 					{#if histogramCurrentValue}
-						<p class="current-size">This tablet: <strong>{histogramCurrentValue.toFixed(1)}″</strong></p>
+						{#if $unitPreference === 'metric'}
+							<p class="current-size">This tablet: <strong>{(histogramCurrentValue * 2.54).toFixed(1)} cm</strong></p>
+						{:else}
+							<p class="current-size">This tablet: <strong>{histogramCurrentValue.toFixed(1)}″</strong></p>
+						{/if}
 					{/if}
 				</div>
 			</div>
