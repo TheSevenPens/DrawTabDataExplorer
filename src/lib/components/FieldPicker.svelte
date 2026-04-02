@@ -28,22 +28,26 @@
 <div class="field-picker">
 	<div class="groups">
 		{#each fieldGroups as group}
-			{@const groupFields = fields.filter(f => f.group === group && !excludeSet.has(f.key))}
-			{#if groupFields.length > 0}
+			{@const allGroupFields = fields.filter(f => f.group === group)}
+			{@const availableGroupFields = allGroupFields.filter(f => !excludeSet.has(f.key))}
+			{#if allGroupFields.length > 0}
 				<div class="group">
 					<div class="group-header">
 						<span class="group-label">{group}</span>
-						{#if onselectgroup}
-							<button class="group-add" onclick={() => pickGroup(groupFields)} title="Add all {group} fields">all</button>
+						{#if onselectgroup && availableGroupFields.length > 0}
+							<button class="group-add" onclick={() => pickGroup(availableGroupFields)} title="Add all {group} fields">all</button>
 						{/if}
 					</div>
-					{#each groupFields as f}
+					{#each allGroupFields as f}
+						{@const chosen = excludeSet.has(f.key)}
 						<button
 							class="field-item"
 							class:selected={f.key === selected}
-							onclick={() => pick(f.key)}
+							class:chosen
+							disabled={chosen}
+							onclick={() => { if (!chosen) pick(f.key); }}
 						>
-							{f.label}
+							{f.label}{#if chosen} ✓{/if}
 						</button>
 					{/each}
 				</div>
@@ -136,5 +140,10 @@
 	.field-item.selected {
 		background: var(--pill-sort-bg);
 		font-weight: 600;
+	}
+
+	.field-item.chosen {
+		opacity: 0.4;
+		cursor: default;
 	}
 </style>
