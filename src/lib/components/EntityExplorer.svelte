@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { type Step, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
-	// SelectStepType still needed for loadView and stepsForSave
-	import FilterStep from '$lib/components/FilterStep.svelte';
+	import { type Step, type FilterStep as FilterStepType, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
+	import FilterBar from '$lib/components/FilterBar.svelte';
 	import SortBar from '$lib/components/SortBar.svelte';
 	import ColumnBar from '$lib/components/ColumnBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
@@ -17,7 +16,6 @@
 		defaultColumns,
 		defaultView,
 		detailBasePath = "",
-		defaultFilterField = "Brand",
 	}: {
 		title: string;
 		entityType: string;
@@ -28,24 +26,30 @@
 		defaultColumns: string[];
 		defaultView: Step[];
 		detailBasePath?: string;
-		defaultFilterField?: string;
 	} = $props();
+
+	interface FilterItem {
+		field: string;
+		operator: string;
+		value: string;
+	}
 
 	interface SortItem {
 		field: string;
 		direction: 'asc' | 'desc';
 	}
 
-	// Extract initial state from default view
 	function getInitialColumns(): string[] {
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
 		const selectStep = parsed.find((s): s is SelectStepType => s.kind === 'select');
 		return selectStep ? selectStep.fields : [...defaultColumns];
 	}
 
-	function getInitialFilters(): Step[] {
+	function getInitialFilters(): FilterItem[] {
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
-		return parsed.filter(s => s.kind === 'filter');
+		return parsed
+			.filter((s): s is FilterStepType => s.kind === 'filter')
+			.map(s => ({ field: s.field, operator: s.operator, value: s.value }));
 	}
 
 	function getInitialSorts(): SortItem[] {
@@ -55,17 +59,19 @@
 			.map(s => ({ field: s.field, direction: s.direction }));
 	}
 
-	let filterSteps: Step[] = $state(getInitialFilters());
+	let filters: FilterItem[] = $state(getInitialFilters());
 	let sorts: SortItem[] = $state(getInitialSorts());
 	let selectedColumns: string[] = $state(getInitialColumns());
 	let tick = $state(0);
 
-	// Build combined steps for execution
 	let allSteps = $derived.by((): Step[] => {
 		void tick;
-		const steps: Step[] = [...filterSteps];
-		for (const sort of sorts) {
-			steps.push({ kind: 'sort', field: sort.field, direction: sort.direction });
+		const steps: Step[] = [];
+		for (const f of filters) {
+			steps.push({ kind: 'filter', field: f.field, operator: f.operator, value: f.value });
+		}
+		for (const s of sorts) {
+			steps.push({ kind: 'sort', field: s.field, direction: s.direction });
 		}
 		steps.push({ kind: 'select' as const, fields: selectedColumns });
 		return steps;
@@ -79,38 +85,30 @@
 		tick++;
 	}
 
-	function addFilter() {
-		filterSteps.push({ kind: 'filter', field: defaultFilterField, operator: '==', value: '' });
-	}
-
-	function removeFilter(index: number) {
-		filterSteps.splice(index, 1);
-	}
-
 	function loadView(loaded: Step[]) {
 		const selectStep = loaded.find((s): s is SelectStepType => s.kind === 'select');
 		selectedColumns = selectStep ? [...selectStep.fields] : [...defaultColumns];
-		filterSteps = loaded.filter(s => s.kind === 'filter');
+		filters = loaded
+			.filter((s): s is FilterStepType => s.kind === 'filter')
+			.map(s => ({ field: s.field, operator: s.operator, value: s.value }));
 		sorts = loaded
 			.filter((s): s is SortStepType => s.kind === 'sort')
 			.map(s => ({ field: s.field, direction: s.direction }));
 		refresh();
 	}
 
-	// For saving views, combine all state into steps
 	let stepsForSave = $derived.by((): Step[] => {
 		void tick;
-		const steps: Step[] = [...filterSteps];
-		for (const sort of sorts) {
-			steps.push({ kind: 'sort' as const, field: sort.field, direction: sort.direction });
+		const steps: Step[] = [];
+		for (const f of filters) {
+			steps.push({ kind: 'filter' as const, field: f.field, operator: f.operator, value: f.value });
+		}
+		for (const s of sorts) {
+			steps.push({ kind: 'sort' as const, field: s.field, direction: s.direction });
 		}
 		steps.push({ kind: 'select' as const, fields: selectedColumns });
 		return steps;
 	});
-
-	function onColumnsChange() {
-		refresh();
-	}
 </script>
 
 <h1>{title}</h1>
@@ -122,24 +120,15 @@
 	<SavedViews steps={stepsForSave} {entityType} {defaultView} onload={loadView} />
 </section>
 
-<div class="pipeline">
-	<div class="pipeline-source">
-		{title} <span class="count">({data.length} records)</span>
-	</div>
-
-	{#each filterSteps as step, i (i)}
-		<div class="pipe-connector">|</div>
-		<FilterStep bind:step={filterSteps[i]} {fields} onchange={refresh} onremove={() => removeFilter(i)} />
-	{/each}
-</div>
-
-<div class="add-step">
-	<button onclick={addFilter}>+ Filter</button>
-</div>
+<FilterBar bind:filters {fields} onchange={refresh} />
 
 <SortBar bind:sorts {fields} onchange={refresh} />
 
-<ColumnBar bind:columns={selectedColumns} {fields} {fieldGroups} onchange={onColumnsChange} />
+<ColumnBar bind:columns={selectedColumns} {fields} {fieldGroups} onchange={refresh} />
+
+<div class="results-count">
+	Showing {result.data.length} of {data.length} {entityLabel}
+</div>
 
 <ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} />
 
@@ -161,46 +150,9 @@
 		margin-bottom: 6px;
 	}
 
-	.pipeline { margin-bottom: 20px; }
-
-	.pipeline-source {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		background: #2563eb;
-		color: #fff;
-		padding: 8px 14px;
-		border-radius: 6px;
+	.results-count {
 		font-size: 14px;
-		font-weight: 600;
-		margin-bottom: 8px;
+		color: #666;
+		margin-bottom: 10px;
 	}
-
-	.pipeline-source .count {
-		font-weight: 400;
-		opacity: 0.8;
-	}
-
-	.add-step {
-		margin-top: 8px;
-		margin-bottom: 16px;
-		display: flex;
-		gap: 6px;
-	}
-
-	.add-step button {
-		padding: 6px 12px;
-		font-size: 13px;
-		border: 1px dashed #aaa;
-		background: #fff;
-		border-radius: 4px;
-		cursor: pointer;
-		color: #555;
-	}
-
-	.add-step button:hover {
-		border-color: #2563eb;
-		color: #2563eb;
-	}
-
 </style>
