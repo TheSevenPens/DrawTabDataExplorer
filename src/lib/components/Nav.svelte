@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
 	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
+	import { theme, toggleTheme } from '$lib/theme-store.js';
 
 	const links = [
 		{ href: '/', label: 'Tablets' },
@@ -22,9 +23,14 @@
 			<a href="{base}{link.href}" class:active={page.url.pathname === base + link.href}>{link.label}</a>
 		{/each}
 	</div>
-	<button class="unit-toggle" onclick={toggleUnits}>
-		{$unitPreference === 'metric' ? 'Metric' : 'Imperial'}
-	</button>
+	<div class="nav-toggles">
+		<button class="unit-toggle" onclick={toggleUnits}>
+			{$unitPreference === 'metric' ? 'Metric' : 'Imperial'}
+		</button>
+		<button class="theme-toggle" onclick={toggleTheme}>
+			{$theme === 'light' ? 'Dark' : 'Light'}
+		</button>
+	</div>
 </nav>
 
 <style>
@@ -77,6 +83,27 @@
 
 	.unit-toggle:hover {
 		background: #16a34a;
+		color: #fff;
+	}
+
+	.nav-toggles {
+		display: flex;
+		gap: 4px;
+	}
+
+	.theme-toggle {
+		padding: 5px 12px;
+		font-size: 13px;
+		border: 1px solid #6b7280;
+		border-radius: 4px;
+		background: #fff;
+		color: #6b7280;
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.theme-toggle:hover {
+		background: #6b7280;
 		color: #fff;
 	}
 </style>

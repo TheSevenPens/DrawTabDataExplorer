@@ -1,25 +1,58 @@
 <script>
+	import { theme } from '$lib/theme-store.js';
 	let { children } = $props();
+
+	$effect(() => {
+		document.documentElement.setAttribute('data-theme', $theme);
+	});
 </script>
 
 {@render children()}
 
 <style>
+	:global(:root) {
+		--bg: #f5f5f5;
+		--bg-card: #fff;
+		--text: #222;
+		--text-muted: #666;
+		--text-dim: #999;
+		--border: #e0e0e0;
+		--border-light: #ddd;
+		--th-bg: #f3f4f6;
+		--th-text: #555;
+		--hover-bg: #f0f7ff;
+		--link: #2563eb;
+	}
+
+	:global([data-theme="dark"]) {
+		--bg: #1a1a2e;
+		--bg-card: #16213e;
+		--text: #e0e0e0;
+		--text-muted: #a0a0a0;
+		--text-dim: #666;
+		--border: #2a2a4a;
+		--border-light: #2a2a4a;
+		--th-bg: #1e2a45;
+		--th-text: #c0c0c0;
+		--hover-bg: #1e2a45;
+		--link: #60a5fa;
+	}
+
 	:global(*) { box-sizing: border-box; margin: 0; padding: 0; font-family: inherit; }
 
 	:global(body) {
 		font-family: "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 		padding: 24px;
-		background: #f5f5f5;
-		color: #222;
+		background: var(--bg);
+		color: var(--text);
 	}
 
 	:global(.step) {
 		display: flex;
 		align-items: flex-start;
 		gap: 10px;
-		background: #fff;
-		border: 1px solid #ddd;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		padding: 10px 14px;
 		font-size: 14px;
@@ -44,8 +77,10 @@
 	:global(.step-controls input) {
 		padding: 4px 8px;
 		font-size: 13px;
-		border: 1px solid #ccc;
+		border: 1px solid var(--border);
 		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	:global(.step-controls input) { width: 160px; }
@@ -53,7 +88,7 @@
 	:global(.step-remove) {
 		background: none;
 		border: none;
-		color: #999;
+		color: var(--text-dim);
 		cursor: pointer;
 		font-size: 18px;
 		padding: 2px 6px;
@@ -64,14 +99,14 @@
 
 	:global(.pipe-connector) {
 		padding: 2px 0 2px 18px;
-		color: #999;
+		color: var(--text-dim);
 		font-size: 18px;
 		line-height: 1;
 	}
 
 	:global(.results-bar) {
 		font-size: 14px;
-		color: #666;
+		color: var(--text-muted);
 		margin-bottom: 10px;
 	}
 
@@ -80,27 +115,29 @@
 	:global(table) {
 		width: 100%;
 		border-collapse: collapse;
-		background: #fff;
+		background: var(--bg-card);
 		font-size: 13px;
 	}
 
 	:global(th), :global(td) {
 		text-align: left;
 		padding: 6px 10px;
-		border-bottom: 1px solid #e0e0e0;
+		border-bottom: 1px solid var(--border);
 		white-space: nowrap;
 	}
 
 	:global(th) {
-		background: #f3f4f6;
-		color: #555;
+		background: var(--th-bg);
+		color: var(--th-text);
 		font-weight: 600;
 		position: sticky;
 		top: 0;
-		border-bottom: 2px solid #e0e0e0;
+		border-bottom: 2px solid var(--border);
 	}
 
-	:global(tr:hover td) { background: #f0f7ff; }
+	:global(tr:hover td) { background: var(--hover-bg); }
 
-	:global(.dim) { color: #999; }
+	:global(.dim) { color: var(--text-dim); }
+
+	:global(a) { color: var(--link); }
 </style>
