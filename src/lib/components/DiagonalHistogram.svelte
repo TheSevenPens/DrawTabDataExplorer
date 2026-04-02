@@ -68,11 +68,13 @@
 	}
 
 	// Histogram bins (1 inch per bin)
+	const binSize = 0.5;
+
 	let bins = $derived.by(() => {
-		const binCount = Math.ceil(scaleMax - scaleMin);
+		const binCount = Math.ceil((scaleMax - scaleMin) / binSize);
 		const counts: number[] = new Array(binCount).fill(0);
 		for (const d of diagonals) {
-			const idx = Math.floor(d - scaleMin);
+			const idx = Math.floor((d - scaleMin) / binSize);
 			if (idx >= 0 && idx < binCount) counts[idx]++;
 		}
 		return counts;
@@ -118,8 +120,8 @@
 			<!-- Histogram bars -->
 			{#each bins as count, i}
 				{#if count > 0}
-					{@const barX = xScale(scaleMin + i)}
-					{@const barW = xScale(scaleMin + i + 1) - barX - 1}
+					{@const barX = xScale(scaleMin + i * binSize)}
+					{@const barW = xScale(scaleMin + (i + 1) * binSize) - barX - 1}
 					{@const barH = (count / maxCount) * chartH * 0.85}
 					<rect
 						x={barX}
