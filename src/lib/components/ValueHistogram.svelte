@@ -1,65 +1,27 @@
 <script lang="ts">
-	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
-
-	let { tablet, allTablets }: {
-		tablet: Tablet;
-		allTablets: Tablet[];
-	} = $props();
-
-	const MM_TO_IN = 0.03937;
-
-	interface SizeRange {
+	export interface HistogramRange {
 		label: string;
 		min: number;
 		max: number;
 	}
 
-	function getRanges(type: string): SizeRange[] {
-		if (type === 'PENTABLET') {
-			return [
-				{ label: 'Small', min: 6, max: 9 },
-				{ label: 'Medium', min: 10, max: 13 },
-				{ label: 'Large', min: 14, max: 19 },
-				{ label: 'XL', min: 20, max: 29 },
-			];
-		}
-		return [
-			{ label: 'Small', min: 11, max: 14 },
-			{ label: 'Medium', min: 15, max: 19 },
-			{ label: 'Large', min: 20, max: 29 },
-			{ label: 'XL', min: 30, max: 33 },
-		];
-	}
+	let { values, currentValue, ranges, unit = '"', binSize = 0.5, chartHeight = 280 }: {
+		values: number[];
+		currentValue: number | null;
+		ranges: HistogramRange[];
+		unit?: string;
+		binSize?: number;
+		chartHeight?: number;
+	} = $props();
 
-	let ranges = $derived(getRanges(tablet.ModelType));
-
-	// Get all diagonals for same type
-	let diagonals = $derived(
-		allTablets
-			.filter(t => t.ModelType === tablet.ModelType)
-			.map(t => {
-				const d = getDiagonal(t.DigitizerDimensions);
-				return d ? d * MM_TO_IN : null;
-			})
-			.filter((d): d is number => d !== null)
-	);
-
-	let thisDiagIn = $derived(() => {
-		const d = getDiagonal(tablet.DigitizerDimensions);
-		return d ? d * MM_TO_IN : null;
-	});
-
-	// Chart dimensions
 	const width = 600;
-	const height = 280;
 	const padLeft = 30;
 	const padRight = 20;
 	const padTop = 30;
 	const padBottom = 50;
-	const chartW = width - padLeft - padRight;
-	const chartH = height - padTop - padBottom;
+	let chartW = $derived(width - padLeft - padRight);
+	let chartH = $derived(chartHeight - padTop - padBottom);
 
-	// Scale: min to max of all ranges
 	let scaleMin = $derived(Math.min(...ranges.map(r => r.min)) - 1);
 	let scaleMax = $derived(Math.max(...ranges.map(r => r.max)) + 1);
 
@@ -67,13 +29,10 @@
 		return padLeft + ((val - scaleMin) / (scaleMax - scaleMin)) * chartW;
 	}
 
-	// Histogram bins (1 inch per bin)
-	const binSize = 0.5;
-
 	let bins = $derived.by(() => {
 		const binCount = Math.ceil((scaleMax - scaleMin) / binSize);
 		const counts: number[] = new Array(binCount).fill(0);
-		for (const d of diagonals) {
+		for (const d of values) {
 			const idx = Math.floor((d - scaleMin) / binSize);
 			if (idx >= 0 && idx < binCount) counts[idx]++;
 		}
@@ -81,16 +40,14 @@
 	});
 
 	let maxCount = $derived(Math.max(...bins, 1));
+	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
 
-	let tx = $derived(thisDiagIn() !== null ? xScale(thisDiagIn()!) : 0);
-
-	// Range colors
 	const rangeColors = ['#dbeafe', '#bbf7d0', '#fef3c7', '#fecaca'];
 </script>
 
-{#if thisDiagIn()}
+{#if currentValue !== null}
 	<div class="histogram-container">
-		<svg viewBox="0 0 {width} {height}" class="histogram">
+		<svg viewBox="0 0 {width} {chartHeight}" class="histogram">
 			<!-- Range backgrounds -->
 			{#each ranges as range, i}
 				<rect
@@ -108,13 +65,6 @@
 					font-size="10"
 					fill="var(--text-muted)"
 				>{range.label}</text>
-				<text
-					x={(xScale(range.min) + xScale(range.max)) / 2}
-					y={height - 4}
-					text-anchor="middle"
-					font-size="9"
-					fill="var(--text-dim)"
-				>{range.min}″–{range.max}″</text>
 			{/each}
 
 			<!-- X axis -->
@@ -143,8 +93,19 @@
 						text-anchor="middle"
 						font-size="9"
 						fill="var(--text-dim)"
-					>{val}″</text>
+					>{val}{unit}</text>
 				{/if}
+			{/each}
+
+			<!-- Range labels at bottom -->
+			{#each ranges as range}
+				<text
+					x={(xScale(range.min) + xScale(range.max)) / 2}
+					y={chartHeight - 4}
+					text-anchor="middle"
+					font-size="9"
+					fill="var(--text-dim)"
+				>{range.min}{unit}–{range.max}{unit}</text>
 			{/each}
 
 			<!-- Histogram bars -->
@@ -165,7 +126,7 @@
 				{/if}
 			{/each}
 
-			<!-- Current tablet indicator -->
+			<!-- Current value indicator -->
 			<line
 				x1={tx}
 				y1={padTop - 2}
@@ -185,7 +146,7 @@
 				font-size="10"
 				font-weight="bold"
 				fill="#e11d48"
-			>{thisDiagIn()!.toFixed(1)}″</text>
+			>{currentValue.toFixed(1)}{unit}</text>
 		</svg>
 	</div>
 {/if}

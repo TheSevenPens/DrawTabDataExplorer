@@ -9,7 +9,7 @@
 	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 	import { getFieldDef } from '$data/lib/pipeline/index.js';
-	import DiagonalHistogram from '$lib/components/DiagonalHistogram.svelte';
+	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
 
 	let tablet: Tablet | null = $state(null);
 	let allTablets: Tablet[] = $state([]);
@@ -22,6 +22,39 @@
 	let filterSameYearOrLater = $state(false);
 
 	let hasDisplay = $derived(tablet?.ModelType === 'PENDISPLAY' || tablet?.ModelType === 'STANDALONE');
+
+	const MM_TO_IN = 0.03937;
+
+	let histogramRanges = $derived.by((): HistogramRange[] => {
+		if (!tablet) return [];
+		if (tablet.ModelType === 'PENTABLET') {
+			return [
+				{ label: 'Small', min: 6, max: 9 },
+				{ label: 'Medium', min: 10, max: 13 },
+				{ label: 'Large', min: 14, max: 19 },
+				{ label: 'XL', min: 20, max: 29 },
+			];
+		}
+		return [
+			{ label: 'Small', min: 11, max: 14 },
+			{ label: 'Medium', min: 15, max: 19 },
+			{ label: 'Large', min: 20, max: 29 },
+			{ label: 'XL', min: 30, max: 33 },
+		];
+	});
+
+	let histogramValues = $derived(
+		allTablets
+			.filter(t => t.ModelType === tablet?.ModelType)
+			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? d * MM_TO_IN : null; })
+			.filter((d): d is number => d !== null)
+	);
+
+	let histogramCurrentValue = $derived.by(() => {
+		if (!tablet) return null;
+		const d = getDiagonal(tablet.DigitizerDimensions);
+		return d ? d * MM_TO_IN : null;
+	});
 
 	const col1Groups = ['Model', 'Physical'];
 	const col2Groups = ['Digitizer'];
@@ -146,7 +179,7 @@
 
 		<section class="compat-section">
 			<h2>Size Comparison</h2>
-			<DiagonalHistogram {tablet} {allTablets} />
+			<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} />
 		</section>
 
 		<section class="compat-section">
