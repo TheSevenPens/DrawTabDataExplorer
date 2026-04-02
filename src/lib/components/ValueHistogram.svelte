@@ -154,7 +154,6 @@
 <style>
 	.histogram-container {
 		margin: 16px 0;
-		max-width: 600px;
 	}
 
 	.histogram {

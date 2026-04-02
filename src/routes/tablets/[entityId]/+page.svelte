@@ -452,8 +452,14 @@
 		align-items: flex-start;
 	}
 
+	.size-comparison > :first-child {
+		flex: 1;
+		min-width: 0;
+	}
+
 	.range-legend {
 		flex-shrink: 0;
+		min-width: 180px;
 	}
 
 	.range-legend h3 {
