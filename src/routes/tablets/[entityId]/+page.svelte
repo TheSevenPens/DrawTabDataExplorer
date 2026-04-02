@@ -24,6 +24,9 @@
 	let hasDisplay = $derived(tablet?.ModelType === 'PENDISPLAY' || tablet?.ModelType === 'STANDALONE');
 
 	const MM_TO_IN = 0.03937;
+	const currentYear = new Date().getFullYear();
+
+	let excludeOldTablets = $state(true);
 
 	let histogramRanges = $derived.by((): HistogramRange[] => {
 		if (!tablet) return [];
@@ -45,7 +48,14 @@
 
 	let histogramValues = $derived(
 		allTablets
-			.filter(t => t.ModelType === tablet?.ModelType)
+			.filter(t => {
+				if (t.ModelType !== tablet?.ModelType) return false;
+				if (excludeOldTablets) {
+					const year = parseInt(t.ModelLaunchYear, 10);
+					if (!isNaN(year) && year < currentYear - 15) return false;
+				}
+				return true;
+			})
 			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? d * MM_TO_IN : null; })
 			.filter((d): d is number => d !== null)
 	);
@@ -179,6 +189,9 @@
 
 		<section class="compat-section">
 			<h2>Size Comparison</h2>
+			<div class="chart-options">
+				<label><input type="checkbox" bind:checked={excludeOldTablets} /> Exclude tablets older than 15 years</label>
+			</div>
 			<div class="size-comparison">
 				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} />
 				<div class="range-legend">
@@ -445,6 +458,19 @@
 	}
 
 	.similar-table a:hover { text-decoration: underline; }
+
+	.chart-options {
+		margin-bottom: 8px;
+	}
+
+	.chart-options label {
+		font-size: 13px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		cursor: pointer;
+		color: var(--text);
+	}
 
 	.size-comparison {
 		display: flex;
