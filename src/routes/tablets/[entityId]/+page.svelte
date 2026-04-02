@@ -20,6 +20,8 @@
 	let filterSameBrand = $state(false);
 	let filterSameYearOrLater = $state(false);
 
+	let hasDisplay = $derived(tablet?.ModelType === 'PENDISPLAY' || tablet?.ModelType === 'STANDALONE');
+
 	const col1Groups = ['Model', 'Physical'];
 	const col2Groups = ['Digitizer'];
 	const col3Groups = ['Display'];
@@ -162,7 +164,6 @@
 				<label><input type="checkbox" bind:checked={filterSameBrand} /> Same brand</label>
 				<label><input type="checkbox" bind:checked={filterSameYearOrLater} /> Same year or later</label>
 			</div>
-			{@const hasDisplay = tablet.ModelType === 'PENDISPLAY' || tablet.ModelType === 'STANDALONE'}
 			{#if similarTablets.length > 0}
 				<table class="similar-table">
 					<thead>
