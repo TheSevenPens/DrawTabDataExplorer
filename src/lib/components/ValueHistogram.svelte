@@ -47,7 +47,7 @@
 
 {#if currentValue !== null}
 	<div class="histogram-container">
-		<svg viewBox="0 0 {width} {chartHeight}" class="histogram">
+		<svg viewBox="0 0 {width} {chartHeight}" class="histogram" style="font-family: 'Google Sans', sans-serif;">
 			<!-- Range backgrounds -->
 			{#each ranges as range, i}
 				<rect
