@@ -18,6 +18,7 @@
 	let filterSimilarSize = $state(true);
 	let filterSamePen = $state(false);
 	let filterSameBrand = $state(false);
+	let filterSameYearOrLater = $state(false);
 
 	const col1Groups = ['Model', 'Physical'];
 	const col2Groups = ['Digitizer'];
@@ -80,6 +81,10 @@
 
 		if (filterSameBrand) {
 			results = results.filter(t => t.Brand === tablet!.Brand);
+		}
+
+		if (filterSameYearOrLater && tablet.ModelLaunchYear) {
+			results = results.filter(t => t.ModelLaunchYear && t.ModelLaunchYear >= tablet!.ModelLaunchYear);
 		}
 
 		return results;
@@ -155,12 +160,14 @@
 				<label><input type="checkbox" bind:checked={filterSimilarSize} /> Similar size</label>
 				<label><input type="checkbox" bind:checked={filterSamePen} /> Same included pen</label>
 				<label><input type="checkbox" bind:checked={filterSameBrand} /> Same brand</label>
+				<label><input type="checkbox" bind:checked={filterSameYearOrLater} /> Same year or later</label>
 			</div>
 			{#if similarTablets.length > 0}
 				<table class="similar-table">
 					<thead>
 						<tr>
 							<th>Tablet</th>
+							<th>Year</th>
 							<th>Dimensions</th>
 							<th>Diagonal</th>
 							<th>Included Pen</th>
@@ -172,6 +179,7 @@
 							{@const diag = getDiagonal(t.DigitizerDimensions)}
 							<tr>
 								<td><a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a></td>
+								<td>{t.ModelLaunchYear || ''}</td>
 								<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
 								<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>
 								<td>{t.ModelIncludedPen || ''}</td>
