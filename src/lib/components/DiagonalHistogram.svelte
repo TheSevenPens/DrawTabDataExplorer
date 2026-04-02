@@ -80,6 +80,8 @@
 
 	let maxCount = $derived(Math.max(...bins, 1));
 
+	let tx = $derived(thisDiagIn() !== null ? xScale(thisDiagIn()!) : 0);
+
 	// Range colors
 	const rangeColors = ['#dbeafe', '#bbf7d0', '#fef3c7', '#fecaca'];
 </script>
@@ -132,7 +134,6 @@
 			{/each}
 
 			<!-- Current tablet indicator -->
-			{@const tx = xScale(thisDiagIn()!)}
 			<line
 				x1={tx}
 				y1={padTop - 2}
