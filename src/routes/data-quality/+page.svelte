@@ -34,27 +34,20 @@
 	let orphanedCompat: { type: string; id: string }[] = $state([]);
 	let orphanedFamilies: { type: string; id: string; referencedBy: string }[] = $state([]);
 	let entityCounts: { entity: string; count: number }[] = $state([]);
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+
 	type TabName = 'summary' | 'compatibility' | 'completion';
 	const validTabs: TabName[] = ['summary', 'compatibility', 'completion'];
 
-	function getTabFromHash(): TabName {
-		if (typeof window === 'undefined') return 'summary';
-		const hash = window.location.hash.slice(1);
+	let activeTab: TabName = $derived.by(() => {
+		const hash = page.url.hash.slice(1);
 		return validTabs.includes(hash as TabName) ? hash as TabName : 'summary';
-	}
-
-	let activeTab: TabName = $state(getTabFromHash());
+	});
 
 	function setTab(tab: TabName) {
-		activeTab = tab;
-		window.location.hash = tab;
+		goto(`${page.url.pathname}#${tab}`, { replaceState: false, noScroll: true });
 	}
-
-	$effect(() => {
-		const onHashChange = () => { activeTab = getTabFromHash(); };
-		window.addEventListener('hashchange', onHashChange);
-		return () => window.removeEventListener('hashchange', onHashChange);
-	});
 	let inventoryPenCount = $state(0);
 	let inventoryTabletCount = $state(0);
 
