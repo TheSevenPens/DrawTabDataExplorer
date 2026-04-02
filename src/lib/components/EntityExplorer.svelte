@@ -111,7 +111,10 @@
 	});
 </script>
 
-<h1>{title}</h1>
+<div class="title-row">
+	<h1>{title}</h1>
+	<span class="results-count">Showing {result.data.length} of {data.length} {entityLabel}</span>
+</div>
 
 <slot name="nav" />
 
@@ -129,7 +132,19 @@
 <ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} />
 
 <style>
-	h1 { margin-bottom: 8px; }
+	.title-row {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+		margin-bottom: 8px;
+	}
+
+	h1 { margin: 0; }
+
+	.results-count {
+		font-size: 14px;
+		color: #888;
+	}
 
 	.views-section {
 		margin-bottom: 12px;

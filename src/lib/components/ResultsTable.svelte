@@ -18,10 +18,6 @@
 	);
 </script>
 
-<div class="results-bar">
-	Showing {data.length} of {total} {entityLabel}
-</div>
-
 <div class="table-wrap">
 	<table>
 		<thead>
