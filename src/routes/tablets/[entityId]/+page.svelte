@@ -6,7 +6,7 @@
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
-	import { unitPreference } from '$lib/unit-store.js';
+	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 	import { getFieldDef } from '$data/lib/pipeline/index.js';
 
@@ -55,7 +55,12 @@
 	<p><a href="{base}/">Back to tablets</a></p>
 {:else}
 	<p class="back"><a href="{base}/">&larr; Tablets</a></p>
-	<h1>{tablet ? `${brandName(tablet.Brand)} ${tablet.ModelName}` : 'Loading...'}</h1>
+	<div class="title-row">
+		<h1>{tablet ? `${brandName(tablet.Brand)} ${tablet.ModelName}` : 'Loading...'}</h1>
+		<button class="unit-toggle" onclick={toggleUnits}>
+			{$unitPreference === 'metric' ? 'Metric' : 'Imperial'}
+		</button>
+	</div>
 
 	{#if tablet}
 		<div class="detail-columns">
@@ -123,7 +128,30 @@
 
 	.back a:hover { text-decoration: underline; }
 
-	h1 { margin-bottom: 16px; }
+	.title-row {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+
+	h1 { margin: 0; }
+
+	.unit-toggle {
+		padding: 4px 10px;
+		font-size: 13px;
+		border: 1px solid #16a34a;
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: #16a34a;
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.unit-toggle:hover {
+		background: #16a34a;
+		color: #fff;
+	}
 
 	.detail-columns {
 		display: grid;
