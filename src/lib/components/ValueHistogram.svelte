@@ -178,19 +178,15 @@
 			<!-- Current value indicator -->
 			<line
 				x1={tx}
-				y1={padTop - 2}
+				y1={padTop}
 				x2={tx}
-				y2={padTop + chartH + 2}
+				y2={padTop + chartH}
 				stroke="#e11d48"
 				stroke-width="2"
 			/>
-			<polygon
-				points="{tx - 5},{padTop - 2} {tx + 5},{padTop - 2} {tx},{padTop + 5}"
-				fill="#e11d48"
-			/>
 			<text
 				x={tx}
-				y={padTop - 10}
+				y={padTop + chartH + 28}
 				text-anchor="middle"
 				font-size="12"
 				font-weight="bold"

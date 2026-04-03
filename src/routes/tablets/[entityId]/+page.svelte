@@ -29,14 +29,14 @@
 	let excludeOldTablets = $state(true);
 
 	const penTabletRangesIn = [
-		{ label: 'TINY', min: 3, max: 6 },
+		{ label: 'TINY', min: 2, max: 6 },
 		{ label: 'SMALL', min: 6, max: 10 },
 		{ label: 'MEDIUM', min: 10, max: 14 },
 		{ label: 'LARGE', min: 14, max: 20 },
 		{ label: 'EXTRA LARGE', min: 20, max: 29 },
 	];
 	const penTabletRangesCm = [
-		{ label: 'TINY', min: 8, max: 16 },
+		{ label: 'TINY', min: 6, max: 16 },
 		{ label: 'SMALL', min: 16, max: 26 },
 		{ label: 'MEDIUM', min: 26, max: 36 },
 		{ label: 'LARGE', min: 36, max: 50 },
