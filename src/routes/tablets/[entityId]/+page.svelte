@@ -28,24 +28,44 @@
 
 	let excludeOldTablets = $state(true);
 
+	const penTabletRangesIn = [
+		{ label: 'TINY', min: 3, max: 6 },
+		{ label: 'SMALL', min: 6, max: 10 },
+		{ label: 'MEDIUM', min: 10, max: 14 },
+		{ label: 'LARGE', min: 14, max: 20 },
+		{ label: 'EXTRA LARGE', min: 20, max: 29 },
+	];
+	const penTabletRangesCm = [
+		{ label: 'TINY', min: 8, max: 16 },
+		{ label: 'SMALL', min: 16, max: 26 },
+		{ label: 'MEDIUM', min: 26, max: 36 },
+		{ label: 'LARGE', min: 36, max: 50 },
+		{ label: 'EXTRA LARGE', min: 50, max: 74 },
+	];
+	const displayRangesIn = [
+		{ label: 'SMALL', min: 11, max: 15 },
+		{ label: 'MEDIUM', min: 15, max: 20 },
+		{ label: 'LARGE', min: 20, max: 30 },
+		{ label: 'EXTRA LARGE', min: 30, max: 34 },
+	];
+	const displayRangesCm = [
+		{ label: 'SMALL', min: 28, max: 38 },
+		{ label: 'MEDIUM', min: 38, max: 50 },
+		{ label: 'LARGE', min: 50, max: 76 },
+		{ label: 'EXTRA LARGE', min: 76, max: 86 },
+	];
+
+	let isMetric = $derived($unitPreference === 'metric');
+
 	let histogramRanges = $derived.by((): HistogramRange[] => {
 		if (!tablet) return [];
 		if (tablet.ModelType === 'PENTABLET') {
-			return [
-				{ label: 'TINY', min: 3, max: 6 },
-				{ label: 'SMALL', min: 6, max: 10 },
-				{ label: 'MEDIUM', min: 10, max: 14 },
-				{ label: 'LARGE', min: 14, max: 20 },
-				{ label: 'EXTRA LARGE', min: 20, max: 29 },
-			];
+			return isMetric ? penTabletRangesCm : penTabletRangesIn;
 		}
-		return [
-			{ label: 'SMALL', min: 11, max: 15 },
-			{ label: 'MEDIUM', min: 15, max: 20 },
-			{ label: 'LARGE', min: 20, max: 30 },
-			{ label: 'EXTRA LARGE', min: 30, max: 34 },
-		];
+		return isMetric ? displayRangesCm : displayRangesIn;
 	});
+
+	const MM_TO_CM = 0.1;
 
 	let histogramValues = $derived(
 		allTablets
@@ -57,14 +77,14 @@
 				}
 				return true;
 			})
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? d * MM_TO_IN : null; })
+			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
 	let histogramCurrentValue = $derived.by(() => {
 		if (!tablet) return null;
 		const d = getDiagonal(tablet.DigitizerDimensions);
-		return d ? d * MM_TO_IN : null;
+		return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
 	});
 
 	const col1Groups = ['Model', 'Physical'];
@@ -194,7 +214,7 @@
 				<label><input type="checkbox" bind:checked={excludeOldTablets} /> Exclude tablets older than 15 years</label>
 			</div>
 			<div class="size-comparison">
-				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} unitPref={$unitPreference} />
+				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} unit={isMetric ? ' cm' : '"'} binSize={isMetric ? 1 : 0.5} />
 				<div class="range-legend">
 					<h3>Size Ranges ({tablet.ModelType === 'PENTABLET' ? 'Pen Tablet' : 'Pen Display'})</h3>
 					<table class="range-table">
@@ -203,21 +223,13 @@
 							{#each histogramRanges as range}
 								<tr>
 									<td>{range.label}</td>
-									{#if $unitPreference === 'metric'}
-										<td>{(range.min * 2.54).toFixed(1)} cm – {(range.max * 2.54).toFixed(1)} cm</td>
-									{:else}
-										<td>{range.min}″ – {range.max}″</td>
-									{/if}
+									<td>{range.min}{isMetric ? ' cm' : '″'} – {range.max}{isMetric ? ' cm' : '″'}</td>
 								</tr>
 							{/each}
 						</tbody>
 					</table>
 					{#if histogramCurrentValue}
-						{#if $unitPreference === 'metric'}
-							<p class="current-size">This tablet: <strong>{(histogramCurrentValue * 2.54).toFixed(1)} cm</strong></p>
-						{:else}
-							<p class="current-size">This tablet: <strong>{histogramCurrentValue.toFixed(1)}″</strong></p>
-						{/if}
+						<p class="current-size">This tablet: <strong>{histogramCurrentValue.toFixed(1)}{isMetric ? ' cm' : '″'}</strong></p>
 					{/if}
 				</div>
 			</div>

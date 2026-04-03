@@ -5,25 +5,14 @@
 		max: number;
 	}
 
-	let { values, currentValue, ranges, unitPref = 'imperial', binSize = 0.5, chartHeight = 280 }: {
+	let { values, currentValue, ranges, unit = '"', binSize = 0.5, chartHeight = 280 }: {
 		values: number[];
 		currentValue: number | null;
 		ranges: HistogramRange[];
-		unitPref?: 'metric' | 'imperial';
+		unit?: string;
 		binSize?: number;
 		chartHeight?: number;
 	} = $props();
-
-	const IN_TO_CM = 2.54;
-	let isMetric = $derived(unitPref === 'metric');
-	let unit = $derived(isMetric ? ' cm' : '"');
-	let conv = $derived(isMetric ? IN_TO_CM : 1);
-
-	// Convert values and ranges to display units
-	let displayValues = $derived(values.map(v => v * conv));
-	let displayCurrentValue = $derived(currentValue !== null ? currentValue * conv : null);
-	let displayRanges = $derived(ranges.map(r => ({ ...r, min: r.min * conv, max: r.max * conv })));
-	let displayBinSize = $derived(binSize * conv);
 
 	const width = 900;
 	const padLeft = 30;
@@ -33,37 +22,37 @@
 	let chartW = $derived(width - padLeft - padRight);
 	let chartH = $derived(chartHeight - padTop - padBottom);
 
-	let scaleMin = $derived(2 * conv);
-	let scaleMax = $derived(34 * conv);
+	let scaleMin = $derived(Math.min(...ranges.map(r => r.min)) - 1);
+	let scaleMax = $derived(Math.max(...ranges.map(r => r.max)) + 1);
 
 	function xScale(val: number): number {
 		return padLeft + ((val - scaleMin) / (scaleMax - scaleMin)) * chartW;
 	}
 
 	let bins = $derived.by(() => {
-		const binCount = Math.ceil((scaleMax - scaleMin) / displayBinSize);
+		const binCount = Math.ceil((scaleMax - scaleMin) / binSize);
 		const counts: number[] = new Array(binCount).fill(0);
-		for (const d of displayValues) {
-			const idx = Math.floor((d - scaleMin) / displayBinSize);
+		for (const d of values) {
+			const idx = Math.floor((d - scaleMin) / binSize);
 			if (idx >= 0 && idx < binCount) counts[idx]++;
 		}
 		return counts;
 	});
 
 	let maxCount = $derived(Math.max(...bins, 1));
-	let tickStep = $derived(isMetric ? 10 : 2);
+	let tickStep = $derived((scaleMax - scaleMin) > 40 ? 10 : 2);
 	let tickStart = $derived(Math.ceil(scaleMin / tickStep) * tickStep);
 	let tickCount = $derived(Math.floor((scaleMax - tickStart) / tickStep) + 1);
-	let tx = $derived(displayCurrentValue !== null ? xScale(displayCurrentValue) : 0);
+	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
 
 	const rangeOpacities = [0.2, 0.35, 0.2, 0.35];
 </script>
 
-{#if displayCurrentValue !== null}
+{#if currentValue !== null}
 	<div class="histogram-container">
 		<svg viewBox="0 0 {width} {chartHeight}" class="histogram" style="font-family: 'Google Sans', sans-serif;">
 			<!-- Range backgrounds -->
-			{#each displayRanges as range, i}
+			{#each ranges as range, i}
 				<rect
 					x={xScale(range.min)}
 					y={padTop}
@@ -85,7 +74,7 @@
 					text-anchor="middle"
 					font-size="10"
 					fill="var(--text-dim)"
-				>{isMetric ? range.min.toFixed(1) : range.min}{unit}–{isMetric ? range.max.toFixed(1) : range.max}{unit}</text>
+				>{range.min}{unit}–{range.max}{unit}</text>
 			{/each}
 
 			<!-- X axis -->
@@ -114,7 +103,7 @@
 						text-anchor="middle"
 						font-size="11"
 						fill="var(--text-dim)"
-					>{isMetric ? val.toFixed(0) : val}{unit}</text>
+					>{val}{unit}</text>
 				{/if}
 			{/each}
 
@@ -122,8 +111,8 @@
 			<!-- Histogram bars -->
 			{#each bins as count, i}
 				{#if count > 0}
-					{@const barX = xScale(scaleMin + i * displayBinSize)}
-					{@const barW = xScale(scaleMin + (i + 1) * displayBinSize) - barX - 1}
+					{@const barX = xScale(scaleMin + i * binSize)}
+					{@const barW = xScale(scaleMin + (i + 1) * binSize) - barX - 1}
 					{@const barH = (count / maxCount) * chartH * 0.85}
 					<rect
 						x={barX}
@@ -157,7 +146,7 @@
 				font-size="12"
 				font-weight="bold"
 				fill="#e11d48"
-			>{displayCurrentValue!.toFixed(1)}{unit}</text>
+			>{currentValue!.toFixed(1)}{unit}</text>
 		</svg>
 	</div>
 {/if}
