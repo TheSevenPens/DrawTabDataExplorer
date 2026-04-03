@@ -31,4 +31,5 @@
 	detailBasePath="/tablets"
 	defaultFilterField="Brand"
 	defaultSortField="Brand"
+	quickFilterFields={["Brand", "ModelType", "DigitizerSizeCategory"]}
 />

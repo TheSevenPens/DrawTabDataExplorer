@@ -19,6 +19,7 @@
 		defaultColumns,
 		defaultView,
 		detailBasePath = "",
+		quickFilterFields = [],
 	}: {
 		title: string;
 		entityType: string;
@@ -29,6 +30,7 @@
 		defaultColumns: string[];
 		defaultView: Step[];
 		detailBasePath?: string;
+		quickFilterFields?: string[];
 	} = $props();
 
 	interface FilterItem {
@@ -80,6 +82,25 @@
 	let columnWidths: Record<string, number> = $state({});
 	let tick = $state(0);
 	let searchText = $state('');
+	let quickFilters: Record<string, string> = $state({});
+
+	interface QuickFilterOption {
+		fieldDef: FieldDef<any>;
+		values: string[];
+	}
+
+	let quickFilterOptions = $derived.by((): QuickFilterOption[] => {
+		return quickFilterFields.map(key => {
+			const fieldDef = fields.find(f => f.key === key);
+			if (!fieldDef) return null;
+			const vals = new Set<string>();
+			for (const row of data) {
+				const v = String(fieldDef.getValue(row) ?? '').trim();
+				if (v && v !== '-') vals.add(v);
+			}
+			return { fieldDef, values: [...vals].sort() };
+		}).filter(Boolean) as QuickFilterOption[];
+	});
 
 	onMount(() => {
 		columnWidths = loadColumnWidths(entityType);
@@ -111,15 +132,32 @@
 
 	let result = $derived.by(() => {
 		const r = pipelineResult;
-		if (!searchText.trim()) return r;
-		const q = searchText.trim().toLowerCase();
-		const fieldDefs = r.visibleFields.map(key => fields.find(f => f.key === key)).filter(Boolean);
-		const filtered = r.data.filter(row =>
-			fieldDefs.some(f => {
-				const val = f!.getValue(row);
-				return val != null && String(val).toLowerCase().includes(q);
-			})
-		);
+		let filtered = r.data;
+
+		// Apply quick filters
+		const activeQuick = Object.entries(quickFilters).filter(([, v]) => v !== '');
+		if (activeQuick.length > 0) {
+			filtered = filtered.filter(row =>
+				activeQuick.every(([key, val]) => {
+					const fd = fields.find(f => f.key === key);
+					if (!fd) return true;
+					return String(fd.getValue(row) ?? '') === val;
+				})
+			);
+		}
+
+		// Apply search
+		if (searchText.trim()) {
+			const q = searchText.trim().toLowerCase();
+			const fieldDefs = r.visibleFields.map(key => fields.find(f => f.key === key)).filter(Boolean);
+			filtered = filtered.filter(row =>
+				fieldDefs.some(f => {
+					const val = f!.getValue(row);
+					return val != null && String(val).toLowerCase().includes(q);
+				})
+			);
+		}
+
 		return { ...r, data: filtered };
 	});
 
@@ -162,8 +200,16 @@
 
 <div class="search-bar">
 	<input type="text" placeholder="Search..." bind:value={searchText} />
-	{#if searchText}
-		<button class="search-clear" onclick={() => searchText = ''}>Clear</button>
+	{#each quickFilterOptions as qf}
+		<select bind:value={quickFilters[qf.fieldDef.key]}>
+			<option value="">All {qf.fieldDef.label}</option>
+			{#each qf.values as v}
+				<option value={v}>{v}</option>
+			{/each}
+		</select>
+	{/each}
+	{#if searchText || Object.values(quickFilters).some(v => v !== '')}
+		<button class="search-clear" onclick={() => { searchText = ''; quickFilters = {}; }}>Clear</button>
 	{/if}
 </div>
 
@@ -224,6 +270,15 @@
 		background: var(--bg-card);
 		color: var(--text);
 		width: 260px;
+	}
+
+	.search-bar select {
+		padding: 5px 10px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	.search-clear {

@@ -51,4 +51,5 @@
 	defaultView={PEN_COMPAT_DEFAULT_VIEW}
 	defaultFilterField="TabletFullName"
 	defaultSortField="TabletFullName"
+	quickFilterFields={["Brand"]}
 />

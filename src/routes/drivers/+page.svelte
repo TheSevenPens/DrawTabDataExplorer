@@ -26,4 +26,5 @@
 	detailBasePath="/drivers"
 	defaultFilterField="OSFamily"
 	defaultSortField="ReleaseDate"
+	quickFilterFields={["Brand"]}
 />

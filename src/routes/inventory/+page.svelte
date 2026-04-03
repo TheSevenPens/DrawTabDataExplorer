@@ -51,6 +51,7 @@
 		defaultView={INVENTORY_PEN_DEFAULT_VIEW}
 		defaultFilterField="Brand"
 		defaultSortField="InventoryId"
+		quickFilterFields={["Brand"]}
 	/>
 {:else}
 	<EntityExplorer
@@ -64,6 +65,7 @@
 		defaultView={INVENTORY_TABLET_DEFAULT_VIEW}
 		defaultFilterField="Brand"
 		defaultSortField="InventoryId"
+		quickFilterFields={["Brand"]}
 	/>
 {/if}
 

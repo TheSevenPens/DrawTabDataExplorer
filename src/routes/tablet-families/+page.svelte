@@ -26,4 +26,5 @@
 	detailBasePath="/tablet-families"
 	defaultFilterField="FamilyId"
 	defaultSortField="FamilyId"
+	quickFilterFields={["Brand"]}
 />

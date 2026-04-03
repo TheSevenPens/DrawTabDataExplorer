@@ -77,6 +77,7 @@
 	defaultView={PRESSURE_RESPONSE_DEFAULT_VIEW}
 	defaultFilterField="Brand"
 	defaultSortField="Date"
+	quickFilterFields={["Brand"]}
 />
 
 <style>

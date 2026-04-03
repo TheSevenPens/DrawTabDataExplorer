@@ -26,4 +26,5 @@
 	detailBasePath="/pen-families"
 	defaultFilterField="FamilyId"
 	defaultSortField="FamilyId"
+	quickFilterFields={["Brand"]}
 />
