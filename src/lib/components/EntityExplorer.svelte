@@ -79,6 +79,7 @@
 	let selectedColumns: string[] = $state(getInitialColumns());
 	let columnWidths: Record<string, number> = $state({});
 	let tick = $state(0);
+	let searchText = $state('');
 
 	onMount(() => {
 		columnWidths = loadColumnWidths(entityType);
@@ -104,8 +105,22 @@
 		return steps;
 	});
 
-	let result = $derived.by(() => {
+	let pipelineResult = $derived.by(() => {
 		return executePipeline(data, allSteps, fields, defaultColumns);
+	});
+
+	let result = $derived.by(() => {
+		const r = pipelineResult;
+		if (!searchText.trim()) return r;
+		const q = searchText.trim().toLowerCase();
+		const fieldDefs = r.visibleFields.map(key => fields.find(f => f.key === key)).filter(Boolean);
+		const filtered = r.data.filter(row =>
+			fieldDefs.some(f => {
+				const val = f!.getValue(row);
+				return val != null && String(val).toLowerCase().includes(q);
+			})
+		);
+		return { ...r, data: filtered };
 	});
 
 	function refresh() {
@@ -144,6 +159,13 @@
 </div>
 
 <slot name="nav" />
+
+<div class="search-bar">
+	<input type="text" placeholder="Search..." bind:value={searchText} />
+	{#if searchText}
+		<button class="search-clear" onclick={() => searchText = ''}>Clear</button>
+	{/if}
+</div>
 
 <section class="views-section">
 	<h2>Views</h2>
@@ -186,6 +208,36 @@
 		font-weight: 600;
 		color: var(--text-muted);
 		margin-bottom: 4px;
+	}
+
+	.search-bar {
+		display: flex;
+		gap: 6px;
+		margin-bottom: 12px;
+	}
+
+	.search-bar input {
+		padding: 5px 10px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+		width: 260px;
+	}
+
+	.search-clear {
+		padding: 5px 10px;
+		font-size: 13px;
+		border: 1px solid var(--border-light);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+
+	.search-clear:hover {
+		border-color: var(--text-muted);
 	}
 
 </style>
