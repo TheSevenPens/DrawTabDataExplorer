@@ -214,7 +214,7 @@
 				<label><input type="checkbox" bind:checked={excludeOldTablets} /> Exclude tablets older than 15 years</label>
 			</div>
 			<div class="size-comparison">
-				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} unit={isMetric ? ' cm' : '"'} binSize={isMetric ? 1 : 0.5} />
+				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} unit={isMetric ? ' cm' : '"'} binSize={isMetric ? 1 : 0.5} bandwidthMultiplier={0.2} />
 				<div class="range-legend">
 					<h3>Size Ranges ({tablet.ModelType === 'PENTABLET' ? 'Pen Tablet' : 'Pen Display'})</h3>
 					<table class="range-table">
