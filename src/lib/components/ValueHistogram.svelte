@@ -40,7 +40,7 @@
 	});
 
 	let maxCount = $derived(Math.max(...bins, 1));
-	let tickStep = $derived((scaleMax - scaleMin) > 40 ? 10 : 2);
+	let tickStep = $derived((scaleMax - scaleMin) > 40 ? 5 : 2);
 	let tickStart = $derived(Math.ceil(scaleMin / tickStep) * tickStep);
 	let tickCount = $derived(Math.floor((scaleMax - tickStart) / tickStep) + 1);
 	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
