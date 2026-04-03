@@ -13,6 +13,7 @@
 		{ href: '/drivers', label: 'Drivers' },
 		{ href: '/pressure-response', label: 'Pressure Response' },
 		{ href: '/inventory', label: 'Inventory' },
+		{ href: '/timeline', label: 'Timeline' },
 		{ href: '/data-quality', label: 'Data Quality' },
 	];
 </script>
