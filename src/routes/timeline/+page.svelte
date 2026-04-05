@@ -38,6 +38,17 @@
 			yearMap.get(p.PenYear)!.pens.push(p);
 		}
 
+		// Fill in gap years that have no releases
+		const years = [...yearMap.keys()].map(Number).filter(y => !isNaN(y));
+		if (years.length >= 2) {
+			const minYear = Math.min(...years);
+			const maxYear = Math.max(...years);
+			for (let y = minYear; y <= maxYear; y++) {
+				const key = String(y);
+				if (!yearMap.has(key)) yearMap.set(key, { tablets: [], pens: [] });
+			}
+		}
+
 		timeline = [...yearMap.entries()]
 			.map(([year, data]) => ({ year, ...data }))
 			.sort((a, b) => b.year.localeCompare(a.year));
@@ -59,7 +70,7 @@
 				tablets = tablets.filter(t => t.ModelType === filterType);
 			}
 			return { year: entry.year, tablets, pens };
-		}).filter(entry => entry.tablets.length > 0 || entry.pens.length > 0);
+		});
 	});
 
 	let totalTablets = $derived(filteredTimeline.reduce((sum, e) => sum + e.tablets.length, 0));
@@ -97,6 +108,9 @@
 		<div class="year-block">
 			<div class="year-label">{entry.year}</div>
 			<div class="year-content">
+				{#if entry.tablets.length === 0 && entry.pens.length === 0}
+					<p class="no-releases">No releases</p>
+				{/if}
 				{#if entry.tablets.length > 0}
 					<div class="category">
 						<h3>Tablets ({entry.tablets.length})</h3>
@@ -105,6 +119,7 @@
 								<a class="item tablet" href="{base}/tablets/{encodeURIComponent(t.EntityId)}">
 									<span class="item-brand">{brandName(t.Brand)}</span>
 									<span class="item-name">{t.ModelName}</span>
+									<span class="item-id">{t.ModelId}</span>
 									<span class="item-type">{t.ModelType}</span>
 								</a>
 							{/each}
@@ -118,7 +133,8 @@
 							{#each entry.pens as p}
 								<a class="item pen" href="{base}/pens/{encodeURIComponent(p.EntityId)}">
 									<span class="item-brand">{brandName(p.Brand)}</span>
-									<span class="item-name">{p.PenName === p.PenId ? p.PenId : `${p.PenName} (${p.PenId})`}</span>
+									<span class="item-name">{p.PenName}</span>
+									<span class="item-id">{p.PenId}</span>
 								</a>
 							{/each}
 						</div>
@@ -192,6 +208,13 @@
 		gap: 12px;
 	}
 
+	.no-releases {
+		font-size: 13px;
+		color: var(--text-dim);
+		font-style: italic;
+		margin: 0;
+	}
+
 	.category h3 {
 		font-size: 13px;
 		font-weight: 600;
@@ -229,6 +252,12 @@
 	.item-name {
 		font-weight: 600;
 		color: var(--text);
+	}
+
+	.item-id {
+		font-size: 11px;
+		font-weight: 700;
+		color: var(--text-muted);
 	}
 
 	.item-type {

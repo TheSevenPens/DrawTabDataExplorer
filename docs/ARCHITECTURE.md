@@ -103,6 +103,48 @@ git commit -m "Update data submodule"
 | `build`   | `vite build`  | Build static site           |
 | `preview` | `vite preview`| Preview built site          |
 
+## Local data quality checks
+
+The data quality page in the app (`/data-quality`) runs checks in the
+browser. You can also run a subset of those checks locally without
+starting the dev server.
+
+### Tablet structural checks (CLI)
+
+```bash
+npx tsx data-repo/lib/run-data-quality.ts
+```
+
+This runs the checks defined in `data-repo/lib/data-quality.ts` against
+all tablet JSON files: required fields, whitespace, enum validation,
+numeric fields, complex field structure, color gamuts, EntityId format,
+display-only fields on pen tablets, unknown fields, UUID format, ISO
+dates, and duplicate EntityIds.
+
+Exit code 0 means no issues; exit code 1 prints the issues grouped by
+type.
+
+### Browser-only checks
+
+The following checks only run in the app (they need the full dataset
+loaded and cross-entity relationships resolved):
+
+- **Required fields** for pens, drivers, pen families, tablet families,
+  pen-compat, and pressure response
+- **Whitespace** on pens, drivers, and pressure response
+- **Orphaned compat references** — pen-compat rows referencing TabletIds
+  or PenIds that don't exist
+- **Orphaned family references** — pens/tablets referencing a family ID
+  that doesn't exist in the family entities
+- **Compat coverage** — Wacom tablets with no pen-compat entries, pens
+  with no tablet-compat entries
+- **Field completion** — percentage of records with each optional field
+  populated (tablets, displays, pens, drivers, pressure response,
+  inventory)
+
+To run these, start the dev server (`npm run dev`) and open the Data
+Quality page.
+
 ## Dependencies
 
 All dev-only:
