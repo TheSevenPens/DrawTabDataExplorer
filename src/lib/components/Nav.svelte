@@ -5,6 +5,7 @@
 	import { theme, toggleTheme } from '$lib/theme-store.js';
 
 	const links = [
+		{ href: '/brands', label: 'Brands' },
 		{ href: '/', label: 'Tablets' },
 		{ href: '/pens', label: 'Pens' },
 		{ href: '/pen-families', label: 'Pen Families' },

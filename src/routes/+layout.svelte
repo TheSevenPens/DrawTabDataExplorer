@@ -2,14 +2,79 @@
 	import { theme } from '$lib/theme-store.js';
 	let { children } = $props();
 
+	let useLocalData = $state(false);
+
 	$effect(() => {
 		document.documentElement.setAttribute('data-theme', $theme);
 	});
+
+	$effect(() => {
+		if (__DEV_LOCAL_DATA_AVAILABLE__) {
+			useLocalData = document.cookie.includes('drawtab-local-data=1');
+		}
+	});
+
+	function toggleDataSource() {
+		if (useLocalData) {
+			document.cookie = 'drawtab-local-data=0; path=/; max-age=0';
+		} else {
+			document.cookie = 'drawtab-local-data=1; path=/; max-age=31536000';
+		}
+		location.reload();
+	}
 </script>
 
+{#if __DEV_LOCAL_DATA_AVAILABLE__}
+	<div class="local-data-banner" class:active={useLocalData}>
+		{#if useLocalData}
+			Using local data repo
+		{:else}
+			Using submodule data
+		{/if}
+		<button onclick={toggleDataSource}>
+			Switch to {useLocalData ? 'submodule' : 'local repo'}
+		</button>
+	</div>
+{/if}
 {@render children()}
 
 <style>
+	.local-data-banner {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		background: #e5e7eb;
+		color: #374151;
+		text-align: center;
+		padding: 6px 12px;
+		font-size: 13px;
+		font-weight: 600;
+		margin: -24px -24px 16px -24px;
+	}
+
+	.local-data-banner.active {
+		background: #f97316;
+		color: #fff;
+	}
+
+	.local-data-banner button {
+		padding: 3px 10px;
+		font-size: 12px;
+		font-weight: 600;
+		border: 1px solid currentColor;
+		border-radius: 4px;
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
+		opacity: 0.85;
+	}
+
+	.local-data-banner button:hover {
+		opacity: 1;
+		background: rgba(255, 255, 255, 0.15);
+	}
+
 	:global(:root) {
 		--bg: #f5f5f5;
 		--bg-card: #fff;

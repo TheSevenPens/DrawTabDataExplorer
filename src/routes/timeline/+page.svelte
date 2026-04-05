@@ -15,6 +15,9 @@
 	let filterType = $state('');
 	let brands: string[] = $state([]);
 	let sortOrder: 'newest' | 'oldest' = $state('newest');
+	let allYears: number[] = $state([]);
+	let yearFrom = $state('');
+	let yearTo = $state('');
 
 	onMount(async () => {
 		const [tablets, pens] = await Promise.all([
@@ -38,8 +41,12 @@
 			yearMap.get(p.PenYear)!.pens.push(p);
 		}
 
-		// Fill in gap years that have no releases
 		const years = [...yearMap.keys()].map(Number).filter(y => !isNaN(y));
+		allYears = years.sort((a, b) => a - b);
+		yearFrom = String(Math.min(...years));
+		yearTo = String(Math.max(...years));
+
+		// Fill in gap years that have no releases
 		if (years.length >= 2) {
 			const minYear = Math.min(...years);
 			const maxYear = Math.max(...years);
@@ -56,6 +63,14 @@
 
 	let filteredTimeline = $derived.by(() => {
 		let result = timeline;
+		const from = Number(yearFrom);
+		const to = Number(yearTo);
+		if (!isNaN(from) && !isNaN(to)) {
+			result = result.filter(e => {
+				const y = Number(e.year);
+				return !isNaN(y) && y >= from && y <= to;
+			});
+		}
 		if (sortOrder === 'oldest') {
 			result = [...result].reverse();
 		}
@@ -101,6 +116,12 @@
 		<option value="newest">Newest First</option>
 		<option value="oldest">Oldest First</option>
 	</select>
+	<span class="year-range">
+		<label>From</label>
+		<input type="number" bind:value={yearFrom} min={allYears[0]} max={yearTo} />
+		<label>To</label>
+		<input type="number" bind:value={yearTo} min={yearFrom} max={allYears[allYears.length - 1]} />
+	</span>
 </div>
 
 <div class="timeline">
@@ -168,6 +189,27 @@
 
 	.filters select {
 		padding: 5px 10px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+	}
+
+	.year-range {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.year-range label {
+		font-size: 13px;
+		color: var(--text-muted);
+	}
+
+	.year-range input {
+		width: 70px;
+		padding: 5px 8px;
 		font-size: 13px;
 		border: 1px solid var(--border);
 		border-radius: 4px;

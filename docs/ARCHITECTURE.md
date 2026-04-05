@@ -95,6 +95,29 @@ git add data-repo
 git commit -m "Update data submodule"
 ```
 
+## Using a local data repo
+
+If you have DrawTabData cloned as a sibling folder (e.g. `../DrawTabData`),
+you can point the dev server at it instead of the submodule:
+
+```bash
+VITE_DATA_DIR=../DrawTabData npm run dev
+```
+
+This enables a **data source toggle** banner at the top of the app:
+
+- **Gray banner** — "Using submodule data" (default). Data is served from
+  the `data-repo/` submodule via the static directory junctions.
+- **Orange banner** — "Using local data repo". Data is served from your
+  local clone. Click the button to switch.
+
+Switching reloads the page so all data is re-fetched from the selected
+source. The toggle sets a browser cookie; the Vite dev plugin reads it
+on each JSON request to decide which directory to serve from.
+
+Without `VITE_DATA_DIR`, no banner or toggle appears (production
+behaviour).
+
 ## npm scripts
 
 | Script    | Command       | Purpose                     |

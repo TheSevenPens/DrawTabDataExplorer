@@ -19,7 +19,9 @@ const config = {
 			assets: 'static',
 		},
 		alias: {
-			'$data': 'data-repo',
+			'$data': process.env.VITE_DATA_DIR && process.env.VITE_DATA_DIR !== 'data-repo'
+				? process.env.VITE_DATA_DIR
+				: 'data-repo',
 		},
 	},
 };
