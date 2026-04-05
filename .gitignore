@@ -10,3 +10,4 @@ static/tablet-families/
 static/pen-compat/
 static/pressure-response/
 static/inventory/
+.claude/settings.local.json
