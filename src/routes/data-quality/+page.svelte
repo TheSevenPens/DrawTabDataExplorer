@@ -170,7 +170,7 @@
 		]);
 
 		inventoryPenCompletion = computeCompletion(invPens, [
-			'PenEntityId', 'PenTech', 'WithTabletEntityId',
+			'PenEntityId', 'PenTech', 'WithTabletInventoryId',
 		]);
 
 		inventoryTabletCompletion = computeCompletion(invTablets, [
