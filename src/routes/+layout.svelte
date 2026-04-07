@@ -1,8 +1,12 @@
-<script>
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 	import { theme } from '$lib/theme-store.js';
+	import { loadVersionFromURL, type VersionInfo } from '$data/lib/drawtab-loader.js';
 	let { children } = $props();
 
 	let useLocalData = $state(false);
+	let version = $state<VersionInfo | null>(null);
 
 	$effect(() => {
 		document.documentElement.setAttribute('data-theme', $theme);
@@ -12,6 +16,10 @@
 		if (__DEV_LOCAL_DATA_AVAILABLE__) {
 			useLocalData = document.cookie.includes('drawtab-local-data=1');
 		}
+	});
+
+	onMount(async () => {
+		version = await loadVersionFromURL(base);
 	});
 
 	function toggleDataSource() {
@@ -37,6 +45,23 @@
 	</div>
 {/if}
 {@render children()}
+
+{#if version}
+	<footer class="data-version">
+		<span>Data {version.version}</span>
+		<span class="sep">·</span>
+		<a href="https://github.com/TheSevenPens/DrawTabData/commit/{version.commit}" target="_blank" rel="noopener">
+			{version.shortCommit}
+		</a>
+		<span class="sep">·</span>
+		<span>
+			{version.counts.tablets} tablets,
+			{version.counts.pens} pens,
+			{version.counts.drivers} drivers,
+			{version.counts.brands} brands
+		</span>
+	</footer>
+{/if}
 
 <style>
 	.local-data-banner {
@@ -73,6 +98,33 @@
 	.local-data-banner button:hover {
 		opacity: 1;
 		background: rgba(255, 255, 255, 0.15);
+	}
+
+	.data-version {
+		margin: 32px -24px -24px -24px;
+		padding: 10px 24px;
+		border-top: 1px solid var(--border);
+		background: var(--bg-card);
+		color: var(--text-muted);
+		font-size: 12px;
+		display: flex;
+		gap: 8px;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	.data-version .sep {
+		color: var(--text-dim);
+	}
+
+	.data-version a {
+		color: var(--link);
+		text-decoration: none;
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	}
+
+	.data-version a:hover {
+		text-decoration: underline;
 	}
 
 	:global(:root) {
