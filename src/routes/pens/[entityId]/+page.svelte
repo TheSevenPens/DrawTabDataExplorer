@@ -42,8 +42,7 @@
 
 		// Find tablets that include this pen
 		includedWithTablets = allTablets.filter((t) => {
-			const included = t.ModelIncludedPen ?? '';
-			return included.split(',').some((p) => p.trim() === found.PenId);
+			return (t.ModelIncludedPen ?? []).some((p) => p === found.PenId);
 		});
 	});
 </script>

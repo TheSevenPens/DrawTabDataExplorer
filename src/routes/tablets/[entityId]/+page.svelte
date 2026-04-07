@@ -138,11 +138,11 @@
 			}
 		}
 
-		if (filterSamePen && tablet.ModelIncludedPen) {
-			const pens = new Set(tablet.ModelIncludedPen.split(',').map(p => p.trim()));
+		if (filterSamePen && tablet.ModelIncludedPen && tablet.ModelIncludedPen.length > 0) {
+			const pens = new Set(tablet.ModelIncludedPen);
 			results = results.filter(t => {
-				if (!t.ModelIncludedPen) return false;
-				return t.ModelIncludedPen.split(',').some(p => pens.has(p.trim()));
+				if (!t.ModelIncludedPen || t.ModelIncludedPen.length === 0) return false;
+				return t.ModelIncludedPen.some(p => pens.has(p));
 			});
 		}
 
@@ -289,7 +289,7 @@
 									<td>{pxCat}</td>
 									<td>{pxDensity ? `${pxDensity} px/mm` : ''}</td>
 								{/if}
-								<td>{t.ModelIncludedPen || ''}</td>
+								<td>{(t.ModelIncludedPen ?? []).join(', ')}</td>
 							</tr>
 						{/each}
 					</tbody>
