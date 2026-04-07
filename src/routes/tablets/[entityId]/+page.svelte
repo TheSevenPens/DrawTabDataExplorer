@@ -82,6 +82,27 @@
 			.filter((d): d is number => d !== null)
 	);
 
+	let allDiagonalsForType = $derived(
+		allTablets
+			.filter(t => t.ModelType === tablet?.ModelType)
+			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.filter((d): d is number => d !== null)
+	);
+
+	function median(nums: number[]): number | null {
+		if (nums.length === 0) return null;
+		const sorted = [...nums].sort((a, b) => a - b);
+		const mid = Math.floor(sorted.length / 2);
+		return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!;
+	}
+
+	let rangeMedians = $derived(
+		histogramRanges.map(range => {
+			const inRange = allDiagonalsForType.filter(d => d >= range.min && d < range.max);
+			return { label: range.label, count: inRange.length, median: median(inRange) };
+		})
+	);
+
 	let histogramCurrentValue = $derived.by(() => {
 		if (!tablet) return null;
 		const d = getDiagonal(tablet.DigitizerDimensions);
@@ -212,19 +233,24 @@
 				<div class="range-legend">
 					<h3>Size Ranges ({tablet.ModelType === 'PENTABLET' ? 'Pen Tablet' : 'Pen Display'})</h3>
 					<table class="range-table">
-						<thead><tr><th>Category</th><th>Range</th></tr></thead>
+						<thead><tr><th>Category</th><th>Range</th><th>Median (n)</th></tr></thead>
 						<tbody>
-							{#each histogramRanges as range}
+							{#each histogramRanges as range, i}
+								{@const m = rangeMedians[i]}
 								<tr>
 									<td>{range.label}</td>
 									<td>{range.min}{isMetric ? ' cm' : '″'} – {range.max}{isMetric ? ' cm' : '″'}</td>
+									<td>
+										{#if m && m.median !== null}
+											{m.median.toFixed(1)}{isMetric ? ' cm' : '″'} <span class="dim">(n={m.count})</span>
+										{:else}
+											<span class="dim">—</span>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
 					</table>
-					{#if histogramCurrentValue}
-						<p class="current-size">This tablet: <strong>{histogramCurrentValue.toFixed(1)}{isMetric ? ' cm' : '″'}</strong></p>
-					{/if}
 				</div>
 			</div>
 		</section>
