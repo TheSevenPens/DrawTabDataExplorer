@@ -59,7 +59,9 @@ These junctions are gitignored.
 
 **EntityExplorer** — Generic page component that wires together the
 pipeline builder, saved views, add-step buttons, and results table.
-Every entity list page delegates to this component.
+Every entity list page delegates to this component. Pages can pass
+`defaultFilterField` to seed the field used when the user clicks "+"
+to add a new filter row.
 
 **DetailView** — Generic detail page showing all fields grouped by
 category, with URL detection, unit conversion, and computed field badges.
