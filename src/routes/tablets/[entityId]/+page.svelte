@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadTabletsFromURL, loadPenCompatFromURL, loadPensFromURL, brandName, getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { findSimilarTablets } from '$data/lib/compat-helpers.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
@@ -11,7 +12,7 @@
 	import { getFieldDef } from '$data/lib/pipeline/index.js';
 	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
 
-	let tablet: Tablet | null = $state(null);
+	let tablet = $state<Tablet | null>(null);
 	let allTablets: Tablet[] = $state([]);
 	let compatiblePens: Pen[] = $state([]);
 	let notFound = $state(false);
@@ -100,7 +101,7 @@
 	}
 
 	onMount(async () => {
-		const entityId = decodeURIComponent(page.params.entityId);
+		const entityId = decodeURIComponent(page.params.entityId!);
 		const [allT, allCompat, allPens] = await Promise.all([
 			loadTabletsFromURL(base),
 			loadPenCompatFromURL(base) as Promise<PenCompat[]>,
@@ -125,36 +126,12 @@
 
 	let similarTablets = $derived.by(() => {
 		if (!tablet) return [];
-		let results = allTablets.filter(t => t.EntityId !== tablet!.EntityId && t.ModelType === tablet!.ModelType);
-
-		if (filterSimilarSize) {
-			const thisDiag = getDiagonal(tablet.DigitizerDimensions);
-			if (thisDiag) {
-				const tolerance = thisDiag * 0.1;
-				results = results.filter(t => {
-					const d = getDiagonal(t.DigitizerDimensions);
-					return d !== null && Math.abs(d - thisDiag) <= tolerance;
-				});
-			}
-		}
-
-		if (filterSamePen && tablet.ModelIncludedPen && tablet.ModelIncludedPen.length > 0) {
-			const pens = new Set(tablet.ModelIncludedPen);
-			results = results.filter(t => {
-				if (!t.ModelIncludedPen || t.ModelIncludedPen.length === 0) return false;
-				return t.ModelIncludedPen.some(p => pens.has(p));
-			});
-		}
-
-		if (filterSameBrand) {
-			results = results.filter(t => t.Brand === tablet!.Brand);
-		}
-
-		if (filterSameYearOrLater && tablet.ModelLaunchYear) {
-			results = results.filter(t => t.ModelLaunchYear && t.ModelLaunchYear >= tablet!.ModelLaunchYear);
-		}
-
-		return results;
+		return findSimilarTablets(tablet, allTablets, {
+			similarSize: filterSimilarSize,
+			samePen: filterSamePen,
+			sameBrand: filterSameBrand,
+			sameYearOrLater: filterSameYearOrLater,
+		});
 	});
 </script>
 
@@ -176,13 +153,13 @@
 				<div class="detail-col">
 					{#each groups as group}
 						{@const groupFields = getGroupFields([group])}
-						{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet); return v && v !== '-'; })}
+						{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet!); return v && v !== '-'; })}
 						{#if hasValues}
 							<section class="field-group">
 								<h2>{group}</h2>
 								<dl>
 									{#each groupFields as f}
-										{@const val = f.getValue(tablet)}
+										{@const val = f.getValue(tablet!)}
 										{@const displayVal = formatValue(val, f.unit, $unitPreference)}
 										{#if val && val !== '-'}
 											<div class="field-row">

@@ -9,10 +9,11 @@
 		disabled?: boolean;
 	}
 
-	let { filters = $bindable(), fields, fieldGroups, onchange }: {
+	let { filters = $bindable(), fields, fieldGroups, defaultFilterField, onchange }: {
 		filters: FilterItem[];
 		fields: FieldDef<any>[];
 		fieldGroups: string[];
+		defaultFilterField?: string;
 		onchange: () => void;
 	} = $props();
 
@@ -43,7 +44,10 @@
 	}
 
 	function addFilter() {
-		filters.push({ field: fields[0]?.key ?? '', operator: '==', value: '' });
+		const initialField = (defaultFilterField && fields.some(f => f.key === defaultFilterField))
+			? defaultFilterField
+			: (fields[0]?.key ?? '');
+		filters.push({ field: initialField, operator: '==', value: '' });
 		editingIndex = filters.length - 1;
 	}
 

@@ -14,7 +14,7 @@
 	let notFound = $state(false);
 
 	onMount(async () => {
-		const entityId = decodeURIComponent(page.params.entityId);
+		const entityId = decodeURIComponent(page.params.entityId!);
 		const [allPens, allCompat, allTablets, allPressure] = await Promise.all([
 			loadPensFromURL(base) as Promise<Pen[]>,
 			loadPenCompatFromURL(base) as Promise<PenCompat[]>,

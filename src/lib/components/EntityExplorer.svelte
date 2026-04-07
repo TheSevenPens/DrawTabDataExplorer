@@ -20,6 +20,8 @@
 		defaultView,
 		detailBasePath = "",
 		quickFilterFields = [],
+		defaultFilterField,
+		defaultSortField,
 	}: {
 		title: string;
 		entityType: string;
@@ -31,12 +33,15 @@
 		defaultView: Step[];
 		detailBasePath?: string;
 		quickFilterFields?: string[];
+		defaultFilterField?: string;
+		defaultSortField?: string;
 	} = $props();
 
 	interface FilterItem {
 		field: string;
 		operator: string;
 		value: string;
+		disabled?: boolean;
 	}
 
 	interface SortItem {
@@ -218,7 +223,7 @@
 	<SavedViews steps={stepsForSave} {entityType} {defaultView} onload={loadView} />
 </section>
 
-<FilterBar bind:filters {fields} {fieldGroups} onchange={refresh} />
+<FilterBar bind:filters {fields} {fieldGroups} {defaultFilterField} onchange={refresh} />
 
 <SortBar bind:sorts {fields} {fieldGroups} onchange={refresh} />
 

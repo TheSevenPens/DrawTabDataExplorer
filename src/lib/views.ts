@@ -1,4 +1,4 @@
-import type { Step } from '.$data/li$data/lib/pipeline/types.js';
+import type { Step } from '$data/lib/pipeline/types.js';
 
 export interface SavedView {
   name: string;

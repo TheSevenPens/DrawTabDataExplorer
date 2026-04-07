@@ -10,7 +10,7 @@
 	let notFound = $state(false);
 
 	onMount(async () => {
-		const entityId = decodeURIComponent(page.params.entityId);
+		const entityId = decodeURIComponent(page.params.entityId!);
 		const all = (await loadDriversFromURL(base)) as Driver[];
 		const found = all.find((d) => d.EntityId === entityId);
 		if (found) {

@@ -22,8 +22,8 @@
 			loadInventoryPensFromURL(base, 'sevenpens'),
 			loadInventoryTabletsFromURL(base, 'sevenpens'),
 		]);
-		pens = p as InventoryPen[];
-		tablets = t as InventoryTablet[];
+		pens = p as unknown as InventoryPen[];
+		tablets = t as unknown as InventoryTablet[];
 	});
 </script>
 

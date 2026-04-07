@@ -15,7 +15,7 @@
 	let inventorySummaries: InventorySummary[] = $state([]);
 
 	onMount(async () => {
-		penEntityId = decodeURIComponent(page.params.penEntityId);
+		penEntityId = decodeURIComponent(page.params.penEntityId!);
 		const all = await loadPressureResponseFromURL(base);
 		sessions = all.filter(s => s.PenEntityId === penEntityId);
 

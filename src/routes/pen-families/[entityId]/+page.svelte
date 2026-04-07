@@ -10,7 +10,7 @@
 	let notFound = $state(false);
 
 	onMount(async () => {
-		const entityId = decodeURIComponent(page.params.entityId);
+		const entityId = decodeURIComponent(page.params.entityId!);
 		const all = (await loadPenFamiliesFromURL(base)) as PenFamily[];
 		const found = all.find((f) => f.EntityId === entityId);
 		if (found) { item = found; } else { notFound = true; }

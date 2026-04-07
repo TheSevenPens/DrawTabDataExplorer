@@ -11,7 +11,7 @@
 	let notFound = $state(false);
 
 	onMount(async () => {
-		const entityId = decodeURIComponent(page.params.entityId);
+		const entityId = decodeURIComponent(page.params.entityId!);
 		const [allFamilies, allTablets] = await Promise.all([
 			loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
 			loadTabletsFromURL(base),
