@@ -27,19 +27,19 @@
 	const MM_TO_IN = 0.03937;
 	const currentYear = new Date().getFullYear();
 
-	let excludeOldTablets = $state(true);
+	let compareYears = $state<number | null>(15);
 
 	const penTabletRangesIn = [
 		{ label: 'TINY', min: 2, max: 6 },
-		{ label: 'SMALL', min: 6, max: 10 },
-		{ label: 'MEDIUM', min: 10, max: 14 },
+		{ label: 'SMALL', min: 6, max: 9 },
+		{ label: 'MEDIUM', min: 9, max: 14 },
 		{ label: 'LARGE', min: 14, max: 20 },
 		{ label: 'EXTRA LARGE', min: 20, max: 29 },
 	];
 	const penTabletRangesCm = [
 		{ label: 'TINY', min: 6, max: 16 },
-		{ label: 'SMALL', min: 16, max: 26 },
-		{ label: 'MEDIUM', min: 26, max: 36 },
+		{ label: 'SMALL', min: 16, max: 24 },
+		{ label: 'MEDIUM', min: 24, max: 36 },
 		{ label: 'LARGE', min: 36, max: 50 },
 		{ label: 'EXTRA LARGE', min: 50, max: 74 },
 	];
@@ -72,9 +72,9 @@
 		allTablets
 			.filter(t => {
 				if (t.ModelType !== tablet?.ModelType) return false;
-				if (excludeOldTablets) {
+				if (compareYears !== null) {
 					const year = parseInt(t.ModelLaunchYear, 10);
-					if (!isNaN(year) && year < currentYear - 15) return false;
+					if (!isNaN(year) && year < currentYear - compareYears) return false;
 				}
 				return true;
 			})
@@ -188,7 +188,15 @@
 		<section class="compat-section">
 			<h2>Size Comparison</h2>
 			<div class="chart-options">
-				<label><input type="checkbox" bind:checked={excludeOldTablets} /> Exclude tablets older than 15 years</label>
+				<label>
+					Compare to tablets released in last:
+					<select bind:value={compareYears}>
+						<option value={10}>10 years</option>
+						<option value={15}>15 years</option>
+						<option value={20}>20 years</option>
+						<option value={null}>all time</option>
+					</select>
+				</label>
 			</div>
 			<div class="size-comparison">
 				<ValueHistogram
