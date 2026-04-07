@@ -191,7 +191,16 @@
 				<label><input type="checkbox" bind:checked={excludeOldTablets} /> Exclude tablets older than 15 years</label>
 			</div>
 			<div class="size-comparison">
-				<ValueHistogram values={histogramValues} currentValue={histogramCurrentValue} ranges={histogramRanges} unit={isMetric ? ' cm' : '"'} binSize={isMetric ? 1 : 0.5} bandwidthMultiplier={0.2} />
+				<ValueHistogram
+								title={`${brandName(tablet.Brand)} ${tablet.ModelName} (${tablet.ModelId}) active area diagonal compared to other ${tablet.ModelType === 'PENTABLET' ? 'pen tablets' : tablet.ModelType === 'PENDISPLAY' ? 'pen displays' : 'standalone tablets'}`}
+								values={histogramValues}
+								currentValue={histogramCurrentValue}
+								currentLabel={`${brandName(tablet.Brand)} ${tablet.ModelName} (${tablet.ModelId})`}
+								ranges={histogramRanges}
+								unit={isMetric ? ' cm' : '"'}
+								binSize={isMetric ? 1 : 0.5}
+								bandwidthMultiplier={0.2}
+							/>
 				<div class="range-legend">
 					<h3>Size Ranges ({tablet.ModelType === 'PENTABLET' ? 'Pen Tablet' : 'Pen Display'})</h3>
 					<table class="range-table">

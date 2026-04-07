@@ -5,9 +5,11 @@
 		max: number;
 	}
 
-	let { values, currentValue, ranges, unit = '"', binSize = 0.5, chartHeight = 280, bandwidthMultiplier = 1.0 }: {
+	let { title = '', values, currentValue, currentLabel = '', ranges, unit = '"', binSize = 0.5, chartHeight = 280, bandwidthMultiplier = 1.0 }: {
+		title?: string;
 		values: number[];
 		currentValue: number | null;
+		currentLabel?: string;
 		ranges: HistogramRange[];
 		unit?: string;
 		binSize?: number;
@@ -18,10 +20,12 @@
 	const width = 900;
 	const padLeft = 30;
 	const padRight = 20;
-	const padTop = 40;
-	const padBottom = 50;
+	let titleHeight = $derived(title ? 28 : 0);
+	let padTop = $derived(40 + titleHeight);
+	const padBottom = 65;
+	let totalHeight = $derived(chartHeight + titleHeight);
 	let chartW = $derived(width - padLeft - padRight);
-	let chartH = $derived(chartHeight - padTop - padBottom);
+	let chartH = $derived(chartHeight - 40 - padBottom);
 
 	let scaleMin = $derived(Math.min(...ranges.map(r => r.min)) - 1);
 	let scaleMax = $derived(Math.max(...ranges.map(r => r.max)) + 1);
@@ -89,11 +93,63 @@
 	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
 
 	const rangeOpacities = [0.2, 0.35, 0.2, 0.35];
+
+	let svgEl: SVGSVGElement | undefined = $state();
+	let copyStatus = $state('');
+
+	async function copyAsImage() {
+		if (!svgEl) return;
+		try {
+			const serialized = new XMLSerializer().serializeToString(svgEl);
+			const svgBlob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' });
+			const url = URL.createObjectURL(svgBlob);
+			const img = new Image();
+			img.src = url;
+			await new Promise<void>((resolve, reject) => {
+				img.onload = () => resolve();
+				img.onerror = () => reject(new Error('image load failed'));
+			});
+			const scale = 2;
+			const canvas = document.createElement('canvas');
+			canvas.width = width * scale;
+			canvas.height = totalHeight * scale;
+			const ctx = canvas.getContext('2d');
+			if (!ctx) throw new Error('no 2d context');
+			ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#fff';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+			URL.revokeObjectURL(url);
+			const blob: Blob = await new Promise((resolve, reject) => {
+				canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+			});
+			await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+			copyStatus = 'Copied!';
+		} catch (err) {
+			copyStatus = 'Copy failed';
+			console.error(err);
+		}
+		setTimeout(() => (copyStatus = ''), 2000);
+	}
 </script>
 
 {#if currentValue !== null}
 	<div class="histogram-container">
-		<svg viewBox="0 0 {width} {chartHeight}" class="histogram" style="font-family: 'Google Sans', sans-serif;">
+		<div class="histogram-toolbar">
+			<button type="button" class="copy-btn" onclick={copyAsImage} title="Copy histogram as image">
+				{copyStatus || 'Copy as image'}
+			</button>
+		</div>
+		<svg bind:this={svgEl} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {totalHeight}" class="histogram" style="font-family: 'Google Sans', sans-serif;">
+			{#if title}
+				<text
+					x={width / 2}
+					y={20}
+					text-anchor="middle"
+					font-size="14"
+					font-weight="600"
+					fill="var(--text)"
+				>{title}</text>
+			{/if}
 			<!-- Range backgrounds -->
 			{#each ranges as range, i}
 				<rect
@@ -106,14 +162,14 @@
 				/>
 				<text
 					x={(xScale(range.min) + xScale(range.max)) / 2}
-					y={padTop - 16}
+					y={padTop - 24}
 					text-anchor="middle"
 					font-size="12"
 					fill="var(--text-muted)"
 				>{range.label}</text>
 				<text
 					x={(xScale(range.min) + xScale(range.max)) / 2}
-					y={padTop - 4}
+					y={padTop - 10}
 					text-anchor="middle"
 					font-size="10"
 					fill="var(--text-dim)"
@@ -178,20 +234,29 @@
 			<!-- Current value indicator -->
 			<line
 				x1={tx}
-				y1={padTop}
+				y1={padTop - 8}
 				x2={tx}
-				y2={padTop + chartH}
+				y2={padTop + chartH + 30}
 				stroke="#e11d48"
 				stroke-width="2"
 			/>
 			<text
 				x={tx}
-				y={padTop + chartH + 28}
+				y={padTop + chartH + 42}
 				text-anchor="middle"
 				font-size="12"
 				font-weight="bold"
 				fill="#e11d48"
 			>{currentValue!.toFixed(1)}{unit}</text>
+			{#if currentLabel}
+				<text
+					x={tx}
+					y={padTop + chartH + 56}
+					text-anchor="middle"
+					font-size="11"
+					fill="#e11d48"
+				>{currentLabel}</text>
+			{/if}
 		</svg>
 	</div>
 {/if}
@@ -205,5 +270,35 @@
 	.histogram {
 		width: 900px;
 		height: auto;
+	}
+
+	.histogram-title {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text);
+		margin: 0 0 8px 0;
+		width: 900px;
+		text-align: center;
+	}
+
+	.histogram-toolbar {
+		width: 900px;
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 4px;
+	}
+
+	.copy-btn {
+		font-size: 12px;
+		padding: 4px 10px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+		cursor: pointer;
+	}
+
+	.copy-btn:hover {
+		background: var(--hover-bg);
 	}
 </style>
