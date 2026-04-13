@@ -27,7 +27,7 @@
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
 	function includedPenNames(tablet: Tablet): string {
-		return formatPenIds(tablet.ModelIncludedPen ?? [], penNameMap);
+		return formatPenIds(tablet.Model.IncludedPen ?? [], penNameMap);
 	}
 
 	let filterSimilarSize = $state(true);
@@ -36,12 +36,12 @@
 	let filterSameYearOrLater = $state(false);
 	let similarSort = $state<'year' | 'diagonal'>('year');
 
-	let hasDisplay = $derived(tablet?.ModelType === 'PENDISPLAY' || tablet?.ModelType === 'STANDALONE');
+	let hasDisplay = $derived(tablet?.Model.Type === 'PENDISPLAY' || tablet?.Model.Type === 'STANDALONE');
 	let isoSizes: ISOPaperSize[] = $state([]);
 
 	let closestISO = $derived.by(() => {
 		if (!tablet) return null;
-		const diagMm = getDiagonal(tablet.DigitizerDimensions);
+		const diagMm = getDiagonal(tablet.Digitizer?.Dimensions);
 		if (!diagMm) return null;
 		const aSeries = isoSizes.filter(p => p.Series === 'A');
 		if (aSeries.length === 0) return null;
@@ -71,7 +71,7 @@
 
 	let histogramRanges = $derived.by((): HistogramRange[] => {
 		if (!tablet) return [];
-		if (tablet.ModelType === 'PENTABLET') {
+		if (tablet.Model.Type === 'PENTABLET') {
 			return isMetric ? penTabletRangesCm : penTabletRangesIn;
 		}
 		return isMetric ? displayRangesCm : displayRangesIn;
@@ -80,31 +80,31 @@
 	let histogramValues = $derived(
 		allTablets
 			.filter(t => {
-				if (t.ModelType !== tablet?.ModelType) return false;
+				if (t.Model.Type !== tablet?.Model.Type) return false;
 				if (compareYears !== null) {
-					const year = parseInt(t.ModelLaunchYear, 10);
+					const year = parseInt(t.Model.LaunchYear, 10);
 					if (!isNaN(year) && year < currentYear - compareYears) return false;
 				}
 				return true;
 			})
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
 	let histogramCurrentValue = $derived.by(() => {
 		if (!tablet) return null;
-		const d = getDiagonal(tablet.DigitizerDimensions);
+		const d = getDiagonal(tablet.Digitizer?.Dimensions);
 		return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
 	});
 
 	let col1Groups = $derived(
-		tablet?.ModelType === 'STANDALONE' ? ['Model', 'Physical', 'Standalone'] : ['Model']
+		tablet?.Model.Type === 'STANDALONE' ? ['Model', 'Physical', 'Standalone'] : ['Model']
 	);
 	const col2Groups = ['Digitizer'];
 	const col3Groups = ['Display'];
 
 	function getGroupFields(groups: string[]) {
-		const expanded = groups.includes('Model') && tablet?.ModelType !== 'STANDALONE'
+		const expanded = groups.includes('Model') && tablet?.Model.Type !== 'STANDALONE'
 			? [...groups, 'Physical']
 			: groups;
 		return TABLET_FIELDS.filter(f => expanded.includes(f.group));
@@ -150,7 +150,7 @@
 
 		const compatPenIds = new Set(
 			allCompat
-				.filter((c) => c.TabletId === found.ModelId)
+				.filter((c) => c.TabletId === found.Model.Id)
 				.map((c) => c.PenId)
 		);
 		compatiblePens = loadedPens.filter((p) => compatPenIds.has(p.PenId));
@@ -158,7 +158,7 @@
 	});
 
 	let availableBrands = $derived(
-		[...new Set(allTablets.filter(t => t.ModelType === tablet?.ModelType).map(t => t.Brand))].sort()
+		[...new Set(allTablets.filter(t => t.Model.Type === tablet?.Model.Type).map(t => t.Model.Brand))].sort()
 	);
 
 	let similarTablets = $derived.by(() => {
@@ -169,14 +169,14 @@
 			sameYearOrLater: filterSameYearOrLater,
 		});
 		if (filterBrand !== 'all') {
-			results = results.filter(t => t.Brand === filterBrand);
+			results = results.filter(t => t.Model.Brand === filterBrand);
 		}
 		results.sort((a, b) => {
 			if (similarSort === 'year') {
-				return (a.ModelLaunchYear || '').localeCompare(b.ModelLaunchYear || '');
+				return (a.Model.LaunchYear || '').localeCompare(b.Model.LaunchYear || '');
 			}
-			const da = getDiagonal(a.DigitizerDimensions) ?? 0;
-			const db = getDiagonal(b.DigitizerDimensions) ?? 0;
+			const da = getDiagonal(a.Digitizer?.Dimensions) ?? 0;
+			const db = getDiagonal(b.Digitizer?.Dimensions) ?? 0;
 			return da - db;
 		});
 		return results;
@@ -189,10 +189,10 @@
 {:else}
 	<p class="back"><a href="{base}/">&larr; Tablets</a></p>
 	<div class="title-row">
-		<h1>{tablet ? `${brandName(tablet.Brand)} ${tablet.ModelName}` : 'Loading...'}</h1>
+		<h1>{tablet ? `${brandName(tablet.Model.Brand)} ${tablet.Model.Name}` : 'Loading...'}</h1>
 		{#if tablet}
-			<button class="flag-toggle" class:flagged={$flaggedTablets.includes(tablet.EntityId)} onclick={() => toggleFlag(tablet!.EntityId)}>
-				{$flaggedTablets.includes(tablet.EntityId) ? 'Unflag' : 'Flag'}
+			<button class="flag-toggle" class:flagged={$flaggedTablets.includes(tablet.Meta.EntityId)} onclick={() => toggleFlag(tablet!.Meta.EntityId)}>
+				{$flaggedTablets.includes(tablet.Meta.EntityId) ? 'Unflag' : 'Flag'}
 			</button>
 		{/if}
 		<button class="unit-toggle" onclick={toggleUnits}>
@@ -270,10 +270,10 @@
 			<h2>Size Comparison</h2>
 			<div class="size-comparison">
 				<ValueHistogram
-								title={`${brandName(tablet.Brand)} ${tablet.ModelName} (${tablet.ModelId}) active area diagonal compared to other ${tablet.ModelType === 'PENTABLET' ? 'pen tablets' : tablet.ModelType === 'PENDISPLAY' ? 'pen displays' : 'standalone tablets'}`}
+								title={`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id}) active area diagonal compared to other ${tablet.Model.Type === 'PENTABLET' ? 'pen tablets' : tablet.Model.Type === 'PENDISPLAY' ? 'pen displays' : 'standalone tablets'}`}
 								values={histogramValues}
 								currentValue={histogramCurrentValue}
-								currentLabel={`${brandName(tablet.Brand)} ${tablet.ModelName} (${tablet.ModelId})`}
+								currentLabel={`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`}
 								ranges={histogramRanges}
 								unit={isMetric ? ' cm' : '"'}
 								binSize={isMetric ? 1 : 0.5}
@@ -349,14 +349,14 @@
 					</thead>
 					<tbody>
 						{#each similarTablets as t}
-							{@const d = t.DigitizerDimensions}
-							{@const diag = getDiagonal(t.DigitizerDimensions)}
-							{@const px = t.DisplayPixelDimensions}
+							{@const d = t.Digitizer?.Dimensions}
+							{@const diag = getDiagonal(t.Digitizer?.Dimensions)}
+							{@const px = t.Display?.PixelDimensions}
 							{@const pxDensity = (px && d && px.Width && d.Width) ? (px.Width / d.Width).toFixed(2) : ''}
 							{@const pxCat = (() => { if (!px || !px.Width || !px.Height) return ''; const w = px.Width, h = px.Height; if (w === 1920 && h === 1080) return 'Full HD'; if ((w === 2560 && h === 1440) || (w === 2560 && h === 1600)) return '2.5K'; if (w === 2880 && h === 1800) return '3K'; if (w === 3840 && h === 2160) return '4K'; return 'Other'; })()}
 							<tr>
-								<td><a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a></td>
-								<td>{t.ModelLaunchYear || ''}</td>
+								<td><a href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a></td>
+								<td>{t.Model.LaunchYear || ''}</td>
 								<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
 								<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>
 								{#if hasDisplay}
@@ -364,7 +364,7 @@
 									<td>{pxCat}</td>
 									<td>{pxDensity ? `${pxDensity} px/mm` : ''}</td>
 								{/if}
-								<td>{(t.ModelIncludedPen ?? []).join(', ')}</td>
+								<td>{(t.Model.IncludedPen ?? []).join(', ')}</td>
 							</tr>
 						{/each}
 					</tbody>

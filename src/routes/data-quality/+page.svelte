@@ -51,12 +51,26 @@
 	let inventoryPenCount = $state(0);
 	let inventoryTabletCount = $state(0);
 
+	function getByPath(obj: Record<string, any>, path: string): unknown {
+		const parts = path.split('.');
+		let cur: unknown = obj;
+		for (const part of parts) {
+			if (cur == null || typeof cur !== 'object') return undefined;
+			cur = (cur as Record<string, unknown>)[part];
+		}
+		return cur;
+	}
+
+	function getEntityId(rec: Record<string, any>): string {
+		return (getByPath(rec, 'Meta.EntityId') as string) ?? rec.EntityId ?? rec._id ?? 'UNKNOWN';
+	}
+
 	function checkRequired(records: Record<string, any>[], entity: string, requiredFields: string[]): Issue[] {
 		const found: Issue[] = [];
 		for (const rec of records) {
-			const eid = rec.EntityId ?? rec._id ?? 'UNKNOWN';
+			const eid = getEntityId(rec);
 			for (const field of requiredFields) {
-				const val = rec[field];
+				const val = getByPath(rec, field);
 				if (val === undefined || val === null || (typeof val === 'string' && val.trim() === '')) {
 					found.push({ entity, entityId: eid, field, issue: 'missing or empty' });
 				}
@@ -67,13 +81,18 @@
 
 	function checkWhitespace(records: Record<string, any>[], entity: string): Issue[] {
 		const found: Issue[] = [];
-		for (const rec of records) {
-			const eid = rec.EntityId ?? rec._id ?? 'UNKNOWN';
-			for (const [field, value] of Object.entries(rec)) {
+		function traverse(obj: Record<string, any>, eid: string, prefix: string) {
+			for (const [field, value] of Object.entries(obj)) {
+				const path = prefix ? `${prefix}.${field}` : field;
 				if (typeof value === 'string' && value !== value.trim()) {
-					found.push({ entity, entityId: eid, field, issue: 'leading/trailing whitespace', value });
+					found.push({ entity, entityId: eid, field: path, issue: 'leading/trailing whitespace', value });
+				} else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+					traverse(value as Record<string, any>, eid, path);
 				}
 			}
+		}
+		for (const rec of records) {
+			traverse(rec, getEntityId(rec), '');
 		}
 		return found;
 	}
@@ -82,7 +101,7 @@
 		const total = records.length;
 		return fields.map(field => {
 			const populated = records.filter(r => {
-				const v = r[field];
+				const v = getByPath(r, field);
 				return v !== undefined && v !== null && v !== '';
 			}).length;
 			return { field, populated, total, percent: total > 0 ? ((populated / total) * 100).toFixed(1) : '0' };
@@ -90,7 +109,7 @@
 	}
 
 	function findOrphanedCompat(ds: DrawTabDataAll): { type: string; id: string }[] {
-		const tabletIds = new Set(ds.tablets.map(t => t.ModelId));
+		const tabletIds = new Set(ds.tablets.map(t => t.Model.Id));
 		const penIds = new Set(ds.pens.map(p => p.PenId));
 		const orphans: { type: string; id: string }[] = [];
 		const seenTablets = new Set<string>();
@@ -125,7 +144,7 @@
 		const allIssues: Issue[] = [];
 
 		// Required field checks
-		allIssues.push(...checkRequired(ds.tablets, 'Tablet', ['EntityId', 'Brand', 'ModelId', 'ModelName', 'ModelType']));
+		allIssues.push(...checkRequired(ds.tablets, 'Tablet', ['Meta.EntityId', 'Model.Brand', 'Model.Id', 'Model.Name', 'Model.Type']));
 		allIssues.push(...checkRequired(ds.pens, 'Pen', ['EntityId', 'Brand', 'PenId', 'PenName']));
 		allIssues.push(...checkRequired(ds.drivers, 'Driver', ['EntityId', 'Brand', 'DriverVersion', 'DriverName', 'OSFamily', 'ReleaseDate']));
 		allIssues.push(...checkRequired(ds.penFamilies, 'PenFamily', ['EntityId', 'Brand', 'FamilyId', 'FamilyName']));
@@ -145,18 +164,18 @@
 
 		// Completion stats
 		tabletCompletion = computeCompletion(ds.tablets, [
-			'ModelLaunchYear', 'ModelAudience', 'ModelFamily', 'ModelStatus', 'ModelIncludedPen',
-			'DigitizerType', 'DigitizerPressureLevels', 'DigitizerDimensions', 'DigitizerDensity',
-			'DigitizerReportRate', 'DigitizerTilt', 'DigitizerAccuracyCenter', 'DigitizerAccuracyCorner',
-			'DigitizerMaxHover', 'DigitizerSupportsTouch',
-			'PhysicalDimensions', 'PhysicalWeight', 'ModelProductLink',
+			'Model.LaunchYear', 'Model.Audience', 'Model.Family', 'Model.Status', 'Model.IncludedPen',
+			'Digitizer.Type', 'Digitizer.PressureLevels', 'Digitizer.Dimensions', 'Digitizer.Density',
+			'Digitizer.ReportRate', 'Digitizer.Tilt', 'Digitizer.AccuracyCenter', 'Digitizer.AccuracyCorner',
+			'Digitizer.MaxHover', 'Digitizer.SupportsTouch',
+			'Physical.Dimensions', 'Physical.Weight', 'Model.ProductLink',
 		]);
 
-		const displayTablets = ds.tablets.filter(t => t.ModelType === 'PENDISPLAY' || t.ModelType === 'STANDALONE');
+		const displayTablets = ds.tablets.filter(t => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE');
 		displayTabletCount = displayTablets.length;
 		displayCompletion = computeCompletion(displayTablets, [
-			'DisplayPixelDimensions', 'DisplayPanelTech', 'DisplayBrightness', 'DisplayContrast',
-			'DisplayColorBitDepth', 'DisplayColorGamuts', 'DisplayLamination',
+			'Display.PixelDimensions', 'Display.PanelTech', 'Display.Brightness', 'Display.Contrast',
+			'Display.ColorBitDepth', 'Display.ColorGamuts', 'Display.Lamination',
 		]);
 
 		penCompletion = computeCompletion(ds.pens, ['PenName', 'PenFamily', 'PenYear']);
@@ -190,8 +209,8 @@
 			}
 		}
 		for (const tab of ds.tablets) {
-			if (tab.ModelFamily && !tabletFamilyIds.has(tab.ModelFamily)) {
-				orphFamilies.push({ type: 'TabletFamily', id: tab.ModelFamily, referencedBy: tab.ModelId });
+			if (tab.Model.Family && !tabletFamilyIds.has(tab.Model.Family)) {
+				orphFamilies.push({ type: 'TabletFamily', id: tab.Model.Family, referencedBy: tab.Model.Id });
 			}
 		}
 		orphanedFamilies = orphFamilies;
@@ -210,10 +229,10 @@
 		];
 
 		// Compat coverage
-		const wacomTablets = ds.tablets.filter(t => t.Brand === 'WACOM');
+		const wacomTablets = ds.tablets.filter(t => t.Model.Brand === 'WACOM');
 		tabletsNoCompat = wacomTablets
-			.filter(t => !ds!.tabletToPens.has(t.ModelId))
-			.map(t => ({ id: t.ModelId, name: t.ModelName }));
+			.filter(t => !ds!.tabletToPens.has(t.Model.Id))
+			.map(t => ({ id: t.Model.Id, name: t.Model.Name }));
 
 		pensNoCompat = ds.pens
 			.filter(p => !ds!.penToTablets.has(p.PenId))

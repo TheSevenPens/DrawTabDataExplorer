@@ -4,7 +4,7 @@
 	let dialog: HTMLDialogElement | undefined = $state();
 	let copied = $state(false);
 	const json = $derived(JSON.stringify(entity, null, 2));
-	const title = $derived(entity.EntityId ?? 'JSON');
+	const title = $derived(entity.Meta?.EntityId ?? entity.EntityId ?? 'JSON');
 
 	// Drag state
 	let posX = $state<number | null>(null);

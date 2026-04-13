@@ -25,14 +25,14 @@
 			loadPensFromURL(base),
 		]);
 
-		brands = [...new Set([...tablets.map(t => t.Brand), ...pens.map(p => p.Brand)])].sort();
+		brands = [...new Set([...tablets.map(t => t.Model.Brand), ...pens.map(p => p.Brand)])].sort();
 
 		const yearMap = new Map<string, { tablets: Tablet[]; pens: Pen[] }>();
 
 		for (const t of tablets) {
-			if (!t.ModelLaunchYear) continue;
-			if (!yearMap.has(t.ModelLaunchYear)) yearMap.set(t.ModelLaunchYear, { tablets: [], pens: [] });
-			yearMap.get(t.ModelLaunchYear)!.tablets.push(t);
+			if (!t.Model.LaunchYear) continue;
+			if (!yearMap.has(t.Model.LaunchYear)) yearMap.set(t.Model.LaunchYear, { tablets: [], pens: [] });
+			yearMap.get(t.Model.LaunchYear)!.tablets.push(t);
 		}
 
 		for (const p of pens) {
@@ -78,11 +78,11 @@
 			let tablets = entry.tablets;
 			let pens = entry.pens;
 			if (filterBrand) {
-				tablets = tablets.filter(t => t.Brand === filterBrand);
+				tablets = tablets.filter(t => t.Model.Brand === filterBrand);
 				pens = pens.filter(p => p.Brand === filterBrand);
 			}
 			if (filterType) {
-				tablets = tablets.filter(t => t.ModelType === filterType);
+				tablets = tablets.filter(t => t.Model.Type === filterType);
 			}
 			return { year: entry.year, tablets, pens };
 		});
@@ -137,11 +137,11 @@
 						<h3>Tablets ({entry.tablets.length})</h3>
 						<div class="items">
 							{#each entry.tablets as t}
-								<a class="item tablet" href="{base}/tablets/{encodeURIComponent(t.EntityId)}">
-									<span class="item-brand">{brandName(t.Brand)}</span>
-									<span class="item-name">{t.ModelName}</span>
-									<span class="item-id">{t.ModelId}</span>
-									<span class="item-type">{t.ModelType}</span>
+								<a class="item tablet" href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">
+									<span class="item-brand">{brandName(t.Model.Brand)}</span>
+									<span class="item-name">{t.Model.Name}</span>
+									<span class="item-id">{t.Model.Id}</span>
+									<span class="item-type">{t.Model.Type}</span>
 								</a>
 							{/each}
 						</div>

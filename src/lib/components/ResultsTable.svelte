@@ -78,7 +78,7 @@
 			{#each data as item}
 				<tr>
 					{#if showFlags}
-						{@const eid = item.EntityId ?? ''}
+						{@const eid = item.Meta?.EntityId ?? item.EntityId ?? ''}
 						<td class="flag-col">
 							<button
 								class="flag-btn"

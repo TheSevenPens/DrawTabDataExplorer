@@ -19,12 +19,12 @@
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
 	let flaggedItems = $derived(
-		$flaggedTablets.map(id => allTablets.find(t => t.EntityId === id)).filter((t): t is Tablet => !!t)
+		$flaggedTablets.map(id => allTablets.find(t => t.Meta.EntityId === id)).filter((t): t is Tablet => !!t)
 	);
 
 	function getDisplayVal(f: typeof TABLET_FIELDS[0], tablet: Tablet): string {
 		if (f.key === 'ModelIncludedPen') {
-			return formatPenIds(tablet.ModelIncludedPen ?? [], penNameMap);
+			return formatPenIds(tablet.Model.IncludedPen ?? [], penNameMap);
 		}
 		const val = f.getValue(tablet);
 		if (!val || val === '-') return '';
@@ -60,44 +60,44 @@
 	let compareYearsPT = $state<number | null>(15);
 	let compareYearsPD = $state<number | null>(15);
 
-	let hasFlaggedPenTablets = $derived(flaggedItems.some(t => t.ModelType === 'PENTABLET'));
-	let hasFlaggedPenDisplays = $derived(flaggedItems.some(t => t.ModelType !== 'PENTABLET'));
+	let hasFlaggedPenTablets = $derived(flaggedItems.some(t => t.Model.Type === 'PENTABLET'));
+	let hasFlaggedPenDisplays = $derived(flaggedItems.some(t => t.Model.Type !== 'PENTABLET'));
 
 	let ptHistValues = $derived(
 		allTablets
 			.filter(t => {
-				if (t.ModelType !== 'PENTABLET') return false;
+				if (t.Model.Type !== 'PENTABLET') return false;
 				if (compareYearsPT !== null) {
-					const y = parseInt(t.ModelLaunchYear, 10);
+					const y = parseInt(t.Model.LaunchYear, 10);
 					if (!isNaN(y) && y < currentYear - compareYearsPT) return false;
 				}
 				return true;
 			})
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
 	let pdHistValues = $derived(
 		allTablets
 			.filter(t => {
-				if (t.ModelType === 'PENTABLET') return false;
+				if (t.Model.Type === 'PENTABLET') return false;
 				if (compareYearsPD !== null) {
-					const y = parseInt(t.ModelLaunchYear, 10);
+					const y = parseInt(t.Model.LaunchYear, 10);
 					if (!isNaN(y) && y < currentYear - compareYearsPD) return false;
 				}
 				return true;
 			})
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
 	function flaggedMarkers(type: 'PENTABLET' | 'PENDISPLAY'): HistogramMarker[] {
 		return flaggedItems
-			.filter(t => type === 'PENTABLET' ? t.ModelType === 'PENTABLET' : t.ModelType !== 'PENTABLET')
+			.filter(t => type === 'PENTABLET' ? t.Model.Type === 'PENTABLET' : t.Model.Type !== 'PENTABLET')
 			.map(t => {
-				const d = getDiagonal(t.DigitizerDimensions);
+				const d = getDiagonal(t.Digitizer?.Dimensions);
 				if (!d) return null;
-				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: `${t.ModelName}` };
+				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: `${t.Model.Name}` };
 			})
 			.filter((m): m is HistogramMarker => m !== null);
 	}
@@ -156,8 +156,8 @@
 		<ul class="flagged-list">
 			{#each flaggedItems as t}
 				<li>
-					<button class="unflag-btn" onclick={() => toggleFlag(t.EntityId)} title="Unflag">&#x2691;</button>
-					<a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName} ({t.ModelId})</a>
+					<button class="unflag-btn" onclick={() => toggleFlag(t.Meta.EntityId)} title="Unflag">&#x2691;</button>
+					<a href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a>
 				</li>
 			{/each}
 		</ul>
@@ -178,7 +178,7 @@
 					<tr>
 						<th class="spec-col">Spec</th>
 						{#each flaggedItems as t}
-							<th><a href="{base}/tablets/{encodeURIComponent(t.EntityId)}">{brandName(t.Brand)} {t.ModelName}</a></th>
+							<th><a href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name}</a></th>
 						{/each}
 					</tr>
 				</thead>

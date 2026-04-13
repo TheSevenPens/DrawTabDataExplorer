@@ -19,9 +19,9 @@
 
 	function filterByYears(tablets: Tablet[], type: string, years: number | null): Tablet[] {
 		return tablets.filter(t => {
-			if (t.ModelType !== type && !(type === 'PENDISPLAY' && t.ModelType === 'STANDALONE')) return false;
+			if (t.Model.Type !== type && !(type === 'PENDISPLAY' && t.Model.Type === 'STANDALONE')) return false;
 			if (years !== null) {
-				const year = parseInt(t.ModelLaunchYear, 10);
+				const year = parseInt(t.Model.LaunchYear, 10);
 				if (!isNaN(year) && year < currentYear - years) return false;
 			}
 			return true;
@@ -30,13 +30,13 @@
 
 	let penTabletValues = $derived(
 		filterByYears(allTablets, 'PENTABLET', penTabletCompareYears)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
 	let penDisplayValues = $derived(
 		filterByYears(allTablets, 'PENDISPLAY', penDisplayCompareYears)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
@@ -67,25 +67,25 @@
 
 	let usPenTabletValues = $derived(
 		filterByYears(allTablets, 'PENTABLET', usCompareYearsPenTablet)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
 	let usPenDisplayValues = $derived(
 		filterByYears(allTablets, 'PENDISPLAY', usCompareYearsPenDisplay)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
 	let isoPenTabletValues = $derived(
 		filterByYears(allTablets, 'PENTABLET', isoCompareYearsPenTablet)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
 	let isoPenDisplayValues = $derived(
 		filterByYears(allTablets, 'PENDISPLAY', isoCompareYearsPenDisplay)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
 
@@ -121,12 +121,12 @@
 	}
 
 	let displayTablets = $derived(
-		allTablets.filter(t => t.ModelType === 'PENDISPLAY' || t.ModelType === 'STANDALONE')
+		allTablets.filter(t => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE')
 	);
 
 	let resolutionCounts = $derived(
 		displayTablets.reduce<Record<string, number>>((acc, t) => {
-			const d = t.DisplayPixelDimensions;
+			const d = t.Display?.PixelDimensions;
 			if (!d?.Width || !d?.Height) return acc;
 			const cat = getResolutionCategory(d.Width, d.Height);
 			acc[cat] = (acc[cat] ?? 0) + 1;
