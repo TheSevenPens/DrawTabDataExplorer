@@ -94,12 +94,16 @@
 		return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
 	});
 
-	const col1Groups = ['Model'];
+	let col1Groups = $derived(
+		tablet?.ModelType === 'STANDALONE' ? ['Model', 'Physical', 'Standalone'] : ['Model']
+	);
 	const col2Groups = ['Digitizer'];
 	const col3Groups = ['Display'];
 
 	function getGroupFields(groups: string[]) {
-		const expanded = groups.includes('Model') ? [...groups, 'Physical'] : groups;
+		const expanded = groups.includes('Model') && tablet?.ModelType !== 'STANDALONE'
+			? [...groups, 'Physical']
+			: groups;
 		return TABLET_FIELDS.filter(f => expanded.includes(f.group));
 	}
 
