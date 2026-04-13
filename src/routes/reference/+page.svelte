@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadISOPaperSizesFromURL, loadTabletsFromURL, getDiagonal, type ISOPaperSize, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadISOPaperSizesFromURL, loadUSPaperSizesFromURL, loadTabletsFromURL, getDiagonal, type ISOPaperSize, type USPaperSize, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 
-	let activeTab: 'tablet-sizes' | 'iso-paper' = $state('tablet-sizes');
+	let activeTab: 'tablet-sizes' | 'iso-paper' | 'us-paper' = $state('tablet-sizes');
 	let paperSizes: ISOPaperSize[] = $state([]);
+	let usPaperSizes: USPaperSize[] = $state([]);
 	let allTablets: Tablet[] = $state([]);
 
 	const currentYear = new Date().getFullYear();
@@ -52,6 +53,30 @@
 	let isoCompareYearsPenTablet = $state<number | null>(15);
 	let isoCompareYearsPenDisplay = $state<number | null>(15);
 
+	let usCompareYearsPenTablet = $state<number | null>(15);
+	let usCompareYearsPenDisplay = $state<number | null>(15);
+
+	let usCommonSeries = $derived(usPaperSizes.filter(p => p.Series === 'Common'));
+
+	let usMarkers = $derived<HistogramMarker[]>(
+		usCommonSeries.map(p => {
+			const diagMm = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
+			return { value: isMetric ? diagMm / 10 : diagMm * MM_TO_IN, label: p.Name };
+		})
+	);
+
+	let usPenTabletValues = $derived(
+		filterByYears(allTablets, 'PENTABLET', usCompareYearsPenTablet)
+			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.filter((d): d is number => d !== null)
+	);
+
+	let usPenDisplayValues = $derived(
+		filterByYears(allTablets, 'PENDISPLAY', usCompareYearsPenDisplay)
+			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.filter((d): d is number => d !== null)
+	);
+
 	let isoPenTabletValues = $derived(
 		filterByYears(allTablets, 'PENTABLET', isoCompareYearsPenTablet)
 			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
@@ -79,11 +104,13 @@
 	}
 
 	onMount(async () => {
-		const [p, t] = await Promise.all([
+		const [p, us, t] = await Promise.all([
 			loadISOPaperSizesFromURL(base),
+			loadUSPaperSizesFromURL(base),
 			loadTabletsFromURL(base),
 		]);
 		paperSizes = p;
+		usPaperSizes = us;
 		allTablets = t;
 	});
 </script>
@@ -96,6 +123,9 @@
 	</button>
 	<button class:active={activeTab === 'iso-paper'} onclick={() => activeTab = 'iso-paper'}>
 		ISO Paper Sizes
+	</button>
+	<button class:active={activeTab === 'us-paper'} onclick={() => activeTab = 'us-paper'}>
+		US Paper Sizes
 	</button>
 </div>
 
@@ -236,6 +266,73 @@
 				bandwidthMultiplier={0.2}
 				bind:compareYears={isoCompareYearsPenDisplay}
 				markers={isoAMarkers}
+			/>
+		</section>
+	{/if}
+{:else if activeTab === 'us-paper'}
+	<section>
+		<div class="section-header">
+			<h2>US Paper Sizes</h2>
+			<button class="copy-btn" onclick={() => {
+				const table = document.querySelector('#us-paper-table');
+				if (table) navigator.clipboard.writeText(table.outerHTML);
+			}}>Copy as HTML</button>
+		</div>
+		{#if usPaperSizes.length > 0}
+			<table id="us-paper-table" class="ref-table">
+				<thead><tr><th>Name</th><th>Series</th><th>Width (cm)</th><th>Height (cm)</th><th>Diagonal (cm)</th><th>Width (in)</th><th>Height (in)</th><th>Diagonal (in)</th></tr></thead>
+				<tbody>
+					{#each usPaperSizes as size}
+						{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
+						{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
+						<tr>
+							<td>{size.Name}</td>
+							<td>{size.Series}</td>
+							<td>{(size.Width_mm / 10).toFixed(1)}</td>
+							<td>{(size.Height_mm / 10).toFixed(1)}</td>
+							<td>{diagCm.toFixed(1)}</td>
+							<td>{size.Width_in}</td>
+							<td>{size.Height_in}</td>
+							<td>{diagIn.toFixed(1)}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		{:else}
+			<p class="no-data">Loading...</p>
+		{/if}
+	</section>
+
+	{#if usPenTabletValues.length > 0}
+		<section>
+			<h2>Pen Tablet Diagonal Distribution with US Paper Sizes</h2>
+			<ValueHistogram
+				title="Pen tablet active area diagonal with US paper sizes"
+				values={usPenTabletValues}
+				currentValue={null}
+				ranges={penTabletHistRanges}
+				unit={isMetric ? ' cm' : '"'}
+				binSize={isMetric ? 1 : 0.5}
+				bandwidthMultiplier={0.2}
+				bind:compareYears={usCompareYearsPenTablet}
+				markers={usMarkers}
+			/>
+		</section>
+	{/if}
+
+	{#if usPenDisplayValues.length > 0}
+		<section>
+			<h2>Pen Display Diagonal Distribution with US Paper Sizes</h2>
+			<ValueHistogram
+				title="Pen display active area diagonal with US paper sizes"
+				values={usPenDisplayValues}
+				currentValue={null}
+				ranges={penDisplayHistRanges}
+				unit={isMetric ? ' cm' : '"'}
+				binSize={isMetric ? 1 : 0.5}
+				bandwidthMultiplier={0.2}
+				bind:compareYears={usCompareYearsPenDisplay}
+				markers={usMarkers}
 			/>
 		</section>
 	{/if}
