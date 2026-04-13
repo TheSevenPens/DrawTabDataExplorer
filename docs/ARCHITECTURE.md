@@ -79,7 +79,50 @@ dataset by release year. Used on the tablet detail page, the Reference
 page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 
 **Nav** — Navigation bar with links to all entity pages and a
-metric/imperial toggle button.
+metric/imperial toggle button. Shows a badge on the Compare link with
+the current flagged tablet count.
+
+## Compare feature
+
+Users can flag tablets for side-by-side comparison. The feature spans
+several files:
+
+- **`src/lib/flagged-store.ts`** — Svelte writable store backed by
+  localStorage (`drawtabdata-flagged-tablets`). Stores an array of
+  EntityId strings, max 6. Exports `flaggedTablets`, `toggleFlag()`,
+  `clearFlags()`, and `flaggedCount` (derived).
+
+- **Flag from list page** — `ResultsTable` accepts optional `flaggedIds`
+  (Set) and `onToggleFlag` callback props. When provided, renders a
+  flag icon column. The tablets list page (`+page.svelte`) passes these
+  through `EntityExplorer`.
+
+- **Flag from detail page** — Tablet detail page shows a Flag/Unflag
+  button in the title row.
+
+- **Compare page** (`/compare`) — Two tabs:
+  - *Flagged* — list of flagged tablets with unflag buttons and clear all.
+  - *Compare* — side-by-side spec table with specs as rows and tablets
+    as columns. Rows are grouped by field group (Model, Digitizer,
+    Display, Physical). Cells with differing values are highlighted.
+    Includes Copy as HTML and Export as HTML buttons. Below the table,
+    size histograms show the flagged tablets as markers against the
+    full distribution.
+
+## Shared modules
+
+- **`src/lib/tablet-size-ranges.ts`** — Size range constants for pen
+  tablets and pen displays (cm and inches), plus `MM_TO_IN` and
+  `MM_TO_CM` conversion constants. Single source of truth imported by
+  the tablet detail, reference, and compare pages.
+
+- **`src/lib/field-display.ts`** — `stripUnit()` and `valueSuffix()`
+  helpers for formatting field labels and values with units. Used by
+  the tablet detail and compare pages.
+
+- **`src/lib/pen-helpers.ts`** — `buildPenNameMap()` and
+  `formatPenIds()` for resolving pen IDs to display names. Used by
+  the tablet detail and compare pages.
 
 ## Svelte 5 notes
 
