@@ -4,7 +4,7 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
-	let { data, visibleFields, fields, total, entityLabel = "records", detailBasePath = "", columnWidths = $bindable({}), onwidthchange }: {
+	let { data, visibleFields, fields, total, entityLabel = "records", detailBasePath = "", columnWidths = $bindable({}), onwidthchange, flaggedIds, onToggleFlag }: {
 		data: any[];
 		visibleFields: string[];
 		fields: FieldDef<any>[];
@@ -13,7 +13,11 @@
 		detailBasePath?: string;
 		columnWidths?: Record<string, number>;
 		onwidthchange?: () => void;
+		flaggedIds?: Set<string>;
+		onToggleFlag?: (entityId: string) => void;
 	} = $props();
+
+	let showFlags = $derived(!!flaggedIds && !!onToggleFlag);
 
 	let fieldDefs = $derived(
 		visibleFields.map((k) => getFieldDef(k, fields)).filter((f) => f !== undefined)
@@ -49,6 +53,9 @@
 	<table style="table-layout: {Object.keys(columnWidths).length > 0 ? 'fixed' : 'auto'};">
 		<thead>
 			<tr>
+				{#if showFlags}
+					<th class="flag-col"></th>
+				{/if}
 				{#each fieldDefs as f}
 					<th
 						style={columnWidths[f.key] ? `width: ${columnWidths[f.key]}px` : ''}
@@ -70,6 +77,17 @@
 		<tbody>
 			{#each data as item}
 				<tr>
+					{#if showFlags}
+						{@const eid = item.EntityId ?? ''}
+						<td class="flag-col">
+							<button
+								class="flag-btn"
+								class:flagged={flaggedIds!.has(eid)}
+								onclick={() => onToggleFlag!(eid)}
+								title={flaggedIds!.has(eid) ? 'Unflag' : 'Flag for comparison'}
+							>{flaggedIds!.has(eid) ? '\u2691' : '\u2690'}</button>
+						</td>
+					{/if}
 					{#each fieldDefs as f}
 						{@const val = f.getValue(item)}
 						{@const displayVal = formatValue(val, f.unit, $unitPreference)}
@@ -118,5 +136,29 @@
 	td {
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.flag-col {
+		width: 28px;
+		padding: 0 2px;
+		text-align: center;
+	}
+
+	.flag-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 16px;
+		color: var(--text-dim);
+		padding: 0;
+		line-height: 1;
+	}
+
+	.flag-btn.flagged {
+		color: #d97706;
+	}
+
+	.flag-btn:hover {
+		color: #d97706;
 	}
 </style>

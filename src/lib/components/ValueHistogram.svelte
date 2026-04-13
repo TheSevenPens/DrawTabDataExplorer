@@ -31,7 +31,8 @@
 	let titleHeight = $derived(title ? 28 : 0);
 	let padTop = $derived(40 + titleHeight);
 	const padBottom = 65;
-	let totalHeight = $derived(chartHeight + titleHeight);
+	let markerExtraHeight = $derived(markers.length > 0 ? (Math.min(MARKER_TIERS, markers.length) - 1) * 14 + 10 : 0);
+	let totalHeight = $derived(chartHeight + titleHeight + markerExtraHeight);
 	let chartW = $derived(width - padLeft - padRight);
 	let chartH = $derived(chartHeight - 40 - padBottom);
 
@@ -101,6 +102,30 @@
 	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
 
 	const rangeOpacities = [0.2, 0.35, 0.2, 0.35];
+
+	// Stagger marker labels to avoid overlap
+	const CHAR_WIDTH = 5.5; // approx px per char at font-size 10
+	const LABEL_PAD = 8; // extra gap between labels
+	const MARKER_TIERS = 4;
+	let positionedMarkers = $derived.by(() => {
+		const visible = markers
+			.filter(m => m.value >= scaleMin && m.value <= scaleMax)
+			.map(m => ({ ...m, x: xScale(m.value), labelW: m.label.length * CHAR_WIDTH }))
+			.sort((a, b) => a.x - b.x);
+		// Track the left edge of the last label placed on each tier (labels are right-aligned to marker x)
+		const tierLeftEdge = new Array(MARKER_TIERS).fill(Infinity);
+		return visible.map(m => {
+			const rightEdge = m.x;
+			const leftEdge = m.x - m.labelW;
+			let tier = 0;
+			for (let i = 0; i < MARKER_TIERS; i++) {
+				if (rightEdge <= tierLeftEdge[i] - LABEL_PAD) { tier = i; break; }
+				if (i === MARKER_TIERS - 1) tier = i;
+			}
+			tierLeftEdge[tier] = leftEdge;
+			return { ...m, tier };
+		});
+	});
 
 	let svgEl: SVGSVGElement | undefined = $state();
 	let copyStatus = $state('');
@@ -250,28 +275,26 @@
 			{/if}
 
 			<!-- Markers -->
-			{#each markers as marker}
-				{#if marker.value >= scaleMin && marker.value <= scaleMax}
-					{@const mx = xScale(marker.value)}
-					<line
-						x1={mx}
-						y1={padTop - 8}
-						x2={mx}
-						y2={padTop + chartH + 30}
-						stroke="#e11d48"
-						stroke-width="1.5"
-						stroke-dasharray="4 3"
-						opacity="0.7"
-					/>
-					<text
-						x={mx}
-						y={padTop + chartH + 42}
-						text-anchor="middle"
-						font-size="10"
-						font-weight="600"
-						fill="#e11d48"
-					>{marker.label}</text>
-				{/if}
+			{#each positionedMarkers as marker}
+				{@const labelY = padTop + chartH + 42 + marker.tier * 14}
+				<line
+					x1={marker.x}
+					y1={padTop - 8}
+					x2={marker.x}
+					y2={labelY - 4}
+					stroke="#e11d48"
+					stroke-width="1.5"
+					stroke-dasharray="4 3"
+					opacity="0.7"
+				/>
+				<text
+					x={marker.x - 4}
+					y={labelY}
+					text-anchor="end"
+					font-size="10"
+					font-weight="600"
+					fill="#e11d48"
+				>{marker.label}</text>
 			{/each}
 
 			<!-- Current value indicator -->

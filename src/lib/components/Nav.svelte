@@ -3,6 +3,7 @@
 	import { base } from '$app/paths';
 	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
 	import { theme, toggleTheme } from '$lib/theme-store.js';
+	import { flaggedCount } from '$lib/flagged-store.js';
 
 	const links = [
 		{ href: '/brands', label: 'Brands' },
@@ -15,6 +16,7 @@
 		{ href: '/pressure-response', label: 'Pressure Response' },
 		{ href: '/inventory', label: 'Inventory' },
 		{ href: '/timeline', label: 'Timeline' },
+		{ href: '/compare', label: 'Compare', dynamic: true },
 		{ href: '/reference', label: 'Reference' },
 		{ href: '/data-quality', label: 'Data Quality' },
 	];
@@ -23,7 +25,7 @@
 <nav>
 	<div class="nav-links">
 		{#each links as link}
-			<a href="{base}{link.href}" class:active={page.url.pathname === base + link.href}>{link.label}</a>
+			<a href="{base}{link.href}" class:active={page.url.pathname === base + link.href}>{link.label}{#if link.dynamic && $flaggedCount > 0}<span class="badge">{$flaggedCount}</span>{/if}</a>
 		{/each}
 	</div>
 	<div class="nav-toggles">
@@ -71,6 +73,19 @@
 		background: #2563eb;
 		color: #fff;
 		border-color: #2563eb;
+	}
+
+	.badge {
+		display: inline-block;
+		margin-left: 4px;
+		padding: 0 5px;
+		font-size: 11px;
+		font-weight: 700;
+		line-height: 16px;
+		background: #d97706;
+		color: #fff;
+		border-radius: 8px;
+		vertical-align: middle;
 	}
 
 	.unit-toggle {

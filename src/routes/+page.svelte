@@ -10,8 +10,10 @@
 	} from '$data/lib/entities/tablet-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
 
 	let data: Tablet[] = $state([]);
+	let flaggedSet = $derived(new Set($flaggedTablets));
 
 	onMount(async () => {
 		data = await loadTabletsFromURL(base);
@@ -32,4 +34,6 @@
 	defaultFilterField="Brand"
 	defaultSortField="Brand"
 	quickFilterFields={["Brand", "ModelType", "DigitizerSizeCategory"]}
+	flaggedIds={flaggedSet}
+	onToggleFlag={toggleFlag}
 />

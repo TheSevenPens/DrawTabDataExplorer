@@ -11,11 +11,19 @@
 	import { formatValue, getFieldLabel, getDisplayUnit } from '$data/lib/units.js';
 	import { getFieldDef } from '$data/lib/pipeline/index.js';
 	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
+	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
 
 	let tablet = $state<Tablet | null>(null);
 	let allTablets: Tablet[] = $state([]);
+	let allPens: Pen[] = $state([]);
 	let compatiblePens: Pen[] = $state([]);
 	let notFound = $state(false);
+
+	let penNameMap = $derived(new Map(allPens.map(p => [p.PenId, `${brandName(p.Brand)} ${p.PenName} (${p.PenId})`])));
+
+	function includedPenNames(tablet: Tablet): string {
+		return (tablet.ModelIncludedPen ?? []).map(id => penNameMap.get(id) ?? id).join(', ');
+	}
 
 	let filterSimilarSize = $state(true);
 	let filterSamePen = $state(false);
@@ -159,13 +167,14 @@
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId!);
-		const [allT, allCompat, allPens, iso] = await Promise.all([
+		const [allT, allCompat, loadedPens, iso] = await Promise.all([
 			loadTabletsFromURL(base),
 			loadPenCompatFromURL(base) as Promise<PenCompat[]>,
 			loadPensFromURL(base) as Promise<Pen[]>,
 			loadISOPaperSizesFromURL(base),
 		]);
 		isoSizes = iso;
+		allPens = loadedPens;
 
 		const found = allT.find((t) => t.EntityId === entityId);
 		if (!found) {
@@ -179,7 +188,7 @@
 				.filter((c) => c.TabletId === found.ModelId)
 				.map((c) => c.PenId)
 		);
-		compatiblePens = allPens.filter((p) => compatPenIds.has(p.PenId));
+		compatiblePens = loadedPens.filter((p) => compatPenIds.has(p.PenId));
 		allTablets = allT;
 	});
 
@@ -216,6 +225,11 @@
 	<p class="back"><a href="{base}/">&larr; Tablets</a></p>
 	<div class="title-row">
 		<h1>{tablet ? `${brandName(tablet.Brand)} ${tablet.ModelName}` : 'Loading...'}</h1>
+		{#if tablet}
+			<button class="flag-toggle" class:flagged={$flaggedTablets.includes(tablet.EntityId)} onclick={() => toggleFlag(tablet!.EntityId)}>
+				{$flaggedTablets.includes(tablet.EntityId) ? 'Unflag' : 'Flag'}
+			</button>
+		{/if}
 		<button class="unit-toggle" onclick={toggleUnits}>
 			{$unitPreference === 'metric' ? 'Metric' : 'Imperial'}
 		</button>
@@ -249,7 +263,9 @@
 											<div class="field-row">
 												<dt>{stripUnit(f.label, f.unit)}</dt>
 												<dd>
-													{#if isUrl(val)}
+													{#if f.key === 'ModelIncludedPen'}
+														{includedPenNames(tablet!)}
+													{:else if isUrl(val)}
 														<a href={val} target="_blank" rel="noopener">{val}</a>
 													{:else}
 														{displayVal}{valueSuffix(f.label, f.unit)}
@@ -406,6 +422,27 @@
 	}
 
 	h1 { margin: 0; }
+
+	.flag-toggle {
+		padding: 4px 10px;
+		font-size: 13px;
+		border: 1px solid #d97706;
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: #d97706;
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.flag-toggle:hover {
+		background: #d97706;
+		color: #fff;
+	}
+
+	.flag-toggle.flagged {
+		background: #d97706;
+		color: #fff;
+	}
 
 	.unit-toggle {
 		padding: 4px 10px;
