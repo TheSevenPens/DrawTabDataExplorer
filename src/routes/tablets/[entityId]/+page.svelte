@@ -8,10 +8,12 @@
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
 	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
-	import { formatValue, getFieldLabel, getDisplayUnit } from '$data/lib/units.js';
-	import { getFieldDef } from '$data/lib/pipeline/index.js';
+	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
+	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
+	import { stripUnit, valueSuffix } from '$lib/field-display.js';
+	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 
 	let tablet = $state<Tablet | null>(null);
 	let allTablets: Tablet[] = $state([]);
@@ -19,10 +21,10 @@
 	let compatiblePens: Pen[] = $state([]);
 	let notFound = $state(false);
 
-	let penNameMap = $derived(new Map(allPens.map(p => [p.PenId, `${brandName(p.Brand)} ${p.PenName} (${p.PenId})`])));
+	let penNameMap = $derived(buildPenNameMap(allPens));
 
 	function includedPenNames(tablet: Tablet): string {
-		return (tablet.ModelIncludedPen ?? []).map(id => penNameMap.get(id) ?? id).join(', ');
+		return formatPenIds(tablet.ModelIncludedPen ?? [], penNameMap);
 	}
 
 	let filterSimilarSize = $state(true);
@@ -58,39 +60,9 @@
 		return `${qualifier}${best.Name}`;
 	});
 
-	const MM_TO_IN = 0.03937;
 	const currentYear = new Date().getFullYear();
 
 	let compareYears = $state<number | null>(15);
-
-	const penTabletRangesIn = [
-		{ label: 'TINY', min: 2, max: 6 },
-		{ label: 'SMALL', min: 6, max: 9 },
-		{ label: 'MEDIUM', min: 9, max: 14 },
-		{ label: 'LARGE', min: 14, max: 20 },
-		{ label: 'EXTRA LARGE', min: 20, max: 29 },
-	];
-	const penTabletRangesCm = [
-		{ label: 'TINY', min: 6, max: 16 },
-		{ label: 'SMALL', min: 16, max: 24 },
-		{ label: 'MEDIUM', min: 24, max: 36 },
-		{ label: 'LARGE', min: 36, max: 50 },
-		{ label: 'EXTRA LARGE', min: 50, max: 74 },
-	];
-	const displayRangesIn = [
-		{ label: 'TINY', min: 9, max: 11 },
-		{ label: 'SMALL', min: 11, max: 15 },
-		{ label: 'MEDIUM', min: 15, max: 20 },
-		{ label: 'LARGE', min: 20, max: 30 },
-		{ label: 'EXTRA LARGE', min: 30, max: 34 },
-	];
-	const displayRangesCm = [
-		{ label: 'TINY', min: 23, max: 28 },
-		{ label: 'SMALL', min: 28, max: 38 },
-		{ label: 'MEDIUM', min: 38, max: 50 },
-		{ label: 'LARGE', min: 50, max: 76 },
-		{ label: 'EXTRA LARGE', min: 76, max: 86 },
-	];
 
 	let isMetric = $derived($unitPreference === 'metric');
 
@@ -101,8 +73,6 @@
 		}
 		return isMetric ? displayRangesCm : displayRangesIn;
 	});
-
-	const MM_TO_CM = 0.1;
 
 	let histogramValues = $derived(
 		allTablets
@@ -133,7 +103,7 @@
 		return TABLET_FIELDS.filter(f => expanded.includes(f.group));
 	}
 
-	function copyGroup(groupId: string, format: string) {
+	function copyGroup(groupId: string, format: 'table' | 'list') {
 		const rows = document.querySelectorAll(`#group-${groupId} .field-row`);
 		const pairs = [...rows].map(r => ({
 			label: r.querySelector('dt')?.textContent?.trim() ?? '',
@@ -152,18 +122,6 @@
 		return val.startsWith('http://') || val.startsWith('https://');
 	}
 
-	function stripUnit(label: string, unit: string | undefined): string {
-		const m = label.match(/^(.+)\s*\(([^)]+)\)$/);
-		if (m && (unit || LABEL_UNITS.has(m[2]))) return m[1].trim();
-		return label;
-	}
-
-	const LABEL_UNITS = new Set(['mm', 'cm', 'g', 'degrees', 'Hz', 'ms']);
-	function valueSuffix(label: string, unit: string | undefined): string {
-		if (unit) return ' ' + getDisplayUnit(unit, $unitPreference);
-		const m = label.match(/\(([^)]+)\)$/);
-		return m && LABEL_UNITS.has(m[1]) ? ' ' + m[1] : '';
-	}
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId!);
@@ -268,7 +226,7 @@
 													{:else if isUrl(val)}
 														<a href={val} target="_blank" rel="noopener">{val}</a>
 													{:else}
-														{displayVal}{valueSuffix(f.label, f.unit)}
+														{displayVal}{valueSuffix(f.label, f.unit, $unitPreference)}
 													{/if}
 													{#if f.computed}
 														<span class="computed-badge">computed</span>
@@ -649,18 +607,6 @@
 
 	.similar-table a:hover { text-decoration: underline; }
 
-	.chart-options {
-		margin-bottom: 8px;
-	}
-
-	.chart-options label {
-		font-size: 13px;
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		cursor: pointer;
-		color: var(--text);
-	}
 
 	.size-comparison {
 		display: flex;

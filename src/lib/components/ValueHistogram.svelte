@@ -340,15 +340,6 @@
 		height: auto;
 	}
 
-	.histogram-title {
-		font-size: 14px;
-		font-weight: 600;
-		color: var(--text);
-		margin: 0 0 8px 0;
-		width: 900px;
-		text-align: center;
-	}
-
 	.histogram-toolbar {
 		width: 900px;
 		display: flex;

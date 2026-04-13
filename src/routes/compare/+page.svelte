@@ -5,44 +5,31 @@
 	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
-	import { formatValue, getDisplayUnit } from '$data/lib/units.js';
+	import { formatValue } from '$data/lib/units.js';
 	import { flaggedTablets, toggleFlag, clearFlags } from '$lib/flagged-store.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
+	import { stripUnit, valueSuffix } from '$lib/field-display.js';
+	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 
 	let activeTab: 'flagged' | 'compare' = $state('flagged');
 	let allTablets: Tablet[] = $state([]);
 	let allPens: Pen[] = $state([]);
 
-	let penNameMap = $derived(new Map(allPens.map(p => [p.PenId, `${brandName(p.Brand)} ${p.PenName} (${p.PenId})`])));
+	let penNameMap = $derived(buildPenNameMap(allPens));
 
 	let flaggedItems = $derived(
 		$flaggedTablets.map(id => allTablets.find(t => t.EntityId === id)).filter((t): t is Tablet => !!t)
 	);
 
-	const LABEL_UNITS = new Set(['mm', 'cm', 'g', 'degrees', 'Hz', 'ms']);
-
-	function stripUnit(label: string, unit: string | undefined): string {
-		const m = label.match(/^(.+)\s*\(([^)]+)\)$/);
-		if (m && (unit || LABEL_UNITS.has(m[2]))) return m[1].trim();
-		return label;
-	}
-
-	function valueSuffix(label: string, unit: string | undefined): string {
-		if (unit) return ' ' + getDisplayUnit(unit, $unitPreference);
-		const m = label.match(/\(([^)]+)\)$/);
-		return m && LABEL_UNITS.has(m[1]) ? ' ' + m[1] : '';
-	}
-
 	function getDisplayVal(f: typeof TABLET_FIELDS[0], tablet: Tablet): string {
 		if (f.key === 'ModelIncludedPen') {
-			const ids = tablet.ModelIncludedPen ?? [];
-			if (ids.length === 0) return '';
-			return ids.map(id => penNameMap.get(id) ?? id).join(', ');
+			return formatPenIds(tablet.ModelIncludedPen ?? [], penNameMap);
 		}
 		const val = f.getValue(tablet);
 		if (!val || val === '-') return '';
 		const converted = formatValue(val, f.unit, $unitPreference);
-		return converted + valueSuffix(f.label, f.unit);
+		return converted + valueSuffix(f.label, f.unit, $unitPreference);
 	}
 
 	// Group fields and filter out those with no data across all flagged tablets
@@ -67,31 +54,8 @@
 		return groups;
 	});
 
-	const MM_TO_IN = 0.03937;
-	const MM_TO_CM = 0.1;
 	const currentYear = new Date().getFullYear();
 	let isMetric = $derived($unitPreference === 'metric');
-
-	const penTabletRangesCm: HistogramRange[] = [
-		{ label: 'TINY', min: 6, max: 16 }, { label: 'SMALL', min: 16, max: 24 },
-		{ label: 'MEDIUM', min: 24, max: 36 }, { label: 'LARGE', min: 36, max: 50 },
-		{ label: 'EXTRA LARGE', min: 50, max: 74 },
-	];
-	const penTabletRangesIn: HistogramRange[] = [
-		{ label: 'TINY', min: 2, max: 6 }, { label: 'SMALL', min: 6, max: 9 },
-		{ label: 'MEDIUM', min: 9, max: 14 }, { label: 'LARGE', min: 14, max: 20 },
-		{ label: 'EXTRA LARGE', min: 20, max: 29 },
-	];
-	const displayRangesCm: HistogramRange[] = [
-		{ label: 'TINY', min: 23, max: 28 }, { label: 'SMALL', min: 28, max: 38 },
-		{ label: 'MEDIUM', min: 38, max: 50 }, { label: 'LARGE', min: 50, max: 76 },
-		{ label: 'EXTRA LARGE', min: 76, max: 86 },
-	];
-	const displayRangesIn: HistogramRange[] = [
-		{ label: 'TINY', min: 9, max: 11 }, { label: 'SMALL', min: 11, max: 15 },
-		{ label: 'MEDIUM', min: 15, max: 20 }, { label: 'LARGE', min: 20, max: 30 },
-		{ label: 'EXTRA LARGE', min: 30, max: 34 },
-	];
 
 	let compareYearsPT = $state<number | null>(15);
 	let compareYearsPD = $state<number | null>(15);
