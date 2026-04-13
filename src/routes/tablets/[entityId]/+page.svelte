@@ -8,7 +8,7 @@
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
 	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
-	import { formatValue, getFieldLabel } from '$data/lib/units.js';
+	import { formatValue, getFieldLabel, getDisplayUnit } from '$data/lib/units.js';
 	import { getFieldDef } from '$data/lib/pipeline/index.js';
 	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
 
@@ -116,16 +116,45 @@
 		return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
 	});
 
-	const col1Groups = ['Model', 'Physical'];
+	const col1Groups = ['Model'];
 	const col2Groups = ['Digitizer'];
 	const col3Groups = ['Display'];
 
 	function getGroupFields(groups: string[]) {
-		return TABLET_FIELDS.filter(f => groups.includes(f.group));
+		const expanded = groups.includes('Model') ? [...groups, 'Physical'] : groups;
+		return TABLET_FIELDS.filter(f => expanded.includes(f.group));
+	}
+
+	function copyGroup(groupId: string, format: string) {
+		const rows = document.querySelectorAll(`#group-${groupId} .field-row`);
+		const pairs = [...rows].map(r => ({
+			label: r.querySelector('dt')?.textContent?.trim() ?? '',
+			value: r.querySelector('dd')?.textContent?.trim().replace(/\s*computed$/, '') ?? '',
+		}));
+		if (format === 'table') {
+			const trs = pairs.map(p => `<tr><td>${p.label}</td><td>${p.value}</td></tr>`).join('');
+			navigator.clipboard.writeText(`<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>${trs}</tbody></table>`);
+		} else {
+			const lis = pairs.map(p => `<li><b>${p.label}:</b> ${p.value}</li>`).join('');
+			navigator.clipboard.writeText(`<ul>${lis}</ul>`);
+		}
 	}
 
 	function isUrl(val: string): boolean {
 		return val.startsWith('http://') || val.startsWith('https://');
+	}
+
+	function stripUnit(label: string, unit: string | undefined): string {
+		const m = label.match(/^(.+)\s*\(([^)]+)\)$/);
+		if (m && (unit || LABEL_UNITS.has(m[2]))) return m[1].trim();
+		return label;
+	}
+
+	const LABEL_UNITS = new Set(['mm', 'cm', 'g', 'degrees', 'Hz', 'ms']);
+	function valueSuffix(label: string, unit: string | undefined): string {
+		if (unit) return ' ' + getDisplayUnit(unit, $unitPreference);
+		const m = label.match(/\(([^)]+)\)$/);
+		return m && LABEL_UNITS.has(m[1]) ? ' ' + m[1] : '';
 	}
 
 	onMount(async () => {
@@ -200,20 +229,30 @@
 						{@const groupFields = getGroupFields([group])}
 						{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet!); return v && v !== '-'; })}
 						{#if hasValues}
-							<section class="field-group">
-								<h2>{group}</h2>
+							<section class="field-group" id="group-{group.toLowerCase()}">
+								<div class="group-header">
+									<h2>{group}</h2>
+									<select class="copy-select" onchange={(e) => {
+										const sel = e.currentTarget as HTMLSelectElement;
+										if (sel.value) { copyGroup(group.toLowerCase(), sel.value); sel.value = ''; }
+									}}>
+										<option value="">Copy as…</option>
+										<option value="table">Table</option>
+										<option value="list">Bulleted list</option>
+									</select>
+								</div>
 								<dl>
 									{#each groupFields as f}
 										{@const val = f.getValue(tablet!)}
 										{@const displayVal = formatValue(val, f.unit, $unitPreference)}
 										{#if val && val !== '-'}
 											<div class="field-row">
-												<dt>{getFieldLabel(f.label, f.unit, $unitPreference)}</dt>
+												<dt>{stripUnit(f.label, f.unit)}</dt>
 												<dd>
 													{#if isUrl(val)}
 														<a href={val} target="_blank" rel="noopener">{val}</a>
 													{:else}
-														{displayVal}
+														{displayVal}{valueSuffix(f.label, f.unit)}
 													{/if}
 													{#if f.computed}
 														<span class="computed-badge">computed</span>
@@ -399,13 +438,20 @@
 		margin-bottom: 16px;
 	}
 
+	.group-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 6px;
+		padding-bottom: 3px;
+		border-bottom: 2px solid var(--border);
+	}
+
 	h2 {
 		font-size: 14px;
 		font-weight: 600;
 		color: #6b21a8;
-		margin-bottom: 6px;
-		padding-bottom: 3px;
-		border-bottom: 2px solid var(--border);
+		margin-bottom: 0;
 	}
 
 	dl {
@@ -501,6 +547,16 @@
 	.copy-btn:hover {
 		background: var(--hover-bg);
 		color: var(--text);
+	}
+
+	.copy-select {
+		padding: 2px 6px;
+		font-size: 12px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
 	}
 
 	.similar-filters {
