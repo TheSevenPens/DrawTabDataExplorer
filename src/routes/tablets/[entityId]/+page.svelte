@@ -12,7 +12,7 @@
 	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
-	import { stripUnit, valueSuffix } from '$lib/field-display.js';
+	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 
 	let tablet = $state<Tablet | null>(null);
@@ -226,7 +226,7 @@
 													{:else if isUrl(val)}
 														<a href={val} target="_blank" rel="noopener">{val}</a>
 													{:else}
-														{displayVal}{valueSuffix(f.label, f.unit, $unitPreference)}
+														{formatValueWithAlt(val, f.label, f.unit, $unitPreference)}
 													{/if}
 													{#if f.computed}
 														<span class="computed-badge">computed</span>
