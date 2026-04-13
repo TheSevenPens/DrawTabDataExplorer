@@ -84,59 +84,6 @@
 			.filter((d): d is number => d !== null)
 	);
 
-	let allDiagonalsForType = $derived(
-		allTablets
-			.filter(t => t.ModelType === tablet?.ModelType)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	function median(nums: number[]): number | null {
-		if (nums.length === 0) return null;
-		const sorted = [...nums].sort((a, b) => a - b);
-		const mid = Math.floor(sorted.length / 2);
-		return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!;
-	}
-
-	let allDiagonalsForTypeCm = $derived(
-		allTablets
-			.filter(t => t.ModelType === tablet?.ModelType)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? d * MM_TO_CM : null; })
-			.filter((d): d is number => d !== null)
-	);
-	let allDiagonalsForTypeIn = $derived(
-		allTablets
-			.filter(t => t.ModelType === tablet?.ModelType)
-			.map(t => { const d = getDiagonal(t.DigitizerDimensions); return d ? d * MM_TO_IN : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let rangeMedians = $derived(
-		histogramRanges.map(range => {
-			const inRange = allDiagonalsForType.filter(d => d >= range.min && d < range.max);
-			return { label: range.label, count: inRange.length, median: median(inRange) };
-		})
-	);
-
-	let dualRanges = $derived.by(() => {
-		if (!tablet) return [];
-		const isPenTablet = tablet.ModelType === 'PENTABLET';
-		const cmRanges = isPenTablet ? penTabletRangesCm : displayRangesCm;
-		const inRanges = isPenTablet ? penTabletRangesIn : displayRangesIn;
-		return cmRanges.map((cmRange, i) => {
-			const inRange = inRanges[i];
-			const inCm = allDiagonalsForTypeCm.filter(d => d >= cmRange.min && d < cmRange.max);
-			const inIn = allDiagonalsForTypeIn.filter(d => d >= inRange.min && d < inRange.max);
-			return {
-				label: cmRange.label,
-				cmMin: cmRange.min, cmMax: cmRange.max,
-				inMin: inRange.min, inMax: inRange.max,
-				medianCm: median(inCm), countCm: inCm.length,
-				medianIn: median(inIn), countIn: inIn.length,
-			};
-		});
-	});
-
 	let histogramCurrentValue = $derived.by(() => {
 		if (!tablet) return null;
 		const d = getDiagonal(tablet.DigitizerDimensions);
@@ -254,29 +201,6 @@
 								bandwidthMultiplier={0.2}
 								bind:compareYears
 							/>
-				<div class="range-legend">
-					<div class="range-legend-header">
-						<h3>Size Ranges ({tablet.ModelType === 'PENTABLET' ? 'Pen Tablet' : 'Pen Display'})</h3>
-						<button class="copy-btn" onclick={() => {
-							const table = document.querySelector('.range-table');
-							if (table) navigator.clipboard.writeText(table.outerHTML);
-						}}>Copy as HTML</button>
-					</div>
-					<table class="range-table">
-						<thead><tr><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Median (cm)</th><th>Median (in)</th></tr></thead>
-						<tbody>
-							{#each dualRanges as r}
-								<tr>
-									<td>{r.label}</td>
-									<td>{r.cmMin} cm – {r.cmMax} cm</td>
-									<td>{r.inMin}″ – {r.inMax}″</td>
-									<td>{r.medianCm !== null ? `${r.medianCm.toFixed(1)} cm` : '—'}</td>
-									<td>{r.medianIn !== null ? `${r.medianIn.toFixed(1)}″` : '—'}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
 			</div>
 		</section>
 
@@ -544,57 +468,6 @@
 		gap: 12px;
 	}
 
-	.range-legend-header {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 6px;
-	}
-
-	.range-legend h3 {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-muted);
-		margin-bottom: 0;
-	}
-
-	.copy-btn {
-		padding: 2px 8px;
-		font-size: 12px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
-	}
-
-	.copy-btn:hover {
-		background: var(--hover-bg);
-		color: var(--text);
-	}
-
-	.range-table {
-		border-collapse: collapse;
-		font-size: 13px;
-	}
-
-	.range-table th, .range-table td {
-		padding: 3px 10px;
-		text-align: left;
-		border-bottom: 1px solid var(--border);
-	}
-
-	.range-table th {
-		font-weight: 600;
-		color: var(--th-text);
-		background: var(--th-bg);
-	}
-
-	.current-size {
-		margin-top: 8px;
-		font-size: 13px;
-		color: #e11d48;
-	}
 
 	.no-data {
 		font-size: 13px;
