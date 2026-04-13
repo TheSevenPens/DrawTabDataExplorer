@@ -17,7 +17,7 @@
 
 		const tabletMap = new Map<string, Tablet>();
 		for (const t of tablets) {
-			tabletMap.set(t.ModelId, t);
+			tabletMap.set(t.Model.Id, t);
 		}
 
 		const penMap = new Map<string, Pen>();
@@ -29,7 +29,7 @@
 			const tablet = tabletMap.get(c.TabletId);
 			const pen = penMap.get(c.PenId);
 			const tabletFullName = tablet
-				? `${brandName(tablet.Brand)} ${tablet.ModelName} (${tablet.ModelId})`
+				? `${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`
 				: `${brandName(c.Brand)} ${c.TabletId}`;
 			const penFullName = pen
 				? (pen.PenName === pen.PenId ? `${brandName(pen.Brand)} ${pen.PenId}` : `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`)

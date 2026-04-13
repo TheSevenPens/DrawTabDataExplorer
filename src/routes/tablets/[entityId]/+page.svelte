@@ -141,7 +141,7 @@
 		isoSizes = iso;
 		allPens = loadedPens;
 
-		const found = allT.find((t) => t.EntityId === entityId);
+		const found = allT.find((t) => t.Meta.EntityId === entityId);
 		if (!found) {
 			notFound = true;
 			return;

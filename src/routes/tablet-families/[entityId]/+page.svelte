@@ -24,7 +24,7 @@
 		}
 		item = found;
 
-		familyTablets = allTablets.filter((t) => t.ModelFamily === found.FamilyId);
+		familyTablets = allTablets.filter((t) => t.Model.Family === found.FamilyId);
 	});
 </script>
 
@@ -53,11 +53,11 @@
 					<tbody>
 						{#each familyTablets as tablet}
 							<tr>
-								<td><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{tablet.ModelId}</a></td>
-								<td>{tablet.ModelName}</td>
-								<td>{tablet.ModelType}</td>
-								<td>{tablet.ModelLaunchYear || ''}</td>
-								<td>{tablet.ModelStatus || ''}</td>
+								<td><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{tablet.Model.Id}</a></td>
+								<td>{tablet.Model.Name}</td>
+								<td>{tablet.Model.Type}</td>
+								<td>{tablet.Model.LaunchYear || ''}</td>
+								<td>{tablet.Model.Status || ''}</td>
 							</tr>
 						{/each}
 					</tbody>

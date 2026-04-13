@@ -37,14 +37,14 @@
 				.map((c) => c.TabletId)
 		);
 
-		compatibleTablets = allTablets.filter((t) => compatTabletIds.has(t.ModelId));
+		compatibleTablets = allTablets.filter((t) => compatTabletIds.has(t.Model.Id));
 
 		// Pressure response data
 		pressureSessionCount = allPressure.filter(s => s.PenEntityId === found.EntityId).length;
 
 		// Find tablets that include this pen
 		includedWithTablets = allTablets.filter((t) => {
-			return (t.ModelIncludedPen ?? []).some((p) => p === found.PenId);
+			return (t.Model.IncludedPen ?? []).some((p) => p === found.PenId);
 		});
 	});
 </script>
@@ -72,7 +72,7 @@
 			{#if compatibleTablets.length > 0}
 				<ul class="entity-list">
 					{#each compatibleTablets as tablet}
-						<li><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{brandName(tablet.Brand)} {tablet.ModelName} ({tablet.ModelId})</a></li>
+						<li><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
 					{/each}
 				</ul>
 			{:else}
@@ -85,7 +85,7 @@
 			{#if includedWithTablets.length > 0}
 				<ul class="entity-list">
 					{#each includedWithTablets as tablet}
-						<li><a href="{base}/tablets/{encodeURIComponent(tablet.EntityId)}">{brandName(tablet.Brand)} {tablet.ModelName} ({tablet.ModelId})</a></li>
+						<li><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
 					{/each}
 				</ul>
 			{:else}
