@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadTabletsFromURL, loadPenCompatFromURL, loadPensFromURL, brandName, getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadTabletsFromURL, loadPenCompatFromURL, loadPensFromURL, loadISOPaperSizesFromURL, brandName, getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import { findSimilarTablets } from '$data/lib/compat-helpers.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
@@ -19,10 +19,36 @@
 
 	let filterSimilarSize = $state(true);
 	let filterSamePen = $state(false);
-	let filterSameBrand = $state(false);
+	let filterBrand = $state('all');
 	let filterSameYearOrLater = $state(false);
+	let similarSort = $state<'year' | 'diagonal'>('year');
 
 	let hasDisplay = $derived(tablet?.ModelType === 'PENDISPLAY' || tablet?.ModelType === 'STANDALONE');
+	let isoSizes: ISOPaperSize[] = $state([]);
+
+	let closestISO = $derived.by(() => {
+		if (!tablet) return null;
+		const diagMm = getDiagonal(tablet.DigitizerDimensions);
+		if (!diagMm) return null;
+		const aSeries = isoSizes.filter(p => p.Series === 'A');
+		if (aSeries.length === 0) return null;
+		let best = aSeries[0];
+		let bestDist = Infinity;
+		for (const p of aSeries) {
+			const pDiag = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
+			const dist = Math.abs(pDiag - diagMm);
+			if (dist < bestDist) { bestDist = dist; best = p; }
+		}
+		const bestDiag = Math.sqrt(best.Width_mm ** 2 + best.Height_mm ** 2);
+		const pct = Math.round(Math.abs(diagMm - bestDiag) / bestDiag * 100);
+		let qualifier = '';
+		if (pct >= 1) {
+			qualifier = diagMm > bestDiag ? `${pct}% larger than ` : `${pct}% smaller than `;
+		} else {
+			qualifier = '~ ';
+		}
+		return `${qualifier}${best.Name}`;
+	});
 
 	const MM_TO_IN = 0.03937;
 	const currentYear = new Date().getFullYear();
@@ -104,11 +130,13 @@
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId!);
-		const [allT, allCompat, allPens] = await Promise.all([
+		const [allT, allCompat, allPens, iso] = await Promise.all([
 			loadTabletsFromURL(base),
 			loadPenCompatFromURL(base) as Promise<PenCompat[]>,
 			loadPensFromURL(base) as Promise<Pen[]>,
+			loadISOPaperSizesFromURL(base),
 		]);
+		isoSizes = iso;
 
 		const found = allT.find((t) => t.EntityId === entityId);
 		if (!found) {
@@ -126,14 +154,29 @@
 		allTablets = allT;
 	});
 
+	let availableBrands = $derived(
+		[...new Set(allTablets.filter(t => t.ModelType === tablet?.ModelType).map(t => t.Brand))].sort()
+	);
+
 	let similarTablets = $derived.by(() => {
 		if (!tablet) return [];
-		return findSimilarTablets(tablet, allTablets, {
+		let results = findSimilarTablets(tablet, allTablets, {
 			similarSize: filterSimilarSize,
 			samePen: filterSamePen,
-			sameBrand: filterSameBrand,
 			sameYearOrLater: filterSameYearOrLater,
 		});
+		if (filterBrand !== 'all') {
+			results = results.filter(t => t.Brand === filterBrand);
+		}
+		results.sort((a, b) => {
+			if (similarSort === 'year') {
+				return (a.ModelLaunchYear || '').localeCompare(b.ModelLaunchYear || '');
+			}
+			const da = getDiagonal(a.DigitizerDimensions) ?? 0;
+			const db = getDiagonal(b.DigitizerDimensions) ?? 0;
+			return da - db;
+		});
+		return results;
 	});
 </script>
 
@@ -180,6 +223,12 @@
 										{/if}
 									{/each}
 								</dl>
+								{#if group === 'Digitizer' && closestISO}
+									<div class="field-row">
+										<dt>Similar ISO Paper</dt>
+										<dd>{closestISO} <span class="computed-badge">computed</span></dd>
+									</div>
+								{/if}
 							</section>
 						{/if}
 					{/each}
@@ -205,7 +254,13 @@
 		</section>
 
 		<section class="compat-section">
-			<h2>Compatible Pens</h2>
+			<div class="similar-header">
+				<h2>Compatible Pens</h2>
+				<button class="copy-btn" onclick={() => {
+					const list = document.querySelector('.entity-list');
+					if (list) navigator.clipboard.writeText(list.outerHTML);
+				}}>Copy as HTML</button>
+			</div>
 			{#if compatiblePens.length > 0}
 				<ul class="entity-list">
 					{#each compatiblePens as pen}
@@ -218,12 +273,33 @@
 		</section>
 
 		<section class="compat-section">
-			<h2>Similar Tablets</h2>
+			<div class="similar-header">
+				<h2>Similar Tablets</h2>
+				<button class="copy-btn" onclick={() => {
+					const table = document.querySelector('.similar-table');
+					if (table) navigator.clipboard.writeText(table.outerHTML);
+				}}>Copy as HTML</button>
+			</div>
 			<div class="similar-filters">
 				<label><input type="checkbox" bind:checked={filterSimilarSize} /> Similar size</label>
 				<label><input type="checkbox" bind:checked={filterSamePen} /> Same included pen</label>
-				<label><input type="checkbox" bind:checked={filterSameBrand} /> Same brand</label>
 				<label><input type="checkbox" bind:checked={filterSameYearOrLater} /> Same year or later</label>
+				<label>
+					Brand:
+					<select class="filter-select" bind:value={filterBrand}>
+						<option value="all">All</option>
+						{#each availableBrands as b}
+							<option value={b}>{brandName(b)}</option>
+						{/each}
+					</select>
+				</label>
+				<label>
+					Sort:
+					<select class="filter-select" bind:value={similarSort}>
+						<option value="year">Year</option>
+						<option value="diagonal">Diagonal</option>
+					</select>
+				</label>
 			</div>
 			{#if similarTablets.length > 0}
 				<table class="similar-table">
@@ -406,10 +482,41 @@
 
 	.entity-list a:hover { text-decoration: underline; }
 
+	.similar-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.copy-btn {
+		padding: 2px 8px;
+		font-size: 12px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+
+	.copy-btn:hover {
+		background: var(--hover-bg);
+		color: var(--text);
+	}
+
 	.similar-filters {
 		display: flex;
 		gap: 14px;
 		margin-bottom: 10px;
+		flex-wrap: wrap;
+	}
+
+	.filter-select {
+		font-size: 13px;
+		padding: 2px 6px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	.similar-filters label {
