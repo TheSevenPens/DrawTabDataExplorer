@@ -20,6 +20,7 @@ DrawTabDataExplorer/
 │   │   ├── drivers/              # Drivers list + detail
 │   │   ├── pressure-response/    # Pressure response sessions
 │   │   ├── inventory/            # Inventory (pens/tablets sub-tabs)
+│   │   ├── reference/            # Reference (tablet sizes, ISO paper sizes)
 │   │   └── data-quality/         # Data quality dashboard
 │   └── lib/
 │       ├── components/           # Reusable Svelte components
@@ -30,6 +31,7 @@ DrawTabDataExplorer/
 │       │   ├── SelectStep.svelte
 │       │   ├── TakeStep.svelte
 │       │   ├── ResultsTable.svelte
+│       │   ├── ValueHistogram.svelte  # Histogram with KDE, ranges, markers
 │       │   ├── SavedViews.svelte
 │       │   └── Nav.svelte
 │       ├── unit-store.ts         # Svelte store for unit preference
@@ -68,6 +70,13 @@ category, with URL detection, unit conversion, and computed field badges.
 
 **SavedViews** — Dropdown with built-in Default view and user-created
 views. Scoped by entity type in localStorage.
+
+**ValueHistogram** — SVG histogram with KDE curve overlay, range
+backgrounds, and optional markers. Supports `currentValue` (red solid
+line for a specific tablet), `markers` (red dashed lines, e.g. ISO
+paper sizes), and an optional `compareYears` dropdown to filter the
+dataset by release year. Used on the tablet detail page, the Reference
+page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 
 **Nav** — Navigation bar with links to all entity pages and a
 metric/imperial toggle button.

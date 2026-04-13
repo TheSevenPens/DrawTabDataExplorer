@@ -15,6 +15,7 @@
 		{ href: '/pressure-response', label: 'Pressure Response' },
 		{ href: '/inventory', label: 'Inventory' },
 		{ href: '/timeline', label: 'Timeline' },
+		{ href: '/reference', label: 'Reference' },
 		{ href: '/data-quality', label: 'Data Quality' },
 	];
 </script>

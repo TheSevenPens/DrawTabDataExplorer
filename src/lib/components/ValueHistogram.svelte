@@ -5,7 +5,12 @@
 		max: number;
 	}
 
-	let { title = '', values, currentValue, currentLabel = '', ranges, unit = '"', binSize = 0.5, chartHeight = 280, bandwidthMultiplier = 1.0 }: {
+	export interface HistogramMarker {
+		value: number;
+		label: string;
+	}
+
+	let { title = '', values, currentValue, currentLabel = '', ranges, unit = '"', binSize = 0.5, chartHeight = 280, bandwidthMultiplier = 1.0, compareYears = $bindable<number | null | undefined>(undefined), compareYearOptions = [10, 15, 20, null] as (number | null)[], markers = [] as HistogramMarker[] }: {
 		title?: string;
 		values: number[];
 		currentValue: number | null;
@@ -15,6 +20,9 @@
 		binSize?: number;
 		chartHeight?: number;
 		bandwidthMultiplier?: number;
+		compareYears?: number | null | undefined;
+		compareYearOptions?: (number | null)[];
+		markers?: HistogramMarker[];
 	} = $props();
 
 	const width = 900;
@@ -132,9 +140,19 @@
 	}
 </script>
 
-{#if currentValue !== null}
+{#if values.length > 0}
 	<div class="histogram-container">
 		<div class="histogram-toolbar">
+			{#if compareYears !== undefined}
+				<label class="compare-label">
+					Compare to tablets released in last:
+					<select class="compare-select" bind:value={compareYears}>
+						{#each compareYearOptions as opt}
+							<option value={opt}>{opt !== null ? `${opt} years` : 'all time'}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
 			<button type="button" class="copy-btn" onclick={copyAsImage} title="Copy histogram as image">
 				{copyStatus || 'Copy as image'}
 			</button>
@@ -231,31 +249,58 @@
 				<path d={kdePath} fill="none" stroke="#0d9488" stroke-width="2" opacity="0.7" />
 			{/if}
 
+			<!-- Markers -->
+			{#each markers as marker}
+				{#if marker.value >= scaleMin && marker.value <= scaleMax}
+					{@const mx = xScale(marker.value)}
+					<line
+						x1={mx}
+						y1={padTop - 8}
+						x2={mx}
+						y2={padTop + chartH + 30}
+						stroke="#e11d48"
+						stroke-width="1.5"
+						stroke-dasharray="4 3"
+						opacity="0.7"
+					/>
+					<text
+						x={mx}
+						y={padTop + chartH + 42}
+						text-anchor="middle"
+						font-size="10"
+						font-weight="600"
+						fill="#e11d48"
+					>{marker.label}</text>
+				{/if}
+			{/each}
+
 			<!-- Current value indicator -->
-			<line
-				x1={tx}
-				y1={padTop - 8}
-				x2={tx}
-				y2={padTop + chartH + 30}
-				stroke="#e11d48"
-				stroke-width="2"
-			/>
-			<text
-				x={tx}
-				y={padTop + chartH + 42}
-				text-anchor="middle"
-				font-size="12"
-				font-weight="bold"
-				fill="#e11d48"
-			>{currentValue!.toFixed(1)}{unit}</text>
-			{#if currentLabel}
+			{#if currentValue !== null}
+				<line
+					x1={tx}
+					y1={padTop - 8}
+					x2={tx}
+					y2={padTop + chartH + 30}
+					stroke="#e11d48"
+					stroke-width="2"
+				/>
 				<text
 					x={tx}
-					y={padTop + chartH + 56}
+					y={padTop + chartH + 42}
 					text-anchor="middle"
-					font-size="11"
+					font-size="12"
+					font-weight="bold"
 					fill="#e11d48"
-				>{currentLabel}</text>
+				>{currentValue.toFixed(1)}{unit}</text>
+				{#if currentLabel}
+					<text
+						x={tx}
+						y={padTop + chartH + 56}
+						text-anchor="middle"
+						font-size="11"
+						fill="#e11d48"
+					>{currentLabel}</text>
+				{/if}
 			{/if}
 		</svg>
 	</div>
@@ -284,8 +329,28 @@
 	.histogram-toolbar {
 		width: 900px;
 		display: flex;
+		align-items: center;
 		justify-content: flex-end;
+		gap: 12px;
 		margin-bottom: 4px;
+	}
+
+	.compare-label {
+		font-size: 13px;
+		color: var(--text);
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin-right: auto;
+	}
+
+	.compare-select {
+		font-size: 13px;
+		padding: 2px 6px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	.copy-btn {
