@@ -14,6 +14,9 @@
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
+	import JsonDialog from '$lib/components/JsonDialog.svelte';
+
+	let showJson = $state(false);
 
 	let tablet = $state<Tablet | null>(null);
 	let allTablets: Tablet[] = $state([]);
@@ -195,7 +198,14 @@
 		<button class="unit-toggle" onclick={toggleUnits}>
 			{$unitPreference === 'metric' ? 'Metric' : 'Imperial'}
 		</button>
+		{#if tablet}
+			<button class="json-btn" onclick={() => showJson = true}>JSON</button>
+		{/if}
 	</div>
+
+	{#if showJson && tablet}
+		<JsonDialog entity={tablet} onclose={() => showJson = false} />
+	{/if}
 
 	{#if tablet}
 		<div class="detail-columns">
@@ -419,6 +429,22 @@
 
 	.unit-toggle:hover {
 		background: #16a34a;
+		color: #fff;
+	}
+
+	.json-btn {
+		padding: 4px 10px;
+		font-size: 13px;
+		border: 1px solid #6b7280;
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: #6b7280;
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.json-btn:hover {
+		background: #6b7280;
 		color: #fff;
 	}
 

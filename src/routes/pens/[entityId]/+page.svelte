@@ -6,8 +6,10 @@
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
+	import JsonDialog from '$lib/components/JsonDialog.svelte';
 
 	let pen: Pen | null = $state(null);
+	let showJson = $state(false);
 	let compatibleTablets: Tablet[] = $state([]);
 	let includedWithTablets: Tablet[] = $state([]);
 	let pressureSessionCount = $state(0);
@@ -51,7 +53,16 @@
 	<h1>Pen not found</h1>
 	<p><a href="{base}/pens">Back to pens</a></p>
 {:else}
-	<h1>{pen?.PenName ?? 'Loading...'}</h1>
+	<div class="title-row">
+		<h1>{pen?.PenName ?? 'Loading...'}</h1>
+		{#if pen}
+			<button class="json-btn" onclick={() => showJson = true}>JSON</button>
+		{/if}
+	</div>
+
+	{#if showJson && pen}
+		<JsonDialog entity={pen} onclose={() => showJson = false} />
+	{/if}
 
 	<DetailView item={pen} fields={PEN_FIELDS} fieldGroups={PEN_FIELD_GROUPS} backHref="/pens" backLabel="Pens" />
 
@@ -94,6 +105,33 @@
 {/if}
 
 <style>
+	.title-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 8px;
+	}
+
+	.title-row h1 {
+		margin: 0;
+	}
+
+	.json-btn {
+		padding: 4px 10px;
+		font-size: 13px;
+		border: 1px solid #6b7280;
+		border-radius: 4px;
+		background: var(--bg-card, #fff);
+		color: #6b7280;
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.json-btn:hover {
+		background: #6b7280;
+		color: #fff;
+	}
+
 	.compat-section {
 		margin-top: 32px;
 	}
