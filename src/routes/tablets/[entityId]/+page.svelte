@@ -7,7 +7,7 @@
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
-	import { unitPreference, toggleUnits } from '$lib/unit-store.js';
+	import { unitPreference, toggleUnits, showAltUnits, toggleAltUnits } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
@@ -198,6 +198,9 @@
 		<button class="unit-toggle" onclick={toggleUnits}>
 			{$unitPreference === 'metric' ? 'Metric' : 'Imperial'}
 		</button>
+		<button class="alt-units-toggle" onclick={toggleAltUnits} title="Show/hide alternate unit conversions">
+			{$showAltUnits ? '± Alt Units' : 'Primary Only'}
+		</button>
 		{#if tablet}
 			<button class="json-btn" onclick={() => showJson = true}>JSON</button>
 		{/if}
@@ -240,7 +243,7 @@
 													{:else if isUrl(val)}
 														<a href={val} target="_blank" rel="noopener">{val}</a>
 													{:else}
-														{formatValueWithAlt(val, f.label, f.unit, $unitPreference)}
+														{formatValueWithAlt(val, f.label, f.unit, $unitPreference, $showAltUnits)}
 													{/if}
 													{#if f.computed}
 														<span class="computed-badge">computed</span>
@@ -429,6 +432,22 @@
 
 	.unit-toggle:hover {
 		background: #16a34a;
+		color: #fff;
+	}
+
+	.alt-units-toggle {
+		padding: 4px 10px;
+		font-size: 13px;
+		border: 1px solid #2563eb;
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: #2563eb;
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.alt-units-toggle:hover {
+		background: #2563eb;
 		color: #fff;
 	}
 

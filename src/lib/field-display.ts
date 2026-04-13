@@ -27,6 +27,7 @@ export function formatValueWithAlt(
 	label: string,
 	unit: string | undefined,
 	pref: UnitPreference,
+	showAlt: boolean = true,
 ): string {
 	if (!rawValue || rawValue === '-') return rawValue;
 
@@ -36,6 +37,9 @@ export function formatValueWithAlt(
 		if (!isNaN(num)) {
 			const pxCm = (num * 10).toFixed(1);
 			const ppi = formatValue(rawValue, unit, 'imperial');
+			if (!showAlt) {
+				return pref === 'metric' ? `${pxCm} px/cm` : `${ppi} PPI`;
+			}
 			if (pref === 'metric') {
 				return `${pxCm} px/cm (${ppi} PPI)`;
 			} else {
@@ -48,7 +52,7 @@ export function formatValueWithAlt(
 	const primaryUnit = valueSuffix(label, unit, pref);
 	const primary = primaryVal + primaryUnit;
 
-	if (!unit || !CONVERTIBLE_UNITS.has(unit)) return primary;
+	if (!showAlt || !unit || !CONVERTIBLE_UNITS.has(unit)) return primary;
 
 	const altPref: UnitPreference = pref === 'metric' ? 'imperial' : 'metric';
 	const altVal = formatValue(rawValue, unit, altPref);

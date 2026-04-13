@@ -6,7 +6,7 @@
 	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 
-	let activeTab: 'tablet-sizes' | 'iso-paper' | 'us-paper' = $state('tablet-sizes');
+	let activeTab: 'tablet-sizes' | 'iso-paper' | 'us-paper' | 'display-resolutions' = $state('tablet-sizes');
 	let paperSizes: ISOPaperSize[] = $state([]);
 	let usPaperSizes: USPaperSize[] = $state([]);
 	let allTablets: Tablet[] = $state([]);
@@ -103,6 +103,37 @@
 		return best.Name;
 	}
 
+	// --- Display resolution categories ---
+
+	const resolutionCategories = [
+		{ name: 'Full HD',  resolutions: [{ w: 1920, h: 1080 }] },
+		{ name: '2.5K',     resolutions: [{ w: 2560, h: 1440 }, { w: 2560, h: 1600 }] },
+		{ name: '3K',       resolutions: [{ w: 2880, h: 1800 }] },
+		{ name: '4K',       resolutions: [{ w: 3840, h: 2160 }] },
+	];
+
+	function getResolutionCategory(w: number, h: number): string {
+		if (w === 1920 && h === 1080) return 'Full HD';
+		if ((w === 2560 && h === 1440) || (w === 2560 && h === 1600)) return '2.5K';
+		if (w === 2880 && h === 1800) return '3K';
+		if (w === 3840 && h === 2160) return '4K';
+		return 'Other';
+	}
+
+	let displayTablets = $derived(
+		allTablets.filter(t => t.ModelType === 'PENDISPLAY' || t.ModelType === 'STANDALONE')
+	);
+
+	let resolutionCounts = $derived(
+		displayTablets.reduce<Record<string, number>>((acc, t) => {
+			const d = t.DisplayPixelDimensions;
+			if (!d?.Width || !d?.Height) return acc;
+			const cat = getResolutionCategory(d.Width, d.Height);
+			acc[cat] = (acc[cat] ?? 0) + 1;
+			return acc;
+		}, {})
+	);
+
 	onMount(async () => {
 		const [p, us, t] = await Promise.all([
 			loadISOPaperSizesFromURL(base),
@@ -126,6 +157,9 @@
 	</button>
 	<button class:active={activeTab === 'us-paper'} onclick={() => activeTab = 'us-paper'}>
 		US Paper Sizes
+	</button>
+	<button class:active={activeTab === 'display-resolutions'} onclick={() => activeTab = 'display-resolutions'}>
+		Display Resolutions
 	</button>
 </div>
 
@@ -203,7 +237,7 @@
 			/>
 		{/if}
 	</section>
-{:else}
+{:else if activeTab === 'iso-paper'}
 	<section>
 		<div class="section-header">
 			<h2>ISO Paper Sizes</h2>
@@ -336,6 +370,58 @@
 			/>
 		</section>
 	{/if}
+{:else if activeTab === 'display-resolutions'}
+	<section>
+		<div class="section-header">
+			<h2>Display Resolution Categories</h2>
+			<button class="copy-btn" onclick={() => {
+				const table = document.querySelector('#res-cat-table');
+				if (table) navigator.clipboard.writeText(table.outerHTML);
+			}}>Copy as HTML</button>
+		</div>
+		<table id="res-cat-table" class="ref-table">
+			<thead>
+				<tr>
+					<th>Category</th>
+					<th>Resolution(s)</th>
+					<th>Megapixels</th>
+					<th>Aspect Ratio</th>
+					<th>Displays in dataset</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each resolutionCategories as cat}
+					{#each cat.resolutions as res, i}
+						{@const mp = ((res.w * res.h) / 1_000_000).toFixed(2)}
+						{@const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b)}
+						{@const g = gcd(res.w, res.h)}
+						{@const ar = `${res.w / g}:${res.h / g}`}
+						{@const count = i === 0 ? (resolutionCounts[cat.name] ?? 0) : null}
+						<tr>
+							{#if i === 0}
+								<td rowspan={cat.resolutions.length} class="cat-name">{cat.name}</td>
+							{/if}
+							<td>{res.w} × {res.h}</td>
+							<td>{mp} MP</td>
+							<td>{ar}</td>
+							{#if i === 0}
+								<td rowspan={cat.resolutions.length} class="count-cell">
+									{count === 0 ? '—' : count}
+								</td>
+							{/if}
+						</tr>
+					{/each}
+				{/each}
+				<tr class="other-row">
+					<td>Other</td>
+					<td>—</td>
+					<td>—</td>
+					<td>—</td>
+					<td>{resolutionCounts['Other'] ?? 0}</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
 {/if}
 
 <style>
@@ -425,6 +511,21 @@
 	.no-data {
 		font-size: 13px;
 		color: var(--text-dim);
+		font-style: italic;
+	}
+
+	.cat-name {
+		font-weight: 600;
+		vertical-align: middle;
+	}
+
+	.count-cell {
+		vertical-align: middle;
+		text-align: center;
+	}
+
+	.other-row td {
+		color: var(--text-muted);
 		font-style: italic;
 	}
 </style>

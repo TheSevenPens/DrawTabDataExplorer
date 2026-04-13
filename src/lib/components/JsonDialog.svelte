@@ -3,8 +3,15 @@
 
 	let dialog: HTMLDialogElement | undefined = $state();
 	let copied = $state(false);
-
 	const json = $derived(JSON.stringify(entity, null, 2));
+	const title = $derived(entity.EntityId ?? 'JSON');
+
+	// Drag state
+	let posX = $state<number | null>(null);
+	let posY = $state<number | null>(null);
+	let dragging = false;
+	let dragOffsetX = 0;
+	let dragOffsetY = 0;
 
 	$effect(() => {
 		dialog?.showModal();
@@ -15,86 +22,158 @@
 		copied = true;
 		setTimeout(() => (copied = false), 2000);
 	}
+
+	function onTitleMousedown(e: MouseEvent) {
+		if (!dialog) return;
+		dragging = true;
+		const rect = dialog.getBoundingClientRect();
+		// Snap from center-based positioning to absolute on first drag
+		if (posX === null) {
+			posX = rect.left;
+			posY = rect.top;
+		}
+		dragOffsetX = e.clientX - posX!;
+		dragOffsetY = e.clientY - posY!;
+		e.preventDefault();
+	}
+
+	function onWindowMousemove(e: MouseEvent) {
+		if (!dragging) return;
+		posX = e.clientX - dragOffsetX;
+		posY = e.clientY - dragOffsetY;
+	}
+
+	function onWindowMouseup() {
+		dragging = false;
+	}
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-<dialog bind:this={dialog} onclose={onclose} onclick={(e) => { if (e.target === dialog) dialog?.close(); }}>
-	<div class="header">
-		<span class="title">JSON</span>
-		<div class="actions">
-			<button class="copy-btn" onclick={copyJson}>{copied ? 'Copied!' : 'Copy'}</button>
-			<button class="close-btn" onclick={() => dialog?.close()}>✕</button>
+<svelte:window onmousemove={onWindowMousemove} onmouseup={onWindowMouseup} />
+
+<dialog
+	bind:this={dialog}
+	onclose={onclose}
+	style={posX !== null ? `left: ${posX}px; top: ${posY}px; margin: 0;` : ''}
+>
+	<!-- Title bar -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="titlebar" onmousedown={onTitleMousedown}>
+		<span class="titlebar-icon">&#123;&#125;</span>
+		<span class="titlebar-title">{title}</span>
+		<div class="titlebar-controls">
+			<button class="copy-btn" onclick={copyJson} title="Copy JSON">
+				{copied ? '✓ Copied' : 'Copy'}
+			</button>
+			<button class="close-btn" onclick={() => dialog?.close()} title="Close">✕</button>
 		</div>
 	</div>
+
+	<!-- Content -->
 	<pre>{json}</pre>
 </dialog>
 
 <style>
 	dialog {
-		border: 1px solid var(--border, #e0e0e0);
-		border-radius: 8px;
+		border: 1px solid #aaa;
+		border-radius: 6px;
 		padding: 0;
-		width: min(680px, 90vw);
-		max-height: 80vh;
+		width: min(700px, 90vw);
+		max-height: 75vh;
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+		box-shadow: 0 4px 6px rgba(0,0,0,0.15), 0 10px 40px rgba(0,0,0,0.20);
+		position: fixed;
 	}
 
 	dialog::backdrop {
-		background: rgba(0, 0, 0, 0.4);
+		background: transparent;
 	}
 
-	.header {
+	/* Title bar */
+	.titlebar {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		padding: 10px 14px;
-		border-bottom: 1px solid var(--border, #e0e0e0);
-		background: var(--surface, #fafafa);
+		gap: 8px;
+		padding: 0 8px 0 12px;
+		height: 32px;
+		background: linear-gradient(to bottom, #e8e8e8, #d4d4d4);
+		border-bottom: 1px solid #aaa;
+		border-radius: 6px 6px 0 0;
+		cursor: move;
+		user-select: none;
 		flex-shrink: 0;
 	}
 
-	.title {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-muted, #555);
+	.titlebar-icon {
+		font-size: 14px;
+		flex-shrink: 0;
 	}
 
-	.actions {
-		display: flex;
-		gap: 6px;
-	}
-
-	pre {
-		margin: 0;
-		padding: 14px;
-		font-size: 12px;
-		font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
-		line-height: 1.5;
-		overflow: auto;
+	.titlebar-title {
 		flex: 1;
-		color: var(--text, #222);
-		background: var(--bg, #fff);
+		font-size: 12px;
+		font-weight: 600;
+		color: #222;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.copy-btn, .close-btn {
-		font-size: 12px;
-		padding: 3px 9px;
-		border: 1px solid var(--border, #ccc);
-		border-radius: 4px;
-		background: var(--bg, #fff);
-		color: var(--text, #333);
+	.titlebar-controls {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-shrink: 0;
+	}
+
+	.copy-btn {
+		font-size: 11px;
+		padding: 2px 8px;
+		border: 1px solid #bbb;
+		border-radius: 3px;
+		background: #f5f5f5;
+		color: #333;
 		cursor: pointer;
+		height: 22px;
 	}
 
 	.copy-btn:hover {
-		background: #f0f0f0;
+		background: #e8e8e8;
+	}
+
+	.close-btn {
+		width: 22px;
+		height: 22px;
+		border: 1px solid #bbb;
+		border-radius: 3px;
+		background: #f5f5f5;
+		color: #333;
+		cursor: pointer;
+		font-size: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
 	}
 
 	.close-btn:hover {
-		background: #fee2e2;
-		border-color: #fca5a5;
+		background: #e81123;
+		border-color: #e81123;
+		color: #fff;
+	}
+
+	/* JSON content */
+	pre {
+		margin: 0;
+		padding: 12px 14px;
+		font-size: 12px;
+		font-family: ui-monospace, 'Cascadia Code', 'Cascadia Mono', 'Fira Code', monospace;
+		line-height: 1.5;
+		overflow: auto;
+		flex: 1;
+		color: #1e1e1e;
+		background: #fff;
+		tab-size: 2;
 	}
 </style>
