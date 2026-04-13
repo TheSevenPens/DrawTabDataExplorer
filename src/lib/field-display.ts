@@ -1,6 +1,6 @@
 import { getDisplayUnit, formatValue, type UnitPreference } from '$data/lib/units.js';
 
-const LABEL_UNITS = new Set(['mm', 'cm', 'g', 'degrees', 'Hz', 'ms']);
+const LABEL_UNITS = new Set(['mm', 'cm', 'g', 'degrees', 'Hz', 'ms', 'cd/m²']);
 
 // Units that have a meaningful alternate conversion to show
 const CONVERTIBLE_UNITS = new Set(['mm', 'g', 'LPmm', 'px/mm']);
