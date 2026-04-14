@@ -4,7 +4,6 @@
 	import { onMount } from 'svelte';
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
-	import SavedViews from '$lib/components/SavedViews.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { loadColumnWidths, saveColumnWidths } from '$lib/column-widths.js';
 
@@ -210,14 +209,10 @@
 
 <slot name="nav" />
 
-<SearchBar bind:searchText bind:quickFilters {quickFilterOptions} />
-
-<section class="views-section">
-	<h2>Views</h2>
-	<SavedViews steps={stepsForSave} {entityType} {defaultView} onload={loadView} />
-</section>
-
-<QueryPipelineBar bind:filters bind:sorts bind:columns={selectedColumns} {fields} {fieldGroups} {defaultFilterField} onchange={refresh} />
+<div class="top-bar">
+	<SearchBar bind:searchText bind:quickFilters {quickFilterOptions} />
+	<QueryPipelineBar bind:filters bind:sorts bind:columns={selectedColumns} {fields} {fieldGroups} {defaultFilterField} onchange={refresh} steps={stepsForSave} {entityType} {defaultView} onload={loadView} />
+</div>
 
 <ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} {linkField} {cellLinks} bind:columnWidths onwidthchange={onWidthChange} {flaggedIds} {onToggleFlag} />
 
@@ -236,19 +231,12 @@
 		color: var(--text-dim);
 	}
 
-	.views-section {
+	.top-bar {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
 		margin-bottom: 12px;
-		border: 1px solid var(--border-light);
-		border-radius: 6px;
-		padding: 6px 10px;
-		background: var(--bg-card);
-	}
-
-	.views-section h2 {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-muted);
-		margin-bottom: 4px;
 	}
 
 

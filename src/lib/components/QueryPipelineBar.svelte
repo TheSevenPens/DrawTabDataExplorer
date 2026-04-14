@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { type FieldDef, getFieldDef, getOperatorsForField } from '$data/lib/pipeline/index.js';
+	import { type FieldDef, type Step, getFieldDef, getOperatorsForField } from '$data/lib/pipeline/index.js';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
+	import SavedViews from '$lib/components/SavedViews.svelte';
 
 	interface FilterItem {
 		field: string;
@@ -14,7 +15,19 @@
 		direction: 'asc' | 'desc';
 	}
 
-	let { filters = $bindable(), sorts = $bindable(), columns = $bindable(), fields, fieldGroups, defaultFilterField, onchange }: {
+	let {
+		filters = $bindable(),
+		sorts = $bindable(),
+		columns = $bindable(),
+		fields,
+		fieldGroups,
+		defaultFilterField,
+		onchange,
+		steps,
+		entityType,
+		defaultView,
+		onload,
+	}: {
 		filters: FilterItem[];
 		sorts: SortItem[];
 		columns: string[];
@@ -22,16 +35,34 @@
 		fieldGroups: string[];
 		defaultFilterField?: string;
 		onchange: () => void;
+		steps: Step[];
+		entityType: string;
+		defaultView: Step[];
+		onload: (steps: Step[]) => void;
 	} = $props();
 
-	function getLabel(key: string): string {
-		return fields.find(f => f.key === key)?.label ?? key;
+	// ── Panel open/close ─────────────────────────────────────────────────────
+
+	let openPanel: 'filter' | 'sort' | 'columns' | 'views' | null = $state(null);
+
+	function togglePanel(name: 'filter' | 'sort' | 'columns' | 'views') {
+		closeAllContextMenus();
+		openPanel = openPanel === name ? null : name;
+	}
+
+	function closeAll() {
+		openPanel = null;
+		closeAllContextMenus();
 	}
 
 	function closeAllContextMenus() {
 		filterContextMenu = null;
 		sortContextMenu = null;
 		colContextMenu = null;
+	}
+
+	function getLabel(key: string): string {
+		return fields.find(f => f.key === key)?.label ?? key;
 	}
 
 	// ── Filter ────────────────────────────────────────────────────────────────
@@ -41,6 +72,8 @@
 	let filterContextMenu: { index: number; x: number; y: number } | null = $state(null);
 	let filterDragIndex: number | null = $state(null);
 	let filterDroppedInside = false;
+
+	let activeFilterCount = $derived(filters.filter(f => !f.disabled).length);
 
 	function getOpLabel(op: string): string {
 		const labels: Record<string, string> = {
@@ -64,6 +97,7 @@
 			: (fields[0]?.key ?? '');
 		filters.push({ field: initialField, operator: '==', value: '' });
 		filterEditingIndex = filters.length - 1;
+		openPanel = 'filter';
 	}
 
 	function toggleFilterDisabled(index: number) {
@@ -258,162 +292,216 @@
 	}
 </script>
 
-<svelte:window onclick={closeAllContextMenus} />
+<svelte:window onclick={closeAll} />
 
-<!-- Filter bar -->
-<div class="bar filter-bar">
-	<span class="bar-label filter-label">filter</span>
-	<div class="pills">
-		{#each filters as filter, i}
-			<button
-				class="pill filter-pill"
-				class:active={filterEditingIndex === i}
-				class:disabled={filter.disabled}
-				class:dragging={filterDragIndex === i}
-				draggable="true"
-				onclick={() => filterEditingIndex = filterEditingIndex === i ? null : i}
-				oncontextmenu={(e) => onFilterContextMenu(e, i)}
-				ondragstart={() => onFilterDragStart(i)}
-				ondragend={onFilterDragEnd}
-				title="Click to edit. Right-click for options. Drag out to remove."
-			>
-				{pillText(filter)}
-			</button>
-		{/each}
-		<button class="add-btn filter-add" onclick={addFilter} title="Add filter">+</button>
-	</div>
-</div>
+<div class="toolbar" onclick={(e) => e.stopPropagation()}>
 
-{#if filterEditingIndex !== null && filters[filterEditingIndex]}
-	{@const filter = filters[filterEditingIndex]}
-	{@const fieldDef = getFieldDef(filter.field, fields)}
-	{@const operators = fieldDef ? getOperatorsForField(fieldDef) : []}
-	{@const needsValue = filter.operator !== 'empty' && filter.operator !== 'notempty'}
-	<div class="editor">
-		<div class="field-select-wrapper">
-			<button class="field-select-btn" onclick={() => filterShowFieldPicker = !filterShowFieldPicker}>
-				{getLabel(filter.field)} ▾
-			</button>
-			{#if filterShowFieldPicker}
-				<FieldPicker
-					{fields}
-					{fieldGroups}
-					selected={filter.field}
-					onselect={(key) => { onFilterFieldChange(filterEditingIndex!, key); filterShowFieldPicker = false; }}
-					onclose={() => filterShowFieldPicker = false}
-				/>
-			{/if}
-		</div>
-
-		<select value={filter.operator} onchange={(e) => onFilterOpChange(filterEditingIndex!, (e.target as HTMLSelectElement).value)}>
-			{#each operators as op}
-				<option value={op.value} selected={op.value === filter.operator}>{op.label}</option>
-			{/each}
-		</select>
-
-		{#if needsValue && fieldDef?.type === 'enum' && fieldDef.enumValues}
-			<select value={filter.value} onchange={(e) => { onFilterValueChange(filterEditingIndex!, (e.target as HTMLSelectElement).value); }}>
-				<option value="">-- select --</option>
-				{#each fieldDef.enumValues as v}
-					<option value={v} selected={v === filter.value}>{v}</option>
-				{/each}
-			</select>
-		{:else if needsValue}
-			<input
-				type={fieldDef?.type === 'number' ? 'number' : 'text'}
-				placeholder="value..."
-				value={filter.value}
-				oninput={(e) => onFilterValueChange(filterEditingIndex!, (e.target as HTMLInputElement).value)}
-			/>
+	<!-- ── Filters ── -->
+	<div class="toolbar-item">
+		<button
+			class="toolbar-btn filter-btn"
+			class:has-active={activeFilterCount > 0}
+			class:open={openPanel === 'filter'}
+			onclick={() => togglePanel('filter')}
+		>
+			Filters{#if activeFilterCount > 0}<span class="badge filter-badge">{activeFilterCount}</span>{/if}
+		</button>
+		{#if openPanel === 'filter'}
+			<div class="panel filter-panel">
+				<div class="panel-pills">
+					{#each filters as filter, i}
+						<button
+							class="pill filter-pill"
+							class:active={filterEditingIndex === i}
+							class:disabled={filter.disabled}
+							class:dragging={filterDragIndex === i}
+							draggable="true"
+							onclick={() => filterEditingIndex = filterEditingIndex === i ? null : i}
+							oncontextmenu={(e) => onFilterContextMenu(e, i)}
+							ondragstart={() => onFilterDragStart(i)}
+							ondragend={onFilterDragEnd}
+							title="Click to edit. Right-click for options. Drag out to remove."
+						>
+							{pillText(filter)}
+						</button>
+					{/each}
+					<button class="add-btn filter-add" onclick={addFilter} title="Add filter">+</button>
+				</div>
+				{#if filters.length === 0}
+					<p class="empty-hint">No filters yet. Click + to add one.</p>
+				{/if}
+				{#if filterEditingIndex !== null && filters[filterEditingIndex]}
+					{@const filter = filters[filterEditingIndex]}
+					{@const fieldDef = getFieldDef(filter.field, fields)}
+					{@const operators = fieldDef ? getOperatorsForField(fieldDef) : []}
+					{@const needsValue = filter.operator !== 'empty' && filter.operator !== 'notempty'}
+					<div class="editor">
+						<div class="field-select-wrapper">
+							<button class="field-select-btn" onclick={() => filterShowFieldPicker = !filterShowFieldPicker}>
+								{getLabel(filter.field)} ▾
+							</button>
+							{#if filterShowFieldPicker}
+								<FieldPicker
+									{fields}
+									{fieldGroups}
+									selected={filter.field}
+									onselect={(key) => { onFilterFieldChange(filterEditingIndex!, key); filterShowFieldPicker = false; }}
+									onclose={() => filterShowFieldPicker = false}
+								/>
+							{/if}
+						</div>
+						<select value={filter.operator} onchange={(e) => onFilterOpChange(filterEditingIndex!, (e.target as HTMLSelectElement).value)}>
+							{#each operators as op}
+								<option value={op.value} selected={op.value === filter.operator}>{op.label}</option>
+							{/each}
+						</select>
+						{#if needsValue && fieldDef?.type === 'enum' && fieldDef.enumValues}
+							<select value={filter.value} onchange={(e) => { onFilterValueChange(filterEditingIndex!, (e.target as HTMLSelectElement).value); }}>
+								<option value="">-- select --</option>
+								{#each fieldDef.enumValues as v}
+									<option value={v} selected={v === filter.value}>{v}</option>
+								{/each}
+							</select>
+						{:else if needsValue}
+							<input
+								type={fieldDef?.type === 'number' ? 'number' : 'text'}
+								placeholder="value..."
+								value={filter.value}
+								oninput={(e) => onFilterValueChange(filterEditingIndex!, (e.target as HTMLInputElement).value)}
+							/>
+						{/if}
+						<button class="done-btn" onclick={() => filterEditingIndex = null}>Done</button>
+					</div>
+				{/if}
+			</div>
 		{/if}
-
-		<button class="done-btn" onclick={() => filterEditingIndex = null}>Done</button>
 	</div>
-{/if}
 
-<!-- Sort bar -->
-<div class="bar sort-bar">
-	<span class="bar-label sort-label">sort</span>
-	<div class="pills">
-		{#each sorts as sort, i}
-			<button
-				class="pill sort-pill"
-				class:dragging={sortDragIndex === i}
-				class:gap-left={sortDragIndex !== null && sortDragOverIndex === i && sortDragOverSide === 'left' && sortDragIndex !== i}
-				class:gap-right={sortDragIndex !== null && sortDragOverIndex === i && sortDragOverSide === 'right' && sortDragIndex !== i}
-				draggable="true"
-				onclick={() => toggleSortDirection(i)}
-				oncontextmenu={(e) => onSortContextMenu(e, i)}
-				ondragstart={() => onSortDragStart(i)}
-				ondragover={(e) => onSortDragOver(e, i)}
-				ondragleave={() => {}}
-				ondrop={() => onSortDrop(i)}
-				ondragend={onSortDragEnd}
-				title="Click to toggle. Right-click for options. Drag to reorder."
-			>
-				{getLabel(sort.field)}<span class="arrow">{sort.direction === 'asc' ? '▲' : '▼'}</span>
-			</button>
-		{/each}
-		<div class="add-wrapper">
-			<button class="add-btn sort-add" onclick={() => sortShowPicker = !sortShowPicker}>+</button>
-			{#if sortShowPicker}
-				<FieldPicker
-					{fields}
-					{fieldGroups}
-					exclude={sorts.map(s => s.field)}
-					onselect={(key) => addSortField(key)}
-					onselectgroup={(keys) => { for (const k of keys) addSortField(k); }}
-					onremovegroup={(keys) => { const s = new Set(keys); sorts = sorts.filter(x => !s.has(x.field)); onchange(); }}
-					onclose={() => sortShowPicker = false}
-				/>
-			{/if}
-		</div>
+	<!-- ── Sort ── -->
+	<div class="toolbar-item">
+		<button
+			class="toolbar-btn sort-btn"
+			class:has-active={sorts.length > 0}
+			class:open={openPanel === 'sort'}
+			onclick={() => togglePanel('sort')}
+		>
+			Sort{#if sorts.length > 0}<span class="sort-summary">{getLabel(sorts[0]!.field)}&nbsp;{sorts[0]!.direction === 'asc' ? '▲' : '▼'}{#if sorts.length > 1}&nbsp;+{sorts.length - 1}{/if}</span>{/if}
+		</button>
+		{#if openPanel === 'sort'}
+			<div class="panel sort-panel">
+				<div class="panel-pills">
+					{#each sorts as sort, i}
+						<button
+							class="pill sort-pill"
+							class:dragging={sortDragIndex === i}
+							class:gap-left={sortDragIndex !== null && sortDragOverIndex === i && sortDragOverSide === 'left' && sortDragIndex !== i}
+							class:gap-right={sortDragIndex !== null && sortDragOverIndex === i && sortDragOverSide === 'right' && sortDragIndex !== i}
+							draggable="true"
+							onclick={() => toggleSortDirection(i)}
+							oncontextmenu={(e) => onSortContextMenu(e, i)}
+							ondragstart={() => onSortDragStart(i)}
+							ondragover={(e) => onSortDragOver(e, i)}
+							ondragleave={() => {}}
+							ondrop={() => onSortDrop(i)}
+							ondragend={onSortDragEnd}
+							title="Click to toggle direction. Right-click for options. Drag to reorder."
+						>
+							{getLabel(sort.field)}<span class="arrow">{sort.direction === 'asc' ? '▲' : '▼'}</span>
+						</button>
+					{/each}
+					<div class="add-wrapper">
+						<button class="add-btn sort-add" onclick={() => sortShowPicker = !sortShowPicker}>+</button>
+						{#if sortShowPicker}
+							<FieldPicker
+								{fields}
+								{fieldGroups}
+								exclude={sorts.map(s => s.field)}
+								onselect={(key) => addSortField(key)}
+								onselectgroup={(keys) => { for (const k of keys) addSortField(k); }}
+								onremovegroup={(keys) => { const s = new Set(keys); sorts = sorts.filter(x => !s.has(x.field)); onchange(); }}
+								onclose={() => sortShowPicker = false}
+							/>
+						{/if}
+					</div>
+				</div>
+				{#if sorts.length === 0}
+					<p class="empty-hint">No sort yet. Click + to add one.</p>
+				{/if}
+			</div>
+		{/if}
 	</div>
+
+	<!-- ── Columns ── -->
+	<div class="toolbar-item">
+		<button
+			class="toolbar-btn col-btn"
+			class:open={openPanel === 'columns'}
+			onclick={() => togglePanel('columns')}
+		>
+			Columns<span class="badge col-badge">{columns.length}</span>
+		</button>
+		{#if openPanel === 'columns'}
+			<div class="panel col-panel">
+				<div class="panel-pills">
+					{#each columns as col, i}
+						<button
+							class="pill col-pill"
+							class:dragging={colDragIndex === i}
+							class:gap-left={colDragIndex !== null && colDragOverIndex === i && colDragOverSide === 'left' && colDragIndex !== i}
+							class:gap-right={colDragIndex !== null && colDragOverIndex === i && colDragOverSide === 'right' && colDragIndex !== i}
+							draggable="true"
+							oncontextmenu={(e) => onColContextMenu(e, i)}
+							ondragstart={() => onColDragStart(i)}
+							ondragover={(e) => onColDragOver(e, i)}
+							ondragleave={() => {}}
+							ondrop={() => onColDrop(i)}
+							ondragend={onColDragEnd}
+							title="Right-click to remove. Drag to reorder."
+						>
+							{getLabel(col)}
+						</button>
+					{/each}
+					<div class="add-wrapper">
+						<button class="add-btn col-add" onclick={() => colShowPicker = !colShowPicker}>+</button>
+						{#if colShowPicker}
+							<FieldPicker
+								{fields}
+								{fieldGroups}
+								exclude={columns}
+								onselect={(key) => addColumnField(key)}
+								onselectgroup={(keys) => { for (const k of keys) addColumnField(k); }}
+								onremovegroup={(keys) => { const s = new Set(keys); columns = columns.filter(c => !s.has(c)); onchange(); }}
+								onclose={() => colShowPicker = false}
+							/>
+						{/if}
+					</div>
+				</div>
+			</div>
+		{/if}
+	</div>
+
+	<!-- ── Views ── -->
+	<div class="toolbar-item views-item">
+		<button
+			class="toolbar-btn views-btn"
+			class:open={openPanel === 'views'}
+			onclick={() => togglePanel('views')}
+		>
+			Views
+		</button>
+		{#if openPanel === 'views'}
+			<div class="panel views-panel">
+				<SavedViews {steps} {entityType} {defaultView} onload={(s) => { onload(s); openPanel = null; }} />
+			</div>
+		{/if}
+	</div>
+
 </div>
 
-<!-- Column bar -->
-<div class="bar column-bar">
-	<span class="bar-label column-label">columns</span>
-	<div class="pills">
-		{#each columns as col, i}
-			<button
-				class="pill col-pill"
-				class:dragging={colDragIndex === i}
-				class:gap-left={colDragIndex !== null && colDragOverIndex === i && colDragOverSide === 'left' && colDragIndex !== i}
-				class:gap-right={colDragIndex !== null && colDragOverIndex === i && colDragOverSide === 'right' && colDragIndex !== i}
-				draggable="true"
-				oncontextmenu={(e) => onColContextMenu(e, i)}
-				ondragstart={() => onColDragStart(i)}
-				ondragover={(e) => onColDragOver(e, i)}
-				ondragleave={() => {}}
-				ondrop={() => onColDrop(i)}
-				ondragend={onColDragEnd}
-				title="Right-click to remove. Drag to reorder."
-			>
-				{getLabel(col)}
-			</button>
-		{/each}
-		<div class="add-wrapper">
-			<button class="add-btn col-add" onclick={() => colShowPicker = !colShowPicker}>+</button>
-			{#if colShowPicker}
-				<FieldPicker
-					{fields}
-					{fieldGroups}
-					exclude={columns}
-					onselect={(key) => addColumnField(key)}
-					onselectgroup={(keys) => { for (const k of keys) addColumnField(k); }}
-					onremovegroup={(keys) => { const s = new Set(keys); columns = columns.filter(c => !s.has(c)); onchange(); }}
-					onclose={() => colShowPicker = false}
-				/>
-			{/if}
-		</div>
-	</div>
-</div>
-
-<!-- Context menus -->
+<!-- Context menus — position:fixed so DOM placement doesn't affect visual position -->
 {#if filterContextMenu}
 	<div class="context-menu" style="left: {filterContextMenu.x}px; top: {filterContextMenu.y}px;">
-		<button onclick={() => { filterEditingIndex = filterContextMenu!.index; filterContextMenu = null; }}>Edit</button>
+		<button onclick={() => { filterEditingIndex = filterContextMenu!.index; openPanel = 'filter'; filterContextMenu = null; }}>Edit</button>
 		<button onclick={() => toggleFilterDisabled(filterContextMenu!.index)}>
 			{filters[filterContextMenu.index]?.disabled ? 'Enable' : 'Disable'}
 		</button>
@@ -440,35 +528,106 @@
 {/if}
 
 <style>
-	/* ── Shared bar structure ───────────────────────────────────────────────── */
-	.bar {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 6px;
-		padding: 8px 12px;
-		font-size: 14px;
-		min-height: 40px;
-		margin-bottom: 4px;
-	}
-
-	.column-bar { align-items: flex-start; margin-bottom: 12px; }
-
-	.bar-label { font-weight: 600; color: #6b21a8; }
-	.filter-label { min-width: 42px; }
-	.sort-label   { min-width: 50px; }
-	.column-label { min-width: 60px; padding-top: 2px; }
-
-	.pills {
+	/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+	.toolbar {
 		display: flex;
 		align-items: center;
 		gap: 4px;
 		flex-wrap: wrap;
 	}
 
-	/* ── Shared pill structure ─────────────────────────────────────────────── */
+	.toolbar-item {
+		position: relative;
+	}
+
+	.toolbar-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 5px 10px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+		white-space: nowrap;
+		line-height: 1;
+	}
+
+	.toolbar-btn:hover,
+	.toolbar-btn.open {
+		border-color: var(--text-dim);
+		color: var(--text);
+		background: var(--hover-bg);
+	}
+
+	.filter-btn.has-active { border-color: #d97706; color: #d97706; }
+	.filter-btn.has-active:hover,
+	.filter-btn.has-active.open { background: #fffbeb; }
+
+	.sort-btn.has-active { border-color: #2563eb; color: #2563eb; }
+	.sort-btn.has-active:hover,
+	.sort-btn.has-active.open { background: #eff6ff; }
+
+	/* ── Badges & summary text ─────────────────────────────────────────────── */
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 4px;
+		font-size: 11px;
+		font-weight: 600;
+		border-radius: 9px;
+		line-height: 1;
+	}
+
+	.filter-badge { background: #d97706; color: #fff; }
+	.col-badge    { background: var(--border); color: var(--text-muted); }
+
+	.sort-summary {
+		font-size: 11px;
+		color: #2563eb;
+		font-weight: 500;
+	}
+
+	/* ── Panels ──────────────────────────────────────────────────────────────── */
+	.panel {
+		position: absolute;
+		top: calc(100% + 4px);
+		left: 0;
+		z-index: 100;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
+		border-radius: 6px;
+		box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+		padding: 10px 12px;
+		min-width: 260px;
+	}
+
+	.views-item .panel {
+		left: auto;
+		right: 0;
+		min-width: 360px;
+	}
+
+	.panel-pills {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-wrap: wrap;
+	}
+
+	.empty-hint {
+		font-size: 12px;
+		color: var(--text-muted);
+		margin: 6px 0 0;
+		font-style: italic;
+	}
+
+	/* ── Pills ───────────────────────────────────────────────────────────────── */
 	.pill {
 		display: inline-flex;
 		align-items: center;
@@ -484,13 +643,11 @@
 	.pill.gap-left  { margin-left: 80px;  transition: margin 0.15s ease; }
 	.pill.gap-right { margin-right: 80px; transition: margin 0.15s ease; }
 
-	/* Filter pill */
 	.filter-pill { background: var(--pill-filter-bg); border: 1px solid var(--pill-filter-border); }
 	.filter-pill:hover  { background: var(--pill-filter-hover); border-color: #f59e0b; }
 	.filter-pill.active { border-color: #d97706; box-shadow: 0 0 0 2px rgba(217,119,6,0.2); }
 	.filter-pill.disabled { opacity: 0.45; text-decoration: line-through; }
 
-	/* Sort pill */
 	.sort-pill {
 		background: var(--pill-sort-bg);
 		border: 1px solid var(--pill-sort-border);
@@ -501,7 +658,6 @@
 	.sort-pill:hover { background: var(--pill-sort-hover); border-color: #93c5fd; }
 	.sort-pill .arrow { font-size: 10px; color: #6b21a8; }
 
-	/* Column pill */
 	.col-pill {
 		background: var(--pill-col-bg);
 		border: 1px solid var(--pill-col-border);
@@ -510,7 +666,7 @@
 	}
 	.col-pill:hover { background: var(--pill-col-hover); border-color: #86efac; }
 
-	/* ── Add button ────────────────────────────────────────────────────────── */
+	/* ── Add button ──────────────────────────────────────────────────────────── */
 	.add-btn {
 		width: 26px;
 		height: 26px;
@@ -523,6 +679,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		flex-shrink: 0;
 	}
 
 	.filter-add:hover { border-color: #d97706; color: #d97706; }
@@ -531,17 +688,14 @@
 
 	.add-wrapper { position: relative; }
 
-	/* ── Filter editor ─────────────────────────────────────────────────────── */
+	/* ── Filter editor ───────────────────────────────────────────────────────── */
 	.editor {
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		padding: 8px 12px;
-		background: var(--editor-bg);
-		border: 1px solid var(--pill-filter-border);
-		border-top: none;
-		border-radius: 0 0 6px 6px;
-		margin-bottom: 12px;
+		padding: 8px 0 2px;
+		border-top: 1px solid var(--border-light);
+		margin-top: 8px;
 		flex-wrap: wrap;
 	}
 
@@ -581,7 +735,7 @@
 	}
 	.done-btn:hover { background: #d97706; color: #fff; }
 
-	/* ── Context menu ──────────────────────────────────────────────────────── */
+	/* ── Context menu ────────────────────────────────────────────────────────── */
 	.context-menu {
 		position: fixed;
 		background: var(--bg-card);

@@ -41,7 +41,6 @@
 	.search-bar {
 		display: flex;
 		gap: 6px;
-		margin-bottom: 12px;
 	}
 
 	.search-bar input {
