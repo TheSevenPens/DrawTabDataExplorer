@@ -2,9 +2,7 @@
 	import { type Step, type FilterStep as FilterStepType, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import FilterBar from '$lib/components/FilterBar.svelte';
-	import SortBar from '$lib/components/SortBar.svelte';
-	import ColumnBar from '$lib/components/ColumnBar.svelte';
+	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
 	import SavedViews from '$lib/components/SavedViews.svelte';
 	import { loadColumnWidths, saveColumnWidths } from '$lib/column-widths.js';
@@ -231,11 +229,7 @@
 	<SavedViews steps={stepsForSave} {entityType} {defaultView} onload={loadView} />
 </section>
 
-<FilterBar bind:filters {fields} {fieldGroups} {defaultFilterField} onchange={refresh} />
-
-<SortBar bind:sorts {fields} {fieldGroups} onchange={refresh} />
-
-<ColumnBar bind:columns={selectedColumns} {fields} {fieldGroups} onchange={refresh} />
+<QueryPipelineBar bind:filters bind:sorts bind:columns={selectedColumns} {fields} {fieldGroups} {defaultFilterField} onchange={refresh} />
 
 <ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} {linkField} {cellLinks} bind:columnWidths onwidthchange={onWidthChange} {flaggedIds} {onToggleFlag} />
 

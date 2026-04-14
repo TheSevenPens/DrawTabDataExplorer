@@ -32,6 +32,7 @@
 	fieldGroups={PEN_FAMILY_FIELD_GROUPS}
 	defaultColumns={PEN_FAMILY_DEFAULT_COLUMNS}
 	defaultView={PEN_FAMILY_DEFAULT_VIEW}
+	linkField="FamilyName"
 	detailBasePath="/pen-families"
 	defaultFilterField="FamilyId"
 	defaultSortField="FamilyId"

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadInventoryPensFromURL, loadInventoryTabletsFromURL } from '$data/lib/drawtab-loader.js';
+	import { loadInventoryPensFromURL, loadInventoryTabletsFromURL, loadPensFromURL, brandName } from '$data/lib/drawtab-loader.js';
 	import {
 		type InventoryPen, INVENTORY_PEN_FIELDS, INVENTORY_PEN_FIELD_GROUPS,
 		INVENTORY_PEN_DEFAULT_COLUMNS, INVENTORY_PEN_DEFAULT_VIEW,
@@ -16,12 +16,22 @@
 	let pens: InventoryPen[] = $state([]);
 	let tablets: InventoryTablet[] = $state([]);
 	let activeTab: 'pens' | 'tablets' = $state('pens');
+	let penNameMap: Record<string, string> = $state({});
 
 	onMount(async () => {
-		const [p, t] = await Promise.all([
+		const [p, t, allPens] = await Promise.all([
 			loadInventoryPensFromURL(base, 'sevenpens'),
 			loadInventoryTabletsFromURL(base, 'sevenpens'),
+			loadPensFromURL(base),
 		]);
+		const map: Record<string, string> = {};
+		for (const pen of allPens) {
+			const name = pen.PenName === pen.PenId
+				? `${brandName(pen.Brand)} ${pen.PenId}`
+				: `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`;
+			map[pen.EntityId] = name;
+		}
+		penNameMap = map;
 		pens = p as unknown as InventoryPen[];
 		tablets = t as unknown as InventoryTablet[];
 	});
@@ -52,6 +62,13 @@
 		defaultFilterField="Brand"
 		defaultSortField="InventoryId"
 		quickFilterFields={["Brand"]}
+		cellLinks={{
+			PenEntityId: (item: InventoryPen) => {
+				const name = penNameMap[item.PenEntityId];
+				if (!name) return [{ label: item.PenEntityId, href: `${base}/pens/${encodeURIComponent(item.PenEntityId)}` }];
+				return [{ label: name, href: `${base}/pens/${encodeURIComponent(item.PenEntityId)}` }];
+			}
+		}}
 	/>
 {:else}
 	<EntityExplorer

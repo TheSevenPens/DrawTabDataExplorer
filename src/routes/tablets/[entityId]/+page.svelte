@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadTabletsFromURL, loadPenCompatFromURL, loadPensFromURL, loadISOPaperSizesFromURL, brandName, getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
+	import Nav from '$lib/components/Nav.svelte';
 	import { findSimilarTablets } from '$data/lib/compat-helpers.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
@@ -182,6 +183,8 @@
 		return results;
 	});
 </script>
+
+<Nav />
 
 {#if notFound}
 	<h1>Tablet not found</h1>

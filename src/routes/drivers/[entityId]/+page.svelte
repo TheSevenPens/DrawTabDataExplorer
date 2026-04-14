@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadDriversFromURL } from '$data/lib/drawtab-loader.js';
+	import Nav from '$lib/components/Nav.svelte';
 	import { type Driver, DRIVER_FIELDS, DRIVER_FIELD_GROUPS } from '$data/lib/entities/driver-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 
@@ -20,6 +21,8 @@
 		}
 	});
 </script>
+
+<Nav />
 
 {#if notFound}
 	<h1>Driver not found</h1>

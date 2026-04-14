@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadPenFamiliesFromURL, loadPensFromURL, brandName } from '$data/lib/drawtab-loader.js';
+	import Nav from '$lib/components/Nav.svelte';
 	import type { Pen } from '$data/lib/drawtab-loader.js';
 	import { type PenFamily, PEN_FAMILY_FIELDS, PEN_FAMILY_FIELD_GROUPS } from '$data/lib/entities/pen-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
@@ -28,6 +29,8 @@
 		}
 	});
 </script>
+
+<Nav />
 
 {#if notFound}
 	<h1>Pen family not found</h1>

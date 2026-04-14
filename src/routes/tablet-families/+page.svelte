@@ -23,6 +23,7 @@
 	fieldGroups={TABLET_FAMILY_FIELD_GROUPS}
 	defaultColumns={TABLET_FAMILY_DEFAULT_COLUMNS}
 	defaultView={TABLET_FAMILY_DEFAULT_VIEW}
+	linkField="FamilyName"
 	detailBasePath="/tablet-families"
 	defaultFilterField="FamilyId"
 	defaultSortField="FamilyId"

@@ -30,6 +30,7 @@
 	fieldGroups={PEN_FIELD_GROUPS}
 	defaultColumns={PEN_DEFAULT_COLUMNS}
 	defaultView={PEN_DEFAULT_VIEW}
+	linkField="FullName"
 	detailBasePath="/pens"
 	defaultFilterField="PenFamily"
 	defaultSortField="PenId"

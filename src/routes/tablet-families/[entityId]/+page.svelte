@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadTabletFamiliesFromURL, loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
+	import Nav from '$lib/components/Nav.svelte';
 	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS } from '$data/lib/entities/tablet-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 
@@ -27,6 +28,8 @@
 		familyTablets = allTablets.filter((t) => t.Model.Family === found.FamilyId);
 	});
 </script>
+
+<Nav />
 
 {#if notFound}
 	<h1>Tablet family not found</h1>

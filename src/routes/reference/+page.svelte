@@ -5,6 +5,7 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
+	import Nav from '$lib/components/Nav.svelte';
 
 	let activeTab: 'tablet-sizes' | 'iso-paper' | 'us-paper' | 'display-resolutions' = $state('tablet-sizes');
 	let paperSizes: ISOPaperSize[] = $state([]);
@@ -146,6 +147,7 @@
 	});
 </script>
 
+<Nav />
 <h1>Reference</h1>
 
 <div class="tabs">

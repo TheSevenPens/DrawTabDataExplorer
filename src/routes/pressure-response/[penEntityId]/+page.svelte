@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { loadPressureResponseFromURL, type PressureResponse } from '$data/lib/drawtab-loader.js';
+	import Nav from '$lib/components/Nav.svelte';
 
 	let penEntityId = $state('');
 	let sessions: PressureResponse[] = $state([]);
@@ -30,6 +31,8 @@
 			.sort((a, b) => a.inventoryId.localeCompare(b.inventoryId));
 	});
 </script>
+
+<Nav />
 
 <p class="back"><a href="{base}/pressure-response">&larr; Pressure Response</a></p>
 
