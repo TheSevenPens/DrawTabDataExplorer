@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadTabletsFromURL, loadPensFromURL, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import {
 		TABLET_FIELDS,
 		TABLET_FIELD_GROUPS,
@@ -13,10 +13,24 @@
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
 
 	let data: Tablet[] = $state([]);
+	let pens: Pen[] = $state([]);
 	let flaggedSet = $derived(new Set($flaggedTablets));
 
+	let penIdToEntityId = $derived(new Map(pens.map((p) => [p.PenId, p.EntityId])));
+
+	let cellLinks = $derived({
+		ModelIncludedPen: (t: Tablet) =>
+			(t.Model.IncludedPen ?? []).map((penId) => ({
+				label: penId,
+				href: `${base}/pens/${encodeURIComponent(penIdToEntityId.get(penId) ?? penId)}`,
+			})),
+	});
+
 	onMount(async () => {
-		data = await loadTabletsFromURL(base);
+		[data, pens] = await Promise.all([
+			loadTabletsFromURL(base),
+			loadPensFromURL(base),
+		]);
 	});
 </script>
 
@@ -32,6 +46,7 @@
 	defaultView={TABLET_DEFAULT_VIEW}
 	detailBasePath="/tablets"
 	linkField="NameAndModelId"
+	{cellLinks}
 	defaultFilterField="Brand"
 	defaultSortField="Brand"
 	quickFilterFields={["Brand", "ModelType", "DigitizerSizeCategory"]}

@@ -4,7 +4,7 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
-	let { data, visibleFields, fields, total, entityLabel = "records", detailBasePath = "", linkField = "EntityId", columnWidths = $bindable({}), onwidthchange, flaggedIds, onToggleFlag }: {
+	let { data, visibleFields, fields, total, entityLabel = "records", detailBasePath = "", linkField = "EntityId", cellLinks = {}, columnWidths = $bindable({}), onwidthchange, flaggedIds, onToggleFlag }: {
 		data: any[];
 		visibleFields: string[];
 		fields: FieldDef<any>[];
@@ -12,6 +12,7 @@
 		entityLabel?: string;
 		detailBasePath?: string;
 		linkField?: string;
+		cellLinks?: Record<string, (item: any) => { label: string; href: string }[]>;
 		columnWidths?: Record<string, number>;
 		onwidthchange?: () => void;
 		flaggedIds?: Set<string>;
@@ -92,7 +93,15 @@
 					{#each fieldDefs as f}
 						{@const val = f.getValue(item)}
 						{@const displayVal = formatValue(val, f.unit, $unitPreference)}
-						{#if f.key === linkField && detailBasePath}
+						{#if cellLinks[f.key]}
+							{@const links = cellLinks[f.key](item)}
+							<td class:dim={links.length === 0}>
+								{#each links as link, i}
+									{#if i > 0}, {/if}
+									<a class="entity-link" href={link.href}>{link.label}</a>
+								{/each}
+							</td>
+						{:else if f.key === linkField && detailBasePath}
 							{@const entityId = item.Meta?.EntityId ?? item.EntityId ?? val}
 							<td><a class="entity-link" href="{base}{detailBasePath}/{encodeURIComponent(entityId)}">{displayVal}</a></td>
 						{:else}
