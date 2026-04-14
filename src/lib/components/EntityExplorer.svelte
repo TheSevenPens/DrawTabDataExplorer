@@ -5,6 +5,7 @@
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
+	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import { loadColumnWidths, saveColumnWidths } from '$lib/column-widths.js';
 
 	let {
@@ -94,6 +95,7 @@
 	let tick = $state(0);
 	let searchText = $state('');
 	let quickFilters: Record<string, string> = $state({});
+	let showExport = $state(false);
 
 	interface QuickFilterOption {
 		fieldDef: FieldDef<any>;
@@ -205,7 +207,24 @@
 <div class="title-row">
 	<h1>{title}</h1>
 	<span class="results-count">Showing {result.data.length} of {data.length} {entityLabel}</span>
+	<button class="export-btn" onclick={() => showExport = true} title="Export data">
+		<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M8 2v8M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/>
+		</svg>
+		Export
+	</button>
 </div>
+
+{#if showExport}
+	<ExportDialog
+		allData={data}
+		filteredData={result.data}
+		allFields={fields}
+		visibleFields={result.visibleFields}
+		{entityType}
+		onclose={() => showExport = false}
+	/>
+{/if}
 
 <slot name="nav" />
 
@@ -229,6 +248,24 @@
 	.results-count {
 		font-size: 14px;
 		color: var(--text-dim);
+	}
+
+	.export-btn {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 4px 10px;
+		font-size: 12px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+	.export-btn:hover {
+		border-color: var(--text-dim);
+		color: var(--text);
 	}
 
 	.top-bar {
