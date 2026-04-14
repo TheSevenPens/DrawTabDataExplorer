@@ -31,6 +31,7 @@
 	defaultColumns={TABLET_DEFAULT_COLUMNS}
 	defaultView={TABLET_DEFAULT_VIEW}
 	detailBasePath="/tablets"
+	linkField="FullName"
 	defaultFilterField="Brand"
 	defaultSortField="Brand"
 	quickFilterFields={["Brand", "ModelType", "DigitizerSizeCategory"]}

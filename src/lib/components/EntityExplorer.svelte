@@ -19,6 +19,7 @@
 		defaultColumns,
 		defaultView,
 		detailBasePath = "",
+		linkField = "EntityId",
 		quickFilterFields = [],
 		defaultFilterField,
 		defaultSortField,
@@ -34,6 +35,7 @@
 		defaultColumns: string[];
 		defaultView: Step[];
 		detailBasePath?: string;
+		linkField?: string;
 		quickFilterFields?: string[];
 		defaultFilterField?: string;
 		defaultSortField?: string;
@@ -233,7 +235,7 @@
 
 <ColumnBar bind:columns={selectedColumns} {fields} {fieldGroups} onchange={refresh} />
 
-<ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} bind:columnWidths onwidthchange={onWidthChange} {flaggedIds} {onToggleFlag} />
+<ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} {linkField} bind:columnWidths onwidthchange={onWidthChange} {flaggedIds} {onToggleFlag} />
 
 <style>
 	.title-row {

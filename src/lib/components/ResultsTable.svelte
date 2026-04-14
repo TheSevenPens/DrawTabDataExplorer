@@ -4,13 +4,14 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
-	let { data, visibleFields, fields, total, entityLabel = "records", detailBasePath = "", columnWidths = $bindable({}), onwidthchange, flaggedIds, onToggleFlag }: {
+	let { data, visibleFields, fields, total, entityLabel = "records", detailBasePath = "", linkField = "EntityId", columnWidths = $bindable({}), onwidthchange, flaggedIds, onToggleFlag }: {
 		data: any[];
 		visibleFields: string[];
 		fields: FieldDef<any>[];
 		total: number;
 		entityLabel?: string;
 		detailBasePath?: string;
+		linkField?: string;
 		columnWidths?: Record<string, number>;
 		onwidthchange?: () => void;
 		flaggedIds?: Set<string>;
@@ -91,8 +92,9 @@
 					{#each fieldDefs as f}
 						{@const val = f.getValue(item)}
 						{@const displayVal = formatValue(val, f.unit, $unitPreference)}
-						{#if f.key === 'EntityId' && detailBasePath && val}
-							<td><a class="entity-link" href="{base}{detailBasePath}/{encodeURIComponent(val)}">{val}</a></td>
+						{#if f.key === linkField && detailBasePath}
+							{@const entityId = item.Meta?.EntityId ?? item.EntityId ?? val}
+							<td><a class="entity-link" href="{base}{detailBasePath}/{encodeURIComponent(entityId)}">{displayVal}</a></td>
 						{:else}
 							<td class:dim={!val || val === '-'}>{displayVal}</td>
 						{/if}
