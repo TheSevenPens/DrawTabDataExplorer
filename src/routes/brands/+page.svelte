@@ -23,6 +23,8 @@
 	fieldGroups={BRAND_FIELD_GROUPS}
 	defaultColumns={BRAND_DEFAULT_COLUMNS}
 	defaultView={BRAND_DEFAULT_VIEW}
+	detailBasePath="/brands"
+	linkField="BrandName"
 	defaultFilterField="BrandName"
 	defaultSortField="BrandName"
 />
