@@ -5,6 +5,7 @@
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
 	import SavedViews from '$lib/components/SavedViews.svelte';
+	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { loadColumnWidths, saveColumnWidths } from '$lib/column-widths.js';
 
 	let {
@@ -209,20 +210,7 @@
 
 <slot name="nav" />
 
-<div class="search-bar">
-	<input type="text" placeholder="Search..." bind:value={searchText} />
-	{#each quickFilterOptions as qf}
-		<select bind:value={quickFilters[qf.fieldDef.key]}>
-			<option value="">All {qf.fieldDef.label}</option>
-			{#each qf.values as v}
-				<option value={v}>{v}</option>
-			{/each}
-		</select>
-	{/each}
-	{#if searchText || Object.values(quickFilters).some(v => v !== '')}
-		<button class="search-clear" onclick={() => { searchText = ''; quickFilters = {}; }}>Clear</button>
-	{/if}
-</div>
+<SearchBar bind:searchText bind:quickFilters {quickFilterOptions} />
 
 <section class="views-section">
 	<h2>Views</h2>
@@ -263,43 +251,5 @@
 		margin-bottom: 4px;
 	}
 
-	.search-bar {
-		display: flex;
-		gap: 6px;
-		margin-bottom: 12px;
-	}
-
-	.search-bar input {
-		padding: 5px 10px;
-		font-size: 13px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text);
-		width: 260px;
-	}
-
-	.search-bar select {
-		padding: 5px 10px;
-		font-size: 13px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text);
-	}
-
-	.search-clear {
-		padding: 5px 10px;
-		font-size: 13px;
-		border: 1px solid var(--border-light);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
-	}
-
-	.search-clear:hover {
-		border-color: var(--text-muted);
-	}
 
 </style>
