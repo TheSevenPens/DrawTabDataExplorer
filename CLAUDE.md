@@ -65,6 +65,36 @@ cd data-repo && git add . && git commit -m "..." && git push
 cd .. && git add data-repo && git commit -m "chore: update data-repo submodule (...)"
 ```
 
+## UI component architecture
+
+### EntityExplorer
+
+The main list-page component. Renders a title row, a top-bar, and a results table.
+
+**Top-bar layout** (one flex row):
+```
+[ Search... ] [ QuickFilter ▾ ] ...   [ Filters ] [ Sort ] [ Columns N ] [ Views ]
+└─────────────── SearchBar ──────────┘ └──────────── QueryPipelineBar ────────────┘
+```
+
+- `SearchBar` — text search input + optional quick-filter dropdowns (configured via `quickFilterFields` prop). Stateless except for `$bindable` `searchText` and `quickFilters`.
+- `QueryPipelineBar` — four toolbar buttons that open dropdown panels: **Filters**, **Sort**, **Columns**, **Views**. Buttons show active-state indicators (filter count badge, sort field name). The Views panel embeds `SavedViews` directly.
+
+### QueryPipelineBar
+
+Owns filter/sort/column pipeline state via `$bindable` props. Also owns the Views panel (accepts `steps`, `entityType`, `defaultView`, `onload` props and renders `SavedViews` inside its dropdown).
+
+All four panels are `position: absolute` dropdowns that open on button click and close on any outside click (`<svelte:window onclick>`). Clicks inside the toolbar use `stopPropagation` to stay open.
+
+Active state indicators:
+- Filters button turns amber + shows count badge when filters are active
+- Sort button turns blue + shows the primary sort field and direction inline
+- Columns button always shows a count badge
+
+### SearchBar
+
+Thin component — search input + quick-filter `<select>` elements + a Clear button (shown only when dirty). The `quickFilterOptions` array is computed by `EntityExplorer` from `quickFilterFields` and passed down.
+
 ## EntityId formats
 
 | Entity  | Format                        | Example                  |
