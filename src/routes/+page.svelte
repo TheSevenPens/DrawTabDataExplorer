@@ -11,18 +11,19 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
+	import { buildPenNameMap } from '$lib/pen-helpers.js';
 
 	let data: Tablet[] = $state([]);
 	let pens: Pen[] = $state([]);
 	let flaggedSet = $derived(new Set($flaggedTablets));
 
-	let penIdToEntityId = $derived(new Map(pens.map((p) => [p.PenId, p.EntityId])));
+	let penNameMap = $derived(buildPenNameMap(pens));
 
 	let cellLinks = $derived({
 		ModelIncludedPen: (t: Tablet) =>
-			(t.Model.IncludedPen ?? []).map((penId) => ({
-				label: penId,
-				href: `${base}/pens/${encodeURIComponent(penIdToEntityId.get(penId) ?? penId)}`,
+			(t.Model.IncludedPen ?? []).map((entityId) => ({
+				label: penNameMap.get(entityId) ?? entityId,
+				href: `${base}/pens/${encodeURIComponent(entityId)}`,
 			})),
 	});
 

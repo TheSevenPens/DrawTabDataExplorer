@@ -44,7 +44,7 @@
 
 		// Find tablets that include this pen
 		includedWithTablets = allTablets.filter((t) => {
-			return (t.Model.IncludedPen ?? []).some((p) => p === found.PenId);
+			return (t.Model.IncludedPen ?? []).some((p) => p === found.EntityId);
 		});
 	});
 </script>
