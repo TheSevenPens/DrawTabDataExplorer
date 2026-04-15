@@ -244,7 +244,9 @@
 													{#if f.key === 'ModelIncludedPen'}
 														{includedPenNames(tablet!)}
 													{:else if isUrl(val)}
-														<a href={val} target="_blank" rel="noopener">{val}</a>
+														<a href={val} target="_blank" rel="noopener">
+															{f.key === 'ModelUserManual' ? 'View Manual ↗' : f.key === 'ModelProductLink' ? 'View Product Page ↗' : val}
+														</a>
 													{:else}
 														{formatValueWithAlt(val, f.label, f.unit, $unitPreference, $showAltUnits)}
 													{/if}
