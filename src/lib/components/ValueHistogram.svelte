@@ -112,17 +112,18 @@
 			.filter(m => m.value >= scaleMin && m.value <= scaleMax)
 			.map(m => ({ ...m, x: xScale(m.value), labelW: m.label.length * CHAR_WIDTH }))
 			.sort((a, b) => a.x - b.x);
-		// Track the left edge of the last label placed on each tier (labels are right-aligned to marker x)
-		const tierLeftEdge = new Array(MARKER_TIERS).fill(Infinity);
+		// Track the right edge (anchor x) of the last label placed on each tier.
+		// Labels are right-aligned, so a label at x spans [x - labelW, x].
+		// A new label at m.x fits on tier i if its left edge clears the previous
+		// label's right edge: m.x - m.labelW >= tierRightEdge[i] + LABEL_PAD.
+		// This lets markers rise back to tier 0 whenever there is room.
+		const tierRightEdge = new Array(MARKER_TIERS).fill(-Infinity);
 		return visible.map(m => {
-			const rightEdge = m.x;
-			const leftEdge = m.x - m.labelW;
-			let tier = 0;
+			let tier = MARKER_TIERS - 1; // fallback: deepest tier
 			for (let i = 0; i < MARKER_TIERS; i++) {
-				if (rightEdge <= tierLeftEdge[i] - LABEL_PAD) { tier = i; break; }
-				if (i === MARKER_TIERS - 1) tier = i;
+				if (m.x - m.labelW >= tierRightEdge[i] + LABEL_PAD) { tier = i; break; }
 			}
-			tierLeftEdge[tier] = leftEdge;
+			tierRightEdge[tier] = m.x;
 			return { ...m, tier };
 		});
 	});
