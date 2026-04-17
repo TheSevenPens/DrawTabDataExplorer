@@ -138,14 +138,16 @@
 		return visible.map(m => {
 			const labelLeft = m.x - m.labelW;
 
-			// Pass 1 — strict: no text overlap on the tier AND no earlier marker's
-			// line (which reaches down to that marker's label, crossing our label
-			// area if that marker is on a shallower tier) passes through our span.
+			// Pass 1 — strict: no text overlap on the tier AND no already-placed
+			// marker whose line extends down through this tier's label row crosses
+			// our label span. A marker at tier j has its line end at label-row j;
+			// it passes through label-row i only when j > i (deeper tier → longer
+			// line). Shallower-tier (j < i) lines end above row i and cannot cross.
 			let tier = -1;
 			for (let i = 0; i < MARKER_TIERS; i++) {
 				const noTextOverlap = labelLeft >= tierRightEdge[i] + LABEL_PAD;
 				const noLineCrossing = placed
-					.filter(p => p.tier < i)
+					.filter(p => p.tier > i)
 					.every(p => p.x < labelLeft - LABEL_PAD);
 				if (noTextOverlap && noLineCrossing) { tier = i; break; }
 			}
