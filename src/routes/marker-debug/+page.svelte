@@ -136,6 +136,18 @@
 			currentValue: 15.6,
 		},
 		{
+			title: 'Real data — Huion Kamvas family (flagged tablets)',
+			description: 'Actual diagonals from HUION-tablets.json for G930L, GS1161, GS1331, GS1333, GS1562, GS1563. Two pairs nearly coincide (GS1331/GS1333 both 13.27" and GS1562/GS1563 at 15.55"/15.81"), making this a realistic stress test.',
+			markers: [
+				{ value: 11.56, label: 'GS1161' },
+				{ value: 13.27, label: 'GS1331' },
+				{ value: 13.27, label: 'GS1333' },
+				{ value: 15.55, label: 'GS1562' },
+				{ value: 15.81, label: 'GS1563' },
+				{ value: 16.03, label: 'G930L'  },
+			],
+		},
+		{
 			title: 'Maximum stress — 10 markers across the range',
 			description: 'Tests all 6 tiers. No label should be invisible or completely unreadable.',
 			markers: [
