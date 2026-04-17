@@ -32,5 +32,20 @@ export const displayRangesIn: HistogramRange[] = [
 	{ label: 'EXTRA LARGE', min: 30, max: 34 },
 ];
 
+// Ranges for a mixed pen-tablet + pen-display comparison chart
+export const mixedRangesCm: HistogramRange[] = [
+	{ label: 'SMALL',  min: 10, max: 28 },
+	{ label: 'MEDIUM', min: 28, max: 41 },
+	{ label: 'LARGE',  min: 41, max: 56 },
+	{ label: 'XL',     min: 56, max: 86 },
+];
+
+export const mixedRangesIn: HistogramRange[] = [
+	{ label: 'SMALL',  min:  4, max: 11 },
+	{ label: 'MEDIUM', min: 11, max: 16 },
+	{ label: 'LARGE',  min: 16, max: 22 },
+	{ label: 'XL',     min: 22, max: 34 },
+];
+
 export const MM_TO_IN = 0.03937;
 export const MM_TO_CM = 0.1;

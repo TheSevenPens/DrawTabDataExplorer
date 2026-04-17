@@ -8,7 +8,7 @@
 	import { formatValue } from '$data/lib/units.js';
 	import { flaggedTablets, toggleFlag, clearFlags } from '$lib/flagged-store.js';
 	import Nav from '$lib/components/Nav.svelte';
-	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
+	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, mixedRangesCm, mixedRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 
@@ -59,51 +59,49 @@
 
 	let compareYearsPT = $state<number | null>(15);
 	let compareYearsPD = $state<number | null>(15);
+	let compareYearsMixed = $state<number | null>(15);
 
-	let hasFlaggedPenTablets = $derived(flaggedItems.some(t => t.Model.Type === 'PENTABLET'));
+	let hasFlaggedPenTablets  = $derived(flaggedItems.some(t => t.Model.Type === 'PENTABLET'));
 	let hasFlaggedPenDisplays = $derived(flaggedItems.some(t => t.Model.Type !== 'PENTABLET'));
+	let hasMixedTypes = $derived(hasFlaggedPenTablets && hasFlaggedPenDisplays);
 
-	let ptHistValues = $derived(
-		allTablets
+	function histValues(typeFilter: 'PENTABLET' | 'PENDISPLAY' | 'ALL', compareYears: number | null): number[] {
+		return allTablets
 			.filter(t => {
-				if (t.Model.Type !== 'PENTABLET') return false;
-				if (compareYearsPT !== null) {
+				if (typeFilter === 'PENTABLET' && t.Model.Type !== 'PENTABLET') return false;
+				if (typeFilter === 'PENDISPLAY' && t.Model.Type === 'PENTABLET') return false;
+				if (compareYears !== null) {
 					const y = parseInt(t.Model.LaunchYear, 10);
-					if (!isNaN(y) && y < currentYear - compareYearsPT) return false;
+					if (!isNaN(y) && y < currentYear - compareYears) return false;
 				}
 				return true;
 			})
 			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
+			.filter((d): d is number => d !== null);
+	}
 
-	let pdHistValues = $derived(
-		allTablets
-			.filter(t => {
-				if (t.Model.Type === 'PENTABLET') return false;
-				if (compareYearsPD !== null) {
-					const y = parseInt(t.Model.LaunchYear, 10);
-					if (!isNaN(y) && y < currentYear - compareYearsPD) return false;
-				}
-				return true;
-			})
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
+	let ptHistValues    = $derived(histValues('PENTABLET', compareYearsPT));
+	let pdHistValues    = $derived(histValues('PENDISPLAY', compareYearsPD));
+	let mixedHistValues = $derived(histValues('ALL', compareYearsMixed));
 
-	function flaggedMarkers(type: 'PENTABLET' | 'PENDISPLAY'): HistogramMarker[] {
+	function flaggedMarkers(typeFilter: 'PENTABLET' | 'PENDISPLAY' | 'ALL'): HistogramMarker[] {
 		return flaggedItems
-			.filter(t => type === 'PENTABLET' ? t.Model.Type === 'PENTABLET' : t.Model.Type !== 'PENTABLET')
+			.filter(t => {
+				if (typeFilter === 'PENTABLET') return t.Model.Type === 'PENTABLET';
+				if (typeFilter === 'PENDISPLAY') return t.Model.Type !== 'PENTABLET';
+				return true;
+			})
 			.map(t => {
 				const d = getDiagonal(t.Digitizer?.Dimensions);
 				if (!d) return null;
-				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: `${t.Model.Name}` };
+				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: t.Model.Name };
 			})
 			.filter((m): m is HistogramMarker => m !== null);
 	}
 
-	let ptMarkers = $derived(flaggedMarkers('PENTABLET'));
-	let pdMarkers = $derived(flaggedMarkers('PENDISPLAY'));
+	let ptMarkers    = $derived(flaggedMarkers('PENTABLET'));
+	let pdMarkers    = $derived(flaggedMarkers('PENDISPLAY'));
+	let mixedMarkers = $derived(flaggedMarkers('ALL'));
 
 	let copyFlaggedStatus = $state('');
 	function copyFlaggedList() {
@@ -215,7 +213,24 @@
 			</table>
 		</div>
 
-		{#if hasFlaggedPenTablets && ptHistValues.length > 0}
+		{#if hasMixedTypes && mixedHistValues.length > 0}
+			<section class="hist-section">
+				<h2>Size Comparison</h2>
+				<ValueHistogram
+					title="Flagged tablets compared to all tablets"
+					values={mixedHistValues}
+					currentValue={null}
+					ranges={isMetric ? mixedRangesCm : mixedRangesIn}
+					unit={isMetric ? ' cm' : '"'}
+					binSize={isMetric ? 1 : 0.5}
+					bandwidthMultiplier={0.2}
+					markers={mixedMarkers}
+					bind:compareYears={compareYearsMixed}
+				/>
+			</section>
+		{/if}
+
+		{#if !hasMixedTypes && hasFlaggedPenTablets && ptHistValues.length > 0}
 			<section class="hist-section">
 				<h2>Pen Tablet Size Comparison</h2>
 				<ValueHistogram
@@ -232,7 +247,7 @@
 			</section>
 		{/if}
 
-		{#if hasFlaggedPenDisplays && pdHistValues.length > 0}
+		{#if !hasMixedTypes && hasFlaggedPenDisplays && pdHistValues.length > 0}
 			<section class="hist-section">
 				<h2>Pen Display Size Comparison</h2>
 				<ValueHistogram
