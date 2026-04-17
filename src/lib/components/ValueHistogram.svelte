@@ -130,43 +130,75 @@
 				labelW: measuredLabelWidths.get(m.label) ?? m.label.length * CHAR_WIDTH_FALLBACK,
 			}))
 			.sort((a, b) => a.x - b.x);
-		// For each tier, track the anchor x of the most recently placed label.
-		// Labels are right-aligned so a label at x spans [x - labelW, x].
-		const tierRightEdge = new Array(MARKER_TIERS).fill(-Infinity);
-		const placed: Array<{ x: number; tier: number }> = [];
 
-		return visible.map(m => {
-			const labelLeft = m.x - m.labelW;
+		if (visible.length === 0) return [];
 
-			// Pass 1 — strict: no text overlap on the tier AND no already-placed
-			// marker whose line extends down through this tier's label row crosses
-			// our label span. A marker at tier j has its line end at label-row j;
-			// it passes through label-row i only when j > i (deeper tier → longer
-			// line). Shallower-tier (j < i) lines end above row i and cannot cross.
-			let tier = -1;
+		// Build alternating-from-both-ends processing order.
+		// Picking from the left end → label sits LEFT of the line (text-anchor="end").
+		// Picking from the right end → label sits RIGHT of the line (text-anchor="start").
+		// This lets markers from each side share tiers, halving tower height.
+		const order: Array<{ m: typeof visible[0]; side: 'left' | 'right' }> = [];
+		for (let lo = 0, hi = visible.length - 1; lo <= hi; lo++, hi--) {
+			order.push({ m: visible[lo], side: 'left' });
+			if (lo !== hi) order.push({ m: visible[hi], side: 'right' });
+		}
+
+		// Per-tier occupation:
+		// leftEdge[i]  — rightmost x of any left-side label on tier i
+		// rightEdge[i] — leftmost  x of any right-side label on tier i
+		const leftEdge  = new Array<number>(MARKER_TIERS).fill(-Infinity);
+		const rightEdge = new Array<number>(MARKER_TIERS).fill(Infinity);
+
+		const placed: Array<{ x: number; tier: number; lL: number; lR: number }> = [];
+		const results = new Map<typeof visible[0], { tier: number; side: 'left' | 'right' }>();
+
+		const tryTier = (
+			m: typeof visible[0], side: 'left' | 'right',
+			lL: number, lR: number, strict: boolean
+		): number => {
 			for (let i = 0; i < MARKER_TIERS; i++) {
-				const noTextOverlap = labelLeft >= tierRightEdge[i] + LABEL_PAD;
-				const noLineCrossing = placed
-					.filter(p => p.tier > i)
-					.every(p => p.x < labelLeft - LABEL_PAD);
-				if (noTextOverlap && noLineCrossing) { tier = i; break; }
-			}
+				// No text overlap with labels already on this tier
+				if (lL < leftEdge[i]  + LABEL_PAD) continue;
+				if (lR > rightEdge[i] - LABEL_PAD) continue;
 
-			// Pass 2 — lenient: when a clean tier isn't available (very dense
-			// markers), accept any tier with no text overlap, ignoring line crossings.
-			if (tier === -1) {
-				for (let i = 0; i < MARKER_TIERS; i++) {
-					if (labelLeft >= tierRightEdge[i] + LABEL_PAD) { tier = i; break; }
+				if (strict) {
+					// Concern 1 — a placed marker's dashed line (at p.x, extending
+					// down to tier p.tier) must not pass through my label span.
+					// Only deeper-tier markers (p.tier > i) reach tier i.
+					const ok1 = placed
+						.filter(p => p.tier > i)
+						.every(p => p.x < lL - LABEL_PAD || p.x > lR + LABEL_PAD);
+					if (!ok1) continue;
+
+					// Concern 2 — my own dashed line (at m.x, reaching down to
+					// tier i) must not pass through any already-placed label at a
+					// shallower tier (p.tier < i), whose label row my line crosses.
+					const ok2 = placed
+						.filter(p => p.tier < i)
+						.every(p => m.x < p.lL - LABEL_PAD || m.x > p.lR + LABEL_PAD);
+					if (!ok2) continue;
 				}
+
+				return i;
 			}
+			return -1;
+		};
 
-			// Pass 3 — last resort: deepest tier regardless of overlap.
-			if (tier === -1) tier = MARKER_TIERS - 1;
+		for (const { m, side } of order) {
+			const lL = side === 'left' ? m.x - m.labelW : m.x;
+			const lR = side === 'left' ? m.x            : m.x + m.labelW;
 
-			tierRightEdge[tier] = m.x;
-			placed.push({ x: m.x, tier });
-			return { ...m, tier };
-		});
+			let tier = tryTier(m, side, lL, lR, true);   // Pass 1 — strict
+			if (tier === -1) tier = tryTier(m, side, lL, lR, false); // Pass 2 — lenient
+			if (tier === -1) tier = MARKER_TIERS - 1;                // Pass 3 — fallback
+
+			if (side === 'left') leftEdge[tier]  = Math.max(leftEdge[tier],  m.x);
+			else                 rightEdge[tier] = Math.min(rightEdge[tier], m.x);
+			placed.push({ x: m.x, tier, lL, lR });
+			results.set(m, { tier, side });
+		}
+
+		return visible.map(m => ({ ...m, ...results.get(m)! }));
 	});
 
 	let svgEl: SVGSVGElement | undefined = $state();
@@ -341,9 +373,9 @@
 					opacity="0.7"
 				/>
 				<text
-					x={marker.x - 4}
+					x={marker.side === 'left' ? marker.x - 4 : marker.x + 4}
 					y={labelY}
-					text-anchor="end"
+					text-anchor={marker.side === 'left' ? 'end' : 'start'}
 					font-size="10"
 					font-weight="600"
 					fill="#e11d48"
