@@ -176,15 +176,15 @@
 			],
 		},
 		{
-			title: 'Real data — Huion flagged list with full "Brand Name (ModelId)" labels',
-			description: 'Same 6 tablets as #13 but using the full copy-list label format. Labels are much wider (up to 34 chars for "Huion Inspiroy Giano G930L (G930L)"), stressing the CHAR_WIDTH estimate and tier placement.',
+			title: 'Real data — 6 Huion tablets as shown on compare page',
+			description: 'These 6 tablets flagged together as they appear on the compare page histogram (label = Model.Name). Two coincident pairs at 13.27" and close together at 15.55"/15.81"/16.03" make this the primary real-world stress test.',
 			markers: [
-				{ value: 11.56, label: 'Huion Kamvas 12 (GS1161)'             },
-				{ value: 13.27, label: 'Huion Kamvas 13 (GS1331)'             },
-				{ value: 13.27, label: 'Huion Kamvas 13 GEN3 (GS1333)'        },
-				{ value: 15.55, label: 'Huion Kamvas 16 (2021) (GS1562)'      },
-				{ value: 15.81, label: 'Huion Kamvas 16 GEN3 (GS1563)'        },
-				{ value: 16.03, label: 'Huion Inspiroy Giano G930L (G930L)'   },
+				{ value: 11.56, label: 'Kamvas 12'            },
+				{ value: 13.27, label: 'Kamvas 13'            },
+				{ value: 13.27, label: 'Kamvas 13 GEN3'       },
+				{ value: 15.55, label: 'Kamvas 16 (2021)'     },
+				{ value: 15.81, label: 'Kamvas 16 GEN3'       },
+				{ value: 16.03, label: 'Inspiroy Giano G930L' },
 			],
 		},
 	];
