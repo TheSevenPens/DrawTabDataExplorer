@@ -2,18 +2,22 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadTabletFamiliesFromURL, loadTabletsFromURL, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { loadTabletFamiliesFromURL, loadTabletsFromURL, getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS } from '$data/lib/entities/tablet-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
+	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import { unitPreference } from '$lib/unit-store.js';
+	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 
 	let item: TabletFamily | null = $state(null);
 	let familyTablets: Tablet[] = $state([]);
+	let allTablets: Tablet[] = $state([]);
 	let notFound = $state(false);
 
 	onMount(async () => {
 		const entityId = decodeURIComponent(page.params.entityId!);
-		const [allFamilies, allTablets] = await Promise.all([
+		const [allFamilies, tablets] = await Promise.all([
 			loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
 			loadTabletsFromURL(base),
 		]);
@@ -24,9 +28,41 @@
 			return;
 		}
 		item = found;
-
-		familyTablets = allTablets.filter((t) => t.Model.Family === found.FamilyId);
+		allTablets = tablets;
+		familyTablets = tablets.filter((t) => t.Model.Family === found.FamilyId);
 	});
+
+	let isMetric = $derived($unitPreference === 'metric');
+
+	// Use the type of the first family tablet that has a diagonal; fall back to PENTABLET
+	let familyType = $derived(
+		familyTablets.find(t => getDiagonal(t.Digitizer?.Dimensions) !== null)?.Model.Type ?? 'PENTABLET'
+	);
+
+	let histogramRanges = $derived<HistogramRange[]>(
+		familyType === 'PENTABLET'
+			? (isMetric ? penTabletRangesCm : penTabletRangesIn)
+			: (isMetric ? displayRangesCm : displayRangesIn)
+	);
+
+	// Background population: all tablets of the same type
+	let histogramValues = $derived(
+		allTablets
+			.filter(t => t.Model.Type === familyType)
+			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.filter((d): d is number => d !== null)
+	);
+
+	// One marker per family tablet that has a diagonal
+	let histogramMarkers = $derived<HistogramMarker[]>(
+		familyTablets
+			.map(t => {
+				const d = getDiagonal(t.Digitizer?.Dimensions);
+				if (!d) return null;
+				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: t.Model.Id };
+			})
+			.filter((m): m is HistogramMarker => m !== null)
+	);
 </script>
 
 <Nav />
@@ -69,6 +105,22 @@
 				<p class="no-data">No tablets found in this family.</p>
 			{/if}
 		</section>
+
+		{#if histogramMarkers.length > 0}
+			<section class="family-section">
+				<h2>Size Comparison</h2>
+				<ValueHistogram
+					title="{item.FamilyName} — active area diagonal"
+					values={histogramValues}
+					currentValue={null}
+					ranges={histogramRanges}
+					unit={isMetric ? ' cm' : '"'}
+					binSize={isMetric ? 1 : 0.5}
+					bandwidthMultiplier={0.2}
+					markers={histogramMarkers}
+				/>
+			</section>
+		{/if}
 	{/if}
 {/if}
 
