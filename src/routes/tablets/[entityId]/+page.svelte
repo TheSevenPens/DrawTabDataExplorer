@@ -111,18 +111,29 @@
 		return TABLET_FIELDS.filter(f => expanded.includes(f.group));
 	}
 
-	function copyGroup(groupId: string, format: 'table' | 'list') {
-		const rows = document.querySelectorAll(`#group-${groupId} .field-row`);
-		const pairs = [...rows].map(r => ({
-			label: r.querySelector('dt')?.textContent?.trim() ?? '',
-			value: r.querySelector('dd')?.textContent?.trim().replace(/\s*computed$/, '') ?? '',
-		}));
+	function copyAllSpecs(format: 'table' | 'list') {
+		const groups = document.querySelectorAll('.specs-section .field-group');
+		const sections: Array<{ title: string; pairs: Array<{ label: string; value: string }> }> = [];
+		for (const group of groups) {
+			const title = group.querySelector('h2')?.textContent?.trim() ?? '';
+			const rows = group.querySelectorAll('.field-row');
+			const pairs = [...rows].map(r => ({
+				label: r.querySelector('dt')?.textContent?.trim() ?? '',
+				value: r.querySelector('dd')?.textContent?.trim().replace(/\s*computed$/, '') ?? '',
+			}));
+			if (pairs.length > 0) sections.push({ title, pairs });
+		}
 		if (format === 'table') {
-			const trs = pairs.map(p => `<tr><td>${p.label}</td><td>${p.value}</td></tr>`).join('');
-			navigator.clipboard.writeText(`<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>${trs}</tbody></table>`);
+			const rows = sections.flatMap(s => [
+				`<tr><th colspan="2">${s.title}</th></tr>`,
+				...s.pairs.map(p => `<tr><td>${p.label}</td><td>${p.value}</td></tr>`),
+			]).join('');
+			navigator.clipboard.writeText(`<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>${rows}</tbody></table>`);
 		} else {
-			const lis = pairs.map(p => `<li><b>${p.label}:</b> ${p.value}</li>`).join('');
-			navigator.clipboard.writeText(`<ul>${lis}</ul>`);
+			const items = sections.map(s =>
+				`<li><b>${s.title}</b><ul>${s.pairs.map(p => `<li><b>${p.label}:</b> ${p.value}</li>`).join('')}</ul></li>`
+			).join('');
+			navigator.clipboard.writeText(`<ul>${items}</ul>`);
 		}
 	}
 
@@ -214,25 +225,29 @@
 	{/if}
 
 	{#if tablet}
-		<div class="detail-columns">
-			{#each [col1Groups, col2Groups, col3Groups] as groups}
-				<div class="detail-col">
-					{#each groups as group}
-						{@const groupFields = getGroupFields([group])}
-						{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet!); return v && v !== '-'; })}
-						{#if hasValues}
-							<section class="field-group" id="group-{group.toLowerCase()}">
-								<div class="group-header">
-									<h2>{group}</h2>
-									<select class="copy-select" onchange={(e) => {
-										const sel = e.currentTarget as HTMLSelectElement;
-										if (sel.value) { copyGroup(group.toLowerCase(), sel.value); sel.value = ''; }
-									}}>
-										<option value="">Copy as…</option>
-										<option value="table">Table</option>
-										<option value="list">Bulleted list</option>
-									</select>
-								</div>
+		<section class="specs-section">
+			<div class="specs-header">
+				<h2>Specs</h2>
+				<select class="copy-select" onchange={(e) => {
+					const sel = e.currentTarget as HTMLSelectElement;
+					if (sel.value) { copyAllSpecs(sel.value as 'table' | 'list'); sel.value = ''; }
+				}}>
+					<option value="">Copy as…</option>
+					<option value="table">Table</option>
+					<option value="list">Bulleted list</option>
+				</select>
+			</div>
+			<div class="detail-columns">
+				{#each [col1Groups, col2Groups, col3Groups] as groups}
+					<div class="detail-col">
+						{#each groups as group}
+							{@const groupFields = getGroupFields([group])}
+							{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet!); return v && v !== '-'; })}
+							{#if hasValues}
+								<section class="field-group" id="group-{group.toLowerCase()}">
+									<div class="group-header">
+										<h2>{group}</h2>
+									</div>
 								<dl>
 									{#each groupFields as f}
 										{@const val = f.getValue(tablet!)}
@@ -270,6 +285,7 @@
 				</div>
 			{/each}
 		</div>
+		</section>
 
 		<section class="compat-section">
 			<h2>Size Comparison</h2>
@@ -472,11 +488,32 @@
 		color: #fff;
 	}
 
+	.specs-section {
+		margin-bottom: 24px;
+	}
+
+	.specs-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 12px;
+		padding-bottom: 4px;
+		border-bottom: 2px solid var(--border);
+	}
+
+	.specs-header h2 {
+		font-size: 15px;
+		font-weight: 700;
+		color: #6b21a8;
+		margin: 0;
+		border: none;
+		padding: 0;
+	}
+
 	.detail-columns {
 		display: grid;
 		grid-template-columns: 1fr 1fr 1fr;
 		gap: 20px;
-		margin-bottom: 24px;
 	}
 
 	.detail-col {
