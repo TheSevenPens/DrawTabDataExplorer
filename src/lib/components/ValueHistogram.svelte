@@ -104,31 +104,65 @@
 	const rangeOpacities = [0.2, 0.35, 0.2, 0.35];
 
 	// Stagger marker labels to avoid overlap
-	const CHAR_WIDTH = 5.5; // approx px per char at font-size 10
+	const CHAR_WIDTH_FALLBACK = 5.5; // used before getComputedTextLength measurements are ready
 	const LABEL_PAD = 8; // extra gap between labels
-	const MARKER_TIERS = 4;
+	const MARKER_TIERS = 6;
+
+	// Measure actual rendered label widths via SVG getComputedTextLength()
+	let uniqueLabels = $derived([...new Set(markers.map(m => m.label))]);
+	let labelMeasureEls: SVGTextElement[] = [];
+	let measuredLabelWidths = $state(new Map<string, number>());
+	$effect(() => {
+		const next = new Map<string, number>();
+		uniqueLabels.forEach((label, i) => {
+			const el = labelMeasureEls[i];
+			if (el) next.set(label, el.getComputedTextLength());
+		});
+		measuredLabelWidths = next;
+	});
+
 	let positionedMarkers = $derived.by(() => {
 		const visible = markers
 			.filter(m => m.value >= scaleMin && m.value <= scaleMax)
-			.map(m => ({ ...m, x: xScale(m.value), labelW: m.label.length * CHAR_WIDTH }))
+			.map(m => ({
+				...m,
+				x: xScale(m.value),
+				labelW: measuredLabelWidths.get(m.label) ?? m.label.length * CHAR_WIDTH_FALLBACK,
+			}))
 			.sort((a, b) => a.x - b.x);
-		// Track the right edge (anchor x) of the last label placed on each tier.
-		// Labels are right-aligned, so a label at x spans [x - labelW, x].
-		// A new label fits on tier i when two conditions hold:
-		//   1. Its left edge clears the previous label on that tier (no text overlap).
-		//   2. No already-placed marker's vertical line passes through its text span
-		//      (a line at px would intersect the label if px >= m.x - m.labelW).
+		// For each tier, track the anchor x of the most recently placed label.
+		// Labels are right-aligned so a label at x spans [x - labelW, x].
 		const tierRightEdge = new Array(MARKER_TIERS).fill(-Infinity);
-		const placedX: number[] = [];
+		const placed: Array<{ x: number; tier: number }> = [];
+
 		return visible.map(m => {
-			let tier = MARKER_TIERS - 1; // fallback: deepest tier
+			const labelLeft = m.x - m.labelW;
+
+			// Pass 1 — strict: no text overlap on the tier AND no earlier marker's
+			// line (which reaches down to that marker's label, crossing our label
+			// area if that marker is on a shallower tier) passes through our span.
+			let tier = -1;
 			for (let i = 0; i < MARKER_TIERS; i++) {
-				const noTextOverlap = m.x - m.labelW >= tierRightEdge[i] + LABEL_PAD;
-				const noLineCrossing = placedX.every(px => px < m.x - m.labelW - LABEL_PAD);
+				const noTextOverlap = labelLeft >= tierRightEdge[i] + LABEL_PAD;
+				const noLineCrossing = placed
+					.filter(p => p.tier < i)
+					.every(p => p.x < labelLeft - LABEL_PAD);
 				if (noTextOverlap && noLineCrossing) { tier = i; break; }
 			}
+
+			// Pass 2 — lenient: when a clean tier isn't available (very dense
+			// markers), accept any tier with no text overlap, ignoring line crossings.
+			if (tier === -1) {
+				for (let i = 0; i < MARKER_TIERS; i++) {
+					if (labelLeft >= tierRightEdge[i] + LABEL_PAD) { tier = i; break; }
+				}
+			}
+
+			// Pass 3 — last resort: deepest tier regardless of overlap.
+			if (tier === -1) tier = MARKER_TIERS - 1;
+
 			tierRightEdge[tier] = m.x;
-			placedX.push(m.x);
+			placed.push({ x: m.x, tier });
 			return { ...m, tier };
 		});
 	});
@@ -189,6 +223,17 @@
 			</button>
 		</div>
 		<svg bind:this={svgEl} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {totalHeight}" class="histogram" style="font-family: 'Google Sans', sans-serif;">
+			<!-- Hidden texts for measuring actual label widths -->
+			{#each uniqueLabels as label, i}
+				<text
+					bind:this={labelMeasureEls[i]}
+					x="0" y="-1000"
+					font-size="10"
+					font-weight="600"
+					visibility="hidden"
+				>{label}</text>
+			{/each}
+
 			{#if title}
 				<text
 					x={width / 2}
