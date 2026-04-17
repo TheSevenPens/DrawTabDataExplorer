@@ -31,12 +31,15 @@
 				<dl>
 					{#each groupFields as f}
 						{@const val = f.getValue(item)}
-						{@const displayVal = formatValue(val, f.unit, $unitPreference)}
+						{@const displayVal = f.getDisplayValue ? f.getDisplayValue(item) : formatValue(val, f.unit, $unitPreference)}
+						{@const href = f.getHref ? f.getHref(item) : null}
 						{#if val}
 							<div class="field-row">
 								<dt>{getFieldLabel(f.label, f.unit, $unitPreference)}</dt>
 								<dd>
-									{#if isUrl(val)}
+									{#if href}
+										<a href="{base}{href}">{displayVal}</a>
+									{:else if isUrl(val)}
 										<a href={val} target="_blank" rel="noopener">{val}</a>
 									{:else}
 										{displayVal}
