@@ -59,7 +59,7 @@
 			.map(t => {
 				const d = getDiagonal(t.Digitizer?.Dimensions);
 				if (!d) return null;
-				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: t.Model.Id };
+				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: t.Model.Name };
 			})
 			.filter((m): m is HistogramMarker => m !== null)
 	);

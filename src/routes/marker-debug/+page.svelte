@@ -153,14 +153,14 @@
 		},
 		{
 			title: 'Real data — Huion Kamvas family (flagged tablets)',
-			description: 'Actual diagonals from HUION-tablets.json for G930L, GS1161, GS1331, GS1333, GS1562, GS1563. Two pairs nearly coincide (GS1331/GS1333 both 13.27" and GS1562/GS1563 at 15.55"/15.81"), making this a realistic stress test.',
+			description: 'Actual diagonals + model names from HUION-tablets.json. Two pairs nearly coincide: Kamvas 13 / Kamvas 13 GEN3 both at 13.27", and Kamvas 16 (2021) / Kamvas 16 GEN3 at 15.55" / 15.81". Long labels like "Kamvas 16 (2021)" (16 chars) make this a realistic stress test.',
 			markers: [
-				{ value: 11.56, label: 'GS1161' },
-				{ value: 13.27, label: 'GS1331' },
-				{ value: 13.27, label: 'GS1333' },
-				{ value: 15.55, label: 'GS1562' },
-				{ value: 15.81, label: 'GS1563' },
-				{ value: 16.03, label: 'G930L'  },
+				{ value: 11.56, label: 'Kamvas 12'         },
+				{ value: 13.27, label: 'Kamvas 13'         },
+				{ value: 13.27, label: 'Kamvas 13 GEN3'    },
+				{ value: 15.55, label: 'Kamvas 16 (2021)'  },
+				{ value: 15.81, label: 'Kamvas 16 GEN3'    },
+				{ value: 16.03, label: 'Inspiroy Giano G930L' },
 			],
 		},
 	];
