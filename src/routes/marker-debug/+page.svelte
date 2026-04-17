@@ -27,6 +27,7 @@
 		description: string;
 		markers: HistogramMarker[];
 		currentValue?: number;
+		ranges?: HistogramRange[];
 	}
 
 	const testCases: TestCase[] = [
@@ -178,6 +179,12 @@
 		{
 			title: 'Real data — 6 Huion tablets as shown on compare page',
 			description: 'These 6 tablets flagged together as they appear on the compare page histogram (label = Model.Name). Two coincident pairs at 13.27" and close together at 15.55"/15.81"/16.03" make this the primary real-world stress test.',
+			ranges: [
+				{ label: 'Small',  min:  8, max: 13 },
+				{ label: 'Medium', min: 13, max: 16 },
+				{ label: 'Large',  min: 16, max: 22 },
+				{ label: 'XL',     min: 22, max: 34 },
+			],
 			markers: [
 				{ value: 11.56, label: 'Kamvas 12'            },
 				{ value: 13.27, label: 'Kamvas 13'            },
@@ -219,7 +226,7 @@
 			<ValueHistogram
 				values={bgValues}
 				currentValue={tc.currentValue ?? null}
-				{ranges}
+				ranges={tc.ranges ?? ranges}
 				unit='"'
 				binSize={0.5}
 				bandwidthMultiplier={0.3}
