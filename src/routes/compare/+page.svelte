@@ -105,6 +105,20 @@
 	let ptMarkers = $derived(flaggedMarkers('PENTABLET'));
 	let pdMarkers = $derived(flaggedMarkers('PENDISPLAY'));
 
+	let copyFlaggedStatus = $state('');
+	function copyFlaggedList() {
+		const text = flaggedItems
+			.map(t => `${brandName(t.Model.Brand)} ${t.Model.Name} (${t.Model.Id})`)
+			.join('\n');
+		navigator.clipboard.writeText(text).then(() => {
+			copyFlaggedStatus = 'Copied!';
+			setTimeout(() => (copyFlaggedStatus = ''), 2000);
+		}).catch(() => {
+			copyFlaggedStatus = 'Failed';
+			setTimeout(() => (copyFlaggedStatus = ''), 2000);
+		});
+	}
+
 	function copyCompareTable() {
 		const table = document.querySelector('#compare-table');
 		if (table) navigator.clipboard.writeText(table.outerHTML);
@@ -151,6 +165,7 @@
 {#if activeTab === 'flagged'}
 	{#if flaggedItems.length > 0}
 		<div class="flagged-actions">
+			<button class="copy-btn" onclick={copyFlaggedList}>{copyFlaggedStatus || 'Copy list'}</button>
 			<button class="clear-btn" onclick={clearFlags}>Clear all</button>
 		</div>
 		<ul class="flagged-list">
