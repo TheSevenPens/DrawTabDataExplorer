@@ -175,6 +175,18 @@
 				{ value: 16.03, label: 'Inspiroy Giano G930L' },
 			],
 		},
+		{
+			title: 'Real data — Huion flagged list with full "Brand Name (ModelId)" labels',
+			description: 'Same 6 tablets as #13 but using the full copy-list label format. Labels are much wider (up to 34 chars for "Huion Inspiroy Giano G930L (G930L)"), stressing the CHAR_WIDTH estimate and tier placement.',
+			markers: [
+				{ value: 11.56, label: 'Huion Kamvas 12 (GS1161)'             },
+				{ value: 13.27, label: 'Huion Kamvas 13 (GS1331)'             },
+				{ value: 13.27, label: 'Huion Kamvas 13 GEN3 (GS1333)'        },
+				{ value: 15.55, label: 'Huion Kamvas 16 (2021) (GS1562)'      },
+				{ value: 15.81, label: 'Huion Kamvas 16 GEN3 (GS1563)'        },
+				{ value: 16.03, label: 'Huion Inspiroy Giano G930L (G930L)'   },
+			],
+		},
 	];
 </script>
 
