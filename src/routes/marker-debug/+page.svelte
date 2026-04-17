@@ -152,6 +152,18 @@
 			],
 		},
 		{
+			title: 'Compare page — 6 flagged pen displays (max allowed)',
+			description: 'Simulates the worst case on the compare page: all 6 flagged slots used, all pen displays. With MARKER_TIERS < 6 the 5th and 6th items pile up on the last tier. All 6 should be readable with MARKER_TIERS = 6.',
+			markers: [
+				{ value: 12.6, label: 'Kamvas 12'           },
+				{ value: 13.6, label: 'Wacom One 13'        },
+				{ value: 15.6, label: 'Kamvas 16 GEN3'      },
+				{ value: 15.8, label: 'Artist 16 3rd'       },
+				{ value: 16.0, label: 'Intuos Pro 16'       },
+				{ value: 21.5, label: 'Kamvas 22 Plus'      },
+			],
+		},
+		{
 			title: 'Real data — Huion Kamvas family (flagged tablets)',
 			description: 'Actual diagonals + model names from HUION-tablets.json. Two pairs nearly coincide: Kamvas 13 / Kamvas 13 GEN3 both at 13.27", and Kamvas 16 (2021) / Kamvas 16 GEN3 at 15.55" / 15.81". Long labels like "Kamvas 16 (2021)" (16 chars) make this a realistic stress test.',
 			markers: [
