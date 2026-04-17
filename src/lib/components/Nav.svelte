@@ -5,6 +5,8 @@
 	import { theme, toggleTheme } from '$lib/theme-store.js';
 	import { flaggedCount } from '$lib/flagged-store.js';
 
+	const isDev = import.meta.env.DEV;
+
 	const links = [
 		{ href: '/brands', label: 'Brands' },
 		{ href: '/', label: 'Tablets' },
@@ -20,6 +22,10 @@
 		{ href: '/reference', label: 'Reference' },
 		{ href: '/data-quality', label: 'Data Quality' },
 	];
+
+	const devLinks = [
+		{ href: '/marker-debug', label: 'MarkerDebug' },
+	];
 </script>
 
 <nav>
@@ -27,6 +33,11 @@
 		{#each links as link}
 			<a href="{base}{link.href}" class:active={page.url.pathname === base + link.href}>{link.label}{#if link.dynamic && $flaggedCount > 0}<span class="badge">{$flaggedCount}</span>{/if}</a>
 		{/each}
+		{#if isDev}
+			{#each devLinks as link}
+				<a href="{base}{link.href}" class:active={page.url.pathname === base + link.href} class="dev-link">{link.label}</a>
+			{/each}
+		{/if}
 	</div>
 	<div class="nav-toggles">
 		<button class="unit-toggle" onclick={toggleUnits}>
@@ -73,6 +84,23 @@
 		background: #2563eb;
 		color: #fff;
 		border-color: #2563eb;
+	}
+
+	a.dev-link {
+		border-color: #d97706;
+		color: #d97706;
+	}
+
+	a.dev-link:hover {
+		background: #d97706;
+		color: #fff;
+		border-color: #d97706;
+	}
+
+	a.dev-link.active {
+		background: #d97706;
+		color: #fff;
+		border-color: #d97706;
 	}
 
 	.badge {
