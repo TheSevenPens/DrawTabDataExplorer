@@ -114,16 +114,21 @@
 			.sort((a, b) => a.x - b.x);
 		// Track the right edge (anchor x) of the last label placed on each tier.
 		// Labels are right-aligned, so a label at x spans [x - labelW, x].
-		// A new label at m.x fits on tier i if its left edge clears the previous
-		// label's right edge: m.x - m.labelW >= tierRightEdge[i] + LABEL_PAD.
-		// This lets markers rise back to tier 0 whenever there is room.
+		// A new label fits on tier i when two conditions hold:
+		//   1. Its left edge clears the previous label on that tier (no text overlap).
+		//   2. No already-placed marker's vertical line passes through its text span
+		//      (a line at px would intersect the label if px >= m.x - m.labelW).
 		const tierRightEdge = new Array(MARKER_TIERS).fill(-Infinity);
+		const placedX: number[] = [];
 		return visible.map(m => {
 			let tier = MARKER_TIERS - 1; // fallback: deepest tier
 			for (let i = 0; i < MARKER_TIERS; i++) {
-				if (m.x - m.labelW >= tierRightEdge[i] + LABEL_PAD) { tier = i; break; }
+				const noTextOverlap = m.x - m.labelW >= tierRightEdge[i] + LABEL_PAD;
+				const noLineCrossing = placedX.every(px => px < m.x - m.labelW - LABEL_PAD);
+				if (noTextOverlap && noLineCrossing) { tier = i; break; }
 			}
 			tierRightEdge[tier] = m.x;
+			placedX.push(m.x);
 			return { ...m, tier };
 		});
 	});
