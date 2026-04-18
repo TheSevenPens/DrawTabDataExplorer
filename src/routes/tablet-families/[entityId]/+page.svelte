@@ -73,7 +73,7 @@
 {:else}
 	<h1>{item?.FamilyName ?? 'Loading...'}</h1>
 
-	<DetailView item={item} fields={TABLET_FAMILY_FIELDS} fieldGroups={TABLET_FAMILY_FIELD_GROUPS} backHref="/tablet-families" backLabel="Tablet Families" />
+	<DetailView item={item} fields={TABLET_FAMILY_FIELDS} fieldGroups={TABLET_FAMILY_FIELD_GROUPS} />
 
 	{#if item}
 		<section class="family-section">

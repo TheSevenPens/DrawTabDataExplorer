@@ -8,7 +8,7 @@
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
-	import { unitPreference, toggleUnits, showAltUnits, toggleAltUnits } from '$lib/unit-store.js';
+	import { unitPreference, showAltUnits } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
@@ -201,7 +201,6 @@
 	<h1>Tablet not found</h1>
 	<p><a href="{base}/">Back to tablets</a></p>
 {:else}
-	<p class="back"><a href="{base}/">&larr; Tablets</a></p>
 	<div class="title-row">
 		<h1>{tablet ? `${brandName(tablet.Model.Brand)} ${tablet.Model.Name}` : 'Loading...'}</h1>
 		{#if tablet}
@@ -209,12 +208,6 @@
 				{$flaggedTablets.includes(tablet.Meta.EntityId) ? 'Unflag' : 'Flag'}
 			</button>
 		{/if}
-		<button class="unit-toggle" onclick={toggleUnits}>
-			{$unitPreference === 'metric' ? 'Metric' : 'Imperial'}
-		</button>
-		<button class="alt-units-toggle" onclick={toggleAltUnits} title="Show/hide alternate unit conversions">
-			{$showAltUnits ? '± Alt Units' : 'Primary Only'}
-		</button>
 		{#if tablet}
 			<button class="json-btn" onclick={() => showJson = true}>JSON</button>
 		{/if}
@@ -398,18 +391,6 @@
 {/if}
 
 <style>
-	.back {
-		margin-bottom: 8px;
-		font-size: 14px;
-	}
-
-	.back a {
-		color: var(--link);
-		text-decoration: none;
-	}
-
-	.back a:hover { text-decoration: underline; }
-
 	.title-row {
 		display: flex;
 		align-items: baseline;
@@ -440,37 +421,6 @@
 		color: #fff;
 	}
 
-	.unit-toggle {
-		padding: 4px 10px;
-		font-size: 13px;
-		border: 1px solid #16a34a;
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: #16a34a;
-		cursor: pointer;
-		font-weight: 600;
-	}
-
-	.unit-toggle:hover {
-		background: #16a34a;
-		color: #fff;
-	}
-
-	.alt-units-toggle {
-		padding: 4px 10px;
-		font-size: 13px;
-		border: 1px solid #2563eb;
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: #2563eb;
-		cursor: pointer;
-		font-weight: 600;
-	}
-
-	.alt-units-toggle:hover {
-		background: #2563eb;
-		color: #fff;
-	}
 
 	.json-btn {
 		padding: 4px 10px;

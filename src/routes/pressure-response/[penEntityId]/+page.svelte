@@ -34,8 +34,6 @@
 
 <Nav />
 
-<p class="back"><a href="{base}/pressure-response">&larr; Pressure Response</a></p>
-
 <h1>Pressure Response: {penEntityId}</h1>
 
 <p class="summary">
@@ -89,18 +87,6 @@
 {/each}
 
 <style>
-	.back {
-		margin-bottom: 16px;
-		font-size: 14px;
-	}
-
-	.back a {
-		color: #2563eb;
-		text-decoration: none;
-	}
-
-	.back a:hover { text-decoration: underline; }
-
 	h1 { margin-bottom: 8px; }
 
 	.summary {

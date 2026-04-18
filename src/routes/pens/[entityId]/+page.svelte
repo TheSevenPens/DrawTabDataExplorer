@@ -67,7 +67,7 @@
 		<JsonDialog entity={pen} onclose={() => showJson = false} />
 	{/if}
 
-	<DetailView item={pen} fields={PEN_FIELDS} fieldGroups={PEN_FIELD_GROUPS} backHref="/pens" backLabel="Pens" />
+	<DetailView item={pen} fields={PEN_FIELDS} fieldGroups={PEN_FIELD_GROUPS} />
 
 	{#if pen}
 		<section class="compat-section">

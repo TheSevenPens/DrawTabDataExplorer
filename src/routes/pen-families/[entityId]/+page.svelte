@@ -37,7 +37,7 @@
 	<p><a href="{base}/pen-families">Back to pen families</a></p>
 {:else}
 	<h1>{item?.FamilyName ?? 'Loading...'}</h1>
-	<DetailView item={item} fields={PEN_FAMILY_FIELDS} fieldGroups={PEN_FAMILY_FIELD_GROUPS} backHref="/pen-families" backLabel="Pen Families" />
+	<DetailView item={item} fields={PEN_FAMILY_FIELDS} fieldGroups={PEN_FAMILY_FIELD_GROUPS} />
 
 	{#if item}
 		<section class="members">

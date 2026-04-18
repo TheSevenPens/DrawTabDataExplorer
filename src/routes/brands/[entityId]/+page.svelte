@@ -21,8 +21,7 @@
 	item={brand}
 	fields={BRAND_FIELDS}
 	fieldGroups={BRAND_FIELD_GROUPS}
-	backHref="/brands"
-	backLabel="All brands"
+
 />
 
 {#if tablets.length > 0}

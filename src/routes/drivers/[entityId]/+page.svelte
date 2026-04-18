@@ -33,7 +33,5 @@
 		item={driver}
 		fields={DRIVER_FIELDS}
 		fieldGroups={DRIVER_FIELD_GROUPS}
-		backHref="/drivers"
-		backLabel="Drivers"
-	/>
+/>
 {/if}

@@ -4,12 +4,10 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
-	let { item, fields, fieldGroups, backHref, backLabel }: {
+	let { item, fields, fieldGroups }: {
 		item: Record<string, any> | null;
 		fields: FieldDef<any>[];
 		fieldGroups: string[];
-		backHref: string;
-		backLabel: string;
 	} = $props();
 
 	function isUrl(val: string): boolean {
@@ -20,8 +18,6 @@
 {#if item === null}
 	<p>Loading...</p>
 {:else}
-	<p class="back"><a href="{base}{backHref}">&larr; {backLabel}</a></p>
-
 	{#each fieldGroups as group}
 		{@const groupFields = fields.filter((f) => f.group === group)}
 		{@const hasValues = groupFields.some((f) => f.getValue(item) !== '')}
@@ -58,18 +54,6 @@
 {/if}
 
 <style>
-	.back {
-		margin-bottom: 16px;
-		font-size: 14px;
-	}
-
-	.back a {
-		color: #2563eb;
-		text-decoration: none;
-	}
-
-	.back a:hover { text-decoration: underline; }
-
 	.field-group {
 		margin-bottom: 24px;
 	}
