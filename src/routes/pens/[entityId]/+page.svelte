@@ -11,6 +11,7 @@
 
 	let pen: Pen | null = $state(null);
 	let showJson = $state(false);
+	let activeTab = $state<'specs' | 'tablets' | 'included' | 'pressure'>('specs');
 	let compatibleTablets: Tablet[] = $state([]);
 	let includedWithTablets: Tablet[] = $state([]);
 	let pressureSessionCount = $state(0);
@@ -67,43 +68,82 @@
 		<JsonDialog entity={pen} onclose={() => showJson = false} />
 	{/if}
 
-	<DetailView item={pen} fields={PEN_FIELDS} fieldGroups={PEN_FIELD_GROUPS} />
-
 	{#if pen}
-		<section class="compat-section">
-			<h2>Compatible Tablets</h2>
-			{#if compatibleTablets.length > 0}
-				<ul class="entity-list">
-					{#each compatibleTablets as tablet}
-						<li><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="no-data">No tablet compatibility data available for this pen.</p>
-			{/if}
+		<section class="basics">
+			<dl class="basics-grid">
+				<div class="basics-item">
+					<dt>Brand</dt>
+					<dd><a href="{base}/brands/{pen.Brand}">{brandName(pen.Brand)}</a></dd>
+				</div>
+				<div class="basics-item">
+					<dt>Pen ID</dt>
+					<dd>{pen.PenId}</dd>
+				</div>
+				{#if pen.PenYear}
+					<div class="basics-item">
+						<dt>Year</dt>
+						<dd>{pen.PenYear}</dd>
+					</div>
+				{/if}
+				{#if pen.PenFamily}
+					<div class="basics-item">
+						<dt>Family</dt>
+						<dd>{pen.PenFamily}</dd>
+					</div>
+				{/if}
+			</dl>
 		</section>
 
-		<section class="compat-section">
-			<h2>Included With Tablets</h2>
-			{#if includedWithTablets.length > 0}
-				<ul class="entity-list">
-					{#each includedWithTablets as tablet}
-						<li><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="no-data">No tablets list this pen as included.</p>
-			{/if}
-		</section>
+		<div class="detail-tabs">
+			<button class:active={activeTab === 'specs'}    onclick={() => activeTab = 'specs'}>Specs</button>
+			<button class:active={activeTab === 'tablets'}  onclick={() => activeTab = 'tablets'}>Compatible Tablets</button>
+			<button class:active={activeTab === 'included'} onclick={() => activeTab = 'included'}>Included With</button>
+			<button class:active={activeTab === 'pressure'} onclick={() => activeTab = 'pressure'}>Pressure Response</button>
+		</div>
 
-		<section class="compat-section">
-			<h2>Pressure Response Data</h2>
-			{#if pressureSessionCount > 0}
-				<p class="pr-link"><a href="{base}/pressure-response/{encodeURIComponent(pen.EntityId)}">{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} available</a></p>
-			{:else}
-				<p class="no-data">No pressure response data available for this pen model.</p>
-			{/if}
-		</section>
+		{#if activeTab === 'specs'}
+			<div class="tab-content">
+				<DetailView item={pen} fields={PEN_FIELDS} fieldGroups={PEN_FIELD_GROUPS} />
+			</div>
+		{/if}
+
+		{#if activeTab === 'tablets'}
+			<div class="tab-content">
+				{#if compatibleTablets.length > 0}
+					<ul class="entity-list">
+						{#each compatibleTablets as tablet}
+							<li><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="no-data">No tablet compatibility data available for this pen.</p>
+				{/if}
+			</div>
+		{/if}
+
+		{#if activeTab === 'included'}
+			<div class="tab-content">
+				{#if includedWithTablets.length > 0}
+					<ul class="entity-list">
+						{#each includedWithTablets as tablet}
+							<li><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="no-data">No tablets list this pen as included.</p>
+				{/if}
+			</div>
+		{/if}
+
+		{#if activeTab === 'pressure'}
+			<div class="tab-content">
+				{#if pressureSessionCount > 0}
+					<p class="pr-link"><a href="{base}/pressure-response/{encodeURIComponent(pen.EntityId)}">{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} available</a></p>
+				{:else}
+					<p class="no-data">No pressure response data available for this pen model.</p>
+				{/if}
+			</div>
+		{/if}
 	{/if}
 {/if}
 
@@ -112,42 +152,106 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		margin-bottom: 8px;
+		margin-bottom: 16px;
 	}
 
-	.title-row h1 {
-		margin: 0;
-	}
+	.title-row h1 { margin: 0; }
 
 	.json-btn {
 		padding: 4px 10px;
 		font-size: 13px;
 		border: 1px solid #6b7280;
 		border-radius: 4px;
-		background: var(--bg-card, #fff);
+		background: var(--bg-card);
 		color: #6b7280;
 		cursor: pointer;
 		font-weight: 600;
 	}
 
-	.json-btn:hover {
-		background: #6b7280;
-		color: #fff;
+	.json-btn:hover { background: #6b7280; color: #fff; }
+
+	/* ── Basics ── */
+	.basics {
+		margin-bottom: 20px;
+		padding: 12px 16px;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 6px;
 	}
 
-	.compat-section {
-		margin-top: 32px;
+	.basics-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0;
+		margin: 0;
+		padding: 0;
 	}
 
-	.compat-section h2 {
-		font-size: 15px;
+	.basics-item {
+		display: flex;
+		flex-direction: column;
+		padding: 4px 20px 4px 0;
+		min-width: 100px;
+	}
+
+	.basics-item dt {
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-dim);
+		margin-bottom: 2px;
+	}
+
+	.basics-item dd {
+		font-size: 13px;
+		color: var(--text);
+	}
+
+	.basics-item dd a {
+		color: var(--link);
+		text-decoration: none;
+	}
+
+	.basics-item dd a:hover { text-decoration: underline; }
+
+	/* ── Tabs ── */
+	.detail-tabs {
+		display: flex;
+		gap: 0;
+		border-bottom: 2px solid var(--border);
+		margin-bottom: 16px;
+	}
+
+	.detail-tabs button {
+		padding: 6px 16px;
+		font-size: 13px;
+		border: 1px solid transparent;
+		border-bottom: none;
+		border-radius: 4px 4px 0 0;
+		background: transparent;
+		color: var(--text-muted);
+		cursor: pointer;
+		position: relative;
+		bottom: -2px;
+	}
+
+	.detail-tabs button:hover {
+		color: #2563eb;
+		background: var(--bg-card);
+		border-color: var(--border);
+	}
+
+	.detail-tabs button.active {
+		background: var(--bg);
+		color: #2563eb;
+		border-color: var(--border);
 		font-weight: 600;
-		color: #6b21a8;
-		margin-bottom: 8px;
-		padding-bottom: 4px;
-		border-bottom: 2px solid #e0e0e0;
 	}
 
+	.tab-content { margin-bottom: 24px; }
+
+	/* ── Lists ── */
 	.entity-list {
 		list-style: none;
 		padding: 0;
@@ -159,18 +263,16 @@
 	}
 
 	.entity-list a {
-		color: #2563eb;
+		color: var(--link);
 		text-decoration: none;
 	}
 
 	.entity-list a:hover { text-decoration: underline; }
 
-	.pr-link {
-		font-size: 13px;
-	}
+	.pr-link { font-size: 13px; }
 
 	.pr-link a {
-		color: #2563eb;
+		color: var(--link);
 		text-decoration: none;
 	}
 
@@ -178,7 +280,7 @@
 
 	.no-data {
 		font-size: 13px;
-		color: #999;
+		color: var(--text-dim);
 		font-style: italic;
 	}
 </style>

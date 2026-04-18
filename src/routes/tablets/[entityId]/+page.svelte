@@ -18,6 +18,7 @@
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 
 	let showJson = $state(false);
+	let activeTab = $state<'specs' | 'size' | 'pens' | 'similar'>('specs');
 
 	let tablet = $state<Tablet | null>(null);
 	let allTablets: Tablet[] = $state([]);
@@ -218,175 +219,225 @@
 	{/if}
 
 	{#if tablet}
-		<section class="specs-section">
-			<div class="specs-header">
-				<h2>Specs</h2>
-				<select class="copy-select" onchange={(e) => {
-					const sel = e.currentTarget as HTMLSelectElement;
-					if (sel.value) { copyAllSpecs(sel.value as 'table' | 'list'); sel.value = ''; }
-				}}>
-					<option value="">Copy as…</option>
-					<option value="table">Table</option>
-					<option value="list">Bulleted list</option>
-				</select>
-			</div>
-			<div class="detail-columns">
-				{#each [col1Groups, col2Groups, col3Groups] as groups}
-					<div class="detail-col">
-						{#each groups as group}
-							{@const groupFields = getGroupFields([group])}
-							{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet!); return v && v !== '-'; })}
-							{#if hasValues}
-								<section class="field-group" id="group-{group.toLowerCase()}">
-									<div class="group-header">
-										<h2>{group}</h2>
-									</div>
-								<dl>
-									{#each groupFields as f}
-										{@const val = f.getValue(tablet!)}
-										{@const displayVal = formatValue(val, f.unit, $unitPreference)}
-										{#if val && val !== '-'}
+		<section class="basics">
+			<dl class="basics-grid">
+				<div class="basics-item">
+					<dt>Brand</dt>
+					<dd><a href="{base}/brands/{tablet.Model.Brand}">{brandName(tablet.Model.Brand)}</a></dd>
+				</div>
+				<div class="basics-item">
+					<dt>Model ID</dt>
+					<dd>{tablet.Model.Id}</dd>
+				</div>
+				<div class="basics-item">
+					<dt>Type</dt>
+					<dd>{tablet.Model.Type}</dd>
+				</div>
+				{#if tablet.Model.LaunchYear}
+					<div class="basics-item">
+						<dt>Year</dt>
+						<dd>{tablet.Model.LaunchYear}</dd>
+					</div>
+				{/if}
+				{#if tablet.Model.Status}
+					<div class="basics-item">
+						<dt>Status</dt>
+						<dd>{tablet.Model.Status}</dd>
+					</div>
+				{/if}
+				{#if tablet.Model.Audience}
+					<div class="basics-item">
+						<dt>Audience</dt>
+						<dd>{tablet.Model.Audience}</dd>
+					</div>
+				{/if}
+				{#if (tablet.Model.IncludedPen ?? []).length > 0}
+					<div class="basics-item">
+						<dt>Included Pen</dt>
+						<dd>{includedPenNames(tablet)}</dd>
+					</div>
+				{/if}
+			</dl>
+		</section>
+
+		<div class="detail-tabs">
+			<button class:active={activeTab === 'specs'}   onclick={() => activeTab = 'specs'}>Specs</button>
+			<button class:active={activeTab === 'size'}    onclick={() => activeTab = 'size'}>Size Comparison</button>
+			<button class:active={activeTab === 'pens'}    onclick={() => activeTab = 'pens'}>Compatible Pens</button>
+			<button class:active={activeTab === 'similar'} onclick={() => activeTab = 'similar'}>Similar Tablets</button>
+		</div>
+
+		{#if activeTab === 'specs'}
+			<section class="tab-content specs-section">
+				<div class="specs-header">
+					<select class="copy-select" onchange={(e) => {
+						const sel = e.currentTarget as HTMLSelectElement;
+						if (sel.value) { copyAllSpecs(sel.value as 'table' | 'list'); sel.value = ''; }
+					}}>
+						<option value="">Copy as…</option>
+						<option value="table">Table</option>
+						<option value="list">Bulleted list</option>
+					</select>
+				</div>
+				<div class="detail-columns">
+					{#each [col1Groups, col2Groups, col3Groups] as groups}
+						<div class="detail-col">
+							{#each groups as group}
+								{@const groupFields = getGroupFields([group])}
+								{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet!); return v && v !== '-'; })}
+								{#if hasValues}
+									<section class="field-group" id="group-{group.toLowerCase()}">
+										<div class="group-header">
+											<h2>{group}</h2>
+										</div>
+										<dl>
+											{#each groupFields as f}
+												{@const val = f.getValue(tablet!)}
+												{@const displayVal = formatValue(val, f.unit, $unitPreference)}
+												{#if val && val !== '-'}
+													<div class="field-row">
+														<dt>{stripUnit(f.label, f.unit)}</dt>
+														<dd>
+															{#if f.key === 'ModelIncludedPen'}
+																{includedPenNames(tablet!)}
+															{:else if isUrl(val)}
+																<a href={val} target="_blank" rel="noopener">
+																	{f.key === 'ModelUserManual' ? 'View Manual ↗' : f.key === 'ModelProductLink' ? 'View Product Page ↗' : val}
+																</a>
+															{:else}
+																{formatValueWithAlt(val, f.label, f.unit, $unitPreference, $showAltUnits)}
+															{/if}
+															{#if f.computed}
+																<span class="computed-badge">computed</span>
+															{/if}
+														</dd>
+													</div>
+												{/if}
+											{/each}
+										</dl>
+										{#if group === 'Digitizer' && closestISO}
 											<div class="field-row">
-												<dt>{stripUnit(f.label, f.unit)}</dt>
-												<dd>
-													{#if f.key === 'ModelIncludedPen'}
-														{includedPenNames(tablet!)}
-													{:else if isUrl(val)}
-														<a href={val} target="_blank" rel="noopener">
-															{f.key === 'ModelUserManual' ? 'View Manual ↗' : f.key === 'ModelProductLink' ? 'View Product Page ↗' : val}
-														</a>
-													{:else}
-														{formatValueWithAlt(val, f.label, f.unit, $unitPreference, $showAltUnits)}
-													{/if}
-													{#if f.computed}
-														<span class="computed-badge">computed</span>
-													{/if}
-												</dd>
+												<dt>Similar ISO Paper</dt>
+												<dd>{closestISO} <span class="computed-badge">computed</span></dd>
 											</div>
 										{/if}
-									{/each}
-								</dl>
-								{#if group === 'Digitizer' && closestISO}
-									<div class="field-row">
-										<dt>Similar ISO Paper</dt>
-										<dd>{closestISO} <span class="computed-badge">computed</span></dd>
-									</div>
+									</section>
 								{/if}
-							</section>
-						{/if}
+							{/each}
+						</div>
 					{/each}
 				</div>
-			{/each}
-		</div>
-		</section>
+			</section>
+		{/if}
 
-		<section class="compat-section">
-			<h2>Size Comparison</h2>
-			<div class="size-comparison">
+		{#if activeTab === 'size'}
+			<section class="tab-content">
 				<ValueHistogram
-								title={`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id}) active area diagonal compared to other ${tablet.Model.Type === 'PENTABLET' ? 'pen tablets' : tablet.Model.Type === 'PENDISPLAY' ? 'pen displays' : 'standalone tablets'}`}
-								values={histogramValues}
-								currentValue={histogramCurrentValue}
-								currentLabel={`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`}
-								ranges={histogramRanges}
-								unit={isMetric ? ' cm' : '"'}
-								binSize={isMetric ? 1 : 0.5}
-								bandwidthMultiplier={0.2}
-								bind:compareYears
-							/>
-			</div>
-		</section>
+					title={`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id}) active area diagonal compared to other ${tablet.Model.Type === 'PENTABLET' ? 'pen tablets' : tablet.Model.Type === 'PENDISPLAY' ? 'pen displays' : 'standalone tablets'}`}
+					values={histogramValues}
+					currentValue={histogramCurrentValue}
+					currentLabel={`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`}
+					ranges={histogramRanges}
+					unit={isMetric ? ' cm' : '"'}
+					binSize={isMetric ? 1 : 0.5}
+					bandwidthMultiplier={0.2}
+					bind:compareYears
+				/>
+			</section>
+		{/if}
 
-		<section class="compat-section">
-			<div class="similar-header">
-				<h2>Compatible Pens</h2>
-				<button class="copy-btn" onclick={() => {
-					const list = document.querySelector('.entity-list');
-					if (list) navigator.clipboard.writeText(list.outerHTML);
-				}}>Copy as HTML</button>
-			</div>
-			{#if compatiblePens.length > 0}
-				<ul class="entity-list">
-					{#each compatiblePens as pen}
-						<li><a href="{base}/pens/{encodeURIComponent(pen.EntityId)}">{brandName(pen.Brand)} {pen.PenName === pen.PenId ? pen.PenId : `${pen.PenName} (${pen.PenId})`}</a></li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="no-data">No pen compatibility data available for this tablet.</p>
-			{/if}
-		</section>
-
-		<section class="compat-section">
-			<div class="similar-header">
-				<h2>Similar Tablets</h2>
-				<button class="copy-btn" onclick={() => {
-					const table = document.querySelector('.similar-table');
-					if (table) navigator.clipboard.writeText(table.outerHTML);
-				}}>Copy as HTML</button>
-			</div>
-			<div class="similar-filters">
-				<label><input type="checkbox" bind:checked={filterSimilarSize} /> Similar size</label>
-				<label><input type="checkbox" bind:checked={filterSamePen} /> Same included pen</label>
-				<label><input type="checkbox" bind:checked={filterSameYearOrLater} /> Same year or later</label>
-				<label>
-					Brand:
-					<select class="filter-select" bind:value={filterBrand}>
-						<option value="all">All</option>
-						{#each availableBrands as b}
-							<option value={b}>{brandName(b)}</option>
+		{#if activeTab === 'pens'}
+			<section class="tab-content">
+				<div class="section-header">
+					<button class="copy-btn" onclick={() => {
+						const list = document.querySelector('.entity-list');
+						if (list) navigator.clipboard.writeText(list.outerHTML);
+					}}>Copy as HTML</button>
+				</div>
+				{#if compatiblePens.length > 0}
+					<ul class="entity-list">
+						{#each compatiblePens as pen}
+							<li><a href="{base}/pens/{encodeURIComponent(pen.EntityId)}">{brandName(pen.Brand)} {pen.PenName === pen.PenId ? pen.PenId : `${pen.PenName} (${pen.PenId})`}</a></li>
 						{/each}
-					</select>
-				</label>
-				<label>
-					Sort:
-					<select class="filter-select" bind:value={similarSort}>
-						<option value="year">Year</option>
-						<option value="diagonal">Diagonal</option>
-					</select>
-				</label>
-			</div>
-			{#if similarTablets.length > 0}
-				<table class="similar-table">
-					<thead>
-						<tr>
-							<th>Tablet</th>
-							<th>Year</th>
-							<th>Dimensions</th>
-							<th>Diagonal</th>
-							{#if hasDisplay}
-								<th>Pixels</th>
-								<th>Category</th>
-								<th>Density</th>
-							{/if}
-							<th>Included Pen</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each similarTablets as t}
-							{@const d = t.Digitizer?.Dimensions}
-							{@const diag = getDiagonal(t.Digitizer?.Dimensions)}
-							{@const px = t.Display?.PixelDimensions}
-							{@const pxDensity = (px && d && px.Width && d.Width) ? (px.Width / d.Width).toFixed(2) : ''}
-							{@const pxCat = (() => { if (!px || !px.Width || !px.Height) return ''; const w = px.Width, h = px.Height; if (w === 1920 && h === 1080) return 'Full HD'; if ((w === 2560 && h === 1440) || (w === 2560 && h === 1600)) return '2.5K'; if (w === 2880 && h === 1800) return '3K'; if (w === 3840 && h === 2160) return '4K'; return 'Other'; })()}
+					</ul>
+				{:else}
+					<p class="no-data">No pen compatibility data available for this tablet.</p>
+				{/if}
+			</section>
+		{/if}
+
+		{#if activeTab === 'similar'}
+			<section class="tab-content">
+				<div class="section-header">
+					<div class="similar-filters">
+						<label><input type="checkbox" bind:checked={filterSimilarSize} /> Similar size</label>
+						<label><input type="checkbox" bind:checked={filterSamePen} /> Same included pen</label>
+						<label><input type="checkbox" bind:checked={filterSameYearOrLater} /> Same year or later</label>
+						<label>
+							Brand:
+							<select class="filter-select" bind:value={filterBrand}>
+								<option value="all">All</option>
+								{#each availableBrands as b}
+									<option value={b}>{brandName(b)}</option>
+								{/each}
+							</select>
+						</label>
+						<label>
+							Sort:
+							<select class="filter-select" bind:value={similarSort}>
+								<option value="year">Year</option>
+								<option value="diagonal">Diagonal</option>
+							</select>
+						</label>
+					</div>
+					<button class="copy-btn" onclick={() => {
+						const table = document.querySelector('.similar-table');
+						if (table) navigator.clipboard.writeText(table.outerHTML);
+					}}>Copy as HTML</button>
+				</div>
+				{#if similarTablets.length > 0}
+					<table class="similar-table">
+						<thead>
 							<tr>
-								<td><a href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a></td>
-								<td>{t.Model.LaunchYear || ''}</td>
-								<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
-								<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>
+								<th>Tablet</th>
+								<th>Year</th>
+								<th>Dimensions</th>
+								<th>Diagonal</th>
 								{#if hasDisplay}
-									<td>{px ? `${px.Width} x ${px.Height}` : ''}</td>
-									<td>{pxCat}</td>
-									<td>{pxDensity ? `${pxDensity} px/mm` : ''}</td>
+									<th>Pixels</th>
+									<th>Category</th>
+									<th>Density</th>
 								{/if}
-								<td>{(t.Model.IncludedPen ?? []).join(', ')}</td>
+								<th>Included Pen</th>
 							</tr>
-						{/each}
-					</tbody>
-				</table>
-			{:else}
-				<p class="no-data">No matching tablets found. Try adjusting the filters.</p>
-			{/if}
-		</section>
+						</thead>
+						<tbody>
+							{#each similarTablets as t}
+								{@const d = t.Digitizer?.Dimensions}
+								{@const diag = getDiagonal(t.Digitizer?.Dimensions)}
+								{@const px = t.Display?.PixelDimensions}
+								{@const pxDensity = (px && d && px.Width && d.Width) ? (px.Width / d.Width).toFixed(2) : ''}
+								{@const pxCat = (() => { if (!px || !px.Width || !px.Height) return ''; const w = px.Width, h = px.Height; if (w === 1920 && h === 1080) return 'Full HD'; if ((w === 2560 && h === 1440) || (w === 2560 && h === 1600)) return '2.5K'; if (w === 2880 && h === 1800) return '3K'; if (w === 3840 && h === 2160) return '4K'; return 'Other'; })()}
+								<tr>
+									<td><a href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a></td>
+									<td>{t.Model.LaunchYear || ''}</td>
+									<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
+									<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>
+									{#if hasDisplay}
+										<td>{px ? `${px.Width} x ${px.Height}` : ''}</td>
+										<td>{pxCat}</td>
+										<td>{pxDensity ? `${pxDensity} px/mm` : ''}</td>
+									{/if}
+									<td>{(t.Model.IncludedPen ?? []).join(', ')}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				{:else}
+					<p class="no-data">No matching tablets found. Try adjusting the filters.</p>
+				{/if}
+			</section>
+		{/if}
 	{/if}
 {/if}
 
@@ -438,26 +489,104 @@
 		color: #fff;
 	}
 
-	.specs-section {
+	/* ── Basics ── */
+	.basics {
+		margin-bottom: 20px;
+		padding: 12px 16px;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+	}
+
+	.basics-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0;
+		margin: 0;
+		padding: 0;
+	}
+
+	.basics-item {
+		display: flex;
+		flex-direction: column;
+		padding: 4px 20px 4px 0;
+		min-width: 100px;
+	}
+
+	.basics-item dt {
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-dim);
+		margin-bottom: 2px;
+	}
+
+	.basics-item dd {
+		font-size: 13px;
+		color: var(--text);
+	}
+
+	.basics-item dd a {
+		color: var(--link);
+		text-decoration: none;
+	}
+
+	.basics-item dd a:hover { text-decoration: underline; }
+
+	/* ── Detail tabs ── */
+	.detail-tabs {
+		display: flex;
+		gap: 0;
+		border-bottom: 2px solid var(--border);
+		margin-bottom: 16px;
+	}
+
+	.detail-tabs button {
+		padding: 6px 16px;
+		font-size: 13px;
+		border: 1px solid transparent;
+		border-bottom: none;
+		border-radius: 4px 4px 0 0;
+		background: transparent;
+		color: var(--text-muted);
+		cursor: pointer;
+		position: relative;
+		bottom: -2px;
+	}
+
+	.detail-tabs button:hover {
+		color: #2563eb;
+		background: var(--bg-card);
+		border-color: var(--border);
+	}
+
+	.detail-tabs button.active {
+		background: var(--bg);
+		color: #2563eb;
+		border-color: var(--border);
+		font-weight: 600;
+	}
+
+	.tab-content {
 		margin-bottom: 24px;
 	}
 
+	/* ── Specs tab ── */
 	.specs-header {
 		display: flex;
 		align-items: center;
+		justify-content: flex-end;
 		gap: 8px;
 		margin-bottom: 12px;
-		padding-bottom: 4px;
-		border-bottom: 2px solid var(--border);
 	}
 
-	.specs-header h2 {
-		font-size: 15px;
-		font-weight: 700;
-		color: #6b21a8;
-		margin: 0;
-		border: none;
-		padding: 0;
+	.section-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin-bottom: 10px;
 	}
 
 	.detail-columns {
@@ -534,18 +663,6 @@
 		vertical-align: middle;
 	}
 
-	.compat-section {
-		margin-top: 24px;
-	}
-
-	.compat-section h2 {
-		font-size: 14px;
-		font-weight: 600;
-		color: #6b21a8;
-		margin-bottom: 6px;
-		padding-bottom: 3px;
-		border-bottom: 2px solid var(--border);
-	}
 
 	.entity-list {
 		list-style: none;
@@ -563,12 +680,6 @@
 	}
 
 	.entity-list a:hover { text-decoration: underline; }
-
-	.similar-header {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
 
 	.copy-btn {
 		padding: 2px 8px;
@@ -649,11 +760,6 @@
 	.similar-table a:hover { text-decoration: underline; }
 
 
-	.size-comparison {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-	}
 
 
 	.no-data {
