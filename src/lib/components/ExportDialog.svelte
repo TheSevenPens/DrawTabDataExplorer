@@ -17,10 +17,10 @@
 		onclose: () => void;
 	} = $props();
 
-	let rowMode: 'all' | 'view' = $state('view');
-	let colMode: 'all' | 'view' = $state('view');
-	let format: 'csv' | 'json' | 'html' | 'markdown' = $state('csv');
-	let output: 'clipboard' | 'file' = $state('clipboard');
+	let rowMode = $state<'all' | 'view'>('view');
+	let colMode = $state<'all' | 'view'>('view');
+	let format = $state<'csv' | 'json' | 'html' | 'markdown'>('csv');
+	let output = $state<'clipboard' | 'file'>('clipboard');
 	let statusMsg = $state('');
 
 	let rows = $derived(rowMode === 'all' ? allData : filteredData);

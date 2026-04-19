@@ -44,6 +44,9 @@ jobs:
           cp -r data-repo/data/pressure-response static/
           cp -r data-repo/data/inventory static/
 
+      - name: Type-check
+        run: npm run check
+
       - name: Build
         run: npm run build
         env:

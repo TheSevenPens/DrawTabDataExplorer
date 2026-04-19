@@ -6,7 +6,8 @@
     "update-data": "cd data-repo && git pull origin master",
     "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +19,7 @@
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@types/node": "^25.5.0",
     "svelte": "^5.55.1",
+    "svelte-check": "^4.4.6",
     "typescript": "^5.9.3",
     "vite": "^8.0.3"
   },

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FieldDef, SelectStep } from '$data/lib/pipeline/index.js';
+	import type { FieldDef, SelectStep, AnyFieldDef } from '$data/lib/pipeline/index.js';
 
 	let { step = $bindable(), fields, fieldGroups, onchange, onremove, removable = true }: {
 		step: SelectStep;

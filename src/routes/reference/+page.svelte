@@ -44,6 +44,8 @@
 	let penTabletHistRanges = $derived<HistogramRange[]>(isMetric ? penTabletRangesCm : penTabletRangesIn);
 	let penDisplayHistRanges = $derived<HistogramRange[]>(isMetric ? displayRangesCm : displayRangesIn);
 
+	let aSeries = $derived(paperSizes.filter(p => p.Series === 'A'));
+
 	let isoAMarkers = $derived<HistogramMarker[]>(
 		aSeries.map(p => {
 			const diagMm = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
@@ -89,8 +91,6 @@
 			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
 			.filter((d): d is number => d !== null)
 	);
-
-	let aSeries = $derived(paperSizes.filter(p => p.Series === 'A'));
 
 	function closestISOA(midpointCm: number): string {
 		if (aSeries.length === 0) return '';

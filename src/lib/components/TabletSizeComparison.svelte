@@ -58,10 +58,10 @@
 		return `${qualifier}${best.Name}`;
 	});
 
-	const tabletLabel = `${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`;
-	const typeLabel = tablet.Model.Type === 'PENTABLET' ? 'pen tablets'
+	let tabletLabel = $derived(`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`);
+	let typeLabel = $derived(tablet.Model.Type === 'PENTABLET' ? 'pen tablets'
 		: tablet.Model.Type === 'PENDISPLAY' ? 'pen displays'
-		: 'standalone tablets';
+		: 'standalone tablets');
 </script>
 
 <ValueHistogram

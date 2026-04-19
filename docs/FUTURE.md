@@ -1,5 +1,17 @@
 # Future Improvements
 
+## Dev-mode error banner
+
+Add a `DevErrorBanner` component that listens for `window.onerror` and
+`window.addEventListener('unhandledrejection', ...)` and renders the error
+message + stack trace inline in the page (no devtools required). Mount it
+in `+layout.svelte` under an `{#if import.meta.env.DEV}` guard so it has
+zero production footprint.
+
+This complements `+error.svelte` (which only catches SvelteKit load errors)
+by surfacing reactive / template runtime errors that don't go through the
+SvelteKit error pipeline.
+
 ## Accessibility
 
 - **Keyboard navigation for drag-to-reorder** in FilterBar, SortBar,

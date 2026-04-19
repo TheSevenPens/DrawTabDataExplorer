@@ -25,6 +25,7 @@
 		markers?: HistogramMarker[];
 	} = $props();
 
+	const MARKER_TIERS = 6;
 	const width = 900;
 	const padLeft = 30;
 	const padRight = 20;
@@ -106,7 +107,6 @@
 	// Stagger marker labels to avoid overlap
 	const CHAR_WIDTH_FALLBACK = 5.5; // used before getComputedTextLength measurements are ready
 	const LABEL_PAD = 8; // extra gap between labels
-	const MARKER_TIERS = 6;
 
 	// Measure actual rendered label widths via SVG getComputedTextLength()
 	let uniqueLabels = $derived([...new Set(markers.map(m => m.label))]);
