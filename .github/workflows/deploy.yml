@@ -45,7 +45,7 @@ jobs:
           cp -r data-repo/data/inventory static/
 
       - name: Type-check
-        run: npm run check
+        run: npx svelte-kit sync && npm run check
 
       - name: Build
         run: npm run build
