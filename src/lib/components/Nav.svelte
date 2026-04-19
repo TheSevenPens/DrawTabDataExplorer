@@ -19,6 +19,7 @@
 		{ href: '/compare', label: 'Compare', dynamic: true },
 		{ href: '/reference', label: 'Reference' },
 		{ href: '/data-quality', label: 'Data Quality' },
+		{ href: '/about', label: 'About' },
 	];
 
 	let settingsOpen = $state(false);

@@ -78,7 +78,8 @@
 	function getOpLabel(op: string): string {
 		const labels: Record<string, string> = {
 			'==': '=', '!=': '!=', '>': '>', '>=': '>=', '<': '<', '<=': '<=',
-			'contains': 'contains', 'startswith': 'starts with',
+			'contains': 'contains', 'notcontains': 'does not contain',
+			'startswith': 'starts with', 'notstartswith': 'does not start with',
 			'empty': 'is empty', 'notempty': 'is not empty',
 		};
 		return labels[op] ?? op;
@@ -286,7 +287,7 @@
 	}
 
 	function onColDragEnd() {
-		if (!colDroppedInside && colDragIndex !== null) { columns.splice(colDragIndex, 1); onchange(); }
+		// Columns are only removed via context menu; do not remove on drag-outside
 		colDragIndex = null;
 		colDragOverIndex = null;
 	}
@@ -553,6 +554,7 @@
 		cursor: pointer;
 		white-space: nowrap;
 		line-height: 1;
+		min-height: 28px;
 	}
 
 	.toolbar-btn:hover,
@@ -606,6 +608,8 @@
 		padding: 10px 12px;
 		min-width: 260px;
 	}
+
+	.filter-panel { min-width: 520px; }
 
 	.views-item .panel {
 		left: auto;
