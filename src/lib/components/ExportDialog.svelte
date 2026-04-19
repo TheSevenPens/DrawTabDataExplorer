@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FieldDef } from '$data/lib/pipeline/index.js';
+	import type { FieldDef, AnyFieldDef } from '$data/lib/pipeline/index.js';
 
 	let {
 		allData,
@@ -11,7 +11,7 @@
 	}: {
 		allData: any[];
 		filteredData: any[];
-		allFields: FieldDef<any>[];
+		allFields: AnyFieldDef[];
 		visibleFields: string[];
 		entityType: string;
 		onclose: () => void;
@@ -26,10 +26,10 @@
 	let rows = $derived(rowMode === 'all' ? allData : filteredData);
 	let fieldKeys = $derived(colMode === 'all' ? allFields.map(f => f.key) : visibleFields);
 	let fieldDefs = $derived(
-		fieldKeys.map(k => allFields.find(f => f.key === k)).filter(Boolean) as FieldDef<any>[]
+		fieldKeys.map(k => allFields.find(f => f.key === k)).filter(Boolean) as AnyFieldDef[]
 	);
 
-	function cell(row: any, field: FieldDef<any>): string {
+	function cell(row: any, field: AnyFieldDef): string {
 		const v = field.getValue(row);
 		return v == null ? '' : String(v);
 	}

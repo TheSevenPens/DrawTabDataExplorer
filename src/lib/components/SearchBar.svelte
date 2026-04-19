@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { FieldDef } from '$data/lib/pipeline/index.js';
+	import type { FieldDef, AnyFieldDef } from '$data/lib/pipeline/index.js';
 
 	interface QuickFilterOption {
-		fieldDef: FieldDef<any>;
+		fieldDef: AnyFieldDef;
 		values: string[];
 	}
 

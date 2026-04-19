@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { FieldDef } from '$data/lib/pipeline/index.js';
+	import type { FieldDef, AnyFieldDef } from '$data/lib/pipeline/index.js';
 
 	let { fields, fieldGroups, selected = '', exclude = [], onselect, onselectgroup, onremovegroup, onclose }: {
-		fields: FieldDef<any>[];
+		fields: AnyFieldDef[];
 		fieldGroups: string[];
 		selected?: string;
 		exclude?: string[];
@@ -18,7 +18,7 @@
 		onselect(key);
 	}
 
-	function toggleGroup(allGroupFields: FieldDef<any>[]) {
+	function toggleGroup(allGroupFields: AnyFieldDef[]) {
 		const allKeys = allGroupFields.map(f => f.key);
 		const allChosen = allKeys.every(k => excludeSet.has(k));
 		if (allChosen && onremovegroup) {

@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { base } from '$app/paths';
 	import { theme } from '$lib/theme-store.js';
-	import { loadVersionFromURL, type VersionInfo } from '$data/lib/drawtab-loader.js';
-	let { children } = $props();
+	let { children, data } = $props();
+
+	const version = data.version;
 
 	let useLocalData = $state(false);
-	let version = $state<VersionInfo | null>(null);
 
 	$effect(() => {
 		document.documentElement.setAttribute('data-theme', $theme);
@@ -16,10 +14,6 @@
 		if (__DEV_LOCAL_DATA_AVAILABLE__) {
 			useLocalData = document.cookie.includes('drawtab-local-data=1');
 		}
-	});
-
-	onMount(async () => {
-		version = await loadVersionFromURL(base);
 	});
 
 	function toggleDataSource() {

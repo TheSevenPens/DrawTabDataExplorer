@@ -3,7 +3,7 @@
 
 	let { step = $bindable(), fields, fieldGroups, onchange, onremove, removable = true }: {
 		step: SelectStep;
-		fields: FieldDef<any>[];
+		fields: AnyFieldDef[];
 		fieldGroups: string[];
 		onchange: () => void;
 		onremove: () => void;

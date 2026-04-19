@@ -1,35 +1,32 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
-	import { page } from '$app/state';
-	import { loadTabletsFromURL, loadPenCompatFromURL, loadPensFromURL, loadISOPaperSizesFromURL, brandName, getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
+	import { brandName, getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
+	import { unitPreference, showAltUnits } from '$lib/unit-store.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import { findSimilarTablets } from '$data/lib/compat-helpers.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
-	import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
-	import { unitPreference, showAltUnits } from '$lib/unit-store.js';
-	import { formatValue, getFieldLabel } from '$data/lib/units.js';
-	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
+	import { formatValue } from '$data/lib/units.js';
+	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
-	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 
+	let { data } = $props();
+	const tablet: Tablet = data.tablet;
+	const allTablets: Tablet[] = data.allTablets;
+	const allPens: Pen[] = data.allPens;
+	const compatiblePens: Pen[] = data.compatiblePens;
+	const isoSizes: ISOPaperSize[] = data.isoSizes;
+
 	let showJson = $state(false);
 	let activeTab = $state<'specs' | 'size' | 'pens' | 'similar'>('specs');
 
-	let tablet = $state<Tablet | null>(null);
-	let allTablets: Tablet[] = $state([]);
-	let allPens: Pen[] = $state([]);
-	let compatiblePens: Pen[] = $state([]);
-	let notFound = $state(false);
-
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
-	function includedPenNames(tablet: Tablet): string {
-		return formatPenIds(tablet.Model.IncludedPen ?? [], penNameMap);
+	function includedPenNames(t: Tablet): string {
+		return formatPenIds(t.Model.IncludedPen ?? [], penNameMap);
 	}
 
 	let filterSimilarSize = $state(true);
@@ -38,75 +35,16 @@
 	let filterSameYearOrLater = $state(false);
 	let similarSort = $state<'year' | 'diagonal'>('year');
 
-	let hasDisplay = $derived(tablet?.Model.Type === 'PENDISPLAY' || tablet?.Model.Type === 'STANDALONE');
-	let isoSizes: ISOPaperSize[] = $state([]);
-
-	let closestISO = $derived.by(() => {
-		if (!tablet) return null;
-		const diagMm = getDiagonal(tablet.Digitizer?.Dimensions);
-		if (!diagMm) return null;
-		const aSeries = isoSizes.filter(p => p.Series === 'A');
-		if (aSeries.length === 0) return null;
-		let best = aSeries[0];
-		let bestDist = Infinity;
-		for (const p of aSeries) {
-			const pDiag = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
-			const dist = Math.abs(pDiag - diagMm);
-			if (dist < bestDist) { bestDist = dist; best = p; }
-		}
-		const bestDiag = Math.sqrt(best.Width_mm ** 2 + best.Height_mm ** 2);
-		const pct = Math.round(Math.abs(diagMm - bestDiag) / bestDiag * 100);
-		let qualifier = '';
-		if (pct >= 1) {
-			qualifier = diagMm > bestDiag ? `${pct}% larger than ` : `${pct}% smaller than `;
-		} else {
-			qualifier = '~ ';
-		}
-		return `${qualifier}${best.Name}`;
-	});
-
-	const currentYear = new Date().getFullYear();
-
-	let compareYears = $state<number | null>(15);
-
-	let isMetric = $derived($unitPreference === 'metric');
-
-	let histogramRanges = $derived.by((): HistogramRange[] => {
-		if (!tablet) return [];
-		if (tablet.Model.Type === 'PENTABLET') {
-			return isMetric ? penTabletRangesCm : penTabletRangesIn;
-		}
-		return isMetric ? displayRangesCm : displayRangesIn;
-	});
-
-	let histogramValues = $derived(
-		allTablets
-			.filter(t => {
-				if (t.Model.Type !== tablet?.Model.Type) return false;
-				if (compareYears !== null) {
-					const year = parseInt(t.Model.LaunchYear, 10);
-					if (!isNaN(year) && year < currentYear - compareYears) return false;
-				}
-				return true;
-			})
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let histogramCurrentValue = $derived.by(() => {
-		if (!tablet) return null;
-		const d = getDiagonal(tablet.Digitizer?.Dimensions);
-		return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
-	});
+	let hasDisplay = $derived(tablet.Model.Type === 'PENDISPLAY' || tablet.Model.Type === 'STANDALONE');
 
 	let col1Groups = $derived(
-		tablet?.Model.Type === 'STANDALONE' ? ['Model', 'Physical', 'Standalone'] : ['Model']
+		tablet.Model.Type === 'STANDALONE' ? ['Model', 'Physical', 'Standalone'] : ['Model']
 	);
 	const col2Groups = ['Digitizer'];
 	const col3Groups = ['Display'];
 
 	function getGroupFields(groups: string[]) {
-		const expanded = groups.includes('Model') && tablet?.Model.Type !== 'STANDALONE'
+		const expanded = groups.includes('Model') && tablet.Model.Type !== 'STANDALONE'
 			? [...groups, 'Physical']
 			: groups;
 		return TABLET_FIELDS.filter(f => expanded.includes(f.group));
@@ -142,52 +80,19 @@
 		return val.startsWith('http://') || val.startsWith('https://');
 	}
 
-
-	onMount(async () => {
-		const entityId = decodeURIComponent(page.params.entityId!);
-		const [allT, allCompat, loadedPens, iso] = await Promise.all([
-			loadTabletsFromURL(base),
-			loadPenCompatFromURL(base) as Promise<PenCompat[]>,
-			loadPensFromURL(base) as Promise<Pen[]>,
-			loadISOPaperSizesFromURL(base),
-		]);
-		isoSizes = iso;
-		allPens = loadedPens;
-
-		const found = allT.find((t) => t.Meta.EntityId === entityId);
-		if (!found) {
-			notFound = true;
-			return;
-		}
-		tablet = found;
-
-		const compatPenIds = new Set(
-			allCompat
-				.filter((c) => c.TabletId === found.Model.Id)
-				.map((c) => c.PenId)
-		);
-		compatiblePens = loadedPens.filter((p) => compatPenIds.has(p.PenId));
-		allTablets = allT;
-	});
-
 	let availableBrands = $derived(
-		[...new Set(allTablets.filter(t => t.Model.Type === tablet?.Model.Type).map(t => t.Model.Brand))].sort()
+		[...new Set(allTablets.filter(t => t.Model.Type === tablet.Model.Type).map(t => t.Model.Brand))].sort()
 	);
 
 	let similarTablets = $derived.by(() => {
-		if (!tablet) return [];
 		let results = findSimilarTablets(tablet, allTablets, {
 			similarSize: filterSimilarSize,
 			samePen: filterSamePen,
 			sameYearOrLater: filterSameYearOrLater,
 		});
-		if (filterBrand !== 'all') {
-			results = results.filter(t => t.Model.Brand === filterBrand);
-		}
+		if (filterBrand !== 'all') results = results.filter(t => t.Model.Brand === filterBrand);
 		results.sort((a, b) => {
-			if (similarSort === 'year') {
-				return (a.Model.LaunchYear || '').localeCompare(b.Model.LaunchYear || '');
-			}
+			if (similarSort === 'year') return (a.Model.LaunchYear || '').localeCompare(b.Model.LaunchYear || '');
 			const da = getDiagonal(a.Digitizer?.Dimensions) ?? 0;
 			const db = getDiagonal(b.Digitizer?.Dimensions) ?? 0;
 			return da - db;
@@ -198,28 +103,19 @@
 
 <Nav />
 
-{#if notFound}
-	<h1>Tablet not found</h1>
-	<p><a href="{base}/">Back to tablets</a></p>
-{:else}
-	<div class="title-row">
-		<h1>{tablet ? `${brandName(tablet.Model.Brand)} ${tablet.Model.Name}` : 'Loading...'}</h1>
-		{#if tablet}
-			<button class="flag-toggle" class:flagged={$flaggedTablets.includes(tablet.Meta.EntityId)} onclick={() => toggleFlag(tablet!.Meta.EntityId)}>
-				{$flaggedTablets.includes(tablet.Meta.EntityId) ? 'Unflag' : 'Flag'}
-			</button>
-		{/if}
-		{#if tablet}
-			<button class="json-btn" onclick={() => showJson = true}>JSON</button>
-		{/if}
-	</div>
+<div class="title-row">
+	<h1>{brandName(tablet.Model.Brand)} {tablet.Model.Name}</h1>
+	<button class="flag-toggle" class:flagged={$flaggedTablets.includes(tablet.Meta.EntityId)} onclick={() => toggleFlag(tablet.Meta.EntityId)}>
+		{$flaggedTablets.includes(tablet.Meta.EntityId) ? 'Unflag' : 'Flag'}
+	</button>
+	<button class="json-btn" onclick={() => showJson = true}>JSON</button>
+</div>
 
-	{#if showJson && tablet}
-		<JsonDialog entity={tablet} onclose={() => showJson = false} />
-	{/if}
+{#if showJson}
+	<JsonDialog entity={tablet} onclose={() => showJson = false} />
+{/if}
 
-	{#if tablet}
-		<section class="basics">
+<section class="basics">
 			<dl class="basics-grid">
 				<div class="basics-item">
 					<dt>Brand</dt>
@@ -331,20 +227,10 @@
 		{/if}
 
 		{#if activeTab === 'size'}
-			<section class="tab-content">
-				<ValueHistogram
-					title={`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id}) active area diagonal compared to other ${tablet.Model.Type === 'PENTABLET' ? 'pen tablets' : tablet.Model.Type === 'PENDISPLAY' ? 'pen displays' : 'standalone tablets'}`}
-					values={histogramValues}
-					currentValue={histogramCurrentValue}
-					currentLabel={`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`}
-					ranges={histogramRanges}
-					unit={isMetric ? ' cm' : '"'}
-					binSize={isMetric ? 1 : 0.5}
-					bandwidthMultiplier={0.2}
-					bind:compareYears
-				/>
-			</section>
-		{/if}
+		<section class="tab-content">
+			<TabletSizeComparison {tablet} {allTablets} {isoSizes} />
+		</section>
+	{/if}
 
 		{#if activeTab === 'pens'}
 			<section class="tab-content">
@@ -436,10 +322,8 @@
 				{:else}
 					<p class="no-data">No matching tablets found. Try adjusting the filters.</p>
 				{/if}
-			</section>
-		{/if}
+		</section>
 	{/if}
-{/if}
 
 <style>
 	.title-row {

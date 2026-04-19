@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { FieldDef } from '$data/lib/pipeline/index.js';
+	import type { FieldDef, AnyFieldDef } from '$data/lib/pipeline/index.js';
 	import { base } from '$app/paths';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
 	let { item, fields, fieldGroups }: {
 		item: Record<string, any> | null;
-		fields: FieldDef<any>[];
+		fields: AnyFieldDef[];
 		fieldGroups: string[];
 	} = $props();
 

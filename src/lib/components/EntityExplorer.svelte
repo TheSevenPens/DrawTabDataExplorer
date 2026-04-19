@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Step, type FilterStep as FilterStepType, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, executePipeline } from '$data/lib/pipeline/index.js';
+	import { type Step, type FilterStep as FilterStepType, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, type AnyFieldDef, executePipeline } from '$data/lib/pipeline/index.js';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
@@ -30,7 +30,7 @@
 		entityType: string;
 		entityLabel: string;
 		data: any[];
-		fields: FieldDef<any>[];
+		fields: AnyFieldDef[];
 		fieldGroups: string[];
 		defaultColumns: string[];
 		defaultView: Step[];
@@ -98,7 +98,7 @@
 	let showExport = $state(false);
 
 	interface QuickFilterOption {
-		fieldDef: FieldDef<any>;
+		fieldDef: AnyFieldDef;
 		values: string[];
 	}
 

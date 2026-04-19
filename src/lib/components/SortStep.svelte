@@ -3,7 +3,7 @@
 
 	let { step = $bindable(), fields, onchange, onremove }: {
 		step: SortStep;
-		fields: FieldDef<any>[];
+		fields: AnyFieldDef[];
 		onchange: () => void;
 		onremove: () => void;
 	} = $props();

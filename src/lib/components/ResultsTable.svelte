@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type FieldDef, getFieldDef } from '$data/lib/pipeline/index.js';
+	import { type FieldDef, type AnyFieldDef, getFieldDef } from '$data/lib/pipeline/index.js';
 	import { base } from '$app/paths';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
@@ -7,7 +7,7 @@
 	let { data, visibleFields, fields, total, entityLabel = "records", detailBasePath = "", linkField = "EntityId", cellLinks = {}, columnWidths = $bindable({}), onwidthchange, flaggedIds, onToggleFlag }: {
 		data: any[];
 		visibleFields: string[];
-		fields: FieldDef<any>[];
+		fields: AnyFieldDef[];
 		total: number;
 		entityLabel?: string;
 		detailBasePath?: string;

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { type FieldDef, type FilterStep, getFieldDef, getOperatorsForField } from '$data/lib/pipeline/index.js';
+	import { type FieldDef, type AnyFieldDef, type FilterStep, getFieldDef, getOperatorsForField } from '$data/lib/pipeline/index.js';
 
 	let { step = $bindable(), fields, onchange, onremove }: {
 		step: FilterStep;
-		fields: FieldDef<any>[];
+		fields: AnyFieldDef[];
 		onchange: () => void;
 		onremove: () => void;
 	} = $props();

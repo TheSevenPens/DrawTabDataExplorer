@@ -117,10 +117,10 @@
 		<option value="oldest">Oldest First</option>
 	</select>
 	<span class="year-range">
-		<label>From</label>
-		<input type="number" bind:value={yearFrom} min={allYears[0]} max={yearTo} />
-		<label>To</label>
-		<input type="number" bind:value={yearTo} min={yearFrom} max={allYears[allYears.length - 1]} />
+		<label for="year-from">From</label>
+		<input id="year-from" type="number" bind:value={yearFrom} min={allYears[0]} max={yearTo} />
+		<label for="year-to">To</label>
+		<input id="year-to" type="number" bind:value={yearTo} min={yearFrom} max={allYears[allYears.length - 1]} />
 	</span>
 </div>
 
