@@ -1,16 +1,19 @@
 # Future Improvements
 
-## Dev-mode error banner
+## E2E smoke tests with Playwright
 
-Add a `DevErrorBanner` component that listens for `window.onerror` and
-`window.addEventListener('unhandledrejection', ...)` and renders the error
-message + stack trace inline in the page (no devtools required). Mount it
-in `+layout.svelte` under an `{#if import.meta.env.DEV}` guard so it has
-zero production footprint.
+Playwright is a browser automation library (by Microsoft) that drives a real
+headless browser. A small smoke-test suite — one test per route, one per tab —
+would catch runtime crashes that `svelte-check` misses (e.g. the `gcd`
+recursive-`{@const}` crash, the `closestISO` blank-page bug).
 
-This complements `+error.svelte` (which only catches SvelteKit load errors)
-by surfacing reactive / template runtime errors that don't go through the
-SvelteKit error pipeline.
+Suggested scope for a first suite:
+- Every top-level route renders a non-empty `<main>` / `<h1>`
+- Every tab on Reference, Compare, and Inventory renders without a JS error
+- Navigating to a tablet/pen detail page from the list page renders the detail
+
+Setup: `npm init playwright@latest`, add a `test` step to `deploy.yml` after
+Type-check. Tests live in `e2e/`.
 
 ## Accessibility
 

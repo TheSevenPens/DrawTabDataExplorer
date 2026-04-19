@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { theme } from '$lib/theme-store.js';
+	import DevErrorBanner from '$lib/components/DevErrorBanner.svelte';
 	let { children, data } = $props();
 
 	let version = $derived(data.version);
@@ -39,6 +40,10 @@
 	</div>
 {/if}
 {@render children()}
+
+{#if import.meta.env.DEV}
+	<DevErrorBanner />
+{/if}
 
 {#if version}
 	<footer class="data-version">
