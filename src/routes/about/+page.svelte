@@ -38,10 +38,22 @@
 	<h2>Other Tools Using This Data</h2>
 	<ul class="link-list">
 		<li>
-			<a href="https://github.com/TheSevenPens/DrawTabDataExplorer" target="_blank" rel="noopener noreferrer">
-				DrawTabDataExplorer on GitHub
+			<a href="https://thesevenpens.github.io/PenPressureData/" target="_blank" rel="noopener noreferrer">
+				Pen Pressure Data
 			</a>
-			— source code for this site
+			— pen pressure response measurements and visualizations
+		</li>
+		<li>
+			<a href="https://thesevenpens.github.io/DrawTabInventory/" target="_blank" rel="noopener noreferrer">
+				DrawTab Inventory
+			</a>
+			— personal tablet and pen inventory tracker
+		</li>
+		<li>
+			<a href="https://thesevenpens.github.io/DrawTabPenCompat/" target="_blank" rel="noopener noreferrer">
+				DrawTab Pen Compat
+			</a>
+			— pen and tablet compatibility reference
 		</li>
 	</ul>
 </section>
