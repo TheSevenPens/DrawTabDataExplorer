@@ -110,6 +110,10 @@
 			.filter((d): d is number => d !== null)
 	);
 
+	function gcd(a: number, b: number): number {
+		return b === 0 ? a : gcd(b, a % b);
+	}
+
 	function closestISOA(midpointCm: number): string {
 		if (aSeries.length === 0) return '';
 		let best = aSeries[0];
@@ -482,7 +486,6 @@
 				{#each resolutionCategories as cat}
 					{#each cat.resolutions as res, i}
 						{@const mp = ((res.w * res.h) / 1_000_000).toFixed(2)}
-						{@const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b)}
 						{@const g = gcd(res.w, res.h)}
 						{@const ar = `${res.w / g}:${res.h / g}`}
 						{@const count = i === 0 ? (resolutionCounts[cat.name] ?? 0) : null}
