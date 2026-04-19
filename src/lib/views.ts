@@ -1,4 +1,5 @@
 import type { Step } from '$data/lib/pipeline/types.js';
+import { getStorageJson, setStorageJson, removeStorageItem } from '$lib/storage.js';
 
 export interface SavedView {
   name: string;
@@ -12,27 +13,27 @@ function getStorageKey(entityType: string): string {
 }
 
 function migrate(entityType: string) {
-  try {
-    const legacy = localStorage.getItem(LEGACY_KEY);
-    if (legacy) {
-      localStorage.setItem(getStorageKey(entityType), legacy);
-      localStorage.removeItem(LEGACY_KEY);
-    }
-  } catch {}
+  const legacyViews = getStorageJson<SavedView[] | null>(LEGACY_KEY, null);
+  if (!legacyViews) return;
+  setStorageJson(getStorageKey(entityType), legacyViews);
+  removeStorageItem(LEGACY_KEY);
+}
+
+function isValidSavedView(value: unknown): value is SavedView {
+  if (!value || typeof value !== 'object') return false;
+  const entry = value as Record<string, unknown>;
+  return typeof entry.name === 'string' && Array.isArray(entry.steps);
 }
 
 export function loadViews(entityType: string): SavedView[] {
   migrate(entityType);
-  try {
-    const raw = localStorage.getItem(getStorageKey(entityType));
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  const raw = getStorageJson<unknown>(getStorageKey(entityType), []);
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(isValidSavedView);
 }
 
 function persist(entityType: string, views: SavedView[]) {
-  localStorage.setItem(getStorageKey(entityType), JSON.stringify(views));
+  setStorageJson(getStorageKey(entityType), views);
 }
 
 export function saveView(entityType: string, name: string, steps: Step[]): void {
