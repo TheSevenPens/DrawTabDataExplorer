@@ -1,21 +1,16 @@
 import { writable, derived } from 'svelte/store';
+import { getStorageJson, setStorageJson } from '$lib/storage.js';
 
 const STORAGE_KEY = 'drawtabdata-flagged-tablets';
 const MAX_FLAGGED = 6;
 
 function load(): string[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  const parsed = getStorageJson(STORAGE_KEY, [] as string[]);
+  return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
 }
 
 function persist(ids: string[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  } catch { /* ignore */ }
+  setStorageJson(STORAGE_KEY, ids);
 }
 
 export const flaggedTablets = writable<string[]>(load());
