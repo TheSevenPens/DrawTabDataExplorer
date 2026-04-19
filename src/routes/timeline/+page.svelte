@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { loadTabletsFromURL, loadPensFromURL, brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 
@@ -137,12 +138,19 @@
 						<h3>Tablets ({entry.tablets.length})</h3>
 						<div class="items">
 							{#each entry.tablets as t}
-								<a class="item tablet" href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">
+								<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<div
+									class="item tablet"
+									role="link"
+									tabindex="0"
+									ondblclick={() => goto(`${base}/tablets/${encodeURIComponent(t.Meta.EntityId)}`)}
+									onkeydown={(e) => { if (e.key === 'Enter') goto(`${base}/tablets/${encodeURIComponent(t.Meta.EntityId)}`); }}
+								>
 									<span class="item-brand">{brandName(t.Model.Brand)}</span>
 									<span class="item-name">{t.Model.Name}</span>
 									<span class="item-id">{t.Model.Id}</span>
 									<span class="item-type">{t.Model.Type}</span>
-								</a>
+								</div>
 							{/each}
 						</div>
 					</div>
@@ -282,7 +290,16 @@
 		min-width: 140px;
 	}
 
-	.item:hover {
+	.item.tablet {
+		cursor: default;
+	}
+
+	.item.tablet:hover {
+		border-color: var(--border);
+		background: var(--hover-bg);
+	}
+
+	.item.pen:hover {
 		border-color: var(--link);
 	}
 
