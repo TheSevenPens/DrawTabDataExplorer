@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { loadTabletsFromURL, loadPensFromURL, brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 
@@ -143,8 +142,8 @@
 									class="item tablet"
 									role="link"
 									tabindex="0"
-									ondblclick={() => goto(`${base}/tablets/${encodeURIComponent(t.Meta.EntityId)}`)}
-									onkeydown={(e) => { if (e.key === 'Enter') goto(`${base}/tablets/${encodeURIComponent(t.Meta.EntityId)}`); }}
+									ondblclick={() => { window.location.href = `${base}/tablets/${encodeURIComponent(t.Meta.EntityId)}`; }}
+									onkeydown={(e) => { if (e.key === 'Enter') window.location.href = `${base}/tablets/${encodeURIComponent(t.Meta.EntityId)}`; }}
 								>
 									<span class="item-brand">{brandName(t.Model.Brand)}</span>
 									<span class="item-name">{t.Model.Name}</span>

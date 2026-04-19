@@ -5,7 +5,7 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 
 	let { data } = $props();
-	const driver: Driver = data.driver;
+	let driver: Driver = $derived(data.driver);
 </script>
 
 <Nav />

@@ -9,9 +9,9 @@
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 
 	let { data } = $props();
-	const family: TabletFamily = data.family;
-	const familyTablets: Tablet[] = data.familyTablets;
-	const allTablets: Tablet[] = data.allTablets;
+	let family: TabletFamily = $derived(data.family);
+	let familyTablets: Tablet[] = $derived(data.familyTablets);
+	let allTablets: Tablet[] = $derived(data.allTablets);
 
 	let isMetric = $derived($unitPreference === 'metric');
 

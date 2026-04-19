@@ -7,10 +7,10 @@
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 
 	let { data } = $props();
-	const pen: Pen = data.pen;
-	const compatibleTablets: Tablet[] = data.compatibleTablets;
-	const includedWithTablets: Tablet[] = data.includedWithTablets;
-	const pressureSessionCount: number = data.pressureSessionCount;
+	let pen: Pen = $derived(data.pen);
+	let compatibleTablets: Tablet[] = $derived(data.compatibleTablets);
+	let includedWithTablets: Tablet[] = $derived(data.includedWithTablets);
+	let pressureSessionCount: number = $derived(data.pressureSessionCount);
 
 	let showJson = $state(false);
 	let activeTab = $state<'specs' | 'tablets' | 'included' | 'pressure'>('specs');

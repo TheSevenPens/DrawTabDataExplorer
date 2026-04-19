@@ -7,8 +7,8 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 
 	let { data } = $props();
-	const family: PenFamily = data.family;
-	const memberPens: Pen[] = data.memberPens;
+	let family: PenFamily = $derived(data.family);
+	let memberPens: Pen[] = $derived(data.memberPens);
 </script>
 
 <Nav />

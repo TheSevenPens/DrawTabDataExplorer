@@ -14,11 +14,11 @@
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 
 	let { data } = $props();
-	const tablet: Tablet = data.tablet;
-	const allTablets: Tablet[] = data.allTablets;
-	const allPens: Pen[] = data.allPens;
-	const compatiblePens: Pen[] = data.compatiblePens;
-	const isoSizes: ISOPaperSize[] = data.isoSizes;
+	let tablet: Tablet = $derived(data.tablet);
+	let allTablets: Tablet[] = $derived(data.allTablets);
+	let allPens: Pen[] = $derived(data.allPens);
+	let compatiblePens: Pen[] = $derived(data.compatiblePens);
+	let isoSizes: ISOPaperSize[] = $derived(data.isoSizes);
 
 	let showJson = $state(false);
 	let activeTab = $state<'specs' | 'size' | 'pens' | 'similar'>('specs');
@@ -36,6 +36,26 @@
 	let similarSort = $state<'year' | 'diagonal'>('year');
 
 	let hasDisplay = $derived(tablet.Model.Type === 'PENDISPLAY' || tablet.Model.Type === 'STANDALONE');
+
+	let closestISO = $derived.by(() => {
+		const diagMm = getDiagonal(tablet.Digitizer?.Dimensions);
+		if (!diagMm || isoSizes.length === 0) return null;
+		const aSeries = isoSizes.filter(p => p.Series === 'A');
+		if (aSeries.length === 0) return null;
+		let best = aSeries[0];
+		let bestDist = Infinity;
+		for (const p of aSeries) {
+			const pDiag = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
+			const dist = Math.abs(pDiag - diagMm);
+			if (dist < bestDist) { bestDist = dist; best = p; }
+		}
+		const bestDiag = Math.sqrt(best.Width_mm ** 2 + best.Height_mm ** 2);
+		const pct = Math.round(Math.abs(diagMm - bestDiag) / bestDiag * 100);
+		const qualifier = pct >= 1
+			? (diagMm > bestDiag ? `${pct}% larger than ` : `${pct}% smaller than `)
+			: '~ ';
+		return `${qualifier}${best.Name}`;
+	});
 
 	let col1Groups = $derived(
 		tablet.Model.Type === 'STANDALONE' ? ['Model', 'Physical', 'Standalone'] : ['Model']

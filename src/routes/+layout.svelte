@@ -2,7 +2,7 @@
 	import { theme } from '$lib/theme-store.js';
 	let { children, data } = $props();
 
-	const version = data.version;
+	let version = $derived(data.version);
 
 	let useLocalData = $state(false);
 

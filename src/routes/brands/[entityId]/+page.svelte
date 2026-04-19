@@ -7,8 +7,8 @@
 
 	let { data } = $props();
 
-	const brand: Brand = data.brand;
-	const tablets: Tablet[] = data.tablets;
+	let brand: Brand = $derived(data.brand);
+	let tablets: Tablet[] = $derived(data.tablets);
 </script>
 
 <Nav />
