@@ -20,7 +20,7 @@
 	<p>
 		All data comes from the <a href="https://github.com/TheSevenPens/DrawTabData" target="_blank" rel="noopener noreferrer">DrawTabData</a>
 		repository — an open dataset of graphics tablet and pen specifications maintained by
-		<a href="https://www.youtube.com/@TheSevenPens" target="_blank" rel="noopener noreferrer">TheSevenPens</a>.
+		<a href="https://www.youtube.com/@SevenPens" target="_blank" rel="noopener noreferrer">TheSevenPens</a>.
 		The data covers digitizer dimensions, pressure levels, tilt support, pen compatibility,
 		driver information, and more.
 	</p>
