@@ -1,5 +1,12 @@
 # Future Improvements
 
+## Accessibility
+
+- **Keyboard navigation for drag-to-reorder** in FilterBar, SortBar,
+  ColumnBar — currently drag-only; add Up/Down arrow key support on pills.
+- **Live regions** for filter/sort/column changes so screen-readers
+  announce result-count updates without full-page navigation.
+
 ## ValueHistogram — marker label layout
 
 The current tier-placement algorithm (3-pass: strict → lenient → fallback) is

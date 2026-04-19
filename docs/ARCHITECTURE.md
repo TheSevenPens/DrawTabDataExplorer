@@ -10,30 +10,42 @@ DrawTabDataExplorer/
 ├── src/
 │   ├── app.html                  # HTML shell
 │   ├── routes/                   # SvelteKit pages
-│   │   ├── +layout.ts            # CSR-only, no SSR
+│   │   ├── +layout.ts            # load() fetches version info for layout
+│   │   ├── +layout.svelte        # Nav + version banner
 │   │   ├── +page.svelte          # Tablets list
-│   │   ├── tablets/[entityId]/   # Tablet detail
-│   │   ├── pens/                 # Pens list + detail
-│   │   ├── pen-families/         # Pen families list + detail
-│   │   ├── tablet-families/      # Tablet families list + detail
+│   │   ├── about/                # About page (links to related tools)
+│   │   ├── tablets/[entityId]/   # Tablet detail (+page.ts + +page.svelte)
+│   │   ├── pens/                 # Pens list + detail (+page.ts)
+│   │   ├── pen-families/         # Pen families list + detail (+page.ts)
+│   │   ├── tablet-families/      # Tablet families list + detail (+page.ts)
 │   │   ├── pen-compat/           # Pen compatibility list
-│   │   ├── drivers/              # Drivers list + detail
+│   │   ├── drivers/              # Drivers list + detail (+page.ts)
+│   │   ├── brands/               # Brands list + detail (+page.ts)
 │   │   ├── pressure-response/    # Pressure response sessions
 │   │   ├── inventory/            # Inventory (pens/tablets sub-tabs)
+│   │   ├── timeline/             # Timeline of releases by year
 │   │   ├── reference/            # Reference (tablet sizes, ISO paper sizes)
 │   │   └── data-quality/         # Data quality dashboard
 │   └── lib/
 │       ├── components/           # Reusable Svelte components
-│       │   ├── EntityExplorer.svelte   # Generic entity page
-│       │   ├── DetailView.svelte       # Generic detail page
+│       │   ├── EntityExplorer.svelte       # Generic entity list page
+│       │   ├── DetailView.svelte           # Generic detail page
+│       │   ├── QueryPipelineBar.svelte     # Thin coordinator for filter/sort/column panels
+│       │   ├── FilterBar.svelte            # Filter pills + editor + drag-to-remove
+│       │   ├── SortBar.svelte              # Sort pills + direction toggle + drag-to-reorder
+│       │   ├── ColumnBar.svelte            # Column pills + drag-to-reorder
+│       │   ├── SearchBar.svelte            # Text search + quick-filter dropdowns
 │       │   ├── FilterStep.svelte
 │       │   ├── SortStep.svelte
 │       │   ├── SelectStep.svelte
 │       │   ├── TakeStep.svelte
 │       │   ├── ResultsTable.svelte
-│       │   ├── ValueHistogram.svelte  # Histogram with KDE, ranges, markers
+│       │   ├── ValueHistogram.svelte       # Histogram with KDE, ranges, markers
+│       │   ├── TabletSizeComparison.svelte # Histogram + ISO note for tablet detail
 │       │   ├── SavedViews.svelte
 │       │   └── Nav.svelte
+│       ├── load-all-data.ts      # loadAllData() — fetches all 9 datasets in parallel
+│       ├── storage.ts            # localStorage helpers (getItem/setItem with JSON)
 │       ├── unit-store.ts         # Svelte store for unit preference
 │       └── views.ts              # Saved views (localStorage)
 ├── static/                       # Junctions -> data-repo/data/*
@@ -67,6 +79,24 @@ to add a new filter row.
 
 **DetailView** — Generic detail page showing all fields grouped by
 category, with URL detection, unit conversion, and computed field badges.
+
+**QueryPipelineBar** — Thin coordinator that renders FilterBar, SortBar,
+ColumnBar, and the Views dropdown in a single toolbar row. Owns only
+`openPanel` state; each sub-panel is self-contained.
+
+**FilterBar** — Filter pills, inline editor row, field picker, operator
+picker, context menu, and drag-to-remove. Supports operators: `contains`,
+`notcontains`, `startswith`, `notstartswith`, `eq`, `neq`, `lt`, `lte`,
+`gt`, `gte`, `isempty`, `isnotempty`.
+
+**SortBar** — Sort pills with ascending/descending toggle, drag-to-reorder,
+and context menu.
+
+**ColumnBar** — Column pills with drag-to-reorder and context menu.
+
+**TabletSizeComparison** — Wraps `ValueHistogram` with pre-computed size
+ranges and the closestISO logic. Used on the tablet detail page so the
+detail component itself stays lean.
 
 **SavedViews** — Dropdown with built-in Default view and user-created
 views. Scoped by entity type in localStorage.
@@ -111,6 +141,15 @@ several files:
 
 ## Shared modules
 
+- **`src/lib/load-all-data.ts`** — `loadAllData(base)` fetches all 9
+  datasets in parallel (tablets, pens, penCompat, drivers, brands,
+  penFamilies, tabletFamilies, isoSizes, pressureResponse) and returns a
+  typed `AllData` object. Use this in pages that need multiple datasets.
+
+- **`src/lib/storage.ts`** — `getItem<T>(key)` / `setItem(key, value)`
+  helpers wrapping `localStorage` with JSON parse/stringify and
+  try/catch. All localStorage access should go through this module.
+
 - **`src/lib/tablet-size-ranges.ts`** — Size range constants for pen
   tablets and pen displays (cm and inches), plus `MM_TO_IN` and
   `MM_TO_CM` conversion constants. Single source of truth imported by
@@ -130,6 +169,18 @@ several files:
 - Cannot use `structuredClone()` on Svelte 5 proxies — use
   `JSON.parse(JSON.stringify(...))` for deep copying
 - Unit preference uses a Svelte writable store subscribed via `$`
+- Detail routes (`[entityId]`) must use `+page.ts` `load()` to supply data;
+  never use `onMount` for route data on detail pages (see CLAUDE.md)
+
+## Type aliases
+
+`AnyFieldDef` (`= FieldDef<any>`) is defined in `data-repo/lib/pipeline/types.ts`
+and re-exported for use in UI components that handle fields generically.
+Import it as:
+
+```ts
+import type { AnyFieldDef } from '$data/lib/pipeline/types.js';
+```
 
 ## Setup
 

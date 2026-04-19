@@ -18,18 +18,30 @@ assets. The app is deployed to GitHub Pages.
 
 ### Detail pages — use `+page.ts` load functions
 
-Routes with `[entityId]` segments load their data in a `+page.ts` file using
+All routes with `[entityId]` segments load their data in a `+page.ts` file using
 SvelteKit's `load` function. The page component reads the result from `$props()`:
 
 ```
-src/routes/brands/[entityId]/+page.ts      ← load function
-src/routes/brands/[entityId]/+page.svelte  ← reads let { data } = $props()
+src/routes/brands/[entityId]/+page.ts           ← load function
+src/routes/brands/[entityId]/+page.svelte       ← reads let { data } = $props()
+
+src/routes/tablets/[entityId]/+page.ts
+src/routes/pens/[entityId]/+page.ts
+src/routes/pen-families/[entityId]/+page.ts
+src/routes/tablet-families/[entityId]/+page.ts
+src/routes/drivers/[entityId]/+page.ts
 ```
 
 **Do NOT load route data in `onMount`.** With `ssr = false`, `$state`
 assignments after `await` inside `onMount` are unreliable in Svelte 5 — the
 template may not re-render when the state changes. `load` functions avoid this
 entirely because data is available before the component mounts.
+
+### Layout-level data — `+layout.ts`
+
+`src/routes/+layout.ts` exports a `load()` function that fetches the
+DrawTabData version info once per session. `+layout.svelte` reads it via
+`let { children, data } = $props()`. This avoids an `onMount` in the layout.
 
 ### List pages — `onMount` is fine
 
@@ -82,9 +94,14 @@ The main list-page component. Renders a title row, a top-bar, and a results tabl
 
 ### QueryPipelineBar
 
-Owns filter/sort/column pipeline state via `$bindable` props. Also owns the Views panel (accepts `steps`, `entityType`, `defaultView`, `onload` props and renders `SavedViews` inside its dropdown).
+A thin coordinator component that renders **FilterBar**, **SortBar**, **ColumnBar**, and the Views dropdown side-by-side. It owns only the `openPanel` state (`'filter' | 'sort' | 'columns' | 'views' | null`) and passes `isOpen` + `ontoggle` to each sub-component.
 
-All four panels are `position: absolute` dropdowns that open on button click and close on any outside click (`<svelte:window onclick>`). Clicks inside the toolbar use `stopPropagation` to stay open.
+Each sub-component is self-contained:
+- **FilterBar** — filter pills, editor row, field picker, context menu, drag-to-remove
+- **SortBar** — sort pills, direction toggle, drag-to-reorder, context menu
+- **ColumnBar** — column pills, drag-to-reorder, context menu
+
+All panels are `position: absolute` dropdowns that open on button click and close on any outside click (`<svelte:window onclick>`). Clicks inside the panel use `stopPropagation` to stay open.
 
 Active state indicators:
 - Filters button turns amber + shows count badge when filters are active
@@ -94,6 +111,22 @@ Active state indicators:
 ### SearchBar
 
 Thin component — search input + quick-filter `<select>` elements + a Clear button (shown only when dirty). The `quickFilterOptions` array is computed by `EntityExplorer` from `quickFilterFields` and passed down.
+
+## Type aliases
+
+`AnyFieldDef` is a convenience alias for `FieldDef<any>` used throughout UI
+components that operate on fields generically (FilterBar, SortBar, ColumnBar,
+FilterStep, SortStep, SelectStep, ResultsTable, etc.).
+
+```ts
+// data-repo/lib/pipeline/types.ts
+export type AnyFieldDef = FieldDef<any>;
+```
+
+Import it alongside other pipeline types:
+```ts
+import type { AnyFieldDef } from '$data/lib/pipeline/types.js';
+```
 
 ## EntityId formats
 
