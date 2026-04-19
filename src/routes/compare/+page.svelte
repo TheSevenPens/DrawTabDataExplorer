@@ -8,11 +8,13 @@
 	import { formatValue } from '$data/lib/units.js';
 	import { flaggedTablets, toggleFlag, clearFlags } from '$lib/flagged-store.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import TabletPicker from '$lib/components/TabletPicker.svelte';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, mixedRangesCm, mixedRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 
 	let activeTab: 'flagged' | 'compare' = $state('flagged');
+	let showPicker = $state(false);
 	let allTablets: Tablet[] = $state([]);
 	let allPens: Pen[] = $state([]);
 
@@ -161,11 +163,19 @@
 </div>
 
 {#if activeTab === 'flagged'}
-	{#if flaggedItems.length > 0}
-		<div class="flagged-actions">
+	<div class="flagged-actions">
+		<button
+			class="add-tablet-btn"
+			onclick={() => (showPicker = true)}
+			disabled={$flaggedTablets.length >= 6}
+			title={$flaggedTablets.length >= 6 ? 'All 6 slots are used' : 'Add a tablet to compare'}
+		>+ Add tablet</button>
+		{#if flaggedItems.length > 0}
 			<button class="copy-btn" onclick={copyFlaggedList}>{copyFlaggedStatus || 'Copy list'}</button>
 			<button class="clear-btn" onclick={clearFlags}>Clear all</button>
-		</div>
+		{/if}
+	</div>
+	{#if flaggedItems.length > 0}
 		<ul class="flagged-list">
 			{#each flaggedItems as t}
 				<li>
@@ -175,7 +185,7 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="no-data">No tablets flagged. Flag tablets from the <a href="{base}/">tablets list</a> or individual tablet detail pages.</p>
+		<p class="no-data">No tablets added yet. Use the button above, or flag tablets from the <a href="{base}/">tablets list</a> or individual tablet pages.</p>
 	{/if}
 {:else}
 	{#if flaggedItems.length < 2}
@@ -266,6 +276,14 @@
 	{/if}
 {/if}
 
+{#if showPicker && allTablets.length > 0}
+	<TabletPicker
+		{allTablets}
+		flaggedIds={$flaggedTablets}
+		onclose={() => (showPicker = false)}
+	/>
+{/if}
+
 <style>
 	h1 { margin-bottom: 16px; }
 
@@ -310,7 +328,31 @@
 	}
 
 	.flagged-actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 		margin-bottom: 12px;
+	}
+
+	.add-tablet-btn {
+		padding: 5px 14px;
+		font-size: 13px;
+		font-weight: 600;
+		border: 1px solid #2563eb;
+		border-radius: 4px;
+		background: #2563eb;
+		color: #fff;
+		cursor: pointer;
+	}
+
+	.add-tablet-btn:hover:not(:disabled) {
+		background: #1d4ed8;
+		border-color: #1d4ed8;
+	}
+
+	.add-tablet-btn:disabled {
+		opacity: 0.45;
+		cursor: default;
 	}
 
 	.clear-btn {
