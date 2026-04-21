@@ -159,12 +159,14 @@
 			);
 		}
 
-		// Apply search
+		// Apply search — check visible fields plus any fields marked alwaysSearch
 		if (searchText.trim()) {
 			const q = searchText.trim().toLowerCase();
-			const fieldDefs = r.visibleFields.map(key => fields.find(f => f.key === key)).filter(Boolean);
+			const visibleDefs = r.visibleFields.map(key => fields.find(f => f.key === key)).filter(Boolean);
+			const alwaysDefs = fields.filter(f => f.alwaysSearch && !r.visibleFields.includes(f.key));
+			const searchDefs = [...visibleDefs, ...alwaysDefs];
 			filtered = filtered.filter(row =>
-				fieldDefs.some(f => {
+				searchDefs.some(f => {
 					const val = f!.getValue(row);
 					return val != null && String(val).toLowerCase().includes(q);
 				})

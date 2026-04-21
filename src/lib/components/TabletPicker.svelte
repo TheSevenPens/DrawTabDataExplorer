@@ -26,7 +26,8 @@
 			if (filterBrand && t.Model.Brand !== filterBrand) return false;
 			if (filterType && t.Model.Type !== filterType) return false;
 			if (q) {
-				const hay = `${brandName(t.Model.Brand)} ${t.Model.Name} ${t.Model.Id}`.toLowerCase();
+				const altNames = (t.Model.AlternateNames ?? []).join(' ');
+				const hay = `${brandName(t.Model.Brand)} ${t.Model.Name} ${t.Model.Id} ${altNames}`.toLowerCase();
 				if (!hay.includes(q)) return false;
 			}
 			return true;
