@@ -1,15 +1,42 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadTabletFamiliesFromURL } from '$data/lib/drawtab-loader.js';
+	import { loadTabletFamiliesFromURL, loadTabletsFromURL } from '$data/lib/drawtab-loader.js';
 	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS, TABLET_FAMILY_DEFAULT_COLUMNS, TABLET_FAMILY_DEFAULT_VIEW } from '$data/lib/entities/tablet-family-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 
-	let data: TabletFamily[] = $state([]);
+	let data: any[] = $state([]);
 
 	onMount(async () => {
-		data = (await loadTabletFamiliesFromURL(base)) as TabletFamily[];
+		const [families, tablets] = await Promise.all([
+			loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
+			loadTabletsFromURL(base),
+		]);
+
+		// Build lookup: FamilyId → { count, earliestYear }
+		const familyStats = new Map<string, { count: number; earliestYear: number }>();
+		for (const t of tablets) {
+			const fid = t.Model.Family;
+			if (!fid) continue;
+			const year = parseInt(t.Model.LaunchYear ?? '');
+			const existing = familyStats.get(fid);
+			if (!existing) {
+				familyStats.set(fid, { count: 1, earliestYear: isNaN(year) ? Infinity : year });
+			} else {
+				existing.count++;
+				if (!isNaN(year) && year < existing.earliestYear) existing.earliestYear = year;
+			}
+		}
+
+		data = families.map((f) => {
+			const stats = familyStats.get(f.FamilyId);
+			return {
+				...f,
+				_tabletCount: stats?.count ?? 0,
+				_earliestYear: stats && stats.earliestYear !== Infinity ? String(stats.earliestYear) : '',
+			};
+		});
 	});
 </script>
 

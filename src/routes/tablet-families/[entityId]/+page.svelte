@@ -56,6 +56,7 @@
 				<tr>
 					<th>Model ID</th>
 					<th>Name</th>
+					<th>Alternate Names</th>
 					<th>Type</th>
 					<th>Year</th>
 					<th>Status</th>
@@ -66,6 +67,7 @@
 					<tr>
 						<td><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{tablet.Model.Id}</a></td>
 						<td>{tablet.Model.Name}</td>
+						<td>{(tablet.Model.AlternateNames ?? []).join(', ')}</td>
 						<td>{tablet.Model.Type}</td>
 						<td>{tablet.Model.LaunchYear || ''}</td>
 						<td>{tablet.Model.Status || ''}</td>
