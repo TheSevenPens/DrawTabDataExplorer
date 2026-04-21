@@ -68,11 +68,22 @@
 {#if activeTab === 'tablets'}
 	<div class="tab-content">
 		{#if compatibleTablets.length > 0}
-			<ul class="entity-list">
-				{#each compatibleTablets as tablet}
-					<li><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
-				{/each}
-			</ul>
+			<table class="compat-table">
+				<thead>
+					<tr>
+						<th>Tablet</th>
+						<th>Year</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each compatibleTablets as tablet}
+						<tr>
+							<td><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></td>
+							<td>{tablet.Model.LaunchYear ?? ''}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		{:else}
 			<p class="no-data">No tablet compatibility data available for this pen.</p>
 		{/if}
@@ -143,4 +154,10 @@
 	.pr-link a:hover { text-decoration: underline; }
 
 	.no-data { font-size: 13px; color: var(--text-dim); font-style: italic; }
+
+	.compat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+	.compat-table th { text-align: left; padding: 6px 10px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+	.compat-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); }
+	.compat-table a { color: var(--link); text-decoration: none; }
+	.compat-table a:hover { text-decoration: underline; }
 </style>
