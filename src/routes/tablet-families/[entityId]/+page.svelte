@@ -65,7 +65,7 @@
 			<tbody>
 				{#each familyTablets as tablet}
 					<tr>
-						<td><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{tablet.Model.Id}</a></td>
+						<td><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}">{tablet.Model.Id}</a></td>
 						<td>{tablet.Model.Name}</td>
 						<td>{(tablet.Model.AlternateNames ?? []).join(', ')}</td>
 						<td>{tablet.Model.Type}</td>

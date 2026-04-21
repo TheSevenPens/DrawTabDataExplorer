@@ -33,7 +33,7 @@
 	defaultColumns={PEN_FAMILY_DEFAULT_COLUMNS}
 	defaultView={PEN_FAMILY_DEFAULT_VIEW}
 	linkField="FamilyName"
-	detailBasePath="/pen-families"
+	detailBasePath="/entity"
 	defaultFilterField="FamilyId"
 	defaultSortField="FamilyId"
 	quickFilterFields={["Brand"]}

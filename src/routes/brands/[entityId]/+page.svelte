@@ -58,7 +58,7 @@
 					<tbody>
 						{#each sortedTablets as t}
 							<tr>
-								<td><a class="entity-link" href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{t.Model.Name} ({t.Model.Id})</a></td>
+								<td><a class="entity-link" href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{t.Model.Name} ({t.Model.Id})</a></td>
 								<td>{(t.Model.AlternateNames ?? []).join(', ')}</td>
 								<td>{t.Model.Type}</td>
 								<td>{t.Model.LaunchYear ?? ''}</td>
@@ -82,7 +82,7 @@
 					<tbody>
 						{#each sortedPens as p}
 							<tr>
-								<td><a class="entity-link" href="{base}/pens/{encodeURIComponent(p.EntityId)}">{p.PenName}</a></td>
+								<td><a class="entity-link" href="{base}/entity/{encodeURIComponent(p.EntityId)}">{p.PenName}</a></td>
 								<td>{p.PenId}</td>
 								<td>{p.PenYear ?? ''}</td>
 							</tr>

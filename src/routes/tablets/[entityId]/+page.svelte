@@ -139,7 +139,7 @@
 			<dl class="basics-grid">
 				<div class="basics-item">
 					<dt>Brand</dt>
-					<dd><a href="{base}/brands/{tablet.Model.Brand}">{brandName(tablet.Model.Brand)}</a></dd>
+					<dd><a href="{base}/entity/{tablet.Model.Brand.toLowerCase()}">{brandName(tablet.Model.Brand)}</a></dd>
 				</div>
 				<div class="basics-item">
 					<dt>Model ID</dt>
@@ -263,7 +263,7 @@
 				{#if compatiblePens.length > 0}
 					<ul class="entity-list">
 						{#each compatiblePens as pen}
-							<li><a href="{base}/pens/{encodeURIComponent(pen.EntityId)}">{brandName(pen.Brand)} {pen.PenName === pen.PenId ? pen.PenId : `${pen.PenName} (${pen.PenId})`}</a></li>
+							<li><a href="{base}/entity/{encodeURIComponent(pen.EntityId)}">{brandName(pen.Brand)} {pen.PenName === pen.PenId ? pen.PenId : `${pen.PenName} (${pen.PenId})`}</a></li>
 						{/each}
 					</ul>
 				{:else}
@@ -325,7 +325,7 @@
 								{@const pxDensity = (px && d && px.Width && d.Width) ? (px.Width / d.Width).toFixed(2) : ''}
 								{@const pxCat = (() => { if (!px || !px.Width || !px.Height) return ''; const w = px.Width, h = px.Height; if (w === 1920 && h === 1080) return 'Full HD'; if ((w === 2560 && h === 1440) || (w === 2560 && h === 1600)) return '2.5K'; if (w === 2880 && h === 1800) return '3K'; if (w === 3840 && h === 2160) return '4K'; return 'Other'; })()}
 								<tr>
-									<td><a href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a></td>
+									<td><a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a></td>
 									<td>{t.Model.LaunchYear || ''}</td>
 									<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
 									<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>

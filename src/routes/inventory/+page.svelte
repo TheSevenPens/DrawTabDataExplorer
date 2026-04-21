@@ -65,8 +65,8 @@
 		cellLinks={{
 			PenEntityId: (item: InventoryPen) => {
 				const name = penNameMap[item.PenEntityId];
-				if (!name) return [{ label: item.PenEntityId, href: `${base}/pens/${encodeURIComponent(item.PenEntityId)}` }];
-				return [{ label: name, href: `${base}/pens/${encodeURIComponent(item.PenEntityId)}` }];
+				if (!name) return [{ label: item.PenEntityId, href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}` }];
+				return [{ label: name, href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}` }];
 			}
 		}}
 	/>

@@ -23,7 +23,7 @@
 		ModelIncludedPen: (t: Tablet) =>
 			(t.Model.IncludedPen ?? []).map((entityId) => ({
 				label: penNameMap.get(entityId) ?? entityId,
-				href: `${base}/pens/${encodeURIComponent(entityId)}`,
+				href: `${base}/entity/${encodeURIComponent(entityId)}`,
 			})),
 	});
 
@@ -45,7 +45,7 @@
 	fieldGroups={TABLET_FIELD_GROUPS}
 	defaultColumns={TABLET_DEFAULT_COLUMNS}
 	defaultView={TABLET_DEFAULT_VIEW}
-	detailBasePath="/tablets"
+	detailBasePath="/entity"
 	linkField="NameAndModelId"
 	{cellLinks}
 	defaultFilterField="Brand"

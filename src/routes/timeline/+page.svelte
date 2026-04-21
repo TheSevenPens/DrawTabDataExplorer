@@ -142,8 +142,8 @@
 									class="item tablet"
 									role="link"
 									tabindex="0"
-									ondblclick={() => { window.location.href = `${base}/tablets/${encodeURIComponent(t.Meta.EntityId)}`; }}
-									onkeydown={(e) => { if (e.key === 'Enter') window.location.href = `${base}/tablets/${encodeURIComponent(t.Meta.EntityId)}`; }}
+									ondblclick={() => { window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`; }}
+									onkeydown={(e) => { if (e.key === 'Enter') window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`; }}
 								>
 									<span class="item-brand">{brandName(t.Model.Brand)}</span>
 									<span class="item-name">{t.Model.Name}</span>
@@ -159,7 +159,7 @@
 						<h3>Pens ({entry.pens.length})</h3>
 						<div class="items">
 							{#each entry.pens as p}
-								<a class="item pen" href="{base}/pens/{encodeURIComponent(p.EntityId)}">
+								<a class="item pen" href="{base}/entity/{encodeURIComponent(p.EntityId)}">
 									<span class="item-brand">{brandName(p.Brand)}</span>
 									<span class="item-name">{p.PenName}</span>
 									<span class="item-id">{p.PenId}</span>

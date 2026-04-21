@@ -51,7 +51,7 @@
 	defaultColumns={TABLET_FAMILY_DEFAULT_COLUMNS}
 	defaultView={TABLET_FAMILY_DEFAULT_VIEW}
 	linkField="FamilyName"
-	detailBasePath="/tablet-families"
+	detailBasePath="/entity"
 	defaultFilterField="FamilyId"
 	defaultSortField="FamilyId"
 	quickFilterFields={["Brand"]}

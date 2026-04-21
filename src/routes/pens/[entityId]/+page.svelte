@@ -31,7 +31,7 @@
 	<dl class="basics-grid">
 		<div class="basics-item">
 			<dt>Brand</dt>
-			<dd><a href="{base}/brands/{pen.Brand}">{brandName(pen.Brand)}</a></dd>
+			<dd><a href="{base}/entity/{pen.Brand.toLowerCase()}">{brandName(pen.Brand)}</a></dd>
 		</div>
 		<div class="basics-item">
 			<dt>Pen ID</dt>
@@ -70,7 +70,7 @@
 		{#if compatibleTablets.length > 0}
 			<ul class="entity-list">
 				{#each compatibleTablets as tablet}
-					<li><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
+					<li><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
 				{/each}
 			</ul>
 		{:else}
@@ -84,7 +84,7 @@
 		{#if includedWithTablets.length > 0}
 			<ul class="entity-list">
 				{#each includedWithTablets as tablet}
-					<li><a href="{base}/tablets/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
+					<li><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}">{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a></li>
 				{/each}
 			</ul>
 		{:else}

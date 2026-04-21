@@ -22,7 +22,7 @@
 		<ul class="entity-list">
 			{#each memberPens as p}
 				<li>
-					<a href="{base}/pens/{encodeURIComponent(p.EntityId)}">
+					<a href="{base}/entity/{encodeURIComponent(p.EntityId)}">
 						{brandName(p.Brand)} {p.PenName}
 						{#if p.PenName !== p.PenId}<span class="dim">({p.PenId})</span>{/if}
 					</a>

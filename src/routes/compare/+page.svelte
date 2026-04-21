@@ -180,7 +180,7 @@
 			{#each flaggedItems as t}
 				<li>
 					<button class="unflag-btn" onclick={() => toggleFlag(t.Meta.EntityId)} title="Unflag">&#x2691;</button>
-					<a href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a>
+					<a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a>
 				</li>
 			{/each}
 		</ul>
@@ -201,7 +201,7 @@
 					<tr>
 						<th class="spec-col">Spec</th>
 						{#each flaggedItems as t}
-							<th><a href="{base}/tablets/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name}</a></th>
+							<th><a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name}</a></th>
 						{/each}
 					</tr>
 				</thead>
