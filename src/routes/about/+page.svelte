@@ -31,6 +31,12 @@
 			</a>
 			— the source dataset powering this site
 		</li>
+		<li>
+			<a href="https://github.com/TheSevenPens/DrawTabDataExplorer" target="_blank" rel="noopener noreferrer">
+				DrawTabDataExplorer on GitHub
+			</a>
+			— the source code for this site
+		</li>
 	</ul>
 </section>
 
