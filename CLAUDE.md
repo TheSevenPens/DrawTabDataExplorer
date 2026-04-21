@@ -130,11 +130,37 @@ import type { AnyFieldDef } from '$data/lib/pipeline/types.js';
 
 ## EntityId formats
 
-| Entity  | Format                        | Example                  |
-|---------|-------------------------------|--------------------------|
-| Tablet  | `BRAND.TABLET.MODELID`        | `WACOM.TABLET.CTL4100`   |
-| Pen     | `BRAND.PEN.PENID`             | `WACOM.PEN.KP503E`       |
-| Brand   | `BRANDID`                     | `WACOM`                  |
+All EntityIds are **lowercase**. The second dot-segment encodes the entity type,
+making EntityIds self-describing.
 
-Brand EntityIds are intentionally short (just the BrandId) because the
-`BRAND.BRAND.BRAND` pattern added no information.
+| Entity         | Format                          | Example                             |
+|----------------|---------------------------------|-------------------------------------|
+| Tablet         | `brand.tablet.modelid`          | `wacom.tablet.ctl4100`              |
+| Pen            | `brand.pen.penid`               | `wacom.pen.kp503e`                  |
+| Driver         | `brand.driver.version_os`       | `wacom.driver.4.78-2_macos`         |
+| Pen Family     | `brand.penfamily.familyid`      | `wacom.penfamily.wacomkpgen3`       |
+| Tablet Family  | `brand.tabletfamily.familyid`   | `wacom.tabletfamily.wacomintuosprogen8` |
+| Brand          | `brand`                         | `wacom`                             |
+
+Brand EntityIds have no dots (just the brand name) because the
+`brand.brand.brand` pattern adds no information.
+
+## Entity resolver route
+
+`/entity/[entityId]` is a universal permalink that resolves any EntityId to its
+detail page without requiring the caller to know the entity type:
+
+```
+/entity/wacom.pen.kp503e          →  /pens/wacom.pen.kp503e
+/entity/wacom.tablet.ctl4100      →  /tablets/wacom.tablet.ctl4100
+/entity/wacom                     →  /brands/wacom
+/entity/wacom.driver.4.78-2_macos →  /drivers/wacom.driver.4.78-2_macos
+/entity/wacom.penfamily.wacomkpgen3      →  /pen-families/wacom.penfamily.wacomkpgen3
+/entity/wacom.tabletfamily.wacomintuosprogen8 →  /tablet-families/wacom.tabletfamily.wacomintuosprogen8
+```
+
+The route (`src/routes/entity/[entityId]/`) has `prerender = false` and relies
+on the SPA fallback (`404.html`) to serve the app shell for unrecognised paths.
+The Svelte component parses the EntityId, determines the type from the second
+dot-segment, and calls `goto()` with `replaceState: true` so the redirect does
+not appear in browser history.
