@@ -3,7 +3,7 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 	import ValueHistogram, { type HistogramRange } from '$lib/components/ValueHistogram.svelte';
-	import ISOPaperSizeChart from '$lib/components/ISOPaperSizeChart.svelte';
+	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
 
 	let { tablet, allTablets, isoSizes }: {
 		tablet: Tablet;
@@ -83,7 +83,7 @@
 
 <div class="iso-chart-section">
 	<h3 class="iso-chart-title">Active Area vs ISO A Paper Sizes</h3>
-	<ISOPaperSizeChart dims={tablet.Digitizer?.Dimensions} {isoSizes} />
+	<TabletDimensionComparison dims={tablet.Digitizer?.Dimensions} {isoSizes} />
 </div>
 
 <style>
