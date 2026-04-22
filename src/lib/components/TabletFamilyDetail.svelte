@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS } from '$data/lib/entities/tablet-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 
@@ -12,6 +13,7 @@
 	let family: TabletFamily = $derived(data.family);
 	let familyTablets: Tablet[] = $derived(data.familyTablets);
 	let allTablets: Tablet[] = $derived(data.allTablets);
+	let isoSizes: ISOPaperSize[] = $derived(data.isoSizes ?? []);
 
 	let isMetric = $derived($unitPreference === 'metric');
 
@@ -93,6 +95,15 @@
 			bandwidthMultiplier={0.2}
 			markers={histogramMarkers}
 		/>
+		<div class="dim-chart-section">
+			<h3 class="dim-chart-title">Active Area vs ISO A Paper Sizes</h3>
+			<TabletDimensionComparison
+				items={familyTablets
+					.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null)
+					.map(t => ({ dims: t.Digitizer!.Dimensions!, label: t.Model.Name }))}
+				{isoSizes}
+			/>
+		</div>
 	</section>
 {/if}
 
@@ -115,4 +126,13 @@
 	td a { color: #2563eb; text-decoration: none; }
 	td a:hover { text-decoration: underline; }
 	.no-data { font-size: 13px; color: #999; font-style: italic; }
+
+	.dim-chart-section { margin-top: 24px; }
+
+	.dim-chart-title {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-muted);
+		margin: 0 0 10px;
+	}
 </style>

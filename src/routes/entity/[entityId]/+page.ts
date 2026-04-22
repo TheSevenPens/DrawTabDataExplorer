@@ -86,14 +86,15 @@ export async function load({ params }) {
 		}
 
 		case 'tabletfamily': {
-			const [families, allTablets] = await Promise.all([
+			const [families, allTablets, isoSizes] = await Promise.all([
 				loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
 				loadTabletsFromURL(base) as Promise<Tablet[]>,
+				loadISOPaperSizesFromURL(base),
 			]);
 			const family = families.find((f) => f.EntityId === entityId);
 			if (!family) error(404, 'Tablet family not found');
 			const familyTablets = allTablets.filter((t) => t.Model.Family === family.FamilyId);
-			return { entityType, family, familyTablets, allTablets };
+			return { entityType, family, familyTablets, allTablets, isoSizes };
 		}
 
 		case 'brand': {

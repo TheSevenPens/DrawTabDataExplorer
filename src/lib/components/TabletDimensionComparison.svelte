@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { Dimensions, ISOPaperSize } from '$data/lib/drawtab-loader.js';
 
-	let { dims, isoSizes }: {
-		dims: Dimensions | undefined;
+	let { dims, items, isoSizes }: {
+		dims?: Dimensions;
+		items?: Array<{ dims: Dimensions; label: string }>;
 		isoSizes: ISOPaperSize[];
 	} = $props();
 
@@ -24,19 +25,38 @@
 		isTablet: boolean; label: string; dimsLabel: string;
 	}
 
+	// Normalize to array — either explicit items or the single dims prop
+	let tabletItems = $derived.by((): Array<{ dims: Dimensions; label: string }> => {
+		if (items && items.length > 0)
+			return items.filter(i => i.dims.Width != null && i.dims.Height != null);
+		if (dims && dims.Width != null && dims.Height != null)
+			return [{ dims, label: 'Active Area' }];
+		return [];
+	});
+
 	let aSeries = $derived(
 		isoSizes
 			.filter(p => p.Series === 'A')
 			.sort((a, b) => (b.Width_mm * b.Height_mm) - (a.Width_mm * a.Height_mm))
 	);
 
+	// Use the largest tablet as the reference for selecting the ISO range
+	let referenceDims = $derived.by((): Dimensions | undefined => {
+		if (tabletItems.length === 0) return undefined;
+		return tabletItems.reduce((best, cur) => {
+			const a = (cur.dims.Width ?? 0) * (cur.dims.Height ?? 0);
+			const b = (best.dims.Width ?? 0) * (best.dims.Height ?? 0);
+			return a > b ? cur : best;
+		}, tabletItems[0]).dims;
+	});
+
 	// Find closest A size index by area
 	let closestISOIdx = $derived.by(() => {
-		if (!dims || dims.Width == null || dims.Height == null || aSeries.length === 0) return -1;
-		const tabArea = dims.Width * dims.Height;
+		if (!referenceDims || referenceDims.Width == null || referenceDims.Height == null || aSeries.length === 0) return -1;
+		const refArea = referenceDims.Width * referenceDims.Height;
 		let best = 0, bestDist = Infinity;
 		aSeries.forEach((p, i) => {
-			const d = Math.abs(p.Width_mm * p.Height_mm - tabArea);
+			const d = Math.abs(p.Width_mm * p.Height_mm - refArea);
 			if (d < bestDist) { bestDist = d; best = i; }
 		});
 		return best;
@@ -51,11 +71,7 @@
 	});
 
 	let chartItems = $derived.by((): ChartItem[] => {
-		if (!dims || dims.Width == null || dims.Height == null || isoSlice.length === 0) return [];
-		const dw: number = dims.Width;
-		const dh: number = dims.Height;
-		const tabW = Math.max(dw, dh);
-		const tabH = Math.min(dw, dh);
+		if (tabletItems.length === 0 || isoSlice.length === 0) return [];
 		const isoItems: ChartItem[] = isoSlice.map(p => ({
 			label: p.Name,
 			dimsLabel: `${p.Width_mm}×${p.Height_mm}`,
@@ -63,14 +79,18 @@
 			hMm: Math.min(p.Width_mm, p.Height_mm),
 			isTablet: false,
 		}));
-		const tabItem: ChartItem = {
-			label: 'Active Area',
-			dimsLabel: `${dw}×${dh}`,
-			wMm: tabW,
-			hMm: tabH,
-			isTablet: true,
-		};
-		return [...isoItems, tabItem].sort((a, b) => (b.wMm * b.hMm) - (a.wMm * a.hMm));
+		const tabItems: ChartItem[] = tabletItems.map(({ dims: d, label }) => {
+			const dw = d.Width!;
+			const dh = d.Height!;
+			return {
+				label,
+				dimsLabel: `${dw}×${dh}`,
+				wMm: Math.max(dw, dh),
+				hMm: Math.min(dw, dh),
+				isTablet: true,
+			};
+		});
+		return [...isoItems, ...tabItems].sort((a, b) => (b.wMm * b.hMm) - (a.wMm * a.hMm));
 	});
 
 	let layout = $derived.by((): { rects: ChartRect[]; svgW: number } | null => {
