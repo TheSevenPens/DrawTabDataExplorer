@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { Dimensions, ISOPaperSize } from '$data/lib/drawtab-loader.js';
 
-	let { dims, items, isoSizes }: {
+	let { dims, items, isoSizes = [], showISO = true }: {
 		dims?: Dimensions;
 		items?: Array<{ dims: Dimensions; label: string }>;
-		isoSizes: ISOPaperSize[];
+		isoSizes?: ISOPaperSize[];
+		showISO?: boolean;
 	} = $props();
 
 	const CHART_H = 200;
@@ -71,8 +72,8 @@
 	});
 
 	let chartItems = $derived.by((): ChartItem[] => {
-		if (tabletItems.length === 0 || isoSlice.length === 0) return [];
-		const isoItems: ChartItem[] = isoSlice.map(p => ({
+		if (tabletItems.length === 0) return [];
+		const isoItems: ChartItem[] = (showISO ? isoSlice : []).map(p => ({
 			label: p.Name,
 			dimsLabel: `${p.Width_mm}×${p.Height_mm}`,
 			wMm: Math.max(p.Width_mm, p.Height_mm),

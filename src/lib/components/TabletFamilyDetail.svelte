@@ -15,6 +15,12 @@
 	let allTablets: Tablet[] = $derived(data.allTablets);
 	let isoSizes: ISOPaperSize[] = $derived(data.isoSizes ?? []);
 
+	let dimsItems = $derived(
+		familyTablets
+			.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null)
+			.map(t => ({ dims: t.Digitizer!.Dimensions!, label: t.Model.Name }))
+	);
+
 	let isMetric = $derived($unitPreference === 'metric');
 
 	let familyType = $derived(
@@ -96,13 +102,12 @@
 			markers={histogramMarkers}
 		/>
 		<div class="dim-chart-section">
+			<h3 class="dim-chart-title">Active Area — Family Comparison</h3>
+			<TabletDimensionComparison items={dimsItems} showISO={false} />
+		</div>
+		<div class="dim-chart-section">
 			<h3 class="dim-chart-title">Active Area vs ISO A Paper Sizes</h3>
-			<TabletDimensionComparison
-				items={familyTablets
-					.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null)
-					.map(t => ({ dims: t.Digitizer!.Dimensions!, label: t.Model.Name }))}
-				{isoSizes}
-			/>
+			<TabletDimensionComparison items={dimsItems} {isoSizes} />
 		</div>
 	</section>
 {/if}
