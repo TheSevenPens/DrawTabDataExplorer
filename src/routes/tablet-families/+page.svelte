@@ -52,7 +52,7 @@
 	defaultView={TABLET_FAMILY_DEFAULT_VIEW}
 	linkField="FamilyName"
 	detailBasePath="/entity"
-	defaultFilterField="FamilyId"
-	defaultSortField="FamilyId"
+	defaultFilterField="FamilyName"
+	defaultSortField="FamilyName"
 	quickFilterFields={["Brand"]}
 />
