@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
-	import { loadTabletsFromURL, loadPensFromURL, brandName, getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
+	import { brandName, getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
@@ -13,10 +12,12 @@
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 
+	let { data } = $props();
+
 	let activeTab: 'flagged' | 'compare' = $state('flagged');
 	let showPicker = $state(false);
-	let allTablets: Tablet[] = $state([]);
-	let allPens: Pen[] = $state([]);
+	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
+	let allPens: Pen[] = $derived(data.allPens ?? []);
 
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
@@ -140,14 +141,6 @@
 		URL.revokeObjectURL(url);
 	}
 
-	onMount(async () => {
-		const [t, p] = await Promise.all([
-			loadTabletsFromURL(base),
-			loadPensFromURL(base) as Promise<Pen[]>,
-		]);
-		allTablets = t;
-		allPens = p;
-	});
 </script>
 
 <Nav />
@@ -172,8 +165,8 @@
 		>+ Add tablet</button>
 		{#if flaggedItems.length > 0}
 			<button class="copy-btn" onclick={copyFlaggedList}>{copyFlaggedStatus || 'Copy list'}</button>
-			<button class="clear-btn" onclick={clearFlags}>Clear all</button>
 		{/if}
+		<button class="clear-btn" onclick={clearFlags}>Clear all</button>
 	</div>
 	{#if flaggedItems.length > 0}
 		<ul class="flagged-list">
@@ -302,29 +295,35 @@
 
 	.tabs {
 		display: flex;
-		gap: 4px;
+		gap: 0;
+		border-bottom: 2px solid var(--border);
 		margin-bottom: 20px;
 	}
 
 	.tabs button {
-		padding: 7px 16px;
+		padding: 7px 18px;
 		font-size: 13px;
-		border: 1px solid var(--border-light);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border: 1px solid transparent;
+		border-bottom: none;
+		border-radius: 4px 4px 0 0;
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
+		position: relative;
+		bottom: -2px;
 	}
 
 	.tabs button:hover {
-		border-color: #2563eb;
 		color: #2563eb;
+		background: var(--hover-bg);
 	}
 
 	.tabs button.active {
-		background: #2563eb;
-		color: #fff;
-		border-color: #2563eb;
+		background: var(--bg-card);
+		color: var(--text);
+		font-weight: 600;
+		border-color: var(--border);
+		border-bottom-color: var(--bg-card);
 	}
 
 	.flagged-actions {
@@ -365,10 +364,11 @@
 		cursor: pointer;
 	}
 
-	.clear-btn:hover {
+	.clear-btn:hover:not(:disabled) {
 		background: #dc2626;
 		color: #fff;
 	}
+
 
 	.flagged-list {
 		list-style: none;

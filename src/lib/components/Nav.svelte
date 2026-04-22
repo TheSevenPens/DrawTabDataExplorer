@@ -17,6 +17,7 @@
 		{ href: '/inventory', label: 'Inventory' },
 		{ href: '/timeline', label: 'Timeline' },
 		{ href: '/compare', label: 'Compare', dynamic: true },
+		{ href: '/analysis', label: 'Analysis' },
 		{ href: '/reference', label: 'Reference' },
 		{ href: '/data-quality', label: 'Data Quality' },
 		{ href: '/about', label: 'About' },

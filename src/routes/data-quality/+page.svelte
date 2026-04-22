@@ -533,29 +533,35 @@
 
 	.tabs {
 		display: flex;
-		gap: 4px;
+		gap: 0;
+		border-bottom: 2px solid var(--border);
 		margin-bottom: 20px;
 	}
 
 	.tabs button {
-		padding: 7px 16px;
+		padding: 7px 18px;
 		font-size: 13px;
-		border: 1px solid #ddd;
-		border-radius: 4px;
-		background: #fff;
-		color: #555;
+		border: 1px solid transparent;
+		border-bottom: none;
+		border-radius: 4px 4px 0 0;
+		background: transparent;
+		color: var(--text-muted);
 		cursor: pointer;
+		position: relative;
+		bottom: -2px;
 	}
 
 	.tabs button:hover {
-		border-color: #2563eb;
 		color: #2563eb;
+		background: var(--hover-bg);
 	}
 
 	.tabs button.active {
-		background: #2563eb;
-		color: #fff;
-		border-color: #2563eb;
+		background: var(--bg-card);
+		color: var(--text);
+		font-weight: 600;
+		border-color: var(--border);
+		border-bottom-color: var(--bg-card);
 	}
 
 	.section {

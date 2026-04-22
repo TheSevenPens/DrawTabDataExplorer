@@ -25,6 +25,7 @@
 		defaultSortField,
 		flaggedIds,
 		onToggleFlag,
+		titleTag,
 	}: {
 		title: string;
 		entityType: string;
@@ -42,7 +43,10 @@
 		defaultSortField?: string;
 		flaggedIds?: Set<string>;
 		onToggleFlag?: (entityId: string) => void;
+		titleTag?: 'h1' | 'h2';
 	} = $props();
+
+	let resolvedTitleTag = $derived(titleTag ?? 'h1');
 
 	interface FilterItem {
 		field: string;
@@ -207,7 +211,7 @@
 </script>
 
 <div class="title-row">
-	<h1>{title}</h1>
+	<svelte:element this={resolvedTitleTag}>{title}</svelte:element>
 	<span class="results-count">Showing {result.data.length} of {data.length} {entityLabel}</span>
 	<button class="export-btn" onclick={() => showExport = true} title="Export data">
 		<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -246,6 +250,15 @@
 	}
 
 	h1 { margin: 0; }
+
+	h2 {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.4px;
+	}
 
 	.results-count {
 		font-size: 14px;
