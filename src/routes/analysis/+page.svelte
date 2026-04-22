@@ -26,20 +26,12 @@
 	}
 
 	function aspectRatioLabel(w: number, h: number): string {
-		// Ensure landscape
 		const lw = Math.max(w, h);
 		const lh = Math.min(w, h);
 		const scale = gcd(Math.round(lw), Math.round(lh));
 		const rw = Math.round(lw / scale);
 		const rh = Math.round(lh / scale);
-		// Normalise well-known ratios
-		if (rw === 16 && rh === 9) return '16:9';
-		if (rw === 16 && rh === 10) return '16:10';
-		if (rw === 4 && rh === 3) return '4:3';
-		if (rw === 3 && rh === 2) return '3:2';
-		if (rw === 5 && rh === 4) return '5:4';
-		if (rw === 8 && rh === 5) return '16:10';  // 8:5 == 16:10
-		// Compute decimal ratio and snap to nearest known ratio
+		// Snap to nearest known ratio
 		const ratio = lw / lh;
 		if (Math.abs(ratio - 16 / 9) < 0.02) return '16:9';
 		if (Math.abs(ratio - 16 / 10) < 0.02) return '16:10';
@@ -47,6 +39,15 @@
 		if (Math.abs(ratio - 3 / 2) < 0.02) return '3:2';
 		if (Math.abs(ratio - 5 / 4) < 0.02) return '5:4';
 		return `${rw}:${rh}`;
+	}
+
+	function ratio16(label: string): string {
+		const [w, h] = label.split(':').map(Number);
+		if (!w || !h) return '';
+		const x = (h / w) * 16;
+		const rounded = Math.round(x * 100) / 100;
+		const display = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(2).replace(/\.?0+$/, '');
+		return `16:${display}`;
 	}
 
 	function countBy<T>(items: T[], key: (item: T) => string): { label: string; count: number }[] {
@@ -67,11 +68,17 @@
 		t => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE'
 	));
 
+	function ratioDecimal(label: string): string {
+		const [w, h] = label.split(':').map(Number);
+		if (!w || !h) return '';
+		return (w / h).toFixed(2);
+	}
+
 	function arRows(tablets: Tablet[]) {
 		return countBy(
 			tablets.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null),
 			t => aspectRatioLabel(t.Digitizer!.Dimensions!.Width!, t.Digitizer!.Dimensions!.Height!)
-		);
+		).map(r => ({ ...r, ratio16: ratio16(r.label), decimal: ratioDecimal(r.label) }));
 	}
 
 	let ptAR = $derived(arRows(penTablets));
@@ -105,12 +112,14 @@
 		<section class="section">
 			<h2>Pen Tablets ({penTablets.length})</h2>
 			<table class="stat-table">
-				<thead><tr><th>Ratio</th><th>Count</th><th></th></tr></thead>
+				<thead><tr><th>Ratio</th><th>16-norm</th><th>Decimal</th><th>Count</th><th></th></tr></thead>
 				<tbody>
 					{#each ptAR as row}
 						{@const pct = (row.count / ptAR.reduce((s, r) => s + r.count, 0) * 100).toFixed(1)}
 						<tr>
 							<td class="label">{row.label}</td>
+							<td class="decimal">{row.ratio16}</td>
+							<td class="decimal">{row.decimal}</td>
 							<td class="count">{row.count}</td>
 							<td class="bar-cell">
 								<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
@@ -125,12 +134,14 @@
 		<section class="section">
 			<h2>Pen Displays &amp; Standalones ({penDisplays.length})</h2>
 			<table class="stat-table">
-				<thead><tr><th>Ratio</th><th>Count</th><th></th></tr></thead>
+				<thead><tr><th>Ratio</th><th>16-norm</th><th>Decimal</th><th>Count</th><th></th></tr></thead>
 				<tbody>
 					{#each pdAR as row}
 						{@const pct = (row.count / pdAR.reduce((s, r) => s + r.count, 0) * 100).toFixed(1)}
 						<tr>
 							<td class="label">{row.label}</td>
+							<td class="decimal">{row.ratio16}</td>
+							<td class="decimal">{row.decimal}</td>
 							<td class="count">{row.count}</td>
 							<td class="bar-cell">
 								<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
@@ -255,6 +266,7 @@
 	.stat-table tr:hover td { background: var(--hover-bg); }
 
 	.label { font-weight: 600; }
+	.decimal { color: var(--text-muted); font-variant-numeric: tabular-nums; width: 60px; }
 	.count { color: var(--text-muted); width: 50px; }
 
 	.bar-cell {
