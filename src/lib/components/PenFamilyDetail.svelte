@@ -19,16 +19,24 @@
 <section class="members">
 	<h2>Pens in this family ({memberPens.length})</h2>
 	{#if memberPens.length > 0}
-		<ul class="entity-list">
-			{#each memberPens as p}
-				<li>
-					<a href="{base}/entity/{encodeURIComponent(p.EntityId)}">
-						{brandName(p.Brand)} {p.PenName}
-						{#if p.PenName !== p.PenId}<span class="dim">({p.PenId})</span>{/if}
-					</a>
-				</li>
-			{/each}
-		</ul>
+		<table class="pen-table">
+			<thead>
+				<tr><th>Name</th><th>Year</th></tr>
+			</thead>
+			<tbody>
+				{#each memberPens as p}
+					<tr>
+						<td>
+							<a href="{base}/entity/{encodeURIComponent(p.EntityId)}">
+								{brandName(p.Brand)} {p.PenName}
+								{#if p.PenName !== p.PenId}<span class="dim">({p.PenId})</span>{/if}
+							</a>
+						</td>
+						<td class="year">{p.PenYear || ''}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
 	{:else}
 		<p class="dim">No pens are linked to this family.</p>
 	{/if}
@@ -37,8 +45,11 @@
 <style>
 	.members { margin-top: 24px; }
 	.members h2 { font-size: 16px; margin-bottom: 8px; }
-	.entity-list { list-style: none; padding: 0; }
-	.entity-list li { padding: 4px 0; }
-	.entity-list a { color: var(--link); text-decoration: none; }
-	.entity-list a:hover { text-decoration: underline; }
+	.pen-table { border-collapse: collapse; font-size: 13px; width: 100%; }
+	.pen-table th { text-align: left; padding: 5px 10px; background: var(--th-bg); color: var(--th-text); border-bottom: 1px solid var(--border); }
+	.pen-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); }
+	.pen-table tr:hover td { background: var(--hover-bg); }
+	.pen-table a { color: var(--link); text-decoration: none; }
+	.pen-table a:hover { text-decoration: underline; }
+	.year { color: var(--text-muted); width: 60px; }
 </style>

@@ -7,6 +7,7 @@
 	import Nav from '$lib/components/Nav.svelte';
 
 	let data: PressureResponse[] = $state([]);
+	let activeTab: 'pen-models' | 'sessions' = $state('pen-models');
 
 	interface PenModelSummary {
 		penEntityId: string;
@@ -44,8 +45,16 @@
 
 <h1>Pressure Response</h1>
 
-<section class="pen-models">
-	<h2>Pen Models ({penModels.length})</h2>
+<div class="tabs">
+	<button class:active={activeTab === 'pen-models'} onclick={() => activeTab = 'pen-models'}>
+		Pen Models ({penModels.length})
+	</button>
+	<button class:active={activeTab === 'sessions'} onclick={() => activeTab = 'sessions'}>
+		Sessions ({data.length})
+	</button>
+</div>
+
+{#if activeTab === 'pen-models'}
 	<table class="compact">
 		<thead>
 			<tr>
@@ -64,61 +73,81 @@
 			{/each}
 		</tbody>
 	</table>
-</section>
-
-<EntityExplorer
-	title="All Sessions"
-	entityType="pressure-response"
-	entityLabel="sessions"
-	{data}
-	fields={PRESSURE_RESPONSE_FIELDS}
-	fieldGroups={PRESSURE_RESPONSE_FIELD_GROUPS}
-	defaultColumns={PRESSURE_RESPONSE_DEFAULT_COLUMNS}
-	defaultView={PRESSURE_RESPONSE_DEFAULT_VIEW}
-	defaultFilterField="Brand"
-	defaultSortField="Date"
-	quickFilterFields={["Brand"]}
-/>
+{:else}
+	<EntityExplorer
+		title="All Sessions"
+		titleTag="h2"
+		entityType="pressure-response"
+		entityLabel="sessions"
+		{data}
+		fields={PRESSURE_RESPONSE_FIELDS}
+		fieldGroups={PRESSURE_RESPONSE_FIELD_GROUPS}
+		defaultColumns={PRESSURE_RESPONSE_DEFAULT_COLUMNS}
+		defaultView={PRESSURE_RESPONSE_DEFAULT_VIEW}
+		defaultFilterField="Brand"
+		defaultSortField="Date"
+		quickFilterFields={["Brand"]}
+	/>
+{/if}
 
 <style>
 	h1 { margin-bottom: 16px; }
 
-	.pen-models {
-		margin-bottom: 24px;
+	.tabs {
+		display: flex;
+		gap: 0;
+		border-bottom: 2px solid var(--border);
+		margin-bottom: 20px;
 	}
 
-	.pen-models h2 {
-		font-size: 15px;
+	.tabs button {
+		padding: 7px 18px;
+		font-size: 13px;
+		border: 1px solid transparent;
+		border-bottom: none;
+		border-radius: 4px 4px 0 0;
+		background: transparent;
+		color: var(--text-muted);
+		cursor: pointer;
+		position: relative;
+		bottom: -2px;
+	}
+
+	.tabs button:hover {
+		color: #2563eb;
+		background: var(--hover-bg);
+	}
+
+	.tabs button.active {
+		background: var(--bg-card);
+		color: var(--text);
 		font-weight: 600;
-		color: #6b21a8;
-		margin-bottom: 8px;
-		padding-bottom: 4px;
-		border-bottom: 2px solid #e0e0e0;
+		border-color: var(--border);
+		border-bottom-color: var(--bg-card);
 	}
 
 	table.compact {
 		width: auto;
 		border-collapse: collapse;
-		background: #fff;
+		background: var(--bg-card);
 		font-size: 13px;
-		margin-bottom: 8px;
 	}
 
 	th, td {
 		text-align: left;
 		padding: 5px 10px;
-		border-bottom: 1px solid #e0e0e0;
+		border-bottom: 1px solid var(--border);
 	}
 
 	th {
-		background: #333;
-		color: #fff;
+		background: var(--th-bg);
+		color: var(--th-text);
 	}
 
-	tr:hover td { background: #f0f7ff; }
+	tr:hover td { background: var(--hover-bg); }
 
 	td a {
-		color: #2563eb;
+		color: var(--link);
 		text-decoration: none;
 	}
 

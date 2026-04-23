@@ -7,8 +7,8 @@
 	let { data } = $props();
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
 
-	type TabName = 'aspect-ratio' | 'display-tech';
-	const validTabs: TabName[] = ['aspect-ratio', 'display-tech'];
+	type TabName = 'aspect-ratio' | 'display-tech' | 'pressure-levels';
+	const validTabs: TabName[] = ['aspect-ratio', 'display-tech', 'pressure-levels'];
 
 	let activeTab: TabName = $derived.by(() => {
 		const hash = page.url.hash.slice(1) as TabName;
@@ -96,6 +96,19 @@
 
 	let panelTechTotal = $derived(displaysWithTech.length);
 	let panelTechCovered = $derived(penDisplays.length);
+
+	// --- Pressure Levels tab ---
+
+	let tabletsWithPressure = $derived(
+		allTablets.filter(t => t.Digitizer?.PressureLevels != null)
+	);
+
+	let pressureRows = $derived(
+		countBy(tabletsWithPressure, t => t.Digitizer!.PressureLevels!)
+			.sort((a, b) => Number(a.label) - Number(b.label))
+	);
+
+	let pressureTotal = $derived(tabletsWithPressure.length);
 </script>
 
 <Nav />
@@ -104,6 +117,7 @@
 <div class="tabs">
 	<button class:active={activeTab === 'aspect-ratio'} onclick={() => setTab('aspect-ratio')}>Aspect Ratio</button>
 	<button class:active={activeTab === 'display-tech'} onclick={() => setTab('display-tech')}>Display Tech</button>
+	<button class:active={activeTab === 'pressure-levels'} onclick={() => setTab('pressure-levels')}>Pressure Levels</button>
 </div>
 
 {#if activeTab === 'aspect-ratio'}
@@ -168,6 +182,31 @@
 					{@const pct = (row.count / panelTechTotal * 100).toFixed(1)}
 					<tr>
 						<td class="label">{row.label}</td>
+						<td class="count">{row.count}</td>
+						<td class="bar-cell">
+							<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
+							<span class="pct">{pct}%</span>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</section>
+
+{:else if activeTab === 'pressure-levels'}
+
+	<section class="section">
+		<h2>Pressure Levels</h2>
+		<p class="description">
+			{pressureTotal} of {allTablets.length} tablets have pressure level data.
+		</p>
+		<table class="stat-table">
+			<thead><tr><th>Pressure Levels</th><th>Count</th><th></th></tr></thead>
+			<tbody>
+				{#each pressureRows as row}
+					{@const pct = (row.count / pressureTotal * 100).toFixed(1)}
+					<tr>
+						<td class="label">{Number(row.label).toLocaleString()}</td>
 						<td class="count">{row.count}</td>
 						<td class="bar-cell">
 							<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>

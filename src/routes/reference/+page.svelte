@@ -114,8 +114,8 @@
 		return b === 0 ? a : gcd(b, a % b);
 	}
 
-	function closestISOA(midpointCm: number): string {
-		if (aSeries.length === 0) return '';
+	function closestISOA(midpointCm: number): { name: string; diagCm: string; diagIn: string } {
+		if (aSeries.length === 0) return { name: '', diagCm: '', diagIn: '' };
 		let best = aSeries[0];
 		let bestDist = Infinity;
 		for (const p of aSeries) {
@@ -123,7 +123,12 @@
 			const dist = Math.abs(diagCm - midpointCm);
 			if (dist < bestDist) { bestDist = dist; best = p; }
 		}
-		return best.Name;
+		const diagMm = Math.sqrt(best.Width_mm ** 2 + best.Height_mm ** 2);
+		return {
+			name: best.Name,
+			diagCm: (diagMm / 10).toFixed(1),
+			diagIn: (diagMm * MM_TO_IN).toFixed(1),
+		};
 	}
 
 	// --- Display resolution categories ---
@@ -200,16 +205,19 @@
 			}}>Copy as HTML</button>
 		</div>
 		<table id="pen-tablet-table" class="ref-table">
-			<thead><tr><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th></tr></thead>
+			<thead><tr><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th><th>Diagonal (cm)</th><th>Diagonal (in)</th></tr></thead>
 			<tbody>
 				{#each penTabletRangesCm as range, i}
 					{@const inRange = penTabletRangesIn[i]}
 					{@const midCm = (range.min + range.max) / 2}
+					{@const iso = closestISOA(midCm)}
 					<tr>
 						<td>{range.label}</td>
 						<td>{range.min} cm – {range.max} cm</td>
 						<td>{inRange.min}″ – {inRange.max}″</td>
-						<td>{closestISOA(midCm)}</td>
+						<td>{iso.name}</td>
+						<td>{iso.diagCm} cm</td>
+						<td>{iso.diagIn}″</td>
 					</tr>
 				{/each}
 			</tbody>
@@ -237,16 +245,19 @@
 			}}>Copy as HTML</button>
 		</div>
 		<table id="pen-display-table" class="ref-table">
-			<thead><tr><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th></tr></thead>
+			<thead><tr><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th><th>Diagonal (cm)</th><th>Diagonal (in)</th></tr></thead>
 			<tbody>
 				{#each displayRangesCm as range, i}
 					{@const inRange = displayRangesIn[i]}
 					{@const midCm = (range.min + range.max) / 2}
+					{@const iso = closestISOA(midCm)}
 					<tr>
 						<td>{range.label}</td>
 						<td>{range.min} cm – {range.max} cm</td>
 						<td>{inRange.min}″ – {inRange.max}″</td>
-						<td>{closestISOA(midCm)}</td>
+						<td>{iso.name}</td>
+						<td>{iso.diagCm} cm</td>
+						<td>{iso.diagIn}″</td>
 					</tr>
 				{/each}
 			</tbody>

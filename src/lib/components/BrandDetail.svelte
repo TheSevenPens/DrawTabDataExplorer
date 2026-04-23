@@ -11,7 +11,7 @@
 	let tablets: Tablet[] = $derived(data.tablets);
 	let pens: Pen[] = $derived(data.pens);
 
-	let activeTab = $state<'tablets' | 'pens'>('tablets');
+	let activeTab = $state<'tablets' | 'pens' | 'timeline'>('tablets');
 
 	let sortedTablets = $derived(
 		[...tablets].sort((a, b) => (b.Model.LaunchYear ?? '').localeCompare(a.Model.LaunchYear ?? ''))
@@ -19,6 +19,23 @@
 	let sortedPens = $derived(
 		[...pens].sort((a, b) => (b.PenYear ?? '').localeCompare(a.PenYear ?? ''))
 	);
+
+	let timeline = $derived.by(() => {
+		const yearMap = new Map<string, { tablets: Tablet[]; pens: Pen[] }>();
+		for (const t of tablets) {
+			if (!t.Model.LaunchYear) continue;
+			if (!yearMap.has(t.Model.LaunchYear)) yearMap.set(t.Model.LaunchYear, { tablets: [], pens: [] });
+			yearMap.get(t.Model.LaunchYear)!.tablets.push(t);
+		}
+		for (const p of pens) {
+			if (!p.PenYear) continue;
+			if (!yearMap.has(p.PenYear)) yearMap.set(p.PenYear, { tablets: [], pens: [] });
+			yearMap.get(p.PenYear)!.pens.push(p);
+		}
+		return [...yearMap.entries()]
+			.map(([year, d]) => ({ year, tablets: d.tablets, pens: d.pens }))
+			.sort((a, b) => b.year.localeCompare(a.year));
+	});
 </script>
 
 <Nav />
@@ -40,6 +57,9 @@
 		</button>
 		<button class="tab-btn" class:active={activeTab === 'pens'} onclick={() => activeTab = 'pens'}>
 			Pens ({pens.length})
+		</button>
+		<button class="tab-btn" class:active={activeTab === 'timeline'} onclick={() => activeTab = 'timeline'}>
+			Timeline
 		</button>
 	</div>
 
@@ -69,7 +89,7 @@
 			{:else}
 				<p class="no-data">No tablets found for this brand.</p>
 			{/if}
-		{:else}
+		{:else if activeTab === 'pens'}
 			{#if sortedPens.length > 0}
 				<table>
 					<thead>
@@ -91,6 +111,47 @@
 				</table>
 			{:else}
 				<p class="no-data">No pens found for this brand.</p>
+			{/if}
+		{:else if activeTab === 'timeline'}
+			{#if timeline.length === 0}
+				<p class="no-data">No timeline data available.</p>
+			{:else}
+				<div class="brand-timeline">
+					{#each timeline as entry}
+						<div class="tl-year-block">
+							<div class="tl-year-label">{entry.year}</div>
+							<div class="tl-year-content">
+								{#if entry.tablets.length > 0}
+									<div class="tl-category">
+										<h3>Tablets ({entry.tablets.length})</h3>
+										<div class="tl-items">
+											{#each entry.tablets as t}
+												<a class="tl-item tl-tablet" href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">
+													<span class="tl-name">{t.Model.Name}</span>
+													<span class="tl-id">{t.Model.Id}</span>
+													<span class="tl-type">{t.Model.Type}</span>
+												</a>
+											{/each}
+										</div>
+									</div>
+								{/if}
+								{#if entry.pens.length > 0}
+									<div class="tl-category">
+										<h3>Pens ({entry.pens.length})</h3>
+										<div class="tl-items">
+											{#each entry.pens as p}
+												<a class="tl-item tl-pen" href="{base}/entity/{encodeURIComponent(p.EntityId)}">
+													<span class="tl-name">{p.PenName}</span>
+													<span class="tl-id">{p.PenId}</span>
+												</a>
+											{/each}
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
 			{/if}
 		{/if}
 	</div>
@@ -146,4 +207,58 @@
 	.entity-link:hover { text-decoration: underline; }
 
 	.no-data { font-size: 13px; color: #999; font-style: italic; }
+
+	.brand-timeline { padding-left: 64px; }
+
+	.tl-year-block {
+		position: relative;
+		margin-bottom: 20px;
+		padding-bottom: 20px;
+		border-bottom: 1px solid var(--border);
+	}
+	.tl-year-block:last-child { border-bottom: none; }
+
+	.tl-year-label {
+		position: absolute;
+		left: -64px;
+		top: 0;
+		width: 52px;
+		font-size: 18px;
+		font-weight: 700;
+		color: var(--text);
+		text-align: right;
+	}
+
+	.tl-year-content { display: flex; flex-direction: column; gap: 10px; }
+
+	.tl-category h3 {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-muted);
+		margin: 0 0 6px;
+		text-transform: uppercase;
+		letter-spacing: 0.4px;
+	}
+
+	.tl-items { display: flex; flex-wrap: wrap; gap: 6px; }
+
+	.tl-item {
+		display: inline-flex;
+		flex-direction: column;
+		padding: 5px 10px;
+		border-radius: 6px;
+		font-size: 12px;
+		text-decoration: none;
+		border: 1px solid var(--border-light);
+		background: var(--bg-card);
+		min-width: 120px;
+	}
+
+	.tl-tablet { border-left: 3px solid #2563eb; }
+	.tl-pen { border-left: 3px solid #7c3aed; }
+	.tl-item:hover { background: var(--hover-bg); border-color: var(--border); }
+
+	.tl-name { font-weight: 600; color: var(--text); }
+	.tl-id { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+	.tl-type { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
 </style>

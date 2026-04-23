@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
+	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS } from '$data/lib/entities/tablet-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
@@ -13,8 +13,6 @@
 	let family: TabletFamily = $derived(data.family);
 	let familyTablets: Tablet[] = $derived(data.familyTablets);
 	let allTablets: Tablet[] = $derived(data.allTablets);
-	let isoSizes: ISOPaperSize[] = $derived(data.isoSizes ?? []);
-
 	let dimsItems = $derived(
 		familyTablets
 			.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null)
@@ -68,10 +66,14 @@
 					<th>Type</th>
 					<th>Year</th>
 					<th>Status</th>
+					<th title="Active area lost when using Force Proportions at 16:9">FP Loss 16:9</th>
+					<th title="Active area lost when using Force Proportions at 16:10">FP Loss 16:10</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each familyTablets as tablet}
+					{@const d = tablet.Digitizer?.Dimensions}
+					{@const isPenTablet = tablet.Model.Type === 'PENTABLET'}
 					<tr>
 						<td><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}">{tablet.Model.Id}</a></td>
 						<td>{tablet.Model.Name}</td>
@@ -79,6 +81,8 @@
 						<td>{tablet.Model.Type}</td>
 						<td>{tablet.Model.LaunchYear || ''}</td>
 						<td>{tablet.Model.Status || ''}</td>
+						<td>{#if isPenTablet && d?.Width && d?.Height}{(() => { const w=d.Width,h=d.Height,r=16/9,cur=w/h,nw=cur>r?h*r:w,nh=cur>r?h:w/r,loss=((w*h-nw*nh)/(w*h))*100; return loss<0.05?'0%':loss.toFixed(1)+'%'; })()}{/if}</td>
+						<td>{#if isPenTablet && d?.Width && d?.Height}{(() => { const w=d.Width,h=d.Height,r=16/10,cur=w/h,nw=cur>r?h*r:w,nh=cur>r?h:w/r,loss=((w*h-nw*nh)/(w*h))*100; return loss<0.05?'0%':loss.toFixed(1)+'%'; })()}{/if}</td>
 					</tr>
 				{/each}
 			</tbody>
@@ -104,10 +108,6 @@
 		<div class="dim-chart-section">
 			<h3 class="dim-chart-title">Active Area — Family Comparison</h3>
 			<TabletDimensionComparison items={dimsItems} showISO={false} />
-		</div>
-		<div class="dim-chart-section">
-			<h3 class="dim-chart-title">Active Area vs ISO A Paper Sizes</h3>
-			<TabletDimensionComparison items={dimsItems} {isoSizes} />
 		</div>
 	</section>
 {/if}
