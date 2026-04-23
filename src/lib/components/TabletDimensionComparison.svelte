@@ -1,12 +1,16 @@
 <script lang="ts">
 	import type { Dimensions, ISOPaperSize } from '$data/lib/drawtab-loader.js';
 
-	let { dims, items, isoSizes = [], showISO = true }: {
+	let { dims, items, isoSizes = [], showISO = true, stacked = false }: {
 		dims?: Dimensions;
 		items?: Array<{ dims: Dimensions; label: string }>;
 		isoSizes?: ISOPaperSize[];
 		showISO?: boolean;
+		stacked?: boolean;
 	} = $props();
+
+	const STACK_FILLS   = ['#dbeafe', '#dcfce7', '#fef9c3', '#fce7f3', '#ede9fe'];
+	const STACK_STROKES = ['#2563eb', '#16a34a', '#ca8a04', '#db2777', '#7c3aed'];
 
 	const CHART_H = 200;
 	const PAD_TOP = 26;  // room for labels above rects
@@ -24,6 +28,7 @@
 	interface ChartRect {
 		x: number; sw: number; sh: number;
 		isTablet: boolean; label: string; dimsLabel: string;
+		colorIdx?: number;
 	}
 
 	// Normalize to array — either explicit items or the single dims prop
@@ -98,6 +103,22 @@
 		if (chartItems.length === 0) return null;
 		const maxH = Math.max(...chartItems.map(it => it.hMm));
 		const scale = CHART_H / maxH;
+
+		if (stacked) {
+			// Sort largest-first so smallest renders on top
+			const sorted = [...chartItems].sort((a, b) => (b.wMm * b.hMm) - (a.wMm * a.hMm));
+			const maxW = Math.max(...sorted.map(it => it.wMm));
+			const svgW = Math.round(maxW * scale);
+			const centerX = svgW / 2;
+			const rects: ChartRect[] = sorted.map((it, i) => {
+				const sw = Math.round(it.wMm * scale);
+				const sh = Math.round(it.hMm * scale);
+				const x = centerX - sw / 2;
+				return { x, sw, sh, isTablet: it.isTablet, label: it.label, dimsLabel: it.dimsLabel, colorIdx: i };
+			});
+			return { rects, svgW };
+		}
+
 		let x = 0;
 		const rects: ChartRect[] = chartItems.map(it => {
 			const sw = Math.round(it.wMm * scale);
@@ -116,34 +137,69 @@
 			width={layout.svgW}
 			height={CHART_H + PAD_TOP + PAD_BOT}
 			role="img"
-			aria-label="Active area size compared to ISO A paper sizes"
+			aria-label="Active area size comparison"
 		>
 			<g transform="translate(0,{PAD_TOP})">
 				{#each layout.rects as r}
-					<rect
-						x={r.x}
-						y={CHART_H - r.sh}
-						width={r.sw}
-						height={r.sh}
-						class={r.isTablet ? 'rect-tablet' : 'rect-iso'}
-					/>
-					<text
-						x={r.x + r.sw / 2}
-						y={CHART_H - r.sh - 6}
-						text-anchor="middle"
-						class={r.isTablet ? 'lbl-tablet' : 'lbl-iso'}
-					>{r.label}</text>
-					<text
-						x={r.x + r.sw / 2}
-						y={CHART_H + 14}
-						text-anchor="middle"
-						class="lbl-dims"
-					>{r.dimsLabel}</text>
+					{#if stacked && r.colorIdx != null}
+						<rect
+							x={r.x}
+							y={CHART_H - r.sh}
+							width={r.sw}
+							height={r.sh}
+							fill={STACK_FILLS[r.colorIdx % STACK_FILLS.length]}
+							stroke={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}
+							stroke-width="1.5"
+							fill-opacity="0.75"
+						/>
+						<text
+							x={r.x + r.sw / 2}
+							y={CHART_H - r.sh - 6}
+							text-anchor="middle"
+							font-size="11"
+							font-weight="700"
+							fill={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}
+							font-family="inherit"
+						>{r.label}</text>
+					{:else}
+						<rect
+							x={r.x}
+							y={CHART_H - r.sh}
+							width={r.sw}
+							height={r.sh}
+							class={r.isTablet ? 'rect-tablet' : 'rect-iso'}
+						/>
+						<text
+							x={r.x + r.sw / 2}
+							y={CHART_H - r.sh - 6}
+							text-anchor="middle"
+							class={r.isTablet ? 'lbl-tablet' : 'lbl-iso'}
+						>{r.label}</text>
+						<text
+							x={r.x + r.sw / 2}
+							y={CHART_H + 14}
+							text-anchor="middle"
+							class="lbl-dims"
+						>{r.dimsLabel}</text>
+					{/if}
 				{/each}
 				<line x1="0" y1={CHART_H} x2={layout.svgW} y2={CHART_H} class="baseline" />
 			</g>
 		</svg>
 	</div>
+	{#if stacked && layout.rects.length > 0}
+		<div class="stack-legend">
+			{#each layout.rects as r}
+				{#if r.colorIdx != null}
+					<div class="legend-item">
+						<span class="legend-swatch" style="background:{STACK_FILLS[r.colorIdx % STACK_FILLS.length]};border-color:{STACK_STROKES[r.colorIdx % STACK_STROKES.length]}"></span>
+						<span class="legend-label">{r.label}</span>
+						<span class="legend-dims">{r.dimsLabel} mm</span>
+					</div>
+				{/if}
+			{/each}
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -200,5 +256,36 @@
 	.baseline {
 		stroke: var(--border);
 		stroke-width: 1;
+	}
+
+	.stack-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 10px;
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 12px;
+	}
+
+	.legend-swatch {
+		width: 12px;
+		height: 12px;
+		border-radius: 2px;
+		border: 1.5px solid;
+		flex-shrink: 0;
+	}
+
+	.legend-label {
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.legend-dims {
+		color: var(--text-muted);
 	}
 </style>

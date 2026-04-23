@@ -38,6 +38,8 @@
 			.filter((d): d is number => d !== null)
 	);
 
+	let stackedDims = $state(false);
+
 	let histogramMarkers = $derived<HistogramMarker[]>(
 		familyTablets
 			.map(t => {
@@ -106,8 +108,15 @@
 			markers={histogramMarkers}
 		/>
 		<div class="dim-chart-section">
-			<h3 class="dim-chart-title">Active Area — Family Comparison</h3>
-			<TabletDimensionComparison items={dimsItems} showISO={false} />
+			<div class="dim-chart-header">
+				<h3 class="dim-chart-title">Active Area — Family Comparison</h3>
+				{#if dimsItems.length > 1}
+					<button class="stack-toggle" class:active={stackedDims} onclick={() => stackedDims = !stackedDims}>
+						{stackedDims ? 'Side by side' : 'Stacked'}
+					</button>
+				{/if}
+			</div>
+			<TabletDimensionComparison items={dimsItems} showISO={false} stacked={stackedDims} />
 		</div>
 	</section>
 {/if}
@@ -134,10 +143,35 @@
 
 	.dim-chart-section { margin-top: 24px; }
 
+	.dim-chart-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 10px;
+	}
+
 	.dim-chart-title {
 		font-size: 13px;
 		font-weight: 600;
 		color: var(--text-muted);
-		margin: 0 0 10px;
+		margin: 0;
+	}
+
+	.stack-toggle {
+		font-size: 11px;
+		padding: 2px 8px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+
+	.stack-toggle:hover { color: var(--text); border-color: var(--text-muted); }
+
+	.stack-toggle.active {
+		background: #ede9fe;
+		border-color: #7c3aed;
+		color: #7c3aed;
 	}
 </style>
