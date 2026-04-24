@@ -8,6 +8,7 @@
 	import { flaggedTablets, toggleFlag, clearFlags } from '$lib/flagged-store.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import TabletPicker from '$lib/components/TabletPicker.svelte';
+	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, mixedRangesCm, mixedRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
@@ -18,6 +19,7 @@
 	let showPicker = $state(false);
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
 	let allPens: Pen[] = $derived(data.allPens ?? []);
+	let isoSizes = $derived(data.isoSizes ?? []);
 
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
@@ -67,6 +69,12 @@
 	let hasFlaggedPenTablets  = $derived(flaggedItems.some(t => t.Model.Type === 'PENTABLET'));
 	let hasFlaggedPenDisplays = $derived(flaggedItems.some(t => t.Model.Type !== 'PENTABLET'));
 	let hasMixedTypes = $derived(hasFlaggedPenTablets && hasFlaggedPenDisplays);
+
+	let dimCompItems = $derived(
+		flaggedItems
+			.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null)
+			.map(t => ({ dims: t.Digitizer!.Dimensions!, label: `${brandName(t.Model.Brand)} ${t.Model.Name}` }))
+	);
 
 	function histValues(typeFilter: 'PENTABLET' | 'PENDISPLAY' | 'ALL', compareYears: number | null): number[] {
 		return allTablets
@@ -215,6 +223,13 @@
 				</tbody>
 			</table>
 		</div>
+
+		{#if dimCompItems.length >= 2}
+			<section class="hist-section">
+				<h2>Digitizer Dimensions</h2>
+				<TabletDimensionComparison items={dimCompItems} isoSizes={isoSizes} stacked={true} />
+			</section>
+		{/if}
 
 		{#if hasMixedTypes && mixedHistValues.length > 0}
 			<section class="hist-section">
