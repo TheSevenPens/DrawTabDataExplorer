@@ -29,6 +29,13 @@
 		return formatPenIds(t.Model.IncludedPen ?? [], penNameMap);
 	}
 
+	let includedPenItems = $derived(
+		(tablet.Model.IncludedPen ?? []).map(id => ({
+			entityId: id,
+			name: penNameMap.get(id) ?? id,
+		}))
+	);
+
 	let filterSimilarSize = $state(true);
 	let filterSamePen = $state(false);
 	let filterBrand = $state('all');
@@ -166,10 +173,15 @@
 						<dd>{tablet.Model.Audience}</dd>
 					</div>
 				{/if}
-				{#if (tablet.Model.IncludedPen ?? []).length > 0}
+				{#if includedPenItems.length > 0}
 					<div class="basics-item">
 						<dt>Included Pen</dt>
-						<dd>{includedPenNames(tablet)}</dd>
+						<dd>
+							{#each includedPenItems as pen, i}
+								{#if i > 0}, {/if}
+								<a href="{base}/entity/{encodeURIComponent(pen.entityId)}">{pen.name}</a>
+							{/each}
+						</dd>
 					</div>
 				{/if}
 			</dl>
@@ -201,7 +213,10 @@
 													<dt>{stripUnit(f.label, f.unit)}</dt>
 													<dd>
 														{#if f.key === 'ModelIncludedPen'}
-															{includedPenNames(tablet!)}
+															{#each includedPenItems as pen, i}
+																{#if i > 0}, {/if}
+																<a href="{base}/entity/{encodeURIComponent(pen.entityId)}">{pen.name}</a>
+															{/each}
 														{:else if isUrl(val)}
 															<a href={val} target="_blank" rel="noopener">
 																{f.key === 'ModelUserManual' ? 'View Manual ↗' : f.key === 'ModelProductLink' ? 'View Product Page ↗' : val}
