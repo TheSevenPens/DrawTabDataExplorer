@@ -34,7 +34,7 @@
 	defaultView={PEN_FAMILY_DEFAULT_VIEW}
 	linkField="FamilyName"
 	detailBasePath="/entity"
-	defaultFilterField="FamilyId"
-	defaultSortField="FamilyId"
+	defaultFilterField="EntityId"
+	defaultSortField="EntityId"
 	quickFilterFields={["Brand"]}
 />

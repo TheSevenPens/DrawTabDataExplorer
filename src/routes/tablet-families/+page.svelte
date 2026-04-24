@@ -14,7 +14,7 @@
 			loadTabletsFromURL(base),
 		]);
 
-		// Build lookup: FamilyId → { count, earliestYear }
+		// Build lookup: EntityId → { count, earliestYear }
 		const familyStats = new Map<string, { count: number; earliestYear: number }>();
 		for (const t of tablets) {
 			const fid = t.Model.Family;
@@ -30,7 +30,7 @@
 		}
 
 		data = families.map((f) => {
-			const stats = familyStats.get(f.FamilyId);
+			const stats = familyStats.get(f.EntityId);
 			return {
 				...f,
 				_tabletCount: stats?.count ?? 0,

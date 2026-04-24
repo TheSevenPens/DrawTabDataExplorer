@@ -80,7 +80,7 @@ export async function load({ params }) {
 			const family = families.find((f) => f.EntityId === entityId);
 			if (!family) error(404, 'Pen family not found');
 			const memberPens = pens
-				.filter((p) => p.PenFamily === family.FamilyId)
+				.filter((p) => p.PenFamily === family.EntityId)
 				.sort((a, b) => a.PenId.localeCompare(b.PenId));
 			return { entityType, family, memberPens };
 		}
@@ -93,7 +93,7 @@ export async function load({ params }) {
 			]);
 			const family = families.find((f) => f.EntityId === entityId);
 			if (!family) error(404, 'Tablet family not found');
-			const familyTablets = allTablets.filter((t) => t.Model.Family === family.FamilyId);
+			const familyTablets = allTablets.filter((t) => t.Model.Family === family.EntityId);
 			return { entityType, family, familyTablets, allTablets, isoSizes };
 		}
 

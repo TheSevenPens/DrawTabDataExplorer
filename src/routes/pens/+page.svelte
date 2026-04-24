@@ -14,7 +14,7 @@
 			loadPenFamiliesFromURL(base),
 		]);
 		const familyNames: Record<string, string> = {};
-		for (const f of families) familyNames[f.FamilyId] = f.FamilyName;
+		for (const f of families) familyNames[f.EntityId] = f.FamilyName;
 		setPenFamilyNames(familyNames);
 		data = pens as Pen[];
 	});

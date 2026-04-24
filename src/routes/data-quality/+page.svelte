@@ -147,8 +147,8 @@
 		allIssues.push(...checkRequired(ds.tablets, 'Tablet', ['Meta.EntityId', 'Model.Brand', 'Model.Id', 'Model.Name', 'Model.Type']));
 		allIssues.push(...checkRequired(ds.pens, 'Pen', ['EntityId', 'Brand', 'PenId', 'PenName']));
 		allIssues.push(...checkRequired(ds.drivers, 'Driver', ['EntityId', 'Brand', 'DriverVersion', 'DriverName', 'OSFamily', 'ReleaseDate']));
-		allIssues.push(...checkRequired(ds.penFamilies, 'PenFamily', ['EntityId', 'Brand', 'FamilyId', 'FamilyName']));
-		allIssues.push(...checkRequired(ds.tabletFamilies, 'TabletFamily', ['EntityId', 'Brand', 'FamilyId', 'FamilyName']));
+		allIssues.push(...checkRequired(ds.penFamilies, 'PenFamily', ['EntityId', 'Brand', 'FamilyName']));
+		allIssues.push(...checkRequired(ds.tabletFamilies, 'TabletFamily', ['EntityId', 'Brand', 'FamilyName']));
 		allIssues.push(...checkRequired(ds.penCompat, 'PenCompat', ['Brand', 'TabletId', 'PenId']));
 
 		// Pressure response checks
@@ -200,8 +200,8 @@
 		orphanedCompat = findOrphanedCompat(ds);
 
 		// Orphaned family references
-		const penFamilyIds = new Set(ds.penFamilies.map(f => (f as any).FamilyId));
-		const tabletFamilyIds = new Set(ds.tabletFamilies.map(f => (f as any).FamilyId));
+		const penFamilyIds = new Set(ds.penFamilies.map(f => f.EntityId));
+		const tabletFamilyIds = new Set(ds.tabletFamilies.map(f => f.EntityId));
 		const orphFamilies: typeof orphanedFamilies = [];
 		for (const pen of ds.pens) {
 			if (pen.PenFamily && !penFamilyIds.has(pen.PenFamily)) {
