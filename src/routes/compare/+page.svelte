@@ -15,7 +15,7 @@
 
 	let { data } = $props();
 
-	let activeTab: 'flagged' | 'compare' = $state('flagged');
+	let activeTab: 'flagged' | 'compare' | 'sizes' = $state('flagged');
 	let showPicker = $state(false);
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
 	let allPens: Pen[] = $derived(data.allPens ?? []);
@@ -161,6 +161,9 @@
 	<button class:active={activeTab === 'compare'} onclick={() => activeTab = 'compare'}>
 		Compare
 	</button>
+	<button class:active={activeTab === 'sizes'} onclick={() => activeTab = 'sizes'}>
+		Compare sizes
+	</button>
 </div>
 
 {#if activeTab === 'flagged'}
@@ -188,7 +191,7 @@
 	{:else}
 		<p class="no-data">No tablets added yet. Use the button above, or flag tablets from the <a href="{base}/">tablets list</a> or individual tablet pages.</p>
 	{/if}
-{:else}
+{:else if activeTab === 'compare'}
 	{#if flaggedItems.length < 2}
 		<p class="no-data">Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.</p>
 	{:else}
@@ -223,7 +226,11 @@
 				</tbody>
 			</table>
 		</div>
-
+	{/if}
+{:else if activeTab === 'sizes'}
+	{#if flaggedItems.length < 2}
+		<p class="no-data">Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.</p>
+	{:else}
 		{#if dimCompItems.length >= 2}
 			<section class="hist-section">
 				<div class="dim-chart-header">
