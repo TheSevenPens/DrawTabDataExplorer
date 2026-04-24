@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { base } from '$app/paths';
 	import { brandName, getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import { unitPreference, showAltUnits } from '$lib/unit-store.js';
@@ -222,7 +222,7 @@
 																{f.key === 'ModelUserManual' ? 'View Manual ↗' : f.key === 'ModelProductLink' ? 'View Product Page ↗' : val}
 															</a>
 														{:else}
-															{formatValueWithAlt(val, f.label, f.unit, $unitPreference, $showAltUnits)}
+															{f.getDisplayValue ? f.getDisplayValue(tablet!) : formatValueWithAlt(val, f.label, f.unit, $unitPreference, $showAltUnits)}
 														{/if}
 														{#if f.computed}
 															<span class="computed-badge">computed</span>
