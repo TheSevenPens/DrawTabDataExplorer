@@ -19,7 +19,6 @@
 	let showPicker = $state(false);
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
 	let allPens: Pen[] = $derived(data.allPens ?? []);
-	let isoSizes = $derived(data.isoSizes ?? []);
 
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
@@ -227,7 +226,7 @@
 		{#if dimCompItems.length >= 2}
 			<section class="hist-section">
 				<h2>Digitizer Dimensions</h2>
-				<TabletDimensionComparison items={dimCompItems} isoSizes={isoSizes} stacked={true} />
+				<TabletDimensionComparison items={dimCompItems} showISO={false} stacked={true} />
 			</section>
 		{/if}
 
