@@ -74,6 +74,7 @@
 			.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null)
 			.map(t => ({ dims: t.Digitizer!.Dimensions!, label: `${brandName(t.Model.Brand)} ${t.Model.Name}` }))
 	);
+	let stackedDims = $state(true);
 
 	function histValues(typeFilter: 'PENTABLET' | 'PENDISPLAY' | 'ALL', compareYears: number | null): number[] {
 		return allTablets
@@ -225,8 +226,13 @@
 
 		{#if dimCompItems.length >= 2}
 			<section class="hist-section">
-				<h2>Digitizer Dimensions</h2>
-				<TabletDimensionComparison items={dimCompItems} showISO={false} stacked={true} />
+				<div class="dim-chart-header">
+					<h2>Digitizer Dimensions</h2>
+					<button class="stack-toggle" class:active={stackedDims} onclick={() => stackedDims = !stackedDims}>
+						{stackedDims ? 'Side by side' : 'Stacked'}
+					</button>
+				</div>
+				<TabletDimensionComparison items={dimCompItems} showISO={false} stacked={stackedDims} />
 			</section>
 		{/if}
 
@@ -297,6 +303,30 @@
 	.hist-section {
 		margin-top: 24px;
 	}
+
+	.dim-chart-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 6px;
+	}
+
+	.dim-chart-header h2 {
+		margin-bottom: 0;
+	}
+
+	.stack-toggle {
+		padding: 2px 10px;
+		font-size: 12px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+
+	.stack-toggle:hover { background: var(--hover-bg); color: var(--text); }
+	.stack-toggle.active { background: #ede9fe; border-color: #7c3aed; color: #6b21a8; font-weight: 600; }
 
 	.hist-section h2 {
 		font-size: 14px;
