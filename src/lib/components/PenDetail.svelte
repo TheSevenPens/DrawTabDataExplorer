@@ -19,7 +19,7 @@
 <Nav />
 
 <div class="title-row">
-	<h1>{pen.PenName}</h1>
+	<h1>{brandName(pen.Brand)} {pen.PenName}</h1>
 	<button class="json-btn" onclick={() => showJson = true}>JSON</button>
 </div>
 
