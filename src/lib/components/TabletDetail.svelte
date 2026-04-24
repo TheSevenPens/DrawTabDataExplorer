@@ -21,7 +21,7 @@
 	let isoSizes: ISOPaperSize[] = $derived(data.isoSizes);
 
 	let showJson = $state(false);
-	let activeTab = $state<'specs' | 'size' | 'pens' | 'similar'>('specs');
+	let activeTab = $state<'model' | 'specs' | 'size' | 'pens' | 'similar'>('model');
 
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
@@ -57,17 +57,16 @@
 		return `${qualifier}${best.Name}`;
 	});
 
-	let col1Groups = $derived(
-		tablet.Model.Type === 'STANDALONE' ? ['Model', 'Physical', 'Standalone'] : ['Model']
-	);
-	const col2Groups = ['Digitizer'];
-	const col3Groups = ['Display'];
+	// Model tab: Model + Physical groups always
+	const modelTabGroups = ['Model', 'Physical'];
+
+	// Specs tab: Digitizer, Display, Standalone (no Model/Physical)
+	const specsCol1Groups = ['Digitizer'];
+	const specsCol2Groups = ['Display'];
+	let specsCol3Groups = $derived(tablet.Model.Type === 'STANDALONE' ? ['Standalone'] : []);
 
 	function getGroupFields(groups: string[]) {
-		const expanded = groups.includes('Model') && tablet.Model.Type !== 'STANDALONE'
-			? [...groups, 'Physical']
-			: groups;
-		return TABLET_FIELDS.filter(f => expanded.includes(f.group));
+		return TABLET_FIELDS.filter(f => groups.includes(f.group));
 	}
 
 	function copyAllSpecs(format: 'table' | 'list') {
@@ -177,11 +176,54 @@
 		</section>
 
 		<div class="detail-tabs">
+			<button class:active={activeTab === 'model'}   onclick={() => activeTab = 'model'}>Model</button>
 			<button class:active={activeTab === 'specs'}   onclick={() => activeTab = 'specs'}>Specs</button>
 			<button class:active={activeTab === 'size'}    onclick={() => activeTab = 'size'}>Size Comparison</button>
 			<button class:active={activeTab === 'pens'}    onclick={() => activeTab = 'pens'}>Compatible Pens</button>
 			<button class:active={activeTab === 'similar'} onclick={() => activeTab = 'similar'}>Similar Tablets</button>
 		</div>
+
+		{#if activeTab === 'model'}
+			<section class="tab-content specs-section">
+				<div class="detail-columns">
+					{#each modelTabGroups as group}
+						{@const groupFields = getGroupFields([group])}
+						{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet!); return v && v !== '-'; })}
+						{#if hasValues}
+							<div class="detail-col">
+								<section class="field-group" id="group-{group.toLowerCase()}">
+									<div class="group-header"><h2>{group}</h2></div>
+									<dl>
+										{#each groupFields as f}
+											{@const val = f.getValue(tablet!)}
+											{#if val && val !== '-'}
+												<div class="field-row">
+													<dt>{stripUnit(f.label, f.unit)}</dt>
+													<dd>
+														{#if f.key === 'ModelIncludedPen'}
+															{includedPenNames(tablet!)}
+														{:else if isUrl(val)}
+															<a href={val} target="_blank" rel="noopener">
+																{f.key === 'ModelUserManual' ? 'View Manual ↗' : f.key === 'ModelProductLink' ? 'View Product Page ↗' : val}
+															</a>
+														{:else}
+															{formatValueWithAlt(val, f.label, f.unit, $unitPreference, $showAltUnits)}
+														{/if}
+														{#if f.computed}
+															<span class="computed-badge">computed</span>
+														{/if}
+													</dd>
+												</div>
+											{/if}
+										{/each}
+									</dl>
+								</section>
+							</div>
+						{/if}
+					{/each}
+				</div>
+			</section>
+		{/if}
 
 		{#if activeTab === 'specs'}
 			<section class="tab-content specs-section">
@@ -196,27 +238,22 @@
 					</select>
 				</div>
 				<div class="detail-columns">
-					{#each [col1Groups, col2Groups, col3Groups] as groups}
+					{#each [specsCol1Groups, specsCol2Groups, ...specsCol3Groups.map(g => [g])] as groups}
 						<div class="detail-col">
 							{#each groups as group}
 								{@const groupFields = getGroupFields([group])}
 								{@const hasValues = groupFields.some(f => { const v = f.getValue(tablet!); return v && v !== '-'; })}
 								{#if hasValues}
 									<section class="field-group" id="group-{group.toLowerCase()}">
-										<div class="group-header">
-											<h2>{group}</h2>
-										</div>
+										<div class="group-header"><h2>{group}</h2></div>
 										<dl>
 											{#each groupFields as f}
 												{@const val = f.getValue(tablet!)}
-												{@const displayVal = formatValue(val, f.unit, $unitPreference)}
 												{#if val && val !== '-'}
 													<div class="field-row">
 														<dt>{stripUnit(f.label, f.unit)}</dt>
 														<dd>
-															{#if f.key === 'ModelIncludedPen'}
-																{includedPenNames(tablet!)}
-															{:else if isUrl(val)}
+															{#if isUrl(val)}
 																<a href={val} target="_blank" rel="noopener">
 																	{f.key === 'ModelUserManual' ? 'View Manual ↗' : f.key === 'ModelProductLink' ? 'View Product Page ↗' : val}
 																</a>
