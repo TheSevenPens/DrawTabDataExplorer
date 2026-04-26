@@ -38,16 +38,52 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 
-	type TabName = 'summary' | 'compatibility' | 'completion';
-	const validTabs: TabName[] = ['summary', 'compatibility', 'completion'];
+	interface SectionDef {
+		id: string;
+		category: string;
+		label: string;
+		count?: () => number;
+	}
 
-	let activeTab: TabName = $derived.by(() => {
+	// Source of truth for the navigation tree. Each entry is one node.
+	// `count` (optional) is read reactively in the template to display a
+	// badge next to the node label.
+	const sectionDefs: SectionDef[] = [
+		{ id: 'entity-counts', category: 'Summary', label: 'Entity Counts' },
+		{ id: 'issues', category: 'Summary', label: 'Issues', count: () => issues.length },
+		{ id: 'orphaned-compat', category: 'Compatibility', label: 'Orphaned Compat References', count: () => orphanedCompat.length },
+		{ id: 'wacom-no-compat', category: 'Compatibility', label: 'Wacom Tablets Missing Compat', count: () => tabletsNoCompat.length },
+		{ id: 'pens-no-compat', category: 'Compatibility', label: 'Pens Missing Compat', count: () => pensNoCompat.length },
+		{ id: 'included-pen-no-compat', category: 'Compatibility', label: 'Included Pens Missing Compat', count: () => includedPenMissingCompat.length },
+		{ id: 'orphaned-families', category: 'Compatibility', label: 'Orphaned Family References', count: () => orphanedFamilies.length },
+		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
+		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
+		{ id: 'completion-pen', category: 'Field Completion', label: 'Pens' },
+		{ id: 'completion-driver', category: 'Field Completion', label: 'Drivers' },
+		{ id: 'completion-pressure', category: 'Field Completion', label: 'Pressure Response' },
+		{ id: 'completion-inv-pen', category: 'Field Completion', label: 'Inventory Pens' },
+		{ id: 'completion-inv-tablet', category: 'Field Completion', label: 'Inventory Tablets' },
+	];
+
+	const sectionIds = new Set(sectionDefs.map((s) => s.id));
+	const defaultSection = 'entity-counts';
+
+	const groupedSections: [string, SectionDef[]][] = (() => {
+		const map = new Map<string, SectionDef[]>();
+		for (const s of sectionDefs) {
+			if (!map.has(s.category)) map.set(s.category, []);
+			map.get(s.category)!.push(s);
+		}
+		return [...map.entries()];
+	})();
+
+	let activeSection: string = $derived.by(() => {
 		const hash = page.url.hash.slice(1);
-		return validTabs.includes(hash as TabName) ? hash as TabName : 'summary';
+		return sectionIds.has(hash) ? hash : defaultSection;
 	});
 
-	function setTab(tab: TabName) {
-		goto(`${page.url.pathname}#${tab}`, { replaceState: false, noScroll: true });
+	function setSection(id: string) {
+		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
 	}
 	let inventoryPenCount = $state(0);
 	let inventoryTabletCount = $state(0);
@@ -288,16 +324,33 @@
 	<p>Loading...</p>
 {:else}
 
-	<!-- Sub-tabs -->
-	<div class="tabs">
-		<button class:active={activeTab === 'summary'} onclick={() => setTab('summary')}>Summary</button>
-		<button class:active={activeTab === 'compatibility'} onclick={() => setTab('compatibility')}>Compatibility</button>
-		<button class:active={activeTab === 'completion'} onclick={() => setTab('completion')}>Field Completion</button>
-	</div>
+	<div class="dq-layout">
+		<nav class="dq-tree" aria-label="Data quality sections">
+			{#each groupedSections as [category, items]}
+				<div class="tree-cat">
+					<div class="tree-cat-label">{category}</div>
+					<ul>
+						{#each items as item}
+							{@const c = item.count?.()}
+							<li>
+								<button
+									type="button"
+									class:active={activeSection === item.id}
+									onclick={() => setSection(item.id)}
+								>
+									<span class="tree-label">{item.label}</span>
+									{#if c != null}<span class="tree-count" class:zero={c === 0}>{c}</span>{/if}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/each}
+		</nav>
 
-	<!-- SUMMARY TAB -->
-	{#if activeTab === 'summary'}
+		<main class="dq-content">
 
+	{#if activeSection === 'entity-counts'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Entity Counts</h2>
@@ -313,6 +366,9 @@
 			</table>
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'issues'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Issues ({issues.length})</h2>
@@ -338,9 +394,9 @@
 			{/if}
 		</section>
 
-	<!-- COMPATIBILITY TAB -->
-	{:else if activeTab === 'compatibility'}
+	{/if}
 
+	{#if activeSection === 'orphaned-compat'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Orphaned Compat References ({orphanedCompat.length})</h2>
@@ -361,6 +417,9 @@
 			{/if}
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'wacom-no-compat'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Wacom Tablets with No Pen Compatibility Data ({tabletsNoCompat.length})</h2>
@@ -381,6 +440,9 @@
 			{/if}
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'pens-no-compat'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Pens with No Tablet Compatibility Data ({pensNoCompat.length})</h2>
@@ -401,6 +463,9 @@
 			{/if}
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'included-pen-no-compat'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Included Pens Missing Compatibility Info ({includedPenMissingCompat.length})</h2>
@@ -426,6 +491,9 @@
 			{/if}
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'orphaned-families'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Orphaned Family References ({orphanedFamilies.length})</h2>
@@ -446,9 +514,9 @@
 			{/if}
 		</section>
 
-	<!-- FIELD COMPLETION TAB -->
-	{:else if activeTab === 'completion'}
+	{/if}
 
+	{#if activeSection === 'completion-tablet'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Tablet Field Completion</h2>
@@ -475,6 +543,9 @@
 			</table>
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'completion-display'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Display Field Completion</h2>
@@ -501,6 +572,9 @@
 			</table>
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'completion-pen'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Pen Field Completion</h2>
@@ -527,6 +601,9 @@
 			</table>
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'completion-driver'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Driver Field Completion</h2>
@@ -553,6 +630,9 @@
 			</table>
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'completion-pressure'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Pressure Response Field Completion</h2>
@@ -579,6 +659,9 @@
 			</table>
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'completion-inv-pen'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Inventory Pen Field Completion</h2>
@@ -604,6 +687,9 @@
 			</table>
 		</section>
 
+	{/if}
+
+	{#if activeSection === 'completion-inv-tablet'}
 		<section class="section">
 			<div class="section-header">
 				<h2>Inventory Tablet Field Completion</h2>
@@ -631,42 +717,118 @@
 
 	{/if}
 
+		</main>
+	</div>
+
 {/if}
 
 <style>
 	h1 { margin-bottom: 16px; }
 
-	.tabs {
+	.dq-layout {
 		display: flex;
-		gap: 0;
-		border-bottom: 2px solid var(--border);
-		margin-bottom: 20px;
+		gap: 24px;
+		align-items: flex-start;
 	}
 
-	.tabs button {
-		padding: 7px 18px;
+	.dq-tree {
+		flex: 0 0 240px;
+		position: sticky;
+		top: 16px;
+		max-height: calc(100vh - 32px);
+		overflow-y: auto;
+		border-right: 1px solid var(--border, #e0e0e0);
+		padding: 4px 12px 4px 0;
 		font-size: 13px;
+	}
+
+	.dq-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.tree-cat {
+		margin-bottom: 14px;
+	}
+
+	.tree-cat-label {
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-muted, #888);
+		padding: 0 8px;
+		margin-bottom: 4px;
+	}
+
+	.tree-cat ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.tree-cat li {
+		margin: 0;
+	}
+
+	.tree-cat button {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		width: 100%;
+		padding: 5px 10px;
+		font-size: 13px;
+		text-align: left;
 		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
+		border-radius: 4px;
 		background: transparent;
-		color: var(--text-muted);
+		color: var(--text, #333);
 		cursor: pointer;
-		position: relative;
-		bottom: -2px;
+		line-height: 1.3;
 	}
 
-	.tabs button:hover {
+	.tree-cat button:hover {
+		background: #eff6ff;
 		color: #2563eb;
-		background: var(--hover-bg);
 	}
 
-	.tabs button.active {
-		background: var(--bg-card);
-		color: var(--text);
+	.tree-cat button.active {
+		background: #dbeafe;
+		color: #1e40af;
 		font-weight: 600;
-		border-color: var(--border);
-		border-bottom-color: var(--bg-card);
+	}
+
+	.tree-label {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.tree-count {
+		flex: 0 0 auto;
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		padding: 1px 6px;
+		border-radius: 9px;
+		background: #fee2e2;
+		color: #991b1b;
+	}
+
+	.tree-count.zero {
+		background: #dcfce7;
+		color: #166534;
+	}
+
+	.tree-cat button.active .tree-count {
+		background: #1e40af;
+		color: #fff;
+	}
+
+	.tree-cat button.active .tree-count.zero {
+		background: #166534;
 	}
 
 	.section {
