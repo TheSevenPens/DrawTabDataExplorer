@@ -5,6 +5,7 @@
 	import { loadInventoryPensFromURL, loadInventoryTabletsFromURL } from '$data/lib/drawtab-loader.js';
 	import { buildFilterUrl } from '$lib/filter-url.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import ExportButton from '$lib/components/ExportButton.svelte';
 
 	interface Issue {
 		entity: string;
@@ -132,6 +133,14 @@
 	let tabletsNoCompat: { id: string; name: string }[] = $state([]);
 	let pensNoCompat: { id: string; name: string }[] = $state([]);
 
+	// Tablets whose IncludedPen has no matching pen-compat row.
+	let includedPenMissingCompat: {
+		tabletId: string;
+		tabletName: string;
+		penEntityId: string;
+		penName: string;
+	}[] = $state([]);
+
 	onMount(async () => {
 		const [dsResult, invPens, invTablets] = await Promise.all([
 			loadAllFromURL(base),
@@ -237,6 +246,38 @@
 		pensNoCompat = ds.pens
 			.filter(p => !ds!.penToTablets.has(p.PenId))
 			.map(p => ({ id: p.PenId, name: p.PenName }));
+
+		// Included pens missing compatibility info.
+		// IncludedPen holds pen EntityIds (e.g. "wacom.pen.kp503e"); pen-compat
+		// rows hold bare PenIds (e.g. "KP-503E"). Resolve each IncludedPen
+		// EntityId to its pen record, then check that a pen-compat row exists
+		// linking the tablet's Model.Id to that pen's PenId.
+		const penByEntityId = new Map(ds.pens.map(p => [p.EntityId, p]));
+		const compatPairs = new Set<string>();
+		for (const row of ds.penCompat) {
+			compatPairs.add(`${row.TabletId}::${row.PenId}`);
+		}
+		const missing: typeof includedPenMissingCompat = [];
+		for (const tablet of ds.tablets) {
+			const included = tablet.Model.IncludedPen ?? [];
+			for (const penEntityId of included) {
+				const pen = penByEntityId.get(penEntityId);
+				const penIdForCompat = pen?.PenId;
+				const penName = pen?.PenName ?? '(missing pen record)';
+				const linked = penIdForCompat
+					? compatPairs.has(`${tablet.Model.Id}::${penIdForCompat}`)
+					: false;
+				if (!linked) {
+					missing.push({
+						tabletId: tablet.Model.Id,
+						tabletName: tablet.Model.Name,
+						penEntityId,
+						penName,
+					});
+				}
+			}
+		}
+		includedPenMissingCompat = missing;
 	});
 </script>
 
@@ -258,7 +299,10 @@
 	{#if activeTab === 'summary'}
 
 		<section class="section">
-			<h2>Entity Counts</h2>
+			<div class="section-header">
+				<h2>Entity Counts</h2>
+				<ExportButton headers={['Entity', 'Count']} rows={entityCounts.map(r => [r.entity, r.count])} />
+			</div>
 			<table class="compact">
 				<thead><tr><th>Entity</th><th>Count</th></tr></thead>
 				<tbody>
@@ -270,7 +314,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Issues ({issues.length})</h2>
+			<div class="section-header">
+				<h2>Issues ({issues.length})</h2>
+				<ExportButton headers={['Entity', 'Entity ID', 'Field', 'Issue', 'Value']} rows={issues.map(i => [i.entity, i.entityId, i.field, i.issue, i.value ?? ''])} />
+			</div>
 			{#if issues.length === 0}
 				<p class="good">No issues found.</p>
 			{:else}
@@ -295,7 +342,10 @@
 	{:else if activeTab === 'compatibility'}
 
 		<section class="section">
-			<h2>Orphaned Compat References ({orphanedCompat.length})</h2>
+			<div class="section-header">
+				<h2>Orphaned Compat References ({orphanedCompat.length})</h2>
+				<ExportButton headers={['Type', 'ID']} rows={orphanedCompat.map(o => [o.type, o.id])} />
+			</div>
 			<p class="description">IDs in pen-compat that don't match any record in the referenced entity.</p>
 			{#if orphanedCompat.length === 0}
 				<p class="good">No orphaned references.</p>
@@ -312,7 +362,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Wacom Tablets with No Pen Compatibility Data ({tabletsNoCompat.length})</h2>
+			<div class="section-header">
+				<h2>Wacom Tablets with No Pen Compatibility Data ({tabletsNoCompat.length})</h2>
+				<ExportButton headers={['Model ID', 'Name']} rows={tabletsNoCompat.map(t => [t.id, t.name])} />
+			</div>
 			<p class="description">Wacom tablets that have no entries in pen-compat.</p>
 			{#if tabletsNoCompat.length === 0}
 				<p class="good">All Wacom tablets have compatibility data.</p>
@@ -329,7 +382,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Pens with No Tablet Compatibility Data ({pensNoCompat.length})</h2>
+			<div class="section-header">
+				<h2>Pens with No Tablet Compatibility Data ({pensNoCompat.length})</h2>
+				<ExportButton headers={['Pen ID', 'Name']} rows={pensNoCompat.map(p => [p.id, p.name])} />
+			</div>
 			<p class="description">Pens that have no entries in pen-compat.</p>
 			{#if pensNoCompat.length === 0}
 				<p class="good">All pens have compatibility data.</p>
@@ -346,7 +402,35 @@
 		</section>
 
 		<section class="section">
-			<h2>Orphaned Family References ({orphanedFamilies.length})</h2>
+			<div class="section-header">
+				<h2>Included Pens Missing Compatibility Info ({includedPenMissingCompat.length})</h2>
+				<ExportButton headers={['Tablet ID', 'Tablet Name', 'Pen EntityId', 'Pen Name']} rows={includedPenMissingCompat.map(r => [r.tabletId, r.tabletName, r.penEntityId, r.penName])} />
+			</div>
+			<p class="description">Tablets whose <code>Model.IncludedPen</code> references a pen, but no pen-compat row links the tablet and pen. These should always be present — an included pen is by definition compatible with its tablet.</p>
+			{#if includedPenMissingCompat.length === 0}
+				<p class="good">All included pens have a matching pen-compat row.</p>
+			{:else}
+				<table class="compact">
+					<thead><tr><th>Tablet ID</th><th>Tablet Name</th><th>Pen EntityId</th><th>Pen Name</th></tr></thead>
+					<tbody>
+						{#each includedPenMissingCompat as r}
+							<tr>
+								<td class="mono">{r.tabletId}</td>
+								<td>{r.tabletName}</td>
+								<td class="mono">{r.penEntityId}</td>
+								<td>{r.penName}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</section>
+
+		<section class="section">
+			<div class="section-header">
+				<h2>Orphaned Family References ({orphanedFamilies.length})</h2>
+				<ExportButton headers={['Type', 'Family ID', 'Referenced By']} rows={orphanedFamilies.map(o => [o.type, o.id, o.referencedBy])} />
+			</div>
 			<p class="description">Family IDs referenced by pens or tablets that don't exist in the family entities.</p>
 			{#if orphanedFamilies.length === 0}
 				<p class="good">No orphaned family references.</p>
@@ -366,7 +450,10 @@
 	{:else if activeTab === 'completion'}
 
 		<section class="section">
-			<h2>Tablet Field Completion</h2>
+			<div class="section-header">
+				<h2>Tablet Field Completion</h2>
+				<ExportButton headers={['Field', 'Populated', '%']} rows={tabletCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+			</div>
 			<p class="description">How many of the {ds.tablets.length} tablets have each field populated.</p>
 			<table class="compact">
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
@@ -389,7 +476,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Display Field Completion</h2>
+			<div class="section-header">
+				<h2>Display Field Completion</h2>
+				<ExportButton headers={['Field', 'Populated', '%']} rows={displayCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+			</div>
 			<p class="description">How many of the {displayTabletCount} pen displays and standalone tablets have each display field populated.</p>
 			<table class="compact">
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
@@ -412,7 +502,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Pen Field Completion</h2>
+			<div class="section-header">
+				<h2>Pen Field Completion</h2>
+				<ExportButton headers={['Field', 'Populated', '%']} rows={penCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+			</div>
 			<p class="description">How many of the {ds.pens.length} pens have each optional field populated.</p>
 			<table class="compact">
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
@@ -435,7 +528,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Driver Field Completion</h2>
+			<div class="section-header">
+				<h2>Driver Field Completion</h2>
+				<ExportButton headers={['Field', 'Populated', '%']} rows={driverCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+			</div>
 			<p class="description">How many of the {ds.drivers.length} drivers have each optional field populated.</p>
 			<table class="compact">
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
@@ -458,7 +554,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Pressure Response Field Completion</h2>
+			<div class="section-header">
+				<h2>Pressure Response Field Completion</h2>
+				<ExportButton headers={['Field', 'Populated', '%']} rows={pressureResponseCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+			</div>
 			<p class="description">How many of the {ds.pressureResponse.length} sessions have each optional field populated.</p>
 			<table class="compact">
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
@@ -481,7 +580,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Inventory Pen Field Completion</h2>
+			<div class="section-header">
+				<h2>Inventory Pen Field Completion</h2>
+				<ExportButton headers={['Field', 'Populated', '%']} rows={inventoryPenCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+			</div>
 			<p class="description">How many of the {inventoryPenCount} inventory pens have each optional field populated.</p>
 			<table class="compact">
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
@@ -503,7 +605,10 @@
 		</section>
 
 		<section class="section">
-			<h2>Inventory Tablet Field Completion</h2>
+			<div class="section-header">
+				<h2>Inventory Tablet Field Completion</h2>
+				<ExportButton headers={['Field', 'Populated', '%']} rows={inventoryTabletCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+			</div>
 			<p class="description">How many of the {inventoryTabletCount} inventory tablets have each optional field populated.</p>
 			<table class="compact">
 				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
@@ -566,6 +671,22 @@
 
 	.section {
 		margin-bottom: 32px;
+	}
+
+	.section-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+		border-bottom: 2px solid #e0e0e0;
+		padding-bottom: 4px;
+		margin-bottom: 8px;
+	}
+
+	.section-header h2 {
+		border-bottom: none;
+		padding-bottom: 0;
+		margin-bottom: 0;
 	}
 
 	h2 {
