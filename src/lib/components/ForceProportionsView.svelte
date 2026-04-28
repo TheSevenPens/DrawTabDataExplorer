@@ -83,6 +83,7 @@
 	}
 
 	let lenUnit = $derived($unitPreference === 'imperial' ? 'in' : 'mm');
+	let areaUnit = $derived($unitPreference === 'imperial' ? 'sq in' : 'sq cm');
 
 	function fmtPct(n: number): string {
 		return (n * 100).toFixed(1);
@@ -90,6 +91,15 @@
 
 	function diag(w: number, h: number): number {
 		return Math.sqrt(w * w + h * h);
+	}
+
+	function fmtArea(wMm: number, hMm: number): string {
+		if ($unitPreference === 'imperial') {
+			const wIn = wMm * 0.03937;
+			const hIn = hMm * 0.03937;
+			return (wIn * hIn).toFixed(2);
+		}
+		return ((wMm * hMm) / 100).toFixed(1);
 	}
 
 	function tabletRatioLabel(): string {
@@ -145,7 +155,8 @@
 					</svg>
 					<div class="caption">
 						{fmtLen(width)} × {fmtLen(height)} {lenUnit}<br />
-						{fmtLen(diag(width, height))} {lenUnit} diagonal
+						{fmtLen(diag(width, height))} {lenUnit} diagonal<br />
+						{fmtArea(width, height)} {areaUnit}
 					</div>
 				</div>
 
@@ -259,7 +270,8 @@
 					</div>
 					<div class="caption">
 						{fmtLen(c.usedW)} × {fmtLen(c.usedH)} {lenUnit} usable<br />
-						{fmtLen(diag(c.usedW, c.usedH))} {lenUnit} diagonal
+						{fmtLen(diag(c.usedW, c.usedH))} {lenUnit} diagonal<br />
+						{fmtArea(c.usedW, c.usedH)} {areaUnit}
 					</div>
 				</div>
 			</div>
