@@ -44,6 +44,7 @@ DrawTabDataExplorer/
 │       │   ├── TabletSizeComparison.svelte # Histogram + ISO note for tablet detail
 │       │   ├── ForceProportionsView.svelte # Force-Proportions loss diagram (16:9, 16:10)
 │       │   ├── SavedViews.svelte
+│       │   ├── SubNav.svelte                # Sub-tab row under main nav
 │       │   └── Nav.svelte
 │       ├── load-all-data.ts      # loadAllData() — fetches all 9 datasets in parallel
 │       ├── storage.ts            # localStorage helpers (getItem/setItem with JSON)
@@ -120,7 +121,18 @@ page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 
 **Nav** — Navigation bar with links to all entity pages and a
 metric/imperial toggle button. Shows a badge on the Compare link with
-the current flagged tablet count.
+the current flagged tablet count. Tablets and tablet-families are
+collapsed under a single "Tablets" link (active for both `/` and
+`/tablet-families`); pens and pen-families likewise under "Pens".
+Each `LinkSpec` may declare an `altActive` array of additional
+pathnames that should mark it as active.
+
+**SubNav** — Generic sub-tab row rendered beneath `Nav` on the four
+list pages that share a top-level entry: `/` and `/tablet-families`
+share the **Tablets** parent (sub-tabs *Tablet models* / *Tablet
+families*); `/pens` and `/pen-families` share **Pens** (*Pen models*
+/ *Pen families*). Takes a `tabs: { href, label }[]` prop and
+highlights the entry whose href matches the current pathname.
 
 ## Compare feature
 
