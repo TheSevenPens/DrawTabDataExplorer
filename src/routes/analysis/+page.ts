@@ -1,8 +1,16 @@
 import { base } from '$app/paths';
-import { loadTabletsFromURL } from '$data/lib/drawtab-loader.js';
-import type { Tablet } from '$data/lib/drawtab-loader.js';
+import {
+	loadTabletsFromURL,
+	loadISOPaperSizesFromURL,
+	loadUSPaperSizesFromURL,
+} from '$data/lib/drawtab-loader.js';
+import type { Tablet, ISOPaperSize, USPaperSize } from '$data/lib/drawtab-loader.js';
 
 export async function load() {
-	const allTablets = await loadTabletsFromURL(base) as Tablet[];
-	return { allTablets };
+	const [allTablets, isoPaperSizes, usPaperSizes] = await Promise.all([
+		loadTabletsFromURL(base) as Promise<Tablet[]>,
+		loadISOPaperSizesFromURL(base),
+		loadUSPaperSizesFromURL(base),
+	]);
+	return { allTablets, isoPaperSizes, usPaperSizes };
 }

@@ -3,14 +3,24 @@
 	import { goto } from '$app/navigation';
 	import Nav from '$lib/components/Nav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
-	import type { Tablet } from '$data/lib/drawtab-loader.js';
+	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import { getDiagonal, type Tablet, type ISOPaperSize, type USPaperSize } from '$data/lib/drawtab-loader.js';
 	import {
 		aspectRatioCategory,
 		ASPECT_RATIO_CATEGORIES,
 	} from '$data/lib/aspect-ratio.js';
+	import { unitPreference } from '$lib/unit-store.js';
+	import {
+		penTabletRangesCm, penTabletRangesIn,
+		displayRangesCm, displayRangesIn,
+		MM_TO_IN, MM_TO_CM,
+	} from '$lib/tablet-size-ranges.js';
 
 	let { data } = $props();
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
+	let isoPaperSizes: ISOPaperSize[] = $derived(data.isoPaperSizes ?? []);
+	let usPaperSizes: USPaperSize[] = $derived(data.usPaperSizes ?? []);
+	let isMetric = $derived($unitPreference === 'metric');
 
 	interface SectionDef {
 		id: string;
@@ -29,6 +39,8 @@
 		{ id: 'panel-tech', category: 'Display Tech', label: 'Panel Technology' },
 		{ id: 'pressure-levels', category: 'Tablet Features', label: 'Pressure Levels' },
 		{ id: 'touch-support', category: 'Tablet Features', label: 'Touch Support' },
+		{ id: 'sizes-pen-tablet', category: 'Sizes', label: 'Pen Tablet diagonal' },
+		{ id: 'sizes-pen-display', category: 'Sizes', label: 'Pen Display diagonal' },
 	];
 
 	const sectionIds = new Set(sectionDefs.map((s) => s.id));
@@ -210,6 +222,68 @@
 	function pct(n: number, total: number): string {
 		return total === 0 ? '0.0%' : `${((n / total) * 100).toFixed(1)}%`;
 	}
+
+	// --- Sizes tab ---
+
+	type Overlay = 'none' | 'iso-a' | 'iso-b' | 'us';
+	const OVERLAY_OPTIONS: { value: Overlay; label: string }[] = [
+		{ value: 'none', label: 'None' },
+		{ value: 'iso-a', label: 'ISO A paper sizes' },
+		{ value: 'iso-b', label: 'ISO B paper sizes' },
+		{ value: 'us', label: 'US paper sizes' },
+	];
+
+	let ptOverlay = $state<Overlay>('none');
+	let pdOverlay = $state<Overlay>('none');
+	let ptSizesYears = $state<number | null>(15);
+	let pdSizesYears = $state<number | null>(15);
+
+	const currentYear = new Date().getFullYear();
+
+	function filterByYears(tablets: Tablet[], type: 'PENTABLET' | 'PENDISPLAY', years: number | null): Tablet[] {
+		return tablets.filter(t => {
+			if (type === 'PENTABLET' && t.Model.Type !== 'PENTABLET') return false;
+			if (type === 'PENDISPLAY' && t.Model.Type === 'PENTABLET') return false;
+			if (years !== null) {
+				const y = parseInt(t.Model.LaunchYear, 10);
+				if (!isNaN(y) && y < currentYear - years) return false;
+			}
+			return true;
+		});
+	}
+
+	function diagsOf(tablets: Tablet[]): number[] {
+		return tablets
+			.map(t => {
+				const d = getDiagonal(t.Digitizer?.Dimensions);
+				return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
+			})
+			.filter((d): d is number => d !== null);
+	}
+
+	let ptSizesValues = $derived(diagsOf(filterByYears(allTablets, 'PENTABLET', ptSizesYears)));
+	let pdSizesValues = $derived(diagsOf(filterByYears(allTablets, 'PENDISPLAY', pdSizesYears)));
+	let ptSizesRanges = $derived(isMetric ? penTabletRangesCm : penTabletRangesIn);
+	let pdSizesRanges = $derived(isMetric ? displayRangesCm : displayRangesIn);
+
+	function paperMarkers(sizes: { Name: string; Width_mm: number; Height_mm: number }[]): HistogramMarker[] {
+		return sizes.map(p => {
+			const diagMm = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
+			return { value: isMetric ? diagMm / 10 : diagMm * MM_TO_IN, label: p.Name };
+		});
+	}
+
+	function markersFor(overlay: Overlay): HistogramMarker[] {
+		switch (overlay) {
+			case 'iso-a': return paperMarkers(isoPaperSizes.filter(p => p.Series === 'A'));
+			case 'iso-b': return paperMarkers(isoPaperSizes.filter(p => p.Series === 'B'));
+			case 'us':    return paperMarkers(usPaperSizes.filter(p => p.Series === 'Common'));
+			default:      return [];
+		}
+	}
+
+	let ptMarkers = $derived(markersFor(ptOverlay));
+	let pdMarkers = $derived(markersFor(pdOverlay));
 </script>
 
 <Nav />
@@ -499,6 +573,77 @@
 
 {/if}
 
+{#if activeSection === 'sizes-pen-tablet'}
+
+	<section class="section">
+		<div class="section-header">
+			<h2>Pen Tablet diagonal ({ptSizesValues.length})</h2>
+			<label class="overlay-select">
+				Overlay:
+				<select bind:value={ptOverlay}>
+					{#each OVERLAY_OPTIONS as opt}
+						<option value={opt.value}>{opt.label}</option>
+					{/each}
+				</select>
+			</label>
+		</div>
+		<p class="description">
+			Distribution of pen-tablet active-area diagonals. Use the overlay
+			control to project paper-size markers onto the chart.
+		</p>
+		{#if ptSizesValues.length > 0}
+			<ValueHistogram
+				title="Pen tablet active area diagonal"
+				values={ptSizesValues}
+				currentValue={null}
+				ranges={ptSizesRanges}
+				unit={isMetric ? ' cm' : '"'}
+				binSize={isMetric ? 1 : 0.5}
+				bandwidthMultiplier={0.2}
+				bind:compareYears={ptSizesYears}
+				markers={ptMarkers}
+			/>
+		{/if}
+	</section>
+
+{/if}
+
+{#if activeSection === 'sizes-pen-display'}
+
+	<section class="section">
+		<div class="section-header">
+			<h2>Pen Display diagonal ({pdSizesValues.length})</h2>
+			<label class="overlay-select">
+				Overlay:
+				<select bind:value={pdOverlay}>
+					{#each OVERLAY_OPTIONS as opt}
+						<option value={opt.value}>{opt.label}</option>
+					{/each}
+				</select>
+			</label>
+		</div>
+		<p class="description">
+			Distribution of pen-display (and standalone) active-area
+			diagonals. Use the overlay control to project paper-size markers
+			onto the chart.
+		</p>
+		{#if pdSizesValues.length > 0}
+			<ValueHistogram
+				title="Pen display active area diagonal"
+				values={pdSizesValues}
+				currentValue={null}
+				ranges={pdSizesRanges}
+				unit={isMetric ? ' cm' : '"'}
+				binSize={isMetric ? 1 : 0.5}
+				bandwidthMultiplier={0.2}
+				bind:compareYears={pdSizesYears}
+				markers={pdMarkers}
+			/>
+		{/if}
+	</section>
+
+{/if}
+
 	</main>
 </div>
 
@@ -621,6 +766,22 @@
 	}
 	.export-trigger:hover { border-color: var(--text-dim); color: var(--text); }
 	.export-trigger:disabled { opacity: 0.4; cursor: not-allowed; }
+
+	.overlay-select {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+		color: var(--text-muted);
+	}
+	.overlay-select select {
+		font-size: 12px;
+		padding: 3px 8px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+	}
 
 	.section { margin-bottom: 32px; }
 

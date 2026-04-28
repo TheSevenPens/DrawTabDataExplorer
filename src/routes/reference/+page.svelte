@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadISOPaperSizesFromURL, loadUSPaperSizesFromURL, loadTabletsFromURL, getDiagonal, type ISOPaperSize, type USPaperSize, type Tablet } from '$data/lib/drawtab-loader.js';
-	import { unitPreference } from '$lib/unit-store.js';
-	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
-	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
+	import { loadISOPaperSizesFromURL, loadUSPaperSizesFromURL, loadTabletsFromURL, type ISOPaperSize, type USPaperSize, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn } from '$lib/tablet-size-ranges.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 
@@ -13,103 +11,8 @@
 	let usPaperSizes: USPaperSize[] = $state([]);
 	let allTablets: Tablet[] = $state([]);
 
-	const currentYear = new Date().getFullYear();
-	let isMetric = $derived($unitPreference === 'metric');
-
-	let penTabletCompareYears = $state<number | null>(15);
-	let penDisplayCompareYears = $state<number | null>(15);
-
-	function filterByYears(tablets: Tablet[], type: string, years: number | null): Tablet[] {
-		return tablets.filter(t => {
-			if (t.Model.Type !== type && !(type === 'PENDISPLAY' && t.Model.Type === 'STANDALONE')) return false;
-			if (years !== null) {
-				const year = parseInt(t.Model.LaunchYear, 10);
-				if (!isNaN(year) && year < currentYear - years) return false;
-			}
-			return true;
-		});
-	}
-
-	let penTabletValues = $derived(
-		filterByYears(allTablets, 'PENTABLET', penTabletCompareYears)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let penDisplayValues = $derived(
-		filterByYears(allTablets, 'PENDISPLAY', penDisplayCompareYears)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let penTabletHistRanges = $derived<HistogramRange[]>(isMetric ? penTabletRangesCm : penTabletRangesIn);
-	let penDisplayHistRanges = $derived<HistogramRange[]>(isMetric ? displayRangesCm : displayRangesIn);
-
 	let aSeries = $derived(paperSizes.filter(p => p.Series === 'A'));
 	let bSeries = $derived(paperSizes.filter(p => p.Series === 'B'));
-
-	function isoMarkers(series: typeof aSeries): HistogramMarker[] {
-		return series.map(p => {
-			const diagMm = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
-			return { value: isMetric ? diagMm / 10 : diagMm * MM_TO_IN, label: p.Name };
-		});
-	}
-
-	let isoAMarkers = $derived<HistogramMarker[]>(isoMarkers(aSeries));
-	let isoBMarkers = $derived<HistogramMarker[]>(isoMarkers(bSeries));
-
-	let isoACompareYearsPenTablet = $state<number | null>(15);
-	let isoACompareYearsPenDisplay = $state<number | null>(15);
-	let isoBCompareYearsPenTablet = $state<number | null>(15);
-	let isoBCompareYearsPenDisplay = $state<number | null>(15);
-
-	let usCompareYearsPenTablet = $state<number | null>(15);
-	let usCompareYearsPenDisplay = $state<number | null>(15);
-
-	let usCommonSeries = $derived(usPaperSizes.filter(p => p.Series === 'Common'));
-
-	let usMarkers = $derived<HistogramMarker[]>(
-		usCommonSeries.map(p => {
-			const diagMm = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
-			return { value: isMetric ? diagMm / 10 : diagMm * MM_TO_IN, label: p.Name };
-		})
-	);
-
-	let usPenTabletValues = $derived(
-		filterByYears(allTablets, 'PENTABLET', usCompareYearsPenTablet)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let usPenDisplayValues = $derived(
-		filterByYears(allTablets, 'PENDISPLAY', usCompareYearsPenDisplay)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let isoAPenTabletValues = $derived(
-		filterByYears(allTablets, 'PENTABLET', isoACompareYearsPenTablet)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let isoAPenDisplayValues = $derived(
-		filterByYears(allTablets, 'PENDISPLAY', isoACompareYearsPenDisplay)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let isoBPenTabletValues = $derived(
-		filterByYears(allTablets, 'PENTABLET', isoBCompareYearsPenTablet)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
-
-	let isoBPenDisplayValues = $derived(
-		filterByYears(allTablets, 'PENDISPLAY', isoBCompareYearsPenDisplay)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
-	);
 
 	function gcd(a: number, b: number): number {
 		return b === 0 ? a : gcd(b, a % b);
@@ -247,18 +150,6 @@
 				{/each}
 			</tbody>
 		</table>
-		{#if penTabletValues.length > 0}
-			<ValueHistogram
-				title="Pen tablet active area diagonal distribution"
-				values={penTabletValues}
-				currentValue={null}
-				ranges={penTabletHistRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={penTabletCompareYears}
-			/>
-		{/if}
 	</section>
 
 	<section>
@@ -293,18 +184,6 @@
 				{/each}
 			</tbody>
 		</table>
-		{#if penDisplayValues.length > 0}
-			<ValueHistogram
-				title="Pen display active area diagonal distribution"
-				values={penDisplayValues}
-				currentValue={null}
-				ranges={penDisplayHistRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={penDisplayCompareYears}
-			/>
-		{/if}
 	</section>
 {:else if activeTab === 'iso-paper-a'}
 	<section>
@@ -344,40 +223,6 @@
 			<p class="no-data">Loading...</p>
 		{/if}
 	</section>
-
-	{#if isoAPenTabletValues.length > 0}
-		<section>
-			<h2>Pen Tablet Diagonal Distribution with ISO A Sizes</h2>
-			<ValueHistogram
-				title="Pen tablet active area diagonal with ISO A paper sizes"
-				values={isoAPenTabletValues}
-				currentValue={null}
-				ranges={penTabletHistRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={isoACompareYearsPenTablet}
-				markers={isoAMarkers}
-			/>
-		</section>
-	{/if}
-
-	{#if isoAPenDisplayValues.length > 0}
-		<section>
-			<h2>Pen Display Diagonal Distribution with ISO A Sizes</h2>
-			<ValueHistogram
-				title="Pen display active area diagonal with ISO A paper sizes"
-				values={isoAPenDisplayValues}
-				currentValue={null}
-				ranges={penDisplayHistRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={isoACompareYearsPenDisplay}
-				markers={isoAMarkers}
-			/>
-		</section>
-	{/if}
 {:else if activeTab === 'iso-paper-b'}
 	<section>
 		<div class="section-header">
@@ -416,40 +261,6 @@
 			<p class="no-data">Loading...</p>
 		{/if}
 	</section>
-
-	{#if isoBPenTabletValues.length > 0}
-		<section>
-			<h2>Pen Tablet Diagonal Distribution with ISO B Sizes</h2>
-			<ValueHistogram
-				title="Pen tablet active area diagonal with ISO B paper sizes"
-				values={isoBPenTabletValues}
-				currentValue={null}
-				ranges={penTabletHistRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={isoBCompareYearsPenTablet}
-				markers={isoBMarkers}
-			/>
-		</section>
-	{/if}
-
-	{#if isoBPenDisplayValues.length > 0}
-		<section>
-			<h2>Pen Display Diagonal Distribution with ISO B Sizes</h2>
-			<ValueHistogram
-				title="Pen display active area diagonal with ISO B paper sizes"
-				values={isoBPenDisplayValues}
-				currentValue={null}
-				ranges={penDisplayHistRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={isoBCompareYearsPenDisplay}
-				markers={isoBMarkers}
-			/>
-		</section>
-	{/if}
 {:else if activeTab === 'us-paper'}
 	<section>
 		<div class="section-header">
@@ -489,40 +300,6 @@
 			<p class="no-data">Loading...</p>
 		{/if}
 	</section>
-
-	{#if usPenTabletValues.length > 0}
-		<section>
-			<h2>Pen Tablet Diagonal Distribution with US Paper Sizes</h2>
-			<ValueHistogram
-				title="Pen tablet active area diagonal with US paper sizes"
-				values={usPenTabletValues}
-				currentValue={null}
-				ranges={penTabletHistRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={usCompareYearsPenTablet}
-				markers={usMarkers}
-			/>
-		</section>
-	{/if}
-
-	{#if usPenDisplayValues.length > 0}
-		<section>
-			<h2>Pen Display Diagonal Distribution with US Paper Sizes</h2>
-			<ValueHistogram
-				title="Pen display active area diagonal with US paper sizes"
-				values={usPenDisplayValues}
-				currentValue={null}
-				ranges={penDisplayHistRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={usCompareYearsPenDisplay}
-				markers={usMarkers}
-			/>
-		</section>
-	{/if}
 {:else if activeTab === 'display-resolutions'}
 	<section>
 		<div class="section-header">
