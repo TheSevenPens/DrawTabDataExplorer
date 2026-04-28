@@ -82,6 +82,10 @@
 		return (n * 100).toFixed(1);
 	}
 
+	function diag(w: number, h: number): number {
+		return Math.sqrt(w * w + h * h);
+	}
+
 	function tabletRatioLabel(): string {
 		if (width <= 0 || height <= 0) return '';
 		// Normalize to long/short so portrait panels label the same as landscape.
@@ -133,7 +137,10 @@
 							{tabletRatioLabel()}
 						</text>
 					</svg>
-					<div class="caption">{fmt(width)} × {fmt(height)} mm</div>
+					<div class="caption">
+						{fmt(width)} × {fmt(height)} mm<br />
+						{fmt(diag(width, height))} mm diagonal
+					</div>
 				</div>
 
 				<div class="arrow">
@@ -244,7 +251,10 @@
 						<div><span class="swatch used"></span> USED: {fmtPct(c.usedFraction)}%</div>
 						<div><span class="swatch lost"></span> LOST: {fmtPct(c.lostFraction)}%</div>
 					</div>
-					<div class="caption">{fmt(c.usedW)} × {fmt(c.usedH)} mm usable</div>
+					<div class="caption">
+						{fmt(c.usedW)} × {fmt(c.usedH)} mm usable<br />
+						{fmt(diag(c.usedW, c.usedH))} mm diagonal
+					</div>
 				</div>
 			</div>
 		</div>
