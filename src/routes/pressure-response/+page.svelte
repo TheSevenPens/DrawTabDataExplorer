@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadPressureResponseFromURL } from '$data/lib/drawtab-loader.js';
-	import { type PressureResponse, PRESSURE_RESPONSE_FIELDS, PRESSURE_RESPONSE_FIELD_GROUPS, PRESSURE_RESPONSE_DEFAULT_COLUMNS, PRESSURE_RESPONSE_DEFAULT_VIEW } from '$data/lib/entities/pressure-response-fields.js';
+	import { loadPressureResponseFromURL, loadPensFromURL, type Pen } from '$data/lib/drawtab-loader.js';
+	import { type PressureResponse, PRESSURE_RESPONSE_FIELDS, PRESSURE_RESPONSE_FIELD_GROUPS, PRESSURE_RESPONSE_DEFAULT_COLUMNS, PRESSURE_RESPONSE_DEFAULT_VIEW, setPenNameMap } from '$data/lib/entities/pressure-response-fields.js';
+	import { buildPenNameMap } from '$lib/pen-helpers.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 
 	let data: PressureResponse[] = $state([]);
+	let allPens: Pen[] = $state([]);
 	let activeTab: 'pen-models' | 'sessions' = $state('pen-models');
 
 	interface PenModelSummary {
@@ -16,9 +18,19 @@
 	}
 
 	let penModels: PenModelSummary[] = $state([]);
+	let penNameMap = $derived(buildPenNameMap(allPens));
+
+	$effect(() => {
+		setPenNameMap(penNameMap);
+	});
 
 	onMount(async () => {
-		data = await loadPressureResponseFromURL(base);
+		const [pressureData, pens] = await Promise.all([
+			loadPressureResponseFromURL(base),
+			loadPensFromURL(base),
+		]);
+		data = pressureData;
+		allPens = pens;
 
 		const modelMap = new Map<string, { sessions: number; inventoryIds: Set<string> }>();
 		for (const s of data) {
@@ -66,7 +78,7 @@
 		<tbody>
 			{#each penModels as model}
 				<tr>
-					<td><a href="{base}/pressure-response/{encodeURIComponent(model.penEntityId)}">{model.penEntityId}</a></td>
+					<td><a href="{base}/pressure-response/{encodeURIComponent(model.penEntityId)}">{penNameMap.get(model.penEntityId) ?? model.penEntityId}</a></td>
 					<td>{model.inventoryIds}</td>
 					<td>{model.sessionCount}</td>
 				</tr>

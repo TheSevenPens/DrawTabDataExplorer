@@ -24,6 +24,7 @@
 	defaultColumns={DRIVER_DEFAULT_COLUMNS}
 	defaultView={DRIVER_DEFAULT_VIEW}
 	detailBasePath="/entity"
+	linkField="DriverName"
 	defaultFilterField="OSFamily"
 	defaultSortField="ReleaseDate"
 	quickFilterFields={["Brand"]}
