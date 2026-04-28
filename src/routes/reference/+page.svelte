@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadISOPaperSizesFromURL, loadUSPaperSizesFromURL, loadTabletsFromURL, type ISOPaperSize, type USPaperSize, type Tablet } from '$data/lib/drawtab-loader.js';
-	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn } from '$lib/tablet-size-ranges.js';
+	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN } from '$lib/tablet-size-ranges.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 

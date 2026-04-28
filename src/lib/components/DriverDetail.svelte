@@ -5,9 +5,12 @@
 
 	let { data } = $props();
 	let driver: Driver = $derived(data.driver);
+
+	const nameField = DRIVER_FIELDS.find((f) => f.key === 'DriverName');
+	let driverName = $derived(nameField ? nameField.getValue(driver) : driver.DriverVersion);
 </script>
 
 <Nav />
 
-<h1>{driver.DriverName}</h1>
+<h1>{driverName}</h1>
 <DetailView item={driver} fields={DRIVER_FIELDS} fieldGroups={DRIVER_FIELD_GROUPS} />
