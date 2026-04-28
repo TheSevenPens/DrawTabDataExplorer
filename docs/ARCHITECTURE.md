@@ -42,6 +42,7 @@ DrawTabDataExplorer/
 │       │   ├── ResultsTable.svelte
 │       │   ├── ValueHistogram.svelte       # Histogram with KDE, ranges, markers
 │       │   ├── TabletSizeComparison.svelte # Histogram + ISO note for tablet detail
+│       │   ├── ForceProportionsView.svelte # Force-Proportions loss diagram (16:9, 16:10)
 │       │   ├── SavedViews.svelte
 │       │   └── Nav.svelte
 │       ├── load-all-data.ts      # loadAllData() — fetches all 9 datasets in parallel
@@ -97,6 +98,15 @@ and context menu.
 **TabletSizeComparison** — Wraps `ValueHistogram` with pre-computed size
 ranges and the closestISO logic. Used on the tablet detail page so the
 detail component itself stays lean.
+
+**ForceProportionsView** — Visualises the active-area loss when "Force
+Proportions" is applied against 16:9 and 16:10 monitor aspect ratios.
+Renders three SVG panels per ratio: tablet at its actual proportions →
+target ratio shape → result with USED region inscribed and LOST strip
+drawn (bottom-aligned for horizontal bands, right-aligned for vertical
+bands). Surfaced as the "Force Proportions" tab on `TabletDetail` for
+`PENTABLET` only — pen displays and standalones already match their
+own screen ratio.
 
 **SavedViews** — Dropdown with built-in Default view and user-created
 views. Scoped by entity type in localStorage.
