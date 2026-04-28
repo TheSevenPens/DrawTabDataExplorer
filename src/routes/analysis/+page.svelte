@@ -106,11 +106,22 @@
 		return (w / h).toFixed(2);
 	}
 
+	function labelToCategory(label: string): string {
+		const [w, h] = label.split(':').map(Number);
+		if (!w || !h) return '';
+		return aspectRatioCategory(w, h) ?? '';
+	}
+
 	function arRows(tablets: Tablet[]) {
 		return countBy(
 			tablets.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null),
 			t => aspectRatioLabel(t.Digitizer!.Dimensions!.Width!, t.Digitizer!.Dimensions!.Height!)
-		).map(r => ({ ...r, ratio16: ratio16(r.label), decimal: ratioDecimal(r.label) }));
+		).map(r => ({
+			...r,
+			ratio16: ratio16(r.label),
+			decimal: ratioDecimal(r.label),
+			category: labelToCategory(r.label),
+		}));
 	}
 
 	let ptAR = $derived(arRows(penTablets));
@@ -221,19 +232,20 @@
 					openExport(
 						'Aspect Ratio: Pen Tablets',
 						'analysis-aspect-ratio-pen-tablets',
-						['Ratio', 'Decimal', 'Count', '%'],
-						ptAR.map(r => [r.ratio16, r.decimal, r.count, pct(r.count, total)]),
+						['Ratio', 'Decimal', 'Category', 'Count', '%'],
+						ptAR.map(r => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
 					);
 				}}>Export</button>
 			</div>
 			<table class="stat-table">
-				<thead><tr><th>Ratio</th><th>Decimal</th><th>Count</th><th></th></tr></thead>
+				<thead><tr><th>Ratio</th><th>Decimal</th><th>Category</th><th>Count</th><th></th></tr></thead>
 				<tbody>
 					{#each ptAR as row}
 						{@const pct = (row.count / ptAR.reduce((s, r) => s + r.count, 0) * 100).toFixed(1)}
 						<tr>
 							<td class="decimal">{row.ratio16}</td>
 							<td class="decimal">{row.decimal}</td>
+							<td class="mono">{row.category}</td>
 							<td class="count">{row.count}</td>
 							<td class="bar-cell">
 								<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
@@ -298,19 +310,20 @@
 					openExport(
 						'Aspect Ratio: Pen Displays & Standalones',
 						'analysis-aspect-ratio-pen-displays',
-						['Ratio', 'Decimal', 'Count', '%'],
-						pdAR.map(r => [r.ratio16, r.decimal, r.count, pct(r.count, total)]),
+						['Ratio', 'Decimal', 'Category', 'Count', '%'],
+						pdAR.map(r => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
 					);
 				}}>Export</button>
 			</div>
 			<table class="stat-table">
-				<thead><tr><th>Ratio</th><th>Decimal</th><th>Count</th><th></th></tr></thead>
+				<thead><tr><th>Ratio</th><th>Decimal</th><th>Category</th><th>Count</th><th></th></tr></thead>
 				<tbody>
 					{#each pdAR as row}
 						{@const pct = (row.count / pdAR.reduce((s, r) => s + r.count, 0) * 100).toFixed(1)}
 						<tr>
 							<td class="decimal">{row.ratio16}</td>
 							<td class="decimal">{row.decimal}</td>
+							<td class="mono">{row.category}</td>
 							<td class="count">{row.count}</td>
 							<td class="bar-cell">
 								<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
