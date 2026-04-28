@@ -170,6 +170,32 @@
 		showToast('Downloaded SVG ✓');
 	}
 
+	async function downloadPptx(): Promise<void> {
+		open = false;
+		showToast('Building PPTX…');
+		const blob = await svgToPngBlob();
+		if (!blob) {
+			console.error('PNG export failed');
+			return;
+		}
+		const el = getSvg();
+		const dims = el ? getPixelDims(el) : { width: 800, height: 600 };
+		try {
+			const { exportChartAsPptx } = await import('$lib/pptx-export.js');
+			const base = filename ?? slug(title || 'chart');
+			await exportChartAsPptx({
+				pngBlob: blob,
+				pngWidth: dims.width,
+				pngHeight: dims.height,
+				title: title || 'Chart',
+				filename: base,
+			});
+			showToast('Downloaded PPTX ✓');
+		} catch (err) {
+			console.error('PPTX export failed', err);
+		}
+	}
+
 	function onWindowClick(): void {
 		if (open) open = false;
 	}
@@ -195,6 +221,7 @@
 			<div class="separator" role="separator"></div>
 			<button type="button" class="item" onclick={downloadPng}>Download PNG</button>
 			<button type="button" class="item" onclick={downloadSvg}>Download SVG</button>
+			<button type="button" class="item" onclick={downloadPptx}>Download PowerPoint</button>
 		</div>
 	{/if}
 </div>

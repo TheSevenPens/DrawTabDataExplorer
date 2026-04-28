@@ -38,9 +38,19 @@
 
 	let rowMode = $state<'all' | 'view'>('view');
 	let colMode = $state<'all' | 'view'>('view');
-	let format = $state<'csv' | 'json' | 'html' | 'markdown'>('csv');
+	let format = $state<'csv' | 'json' | 'html' | 'markdown' | 'pptx'>('csv');
 	let output = $state<'clipboard' | 'file'>('clipboard');
 	let statusMsg = $state('');
+
+	// PowerPoint is download-only — clipboard PPTX isn't a thing. When
+	// the user picks PPT, snap output to "file" and disable the
+	// clipboard radio. Snapping back when they pick another format isn't
+	// strictly necessary but keeps the form less surprising.
+	$effect(() => {
+		if (format === 'pptx' && output === 'clipboard') {
+			output = 'file';
+		}
+	});
 
 	interface ExportField {
 		key: string;
@@ -155,6 +165,26 @@
 	}
 
 	async function doExport() {
+		if (format === 'pptx') {
+			// Lazy-import the pptx-export helper so pptxgenjs (~200 KB)
+			// only loads on demand.
+			statusMsg = 'Building PPTX…';
+			const { exportTableAsPptx } = await import('$lib/pptx-export.js');
+			const headerLabels = exportFields.map((f) => f.label);
+			const dataRows = exportRows.map((row) =>
+				exportFields.map((f) => cell(row, f)),
+			);
+			const base = filename ?? entityType;
+			await exportTableAsPptx({
+				headers: headerLabels,
+				rows: dataRows,
+				title,
+				filename: base,
+			});
+			statusMsg = '';
+			onclose();
+			return;
+		}
 		const content = getContent();
 		if (output === 'clipboard') {
 			await navigator.clipboard.writeText(content);
@@ -253,20 +283,27 @@
 						<input type="radio" bind:group={format} value="markdown" />
 						Markdown
 					</label>
+					<label class="format-opt" class:selected={format === 'pptx'}>
+						<input type="radio" bind:group={format} value="pptx" />
+						PowerPoint
+					</label>
 				</div>
 			</fieldset>
 
 			<!-- Output -->
 			<fieldset>
 				<legend>Output</legend>
-				<label>
-					<input type="radio" bind:group={output} value="clipboard" />
+				<label class:disabled-opt={format === 'pptx'}>
+					<input type="radio" bind:group={output} value="clipboard" disabled={format === 'pptx'} />
 					Copy to clipboard
 				</label>
 				<label>
 					<input type="radio" bind:group={output} value="file" />
 					Save as file
 				</label>
+				{#if format === 'pptx'}
+					<p class="hint">PowerPoint export is download-only.</p>
+				{/if}
 			</fieldset>
 
 		</div>
@@ -372,6 +409,18 @@
 	.count {
 		color: var(--text-muted);
 		font-size: 12px;
+	}
+
+	label.disabled-opt {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+
+	.hint {
+		font-size: 12px;
+		color: var(--text-muted);
+		margin: 4px 0 0;
+		font-style: italic;
 	}
 
 	.summary {
