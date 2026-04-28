@@ -278,8 +278,8 @@
 					</div>
 					<div class="caption">
 						{fmtLen(c.usedW)} × {fmtLen(c.usedH)} {lenUnit} usable<br />
-						{fmtLen(diag(c.usedW, c.usedH))} {lenUnit} diagonal{#if c.strip !== 'none'} <span class="delta">({fmtLen(diag(c.usedW, c.usedH) - diag(width, height))} {lenUnit})</span>{/if}<br />
-						{fmtArea(c.usedW, c.usedH)} {areaUnit}{#if c.strip !== 'none'} <span class="delta">({fmtAreaDelta(c.usedW * c.usedH - width * height)} {areaUnit})</span>{/if}
+						{fmtLen(diag(c.usedW, c.usedH))} {lenUnit} diagonal{#if c.strip !== 'none'}{' '}<span class="delta">({fmtLen(diag(c.usedW, c.usedH) - diag(width, height))} {lenUnit})</span>{/if}<br />
+						{fmtArea(c.usedW, c.usedH)} {areaUnit}{#if c.strip !== 'none'}{' '}<span class="delta">({fmtAreaDelta(c.usedW * c.usedH - width * height)} {areaUnit})</span>{/if}
 					</div>
 				</div>
 			</div>
