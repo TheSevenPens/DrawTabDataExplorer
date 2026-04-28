@@ -162,9 +162,9 @@
 						</text>
 					</svg>
 					<div class="caption">
-						{fmtLen(width)} × {fmtLen(height)} {lenUnit}<br />
-						{fmtLen(diag(width, height))} {lenUnit} diagonal<br />
-						{fmtArea(width, height)} {areaUnit}
+						<div><span class="lbl">Dimensions:</span> {fmtLen(width)} × {fmtLen(height)} {lenUnit}</div>
+						<div><span class="lbl">Diagonal:</span> {fmtLen(diag(width, height))} {lenUnit}</div>
+						<div><span class="lbl">Area:</span> {fmtArea(width, height)} {areaUnit}</div>
 					</div>
 				</div>
 
@@ -277,9 +277,13 @@
 						<div><span class="swatch lost"></span> LOST: {fmtPct(c.lostFraction)}%</div>
 					</div>
 					<div class="caption">
-						{fmtLen(c.usedW)} × {fmtLen(c.usedH)} {lenUnit} usable<br />
-						{fmtLen(diag(c.usedW, c.usedH))} {lenUnit} diagonal{#if c.strip !== 'none'}{' '}<span class="delta">({fmtLen(diag(c.usedW, c.usedH) - diag(width, height))} {lenUnit})</span>{/if}<br />
-						{fmtArea(c.usedW, c.usedH)} {areaUnit}{#if c.strip !== 'none'}{' '}<span class="delta">({fmtAreaDelta(c.usedW * c.usedH - width * height)} {areaUnit})</span>{/if}
+						<div><span class="lbl">Dimensions:</span> {fmtLen(c.usedW)} × {fmtLen(c.usedH)} {lenUnit}</div>
+						<div>
+							<span class="lbl">Diagonal:</span> {fmtLen(diag(c.usedW, c.usedH))} {lenUnit}{#if c.strip !== 'none'}{' '}<span class="delta">({fmtLen(diag(c.usedW, c.usedH) - diag(width, height))} {lenUnit})</span>{/if}
+						</div>
+						<div>
+							<span class="lbl">Area:</span> {fmtArea(c.usedW, c.usedH)} {areaUnit}{#if c.strip !== 'none'}{' '}<span class="delta">({fmtAreaDelta(c.usedW * c.usedH - width * height)} {areaUnit})</span>{/if}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -330,6 +334,10 @@
 	}
 	.delta {
 		color: #b91c1c;
+	}
+	.lbl {
+		font-weight: 600;
+		color: var(--text);
 	}
 	.arrow {
 		display: flex;
