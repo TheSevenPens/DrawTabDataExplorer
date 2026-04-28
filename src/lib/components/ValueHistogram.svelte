@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
+
 	export interface HistogramRange {
 		label: string;
 		min: number;
@@ -202,41 +204,6 @@
 	});
 
 	let svgEl: SVGSVGElement | undefined = $state();
-	let copyStatus = $state('');
-
-	async function copyAsImage() {
-		if (!svgEl) return;
-		try {
-			const serialized = new XMLSerializer().serializeToString(svgEl);
-			const svgBlob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' });
-			const url = URL.createObjectURL(svgBlob);
-			const img = new Image();
-			img.src = url;
-			await new Promise<void>((resolve, reject) => {
-				img.onload = () => resolve();
-				img.onerror = () => reject(new Error('image load failed'));
-			});
-			const scale = 2;
-			const canvas = document.createElement('canvas');
-			canvas.width = width * scale;
-			canvas.height = totalHeight * scale;
-			const ctx = canvas.getContext('2d');
-			if (!ctx) throw new Error('no 2d context');
-			ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#fff';
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-			ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-			URL.revokeObjectURL(url);
-			const blob: Blob = await new Promise((resolve, reject) => {
-				canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
-			});
-			await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-			copyStatus = 'Copied!';
-		} catch (err) {
-			copyStatus = 'Copy failed';
-			console.error(err);
-		}
-		setTimeout(() => (copyStatus = ''), 2000);
-	}
 </script>
 
 {#if values.length > 0}
@@ -252,9 +219,7 @@
 					</select>
 				</label>
 			{/if}
-			<button type="button" class="copy-btn" onclick={copyAsImage} title="Copy histogram as image">
-				{copyStatus || 'Copy as image'}
-			</button>
+			<ChartExportButton getSvg={() => svgEl} title={title || 'histogram'} />
 		</div>
 		<svg bind:this={svgEl} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {totalHeight}" class="histogram" style="font-family: 'Google Sans', sans-serif;">
 			<!-- Hidden texts for measuring actual label widths -->
@@ -452,17 +417,5 @@
 		color: var(--text);
 	}
 
-	.copy-btn {
-		font-size: 12px;
-		padding: 4px 10px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text);
-		cursor: pointer;
-	}
 
-	.copy-btn:hover {
-		background: var(--hover-bg);
-	}
 </style>

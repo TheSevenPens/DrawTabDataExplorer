@@ -1,13 +1,17 @@
 <script lang="ts">
 	import type { Dimensions, ISOPaperSize } from '$data/lib/drawtab-loader.js';
+	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 
-	let { dims, items, isoSizes = [], showISO = true, stacked = false }: {
+	let { dims, items, isoSizes = [], showISO = true, stacked = false, title = 'tablet-dimensions' }: {
 		dims?: Dimensions;
 		items?: Array<{ dims: Dimensions; label: string }>;
 		isoSizes?: ISOPaperSize[];
 		showISO?: boolean;
 		stacked?: boolean;
+		title?: string;
 	} = $props();
+
+	let svgEl: SVGSVGElement | undefined = $state();
 
 	const STACK_FILLS   = ['#dbeafe', '#dcfce7', '#fef9c3', '#fce7f3', '#ede9fe'];
 	const STACK_STROKES = ['#2563eb', '#16a34a', '#ca8a04', '#db2777', '#7c3aed'];
@@ -132,8 +136,13 @@
 </script>
 
 {#if layout}
+	<div class="chart-toolbar">
+		<ChartExportButton getSvg={() => svgEl} {title} />
+	</div>
 	<div class="iso-chart-scroll">
 		<svg
+			bind:this={svgEl}
+			xmlns="http://www.w3.org/2000/svg"
 			width={layout.svgW}
 			height={CHART_H + PAD_TOP + PAD_BOT}
 			role="img"
@@ -203,6 +212,11 @@
 {/if}
 
 <style>
+	.chart-toolbar {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 6px;
+	}
 	.iso-chart-scroll {
 		overflow-x: auto;
 		padding-bottom: 4px;
