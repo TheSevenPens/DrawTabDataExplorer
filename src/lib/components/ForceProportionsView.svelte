@@ -325,7 +325,8 @@
 		margin-top: 6px;
 		font-size: 12px;
 		color: var(--text-muted);
-		text-align: center;
+		text-align: left;
+		align-self: flex-start;
 	}
 	.delta {
 		color: #b91c1c;
