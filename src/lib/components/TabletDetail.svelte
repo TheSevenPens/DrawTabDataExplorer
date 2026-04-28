@@ -8,6 +8,7 @@
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { formatValue } from '$data/lib/units.js';
 	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
+	import ForceProportionsView from '$lib/components/ForceProportionsView.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
@@ -21,7 +22,12 @@
 	let isoSizes: ISOPaperSize[] = $derived(data.isoSizes);
 
 	let showJson = $state(false);
-	let activeTab = $state<'model' | 'specs' | 'size' | 'pens' | 'similar'>('model');
+	let activeTab = $state<'model' | 'specs' | 'size' | 'force' | 'pens' | 'similar'>('model');
+
+	let isPenTablet = $derived(tablet.Model.Type === 'PENTABLET');
+	let activeAreaW = $derived(tablet.Digitizer?.Dimensions?.Width ?? 0);
+	let activeAreaH = $derived(tablet.Digitizer?.Dimensions?.Height ?? 0);
+	let canShowForce = $derived(isPenTablet && activeAreaW > 0 && activeAreaH > 0);
 
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
@@ -191,6 +197,9 @@
 			<button class:active={activeTab === 'model'}   onclick={() => activeTab = 'model'}>Model</button>
 			<button class:active={activeTab === 'specs'}   onclick={() => activeTab = 'specs'}>Specs</button>
 			<button class:active={activeTab === 'size'}    onclick={() => activeTab = 'size'}>Size Comparison</button>
+			{#if canShowForce}
+				<button class:active={activeTab === 'force'}   onclick={() => activeTab = 'force'}>Force Proportions</button>
+			{/if}
 			<button class:active={activeTab === 'pens'}    onclick={() => activeTab = 'pens'}>Compatible Pens</button>
 			<button class:active={activeTab === 'similar'} onclick={() => activeTab = 'similar'}>Similar Tablets</button>
 		</div>
@@ -303,6 +312,12 @@
 			<TabletSizeComparison {tablet} {allTablets} {isoSizes} />
 		</section>
 	{/if}
+
+		{#if activeTab === 'force' && canShowForce}
+			<section class="tab-content">
+				<ForceProportionsView width={activeAreaW} height={activeAreaH} />
+			</section>
+		{/if}
 
 		{#if activeTab === 'pens'}
 			<section class="tab-content">
