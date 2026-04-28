@@ -166,7 +166,7 @@
 							{c.label}
 						</text>
 					</svg>
-					<div class="caption">target ratio</div>
+					<div class="caption">monitor aspect ratio</div>
 				</div>
 
 				<div class="arrow">
