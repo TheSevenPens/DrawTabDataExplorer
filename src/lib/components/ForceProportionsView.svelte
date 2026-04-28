@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { POPULAR_RATIOS, VERYCLOSE_THRESHOLD } from '$data/lib/aspect-ratio.js';
+	import { unitPreference } from '$lib/unit-store.js';
 
 	let { width, height }: { width: number; height: number } = $props();
 
@@ -74,9 +75,14 @@
 
 	let calcs = $derived(width > 0 && height > 0 ? TARGETS.map(compute) : []);
 
-	function fmt(n: number): string {
-		return n.toFixed(1);
+	function fmtLen(mm: number): string {
+		if ($unitPreference === 'imperial') {
+			return (mm * 0.03937).toFixed(2);
+		}
+		return mm.toFixed(1);
 	}
+
+	let lenUnit = $derived($unitPreference === 'imperial' ? 'in' : 'mm');
 
 	function fmtPct(n: number): string {
 		return (n * 100).toFixed(1);
@@ -138,8 +144,8 @@
 						</text>
 					</svg>
 					<div class="caption">
-						{fmt(width)} × {fmt(height)} mm<br />
-						{fmt(diag(width, height))} mm diagonal
+						{fmtLen(width)} × {fmtLen(height)} {lenUnit}<br />
+						{fmtLen(diag(width, height))} {lenUnit} diagonal
 					</div>
 				</div>
 
@@ -252,8 +258,8 @@
 						<div><span class="swatch lost"></span> LOST: {fmtPct(c.lostFraction)}%</div>
 					</div>
 					<div class="caption">
-						{fmt(c.usedW)} × {fmt(c.usedH)} mm usable<br />
-						{fmt(diag(c.usedW, c.usedH))} mm diagonal
+						{fmtLen(c.usedW)} × {fmtLen(c.usedH)} {lenUnit} usable<br />
+						{fmtLen(diag(c.usedW, c.usedH))} {lenUnit} diagonal
 					</div>
 				</div>
 			</div>
