@@ -145,22 +145,30 @@ making EntityIds self-describing.
 Brand EntityIds have no dots (just the brand name) because the
 `brand.brand.brand` pattern adds no information.
 
-## Entity resolver route
+## Entity detail route
 
-`/entity/[entityId]` is a universal permalink that resolves any EntityId to its
-detail page without requiring the caller to know the entity type:
+`/entity/[entityId]` is the **canonical** detail URL for every entity. The
+loader (`src/routes/entity/[entityId]/+page.ts`) parses the EntityId,
+determines the entity type from the second dot-segment (or treats a single
+segment as a brand), fetches the appropriate data, and returns it with an
+`entityType` discriminator. The page component (`+page.svelte`) renders one
+of `TabletDetail`, `PenDetail`, `BrandDetail`, `DriverDetail`,
+`PenFamilyDetail`, or `TabletFamilyDetail` based on `entityType`.
 
 ```
-/entity/wacom.pen.kp503e          →  /pens/wacom.pen.kp503e
-/entity/wacom.tablet.ctl4100      →  /tablets/wacom.tablet.ctl4100
-/entity/wacom                     →  /brands/wacom
-/entity/wacom.driver.4.78-2_macos →  /drivers/wacom.driver.4.78-2_macos
-/entity/wacom.penfamily.wacomkpgen3      →  /pen-families/wacom.penfamily.wacomkpgen3
-/entity/wacom.tabletfamily.wacomintuosprogen8 →  /tablet-families/wacom.tabletfamily.wacomintuosprogen8
+/entity/wacom.pen.kp503e                       →  PenDetail
+/entity/wacom.tablet.ctl4100                   →  TabletDetail
+/entity/wacom                                  →  BrandDetail
+/entity/wacom.driver.4.78-2_macos              →  DriverDetail
+/entity/wacom.penfamily.wacomkpgen3            →  PenFamilyDetail
+/entity/wacom.tabletfamily.wacomintuosprogen8  →  TabletFamilyDetail
 ```
 
-The route (`src/routes/entity/[entityId]/`) has `prerender = false` and relies
-on the SPA fallback (`404.html`) to serve the app shell for unrecognised paths.
-The Svelte component parses the EntityId, determines the type from the second
-dot-segment, and calls `goto()` with `replaceState: true` so the redirect does
-not appear in browser history.
+The typed routes (`/tablets/[entityId]`, `/pens/[entityId]`, etc.) still
+exist but are thin redirects to `/entity/[entityId]` — see each route's
+`+page.ts` for the `redirect(307, ...)` call. List pages link directly to
+`/entity/...` so users land on the canonical URL without an intermediate
+hop.
+
+The route has `prerender = false` and relies on the SPA fallback
+(`404.html`) to serve the app shell for unrecognised paths.
