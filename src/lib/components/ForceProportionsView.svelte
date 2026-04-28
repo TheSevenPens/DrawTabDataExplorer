@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { POPULAR_RATIOS, VERYCLOSE_THRESHOLD } from '$data/lib/aspect-ratio.js';
+
 	let { width, height }: { width: number; height: number } = $props();
 
 	const TARGETS = [
@@ -81,7 +83,14 @@
 	}
 
 	function tabletRatioLabel(): string {
-		const r = width / height;
+		if (width <= 0 || height <= 0) return '';
+		// Normalize to long/short so portrait panels label the same as landscape.
+		const r = Math.max(width, height) / Math.min(width, height);
+		for (const p of POPULAR_RATIOS) {
+			if (Math.abs(r - p.ratio) <= VERYCLOSE_THRESHOLD) {
+				return p.name.replace('X', ':');
+			}
+		}
 		return `${r.toFixed(2)}:1`;
 	}
 </script>
