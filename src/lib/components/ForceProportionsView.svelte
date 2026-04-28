@@ -102,6 +102,14 @@
 		return ((wMm * hMm) / 100).toFixed(1);
 	}
 
+	function fmtAreaDelta(deltaMm2: number): string {
+		if ($unitPreference === 'imperial') {
+			// mm² → in² via (0.03937)² ≈ 0.00155
+			return (deltaMm2 * 0.03937 * 0.03937).toFixed(2);
+		}
+		return (deltaMm2 / 100).toFixed(1);
+	}
+
 	function tabletRatioLabel(): string {
 		if (width <= 0 || height <= 0) return '';
 		// Normalize to long/short so portrait panels label the same as landscape.
@@ -270,8 +278,8 @@
 					</div>
 					<div class="caption">
 						{fmtLen(c.usedW)} × {fmtLen(c.usedH)} {lenUnit} usable<br />
-						{fmtLen(diag(c.usedW, c.usedH))} {lenUnit} diagonal<br />
-						{fmtArea(c.usedW, c.usedH)} {areaUnit}
+						{fmtLen(diag(c.usedW, c.usedH))} {lenUnit} diagonal{#if c.strip !== 'none'} <span class="delta">({fmtLen(diag(c.usedW, c.usedH) - diag(width, height))} {lenUnit})</span>{/if}<br />
+						{fmtArea(c.usedW, c.usedH)} {areaUnit}{#if c.strip !== 'none'} <span class="delta">({fmtAreaDelta(c.usedW * c.usedH - width * height)} {areaUnit})</span>{/if}
 					</div>
 				</div>
 			</div>
@@ -318,6 +326,9 @@
 		font-size: 12px;
 		color: var(--text-muted);
 		text-align: center;
+	}
+	.delta {
+		color: #b91c1c;
 	}
 	.arrow {
 		display: flex;
