@@ -6,6 +6,7 @@
 	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import ExportDialog from '$lib/components/ExportDialog.svelte';
 
 	let activeTab: 'tablet-sizes' | 'iso-paper-a' | 'iso-paper-b' | 'us-paper' | 'display-resolutions' = $state('tablet-sizes');
 	let paperSizes: ISOPaperSize[] = $state([]);
@@ -162,6 +163,24 @@
 		}, {})
 	);
 
+	// Single shared ExportDialog. Each section's Export trigger sets
+	// `exportDialog` to a config object; the dialog mounts when set.
+	let exportDialog: {
+		title: string;
+		filename: string;
+		headers: string[];
+		rows: (string | number)[][];
+	} | null = $state(null);
+
+	function openExport(
+		title: string,
+		filename: string,
+		headers: string[],
+		rows: (string | number)[][],
+	): void {
+		exportDialog = { title, filename, headers, rows };
+	}
+
 	onMount(async () => {
 		const [p, us, t] = await Promise.all([
 			loadISOPaperSizesFromURL(base),
@@ -199,10 +218,16 @@
 	<section>
 		<div class="section-header">
 			<h2>Pen Tablet Size Categories</h2>
-			<button class="copy-btn" onclick={() => {
-				const table = document.querySelector('#pen-tablet-table');
-				if (table) navigator.clipboard.writeText(table.outerHTML);
-			}}>Copy as HTML</button>
+			<button class="copy-btn" onclick={() => openExport(
+				'Pen Tablet Size Categories',
+				'pen-tablet-sizes',
+				['Category', 'Range (cm)', 'Range (in)', 'Similar ISO A', 'Diagonal (cm)', 'Diagonal (in)'],
+				penTabletRangesCm.map((range, i) => {
+					const inRange = penTabletRangesIn[i];
+					const iso = closestISOA((range.min + range.max) / 2);
+					return [range.label, `${range.min} cm – ${range.max} cm`, `${inRange.min}″ – ${inRange.max}″`, iso.name, `${iso.diagCm} cm`, `${iso.diagIn}″`];
+				})
+			)}>Export</button>
 		</div>
 		<table id="pen-tablet-table" class="ref-table">
 			<thead><tr><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th><th>Diagonal (cm)</th><th>Diagonal (in)</th></tr></thead>
@@ -239,10 +264,16 @@
 	<section>
 		<div class="section-header">
 			<h2>Pen Display Size Categories</h2>
-			<button class="copy-btn" onclick={() => {
-				const table = document.querySelector('#pen-display-table');
-				if (table) navigator.clipboard.writeText(table.outerHTML);
-			}}>Copy as HTML</button>
+			<button class="copy-btn" onclick={() => openExport(
+				'Pen Display Size Categories',
+				'pen-display-sizes',
+				['Category', 'Range (cm)', 'Range (in)', 'Similar ISO A', 'Diagonal (cm)', 'Diagonal (in)'],
+				displayRangesCm.map((range, i) => {
+					const inRange = displayRangesIn[i];
+					const iso = closestISOA((range.min + range.max) / 2);
+					return [range.label, `${range.min} cm – ${range.max} cm`, `${inRange.min}″ – ${inRange.max}″`, iso.name, `${iso.diagCm} cm`, `${iso.diagIn}″`];
+				})
+			)}>Export</button>
 		</div>
 		<table id="pen-display-table" class="ref-table">
 			<thead><tr><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th><th>Diagonal (cm)</th><th>Diagonal (in)</th></tr></thead>
@@ -279,10 +310,16 @@
 	<section>
 		<div class="section-header">
 			<h2>ISO A Paper Sizes</h2>
-			<button class="copy-btn" onclick={() => {
-				const table = document.querySelector('#iso-a-paper-table');
-				if (table) navigator.clipboard.writeText(table.outerHTML);
-			}}>Copy as HTML</button>
+			<button class="copy-btn" disabled={aSeries.length === 0} onclick={() => openExport(
+				'ISO A Paper Sizes',
+				'iso-a-paper-sizes',
+				['Name', 'Width (cm)', 'Height (cm)', 'Diagonal (cm)', 'Width (in)', 'Height (in)', 'Diagonal (in)'],
+				aSeries.map((size) => {
+					const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
+					const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
+					return [size.Name, (size.Width_mm / 10).toFixed(1), (size.Height_mm / 10).toFixed(1), diagCm.toFixed(1), size.Width_in, size.Height_in, diagIn.toFixed(1)];
+				})
+			)}>Export</button>
 		</div>
 		{#if aSeries.length > 0}
 			<table id="iso-a-paper-table" class="ref-table">
@@ -345,10 +382,16 @@
 	<section>
 		<div class="section-header">
 			<h2>ISO B Paper Sizes</h2>
-			<button class="copy-btn" onclick={() => {
-				const table = document.querySelector('#iso-b-paper-table');
-				if (table) navigator.clipboard.writeText(table.outerHTML);
-			}}>Copy as HTML</button>
+			<button class="copy-btn" disabled={bSeries.length === 0} onclick={() => openExport(
+				'ISO B Paper Sizes',
+				'iso-b-paper-sizes',
+				['Name', 'Width (cm)', 'Height (cm)', 'Diagonal (cm)', 'Width (in)', 'Height (in)', 'Diagonal (in)'],
+				bSeries.map((size) => {
+					const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
+					const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
+					return [size.Name, (size.Width_mm / 10).toFixed(1), (size.Height_mm / 10).toFixed(1), diagCm.toFixed(1), size.Width_in, size.Height_in, diagIn.toFixed(1)];
+				})
+			)}>Export</button>
 		</div>
 		{#if bSeries.length > 0}
 			<table id="iso-b-paper-table" class="ref-table">
@@ -411,10 +454,16 @@
 	<section>
 		<div class="section-header">
 			<h2>US Paper Sizes</h2>
-			<button class="copy-btn" onclick={() => {
-				const table = document.querySelector('#us-paper-table');
-				if (table) navigator.clipboard.writeText(table.outerHTML);
-			}}>Copy as HTML</button>
+			<button class="copy-btn" disabled={usPaperSizes.length === 0} onclick={() => openExport(
+				'US Paper Sizes',
+				'us-paper-sizes',
+				['Name', 'Series', 'Width (cm)', 'Height (cm)', 'Diagonal (cm)', 'Width (in)', 'Height (in)', 'Diagonal (in)'],
+				usPaperSizes.map((size) => {
+					const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
+					const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
+					return [size.Name, size.Series, (size.Width_mm / 10).toFixed(1), (size.Height_mm / 10).toFixed(1), diagCm.toFixed(1), size.Width_in, size.Height_in, diagIn.toFixed(1)];
+				})
+			)}>Export</button>
 		</div>
 		{#if usPaperSizes.length > 0}
 			<table id="us-paper-table" class="ref-table">
@@ -479,9 +528,20 @@
 		<div class="section-header">
 			<h2>Display Resolution Categories</h2>
 			<button class="copy-btn" onclick={() => {
-				const table = document.querySelector('#res-cat-table');
-				if (table) navigator.clipboard.writeText(table.outerHTML);
-			}}>Copy as HTML</button>
+				const headers = ['Category', 'Resolution', 'Megapixels', 'Aspect Ratio', 'Displays in dataset'];
+				const rows: (string | number)[][] = [];
+				for (const cat of resolutionCategories) {
+					cat.resolutions.forEach((res, i) => {
+						const mp = ((res.w * res.h) / 1_000_000).toFixed(2);
+						const g = gcd(res.w, res.h);
+						const ar = `${res.w / g}:${res.h / g}`;
+						const count = i === 0 ? (resolutionCounts[cat.name] ?? 0) : '';
+						rows.push([cat.name, `${res.w} × ${res.h}`, `${mp} MP`, ar, count]);
+					});
+				}
+				rows.push(['Other', '—', '—', '—', resolutionCounts['Other'] ?? 0]);
+				openExport('Display Resolution Categories', 'display-resolutions', headers, rows);
+			}}>Export</button>
 		</div>
 		<table id="res-cat-table" class="ref-table">
 			<thead>
@@ -525,6 +585,17 @@
 			</tbody>
 		</table>
 	</section>
+{/if}
+
+{#if exportDialog}
+	<ExportDialog
+		entityType="reference"
+		title={exportDialog.title}
+		filename={exportDialog.filename}
+		headers={exportDialog.headers}
+		rows={exportDialog.rows}
+		onclose={() => (exportDialog = null)}
+	/>
 {/if}
 
 <style>

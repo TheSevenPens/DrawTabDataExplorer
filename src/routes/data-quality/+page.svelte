@@ -5,7 +5,7 @@
 	import { loadInventoryPensFromURL, loadInventoryTabletsFromURL } from '$data/lib/drawtab-loader.js';
 	import { buildFilterUrl } from '$lib/filter-url.js';
 	import Nav from '$lib/components/Nav.svelte';
-	import ExportButton from '$lib/components/ExportButton.svelte';
+	import ExportDialog from '$lib/components/ExportDialog.svelte';
 
 	interface Issue {
 		entity: string;
@@ -85,6 +85,26 @@
 	function setSection(id: string) {
 		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
 	}
+
+	// Single shared ExportDialog instance, opened by per-section trigger
+	// buttons. Each trigger sets `exportDialog` to a config object; the
+	// dialog mounts when set and closes by setting it back to null.
+	let exportDialog: {
+		title: string;
+		filename: string;
+		headers: string[];
+		rows: (string | number)[][];
+	} | null = $state(null);
+
+	function openExport(
+		title: string,
+		filename: string,
+		headers: string[],
+		rows: (string | number)[][],
+	): void {
+		exportDialog = { title, filename, headers, rows };
+	}
+
 	let inventoryPenCount = $state(0);
 	let inventoryTabletCount = $state(0);
 
@@ -354,7 +374,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Entity Counts</h2>
-				<ExportButton headers={['Entity', 'Count']} rows={entityCounts.map(r => [r.entity, r.count])} />
+				<button class="export-trigger" disabled={entityCounts.length === 0} onclick={() => openExport('Entity Counts', 'data-quality-entity-counts', ['Entity', 'Count'], entityCounts.map(r => [r.entity, r.count]))}>Export</button>
 			</div>
 			<table class="compact">
 				<thead><tr><th>Entity</th><th>Count</th></tr></thead>
@@ -372,7 +392,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Issues ({issues.length})</h2>
-				<ExportButton headers={['Entity', 'Entity ID', 'Field', 'Issue', 'Value']} rows={issues.map(i => [i.entity, i.entityId, i.field, i.issue, i.value ?? ''])} />
+				<button class="export-trigger" disabled={issues.length === 0} onclick={() => openExport('Issues', 'data-quality-issues', ['Entity', 'Entity ID', 'Field', 'Issue', 'Value'], issues.map(i => [i.entity, i.entityId, i.field, i.issue, i.value ?? '']))}>Export</button>
 			</div>
 			{#if issues.length === 0}
 				<p class="good">No issues found.</p>
@@ -400,7 +420,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Orphaned Compat References ({orphanedCompat.length})</h2>
-				<ExportButton headers={['Type', 'ID']} rows={orphanedCompat.map(o => [o.type, o.id])} />
+				<button class="export-trigger" disabled={orphanedCompat.length === 0} onclick={() => openExport('Orphaned Compat References', 'data-quality-orphaned-compat', ['Type', 'ID'], orphanedCompat.map(o => [o.type, o.id]))}>Export</button>
 			</div>
 			<p class="description">IDs in pen-compat that don't match any record in the referenced entity.</p>
 			{#if orphanedCompat.length === 0}
@@ -423,7 +443,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Wacom Tablets with No Pen Compatibility Data ({tabletsNoCompat.length})</h2>
-				<ExportButton headers={['Model ID', 'Name']} rows={tabletsNoCompat.map(t => [t.id, t.name])} />
+				<button class="export-trigger" disabled={tabletsNoCompat.length === 0} onclick={() => openExport('Wacom Tablets with No Pen Compatibility Data', 'data-quality-wacom-no-compat', ['Model ID', 'Name'], tabletsNoCompat.map(t => [t.id, t.name]))}>Export</button>
 			</div>
 			<p class="description">Wacom tablets that have no entries in pen-compat.</p>
 			{#if tabletsNoCompat.length === 0}
@@ -446,7 +466,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Pens with No Tablet Compatibility Data ({pensNoCompat.length})</h2>
-				<ExportButton headers={['Pen ID', 'Name']} rows={pensNoCompat.map(p => [p.id, p.name])} />
+				<button class="export-trigger" disabled={pensNoCompat.length === 0} onclick={() => openExport('Pens with No Tablet Compatibility Data', 'data-quality-pens-no-compat', ['Pen ID', 'Name'], pensNoCompat.map(p => [p.id, p.name]))}>Export</button>
 			</div>
 			<p class="description">Pens that have no entries in pen-compat.</p>
 			{#if pensNoCompat.length === 0}
@@ -469,7 +489,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Included Pens Missing Compatibility Info ({includedPenMissingCompat.length})</h2>
-				<ExportButton headers={['Tablet ID', 'Tablet Name', 'Pen EntityId', 'Pen Name']} rows={includedPenMissingCompat.map(r => [r.tabletId, r.tabletName, r.penEntityId, r.penName])} />
+				<button class="export-trigger" disabled={includedPenMissingCompat.length === 0} onclick={() => openExport('Included Pens Missing Compatibility Info', 'data-quality-included-pens-no-compat', ['Tablet ID', 'Tablet Name', 'Pen EntityId', 'Pen Name'], includedPenMissingCompat.map(r => [r.tabletId, r.tabletName, r.penEntityId, r.penName]))}>Export</button>
 			</div>
 			<p class="description">Tablets whose <code>Model.IncludedPen</code> references a pen, but no pen-compat row links the tablet and pen. These should always be present — an included pen is by definition compatible with its tablet.</p>
 			{#if includedPenMissingCompat.length === 0}
@@ -497,7 +517,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Orphaned Family References ({orphanedFamilies.length})</h2>
-				<ExportButton headers={['Type', 'Family ID', 'Referenced By']} rows={orphanedFamilies.map(o => [o.type, o.id, o.referencedBy])} />
+				<button class="export-trigger" disabled={orphanedFamilies.length === 0} onclick={() => openExport('Orphaned Family References', 'data-quality-orphaned-families', ['Type', 'Family ID', 'Referenced By'], orphanedFamilies.map(o => [o.type, o.id, o.referencedBy]))}>Export</button>
 			</div>
 			<p class="description">Family IDs referenced by pens or tablets that don't exist in the family entities.</p>
 			{#if orphanedFamilies.length === 0}
@@ -520,7 +540,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Tablet Field Completion</h2>
-				<ExportButton headers={['Field', 'Populated', '%']} rows={tabletCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+				<button class="export-trigger" disabled={tabletCompletion.length === 0} onclick={() => openExport('Tablet Field Completion', 'data-quality-tablet-completion', ['Field', 'Populated', '%'], tabletCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
 			</div>
 			<p class="description">How many of the {ds.tablets.length} tablets have each field populated.</p>
 			<table class="compact">
@@ -549,7 +569,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Display Field Completion</h2>
-				<ExportButton headers={['Field', 'Populated', '%']} rows={displayCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+				<button class="export-trigger" disabled={displayCompletion.length === 0} onclick={() => openExport('Display Field Completion', 'data-quality-display-completion', ['Field', 'Populated', '%'], displayCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
 			</div>
 			<p class="description">How many of the {displayTabletCount} pen displays and standalone tablets have each display field populated.</p>
 			<table class="compact">
@@ -578,7 +598,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Pen Field Completion</h2>
-				<ExportButton headers={['Field', 'Populated', '%']} rows={penCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+				<button class="export-trigger" disabled={penCompletion.length === 0} onclick={() => openExport('Pen Field Completion', 'data-quality-pen-completion', ['Field', 'Populated', '%'], penCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
 			</div>
 			<p class="description">How many of the {ds.pens.length} pens have each optional field populated.</p>
 			<table class="compact">
@@ -607,7 +627,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Driver Field Completion</h2>
-				<ExportButton headers={['Field', 'Populated', '%']} rows={driverCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+				<button class="export-trigger" disabled={driverCompletion.length === 0} onclick={() => openExport('Driver Field Completion', 'data-quality-driver-completion', ['Field', 'Populated', '%'], driverCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
 			</div>
 			<p class="description">How many of the {ds.drivers.length} drivers have each optional field populated.</p>
 			<table class="compact">
@@ -636,7 +656,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Pressure Response Field Completion</h2>
-				<ExportButton headers={['Field', 'Populated', '%']} rows={pressureResponseCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+				<button class="export-trigger" disabled={pressureResponseCompletion.length === 0} onclick={() => openExport('Pressure Response Field Completion', 'data-quality-pressure-response-completion', ['Field', 'Populated', '%'], pressureResponseCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
 			</div>
 			<p class="description">How many of the {ds.pressureResponse.length} sessions have each optional field populated.</p>
 			<table class="compact">
@@ -665,7 +685,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Inventory Pen Field Completion</h2>
-				<ExportButton headers={['Field', 'Populated', '%']} rows={inventoryPenCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+				<button class="export-trigger" disabled={inventoryPenCompletion.length === 0} onclick={() => openExport('Inventory Pen Field Completion', 'data-quality-inventory-pen-completion', ['Field', 'Populated', '%'], inventoryPenCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
 			</div>
 			<p class="description">How many of the {inventoryPenCount} inventory pens have each optional field populated.</p>
 			<table class="compact">
@@ -693,7 +713,7 @@
 		<section class="section">
 			<div class="section-header">
 				<h2>Inventory Tablet Field Completion</h2>
-				<ExportButton headers={['Field', 'Populated', '%']} rows={inventoryTabletCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`])} />
+				<button class="export-trigger" disabled={inventoryTabletCompletion.length === 0} onclick={() => openExport('Inventory Tablet Field Completion', 'data-quality-inventory-tablet-completion', ['Field', 'Populated', '%'], inventoryTabletCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
 			</div>
 			<p class="description">How many of the {inventoryTabletCount} inventory tablets have each optional field populated.</p>
 			<table class="compact">
@@ -719,6 +739,17 @@
 
 		</main>
 	</div>
+
+	{#if exportDialog}
+		<ExportDialog
+			entityType="data-quality"
+			title={exportDialog.title}
+			filename={exportDialog.filename}
+			headers={exportDialog.headers}
+			rows={exportDialog.rows}
+			onclose={() => (exportDialog = null)}
+		/>
+	{/if}
 
 {/if}
 
@@ -849,6 +880,27 @@
 		border-bottom: none;
 		padding-bottom: 0;
 		margin-bottom: 0;
+	}
+
+	.export-trigger {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 4px 10px;
+		font-size: 12px;
+		border: 1px solid var(--border, #ccc);
+		border-radius: 4px;
+		background: var(--bg-card, #fff);
+		color: var(--text-muted, #666);
+		cursor: pointer;
+	}
+	.export-trigger:hover {
+		border-color: var(--text-dim, #999);
+		color: var(--text, #333);
+	}
+	.export-trigger:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
 	}
 
 	h2 {

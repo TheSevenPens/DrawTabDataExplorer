@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import Nav from '$lib/components/Nav.svelte';
+	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import type { Tablet } from '$data/lib/drawtab-loader.js';
 
 	let { data } = $props();
@@ -109,6 +110,27 @@
 	);
 
 	let pressureTotal = $derived(tabletsWithPressure.length);
+
+	// Single shared ExportDialog instance, opened by per-section trigger buttons.
+	let exportDialog: {
+		title: string;
+		filename: string;
+		headers: string[];
+		rows: (string | number)[][];
+	} | null = $state(null);
+
+	function openExport(
+		title: string,
+		filename: string,
+		headers: string[],
+		rows: (string | number)[][],
+	): void {
+		exportDialog = { title, filename, headers, rows };
+	}
+
+	function pct(n: number, total: number): string {
+		return total === 0 ? '0.0%' : `${((n / total) * 100).toFixed(1)}%`;
+	}
 </script>
 
 <Nav />
@@ -124,7 +146,18 @@
 
 	<div class="two-col">
 		<section class="section">
-			<h2>Pen Tablets ({penTablets.length})</h2>
+			<div class="section-header">
+				<h2>Pen Tablets ({penTablets.length})</h2>
+				<button class="export-trigger" disabled={ptAR.length === 0} onclick={() => {
+					const total = ptAR.reduce((s, r) => s + r.count, 0);
+					openExport(
+						'Aspect Ratio: Pen Tablets',
+						'analysis-aspect-ratio-pen-tablets',
+						['Ratio', '16-norm', 'Decimal', 'Count', '%'],
+						ptAR.map(r => [r.label, r.ratio16, r.decimal, r.count, pct(r.count, total)]),
+					);
+				}}>Export</button>
+			</div>
 			<table class="stat-table">
 				<thead><tr><th>Ratio</th><th>16-norm</th><th>Decimal</th><th>Count</th><th></th></tr></thead>
 				<tbody>
@@ -146,7 +179,18 @@
 		</section>
 
 		<section class="section">
-			<h2>Pen Displays &amp; Standalones ({penDisplays.length})</h2>
+			<div class="section-header">
+				<h2>Pen Displays &amp; Standalones ({penDisplays.length})</h2>
+				<button class="export-trigger" disabled={pdAR.length === 0} onclick={() => {
+					const total = pdAR.reduce((s, r) => s + r.count, 0);
+					openExport(
+						'Aspect Ratio: Pen Displays & Standalones',
+						'analysis-aspect-ratio-pen-displays',
+						['Ratio', '16-norm', 'Decimal', 'Count', '%'],
+						pdAR.map(r => [r.label, r.ratio16, r.decimal, r.count, pct(r.count, total)]),
+					);
+				}}>Export</button>
+			</div>
 			<table class="stat-table">
 				<thead><tr><th>Ratio</th><th>16-norm</th><th>Decimal</th><th>Count</th><th></th></tr></thead>
 				<tbody>
@@ -171,7 +215,15 @@
 {:else if activeTab === 'display-tech'}
 
 	<section class="section">
-		<h2>Panel Technology</h2>
+		<div class="section-header">
+			<h2>Panel Technology</h2>
+			<button class="export-trigger" disabled={panelTechRows.length === 0} onclick={() => openExport(
+				'Panel Technology',
+				'analysis-panel-tech',
+				['Panel Tech', 'Count', '%'],
+				panelTechRows.map(r => [r.label, r.count, pct(r.count, panelTechTotal)]),
+			)}>Export</button>
+		</div>
 		<p class="description">
 			{displaysWithTech.length} of {panelTechCovered} pen displays and standalones have panel tech data.
 		</p>
@@ -196,7 +248,15 @@
 {:else if activeTab === 'pressure-levels'}
 
 	<section class="section">
-		<h2>Pressure Levels</h2>
+		<div class="section-header">
+			<h2>Pressure Levels</h2>
+			<button class="export-trigger" disabled={pressureRows.length === 0} onclick={() => openExport(
+				'Pressure Levels',
+				'analysis-pressure-levels',
+				['Pressure Levels', 'Count', '%'],
+				pressureRows.map(r => [Number(r.label), r.count, pct(r.count, pressureTotal)]),
+			)}>Export</button>
+		</div>
 		<p class="description">
 			{pressureTotal} of {allTablets.length} tablets have pressure level data.
 		</p>
@@ -218,6 +278,17 @@
 		</table>
 	</section>
 
+{/if}
+
+{#if exportDialog}
+	<ExportDialog
+		entityType="analysis"
+		title={exportDialog.title}
+		filename={exportDialog.filename}
+		headers={exportDialog.headers}
+		rows={exportDialog.rows}
+		onclose={() => (exportDialog = null)}
+	/>
 {/if}
 
 <style>
@@ -255,6 +326,30 @@
 		border-color: var(--border);
 		border-bottom-color: var(--bg-card);
 	}
+
+	.section-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 8px;
+	}
+	.section-header h2 { margin: 0; }
+
+	.export-trigger {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 4px 10px;
+		font-size: 12px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+	.export-trigger:hover { border-color: var(--text-dim); color: var(--text); }
+	.export-trigger:disabled { opacity: 0.4; cursor: not-allowed; }
 
 	.two-col {
 		display: grid;

@@ -9,6 +9,7 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import TabletPicker from '$lib/components/TabletPicker.svelte';
 	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
+	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, mixedRangesCm, mixedRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
@@ -128,26 +129,29 @@
 		});
 	}
 
-	function copyCompareTable() {
-		const table = document.querySelector('#compare-table');
-		if (table) navigator.clipboard.writeText(table.outerHTML);
-	}
-
-	function exportCompareHTML() {
-		const table = document.querySelector('#compare-table');
-		if (!table) return;
-		const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Tablet Comparison</title>
-<style>table{border-collapse:collapse;font-family:sans-serif;font-size:13px}th,td{padding:4px 10px;text-align:left;border:1px solid #ddd}th{background:#f3f4f6;font-weight:600}.group-header{background:#e5e7eb;font-weight:700}.differs{background:#fef3c7}</style>
-</head><body>${table.outerHTML}</body></html>`;
-		const blob = new Blob([html], { type: 'text/html' });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = 'tablet-comparison.html';
-		a.click();
-		URL.revokeObjectURL(url);
-	}
+	// Build a flat headers + rows pair for the comparison table, suitable
+	// for ExportDialog. Group rows are emitted as a single non-blank cell
+	// in the first column so they're visible when the export is opened in
+	// a spreadsheet. The differs-highlighting (a CSS class on cells with
+	// values that vary across the flagged tablets) is dropped — the
+	// underlying values are exported faithfully, and the user can compute
+	// "differs" themselves from the data.
+	let showExport = $state(false);
+	let compareExportHeaders: string[] = $derived.by(() => {
+		const tabletCols = flaggedItems.map((t) => `${brandName(t.Model.Brand)} ${t.Model.Name}`);
+		return ['Field', ...tabletCols];
+	});
+	let compareExportRows: (string | number)[][] = $derived.by(() => {
+		const blanks = flaggedItems.map(() => '');
+		const out: (string | number)[][] = [];
+		for (const group of comparisonGroups) {
+			out.push([group.group, ...blanks]);
+			for (const f of group.fields) {
+				out.push([f.label, ...f.values]);
+			}
+		}
+		return out;
+	});
 
 </script>
 
@@ -196,8 +200,7 @@
 		<p class="no-data">Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.</p>
 	{:else}
 		<div class="compare-toolbar">
-			<button class="copy-btn" onclick={copyCompareTable}>Copy as HTML</button>
-			<button class="copy-btn" onclick={exportCompareHTML}>Export as HTML</button>
+			<button class="copy-btn" onclick={() => (showExport = true)} disabled={compareExportRows.length === 0}>Export</button>
 		</div>
 		<div class="compare-wrap">
 			<table id="compare-table" class="compare-table">
@@ -301,6 +304,17 @@
 		{allTablets}
 		flaggedIds={$flaggedTablets}
 		onclose={() => (showPicker = false)}
+	/>
+{/if}
+
+{#if showExport}
+	<ExportDialog
+		entityType="tablet-comparison"
+		title="Export Tablet Comparison"
+		filename="tablet-comparison"
+		headers={compareExportHeaders}
+		rows={compareExportRows}
+		onclose={() => (showExport = false)}
 	/>
 {/if}
 

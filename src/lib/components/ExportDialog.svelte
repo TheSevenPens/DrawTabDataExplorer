@@ -1,21 +1,40 @@
 <script lang="ts">
-	import type { FieldDef, AnyFieldDef } from '$data/lib/pipeline/index.js';
+	import type { AnyFieldDef } from '$data/lib/pipeline/index.js';
+
+	interface Props {
+		entityType: string;
+		onclose: () => void;
+		// Rich mode — scope toggles enabled (rows: view vs all, columns: view vs all)
+		allData?: any[];
+		filteredData?: any[];
+		allFields?: AnyFieldDef[];
+		visibleFields?: string[];
+		// Simple mode — pre-built headers + rows, no scope toggles
+		headers?: string[];
+		rows?: (string | number)[][];
+		// Optional overrides
+		filename?: string;
+		title?: string;
+	}
 
 	let {
+		entityType,
+		onclose,
 		allData,
 		filteredData,
 		allFields,
 		visibleFields,
-		entityType,
-		onclose,
-	}: {
-		allData: any[];
-		filteredData: any[];
-		allFields: AnyFieldDef[];
-		visibleFields: string[];
-		entityType: string;
-		onclose: () => void;
-	} = $props();
+		headers,
+		rows,
+		filename,
+		title = 'Export Data',
+	}: Props = $props();
+
+	// "Simple mode" is when the caller provides flat headers+rows arrays
+	// (no FieldDef metadata, no view/all distinction). Used by surfaces
+	// where the data is already a static, pre-rendered table — e.g. each
+	// Data Quality section. The scope toggles are hidden in this mode.
+	const simpleMode = headers !== undefined && rows !== undefined;
 
 	let rowMode = $state<'all' | 'view'>('view');
 	let colMode = $state<'all' | 'view'>('view');
@@ -23,13 +42,37 @@
 	let output = $state<'clipboard' | 'file'>('clipboard');
 	let statusMsg = $state('');
 
-	let rows = $derived(rowMode === 'all' ? allData : filteredData);
-	let fieldKeys = $derived(colMode === 'all' ? allFields.map(f => f.key) : visibleFields);
-	let fieldDefs = $derived(
-		fieldKeys.map(k => allFields.find(f => f.key === k)).filter(Boolean) as AnyFieldDef[]
-	);
+	interface ExportField {
+		key: string;
+		label: string;
+		getValue: (row: any) => unknown;
+	}
 
-	function cell(row: any, field: AnyFieldDef): string {
+	const exportRows: any[] = $derived.by(() => {
+		if (simpleMode) {
+			return (rows ?? []).map((arr) => {
+				const obj: Record<string, unknown> = {};
+				(headers ?? []).forEach((h, i) => {
+					obj[h] = arr[i];
+				});
+				return obj;
+			});
+		}
+		return (rowMode === 'all' ? allData : filteredData) ?? [];
+	});
+
+	const exportFields: ExportField[] = $derived.by(() => {
+		if (simpleMode) {
+			return (headers ?? []).map((h) => ({ key: h, label: h, getValue: (row: any) => row[h] }));
+		}
+		const keys = colMode === 'all' ? (allFields ?? []).map((f) => f.key) : (visibleFields ?? []);
+		return keys
+			.map((k) => (allFields ?? []).find((f) => f.key === k))
+			.filter((f): f is AnyFieldDef => Boolean(f))
+			.map((f) => ({ key: f.key, label: f.label, getValue: (row: any) => f.getValue(row) }));
+	});
+
+	function cell(row: any, field: ExportField): string {
 		const v = field.getValue(row);
 		return v == null ? '' : String(v);
 	}
@@ -46,56 +89,69 @@
 	}
 
 	function buildCSV(): string {
-		const header = fieldDefs.map(f => csvEscape(f.label)).join(',');
-		const body = rows.map(row => fieldDefs.map(f => csvEscape(cell(row, f))).join(',')).join('\n');
+		const header = exportFields.map((f) => csvEscape(f.label)).join(',');
+		const body = exportRows
+			.map((row) => exportFields.map((f) => csvEscape(cell(row, f))).join(','))
+			.join('\n');
 		return header + '\n' + body;
 	}
 
 	function buildJSON(): string {
 		return JSON.stringify(
-			rows.map(row => Object.fromEntries(fieldDefs.map(f => [f.key, cell(row, f)]))),
+			exportRows.map((row) => Object.fromEntries(exportFields.map((f) => [f.key, cell(row, f)]))),
 			null,
-			2
+			2,
 		);
 	}
 
 	function buildHTML(): string {
-		const ths = fieldDefs.map(f => `<th>${htmlEscape(f.label)}</th>`).join('');
-		const trs = rows.map(row => {
-			const tds = fieldDefs.map(f => `<td>${htmlEscape(cell(row, f))}</td>`).join('');
-			return `  <tr>${tds}</tr>`;
-		}).join('\n');
+		const ths = exportFields.map((f) => `<th>${htmlEscape(f.label)}</th>`).join('');
+		const trs = exportRows
+			.map((row) => {
+				const tds = exportFields.map((f) => `<td>${htmlEscape(cell(row, f))}</td>`).join('');
+				return `  <tr>${tds}</tr>`;
+			})
+			.join('\n');
 		return `<table>\n<thead>\n  <tr>${ths}</tr>\n</thead>\n<tbody>\n${trs}\n</tbody>\n</table>`;
 	}
 
 	function buildMarkdown(): string {
-		const header = '| ' + fieldDefs.map(f => f.label).join(' | ') + ' |';
-		const sep    = '| ' + fieldDefs.map(() => '---').join(' | ') + ' |';
-		const body   = rows.map(row =>
-			'| ' + fieldDefs.map(f => cell(row, f).replace(/\|/g, '\\|')).join(' | ') + ' |'
-		).join('\n');
+		const header = '| ' + exportFields.map((f) => f.label).join(' | ') + ' |';
+		const sep = '| ' + exportFields.map(() => '---').join(' | ') + ' |';
+		const body = exportRows
+			.map(
+				(row) =>
+					'| ' + exportFields.map((f) => cell(row, f).replace(/\|/g, '\\|')).join(' | ') + ' |',
+			)
+			.join('\n');
 		return [header, sep, body].join('\n');
 	}
 
 	function getContent(): string {
-		if (format === 'csv')      return buildCSV();
-		if (format === 'json')     return buildJSON();
-		if (format === 'html')     return buildHTML();
+		if (format === 'csv') return buildCSV();
+		if (format === 'json') return buildJSON();
+		if (format === 'html') return buildHTML();
 		return buildMarkdown();
 	}
 
 	function getMimeType(): string {
-		if (format === 'csv')  return 'text/csv';
+		if (format === 'csv') return 'text/csv';
 		if (format === 'json') return 'application/json';
 		if (format === 'html') return 'text/html';
 		return 'text/markdown';
 	}
 
 	function getExtension(): string {
-		if (format === 'csv')  return 'csv';
+		if (format === 'csv') return 'csv';
 		if (format === 'json') return 'json';
 		if (format === 'html') return 'html';
 		return 'md';
+	}
+
+	function getFilename(): string {
+		const base = filename ?? entityType;
+		const date = new Date().toISOString().slice(0, 10);
+		return `${base}-${date}.${getExtension()}`;
 	}
 
 	async function doExport() {
@@ -103,13 +159,16 @@
 		if (output === 'clipboard') {
 			await navigator.clipboard.writeText(content);
 			statusMsg = 'Copied!';
-			setTimeout(() => { statusMsg = ''; onclose(); }, 900);
+			setTimeout(() => {
+				statusMsg = '';
+				onclose();
+			}, 900);
 		} else {
 			const blob = new Blob([content], { type: getMimeType() });
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `${entityType}-${new Date().toISOString().slice(0, 10)}.${getExtension()}`;
+			a.download = getFilename();
 			a.click();
 			URL.revokeObjectURL(url);
 			onclose();
@@ -129,39 +188,50 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div class="backdrop" onclick={onBackdropClick}>
-	<div class="dialog" role="dialog" aria-modal="true" aria-label="Export data">
+	<div class="dialog" role="dialog" aria-modal="true" aria-label={title}>
 		<div class="dialog-header">
-			<h2>Export Data</h2>
+			<h2>{title}</h2>
 			<button class="close-btn" onclick={onclose} aria-label="Close">✕</button>
 		</div>
 
 		<div class="dialog-body">
 
-			<!-- Rows -->
-			<fieldset>
-				<legend>Rows</legend>
-				<label>
-					<input type="radio" bind:group={rowMode} value="view" />
-					Current view <span class="count">({filteredData.length})</span>
-				</label>
-				<label>
-					<input type="radio" bind:group={rowMode} value="all" />
-					All rows <span class="count">({allData.length})</span>
-				</label>
-			</fieldset>
+			{#if !simpleMode}
+				<!-- Rows -->
+				<fieldset>
+					<legend>Rows</legend>
+					<label>
+						<input type="radio" bind:group={rowMode} value="view" />
+						Current view <span class="count">({filteredData?.length ?? 0})</span>
+					</label>
+					<label>
+						<input type="radio" bind:group={rowMode} value="all" />
+						All rows <span class="count">({allData?.length ?? 0})</span>
+					</label>
+				</fieldset>
 
-			<!-- Columns -->
-			<fieldset>
-				<legend>Columns</legend>
-				<label>
-					<input type="radio" bind:group={colMode} value="view" />
-					View columns <span class="count">({visibleFields.length})</span>
-				</label>
-				<label>
-					<input type="radio" bind:group={colMode} value="all" />
-					All columns <span class="count">({allFields.length})</span>
-				</label>
-			</fieldset>
+				<!-- Columns -->
+				<fieldset>
+					<legend>Columns</legend>
+					<label>
+						<input type="radio" bind:group={colMode} value="view" />
+						View columns <span class="count">({visibleFields?.length ?? 0})</span>
+					</label>
+					<label>
+						<input type="radio" bind:group={colMode} value="all" />
+						All columns <span class="count">({allFields?.length ?? 0})</span>
+					</label>
+				</fieldset>
+			{:else}
+				<!-- Simple mode: no scope toggles, just show what's about to be exported -->
+				<div class="summary">
+					Exporting <strong>{exportRows.length}</strong>
+					{exportRows.length === 1 ? 'row' : 'rows'}
+					&times;
+					<strong>{exportFields.length}</strong>
+					{exportFields.length === 1 ? 'column' : 'columns'}
+				</div>
+			{/if}
 
 			<!-- Format -->
 			<fieldset>
@@ -206,7 +276,11 @@
 				<span class="status">{statusMsg}</span>
 			{/if}
 			<button class="cancel-btn" onclick={onclose}>Cancel</button>
-			<button class="export-btn" onclick={doExport}>
+			<button
+				class="export-btn"
+				onclick={doExport}
+				disabled={exportRows.length === 0 || exportFields.length === 0}
+			>
 				{output === 'clipboard' ? 'Copy' : 'Download'}
 			</button>
 		</div>
@@ -300,6 +374,16 @@
 		font-size: 12px;
 	}
 
+	.summary {
+		font-size: 13px;
+		color: var(--text-muted);
+		padding: 4px 0;
+	}
+	.summary strong {
+		color: var(--text);
+		font-variant-numeric: tabular-nums;
+	}
+
 	/* Format as a button-row */
 	.format-row {
 		display: flex;
@@ -359,5 +443,6 @@
 		cursor: pointer;
 		font-weight: 500;
 	}
-	.export-btn:hover { background: #1d4ed8; border-color: #1d4ed8; }
+	.export-btn:hover:not(:disabled) { background: #1d4ed8; border-color: #1d4ed8; }
+	.export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
