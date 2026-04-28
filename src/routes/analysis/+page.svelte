@@ -27,7 +27,8 @@
 		{ id: 'aspect-pen-display', category: 'Aspect Ratio', label: 'Pen Displays' },
 		{ id: 'aspect-pen-display-by-category', category: 'Aspect Ratio', label: 'Pen Displays — by Category' },
 		{ id: 'panel-tech', category: 'Display Tech', label: 'Panel Technology' },
-		{ id: 'pressure-levels', category: 'Pressure', label: 'Pressure Levels' },
+		{ id: 'pressure-levels', category: 'Tablet Features', label: 'Pressure Levels' },
+		{ id: 'touch-support', category: 'Tablet Features', label: 'Touch Support' },
 	];
 
 	const sectionIds = new Set(sectionDefs.map((s) => s.id));
@@ -172,6 +173,22 @@
 	);
 
 	let pressureTotal = $derived(tabletsWithPressure.length);
+
+	// --- Touch Support tab ---
+
+	const TOUCH_ORDER = ['YES', 'NO', '(not specified)'];
+
+	let touchSupportRows = $derived.by(() => {
+		const counts = new Map<string, number>();
+		for (const t of allTablets) {
+			const v = t.Digitizer?.SupportsTouch;
+			const key = v === 'YES' || v === 'NO' ? v : '(not specified)';
+			counts.set(key, (counts.get(key) ?? 0) + 1);
+		}
+		return TOUCH_ORDER.filter(k => counts.has(k)).map(k => ({ label: k, count: counts.get(k)! }));
+	});
+
+	let touchTotal = $derived(touchSupportRows.reduce((s, r) => s + r.count, 0));
 
 	// Single shared ExportDialog instance, opened by per-section trigger buttons.
 	let exportDialog: {
@@ -438,6 +455,41 @@
 						<td class="bar-cell">
 							<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
 							<span class="pct">{pct}%</span>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</section>
+
+{/if}
+
+{#if activeSection === 'touch-support'}
+
+	<section class="section">
+		<div class="section-header">
+			<h2>Touch Support</h2>
+			<button class="export-trigger" disabled={touchSupportRows.length === 0} onclick={() => openExport(
+				'Touch Support',
+				'analysis-touch-support',
+				['Touch', 'Count', '%'],
+				touchSupportRows.map(r => [r.label, r.count, pct(r.count, touchTotal)]),
+			)}>Export</button>
+		</div>
+		<p class="description">
+			Distribution of {allTablets.length} tablets by digitizer touch support.
+		</p>
+		<table class="stat-table">
+			<thead><tr><th>Touch</th><th>Count</th><th></th></tr></thead>
+			<tbody>
+				{#each touchSupportRows as row}
+					{@const pctVal = (row.count / touchTotal * 100).toFixed(1)}
+					<tr>
+						<td class="label">{row.label}</td>
+						<td class="count">{row.count}</td>
+						<td class="bar-cell">
+							<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
+							<span class="pct">{pctVal}%</span>
 						</td>
 					</tr>
 				{/each}
