@@ -5,6 +5,12 @@
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS, PEN_DEFAULT_COLUMNS, PEN_DEFAULT_VIEW, setPenFamilyNames } from '$data/lib/entities/pen-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
+
+	const penTabs = [
+		{ href: '/pens', label: 'Pen models' },
+		{ href: '/pen-families', label: 'Pen families' },
+	];
 
 	let data: Pen[] = $state([]);
 
@@ -21,6 +27,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={penTabs} />
 <EntityExplorer
 	title="Pens"
 	entityType="pens"

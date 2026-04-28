@@ -5,6 +5,12 @@
 	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS, TABLET_FAMILY_DEFAULT_COLUMNS, TABLET_FAMILY_DEFAULT_VIEW } from '$data/lib/entities/tablet-family-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
+
+	const tabletTabs = [
+		{ href: '/', label: 'Tablet models' },
+		{ href: '/tablet-families', label: 'Tablet families' },
+	];
 
 	let data: any[] = $state([]);
 
@@ -41,6 +47,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={tabletTabs} />
 <EntityExplorer
 	title="Tablet Families"
 	entityType="tablet-families"

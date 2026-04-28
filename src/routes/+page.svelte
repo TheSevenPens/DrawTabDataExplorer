@@ -10,6 +10,12 @@
 	} from '$data/lib/entities/tablet-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
+
+	const tabletTabs = [
+		{ href: '/', label: 'Tablet models' },
+		{ href: '/tablet-families', label: 'Tablet families' },
+	];
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
 	import { buildPenNameMap } from '$lib/pen-helpers.js';
 
@@ -36,6 +42,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={tabletTabs} />
 <EntityExplorer
 	title="Tablets"
 	entityType="tablets"

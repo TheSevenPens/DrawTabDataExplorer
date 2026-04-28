@@ -5,12 +5,18 @@
 	import { theme, toggleTheme } from '$lib/theme-store.js';
 	import { flaggedCount } from '$lib/flagged-store.js';
 
-	const links = [
+	type LinkSpec = {
+		href: string;
+		label: string;
+		dynamic?: boolean;
+		// Additional pathnames (without base prefix) that should mark this link as active.
+		altActive?: string[];
+	};
+
+	const links: LinkSpec[] = [
 		{ href: '/brands', label: 'Brands' },
-		{ href: '/', label: 'Tablets' },
-		{ href: '/pens', label: 'Pens' },
-		{ href: '/pen-families', label: 'Pen Families' },
-		{ href: '/tablet-families', label: 'Tablet Families' },
+		{ href: '/', label: 'Tablets', altActive: ['/tablet-families'] },
+		{ href: '/pens', label: 'Pens', altActive: ['/pen-families'] },
 		{ href: '/pen-compat', label: 'Pen Compat' },
 		{ href: '/drivers', label: 'Drivers' },
 		{ href: '/pressure-response', label: 'Pressure Response' },
@@ -23,6 +29,12 @@
 		{ href: '/about', label: 'About' },
 	];
 
+	function isActive(link: LinkSpec, path: string): boolean {
+		const norm = path.startsWith(base) ? path.slice(base.length) || '/' : path;
+		if (norm === link.href) return true;
+		return (link.altActive ?? []).includes(norm);
+	}
+
 	let settingsOpen = $state(false);
 </script>
 
@@ -31,7 +43,7 @@
 <nav>
 	<div class="nav-links">
 		{#each links as link}
-			<a href="{base}{link.href}" class:active={page.url.pathname === base + link.href}>{link.label}{#if link.dynamic && $flaggedCount > 0}<span class="badge">{$flaggedCount}</span>{/if}</a>
+			<a href="{base}{link.href}" class:active={isActive(link, page.url.pathname)}>{link.label}{#if link.dynamic && $flaggedCount > 0}<span class="badge">{$flaggedCount}</span>{/if}</a>
 		{/each}
 	</div>
 	<div class="nav-toggles">

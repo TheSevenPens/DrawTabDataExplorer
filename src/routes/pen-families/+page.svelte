@@ -5,6 +5,12 @@
 	import { type PenFamily, PEN_FAMILY_FIELDS, PEN_FAMILY_FIELD_GROUPS, PEN_FAMILY_DEFAULT_COLUMNS, PEN_FAMILY_DEFAULT_VIEW, setPenFamilyMemberCounts } from '$data/lib/entities/pen-family-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
+
+	const penTabs = [
+		{ href: '/pens', label: 'Pen models' },
+		{ href: '/pen-families', label: 'Pen families' },
+	];
 
 	let data: PenFamily[] = $state([]);
 
@@ -23,6 +29,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={penTabs} />
 <EntityExplorer
 	title="Pen Families"
 	entityType="pen-families"
