@@ -43,6 +43,9 @@ jobs:
           cp -r data-repo/data/pen-compat static/
           cp -r data-repo/data/pressure-response static/
           cp -r data-repo/data/inventory static/
+          cp -r data-repo/data/brands static/
+          cp -r data-repo/data/reference static/
+          cp data-repo/data/version.json static/
 
       - name: Type-check
         run: npx svelte-kit sync && npm run check

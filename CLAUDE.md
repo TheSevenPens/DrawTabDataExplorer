@@ -4,8 +4,23 @@
 
 SvelteKit static site (adapter-static, `ssr = false`, `prerender = true`) that
 displays tablet/pen data from the `data-repo` git submodule. Data files are
-symlinked from `static/` → `data-repo/data/` so Vite serves them as static
-assets. The app is deployed to GitHub Pages.
+served via symlinks from `static/` → `data-repo/data/` so Vite picks them up
+as static assets. The app is deployed to GitHub Pages.
+
+## First-time setup — `static/` symlinks
+
+`npm install` runs `scripts/setup-static.mjs` via the `postinstall` hook,
+which creates symlinks (Windows: directory junctions) from `static/` →
+`data-repo/data/` for every subdirectory the dev server needs. Idempotent —
+re-runnable any time as `npm run setup-static`.
+
+If the data submodule isn't checked out yet, the setup script warns and
+skips. Run `git submodule update --init --recursive` first, then
+`npm run setup-static`.
+
+Symptom of missing links: empty list pages and 404s on every entity detail
+URL. The dev server prints `[404] GET /tablets/WACOM-tablets.json` and
+similar in its terminal output. Re-run `npm run setup-static` to fix.
 
 ## Key aliases
 
@@ -76,6 +91,44 @@ to data files require two commits:
 cd data-repo && git add . && git commit -m "..." && git push
 cd .. && git add data-repo && git commit -m "chore: update data-repo submodule (...)"
 ```
+
+## Adding a new brand
+
+A new brand needs touches in two places plus the data files themselves.
+Anything else is automated or validated.
+
+1. **Brand record** — add to `data-repo/data/brands/brands.json`. The static
+   copy under `static/brands/` is now a symlink, so no separate resync.
+2. **Schema enum** — add `"FOOBAR"` to `BrandEnum` in
+   `data-repo/lib/schemas.ts` **and** to `BRANDS` in
+   `data-repo/lib/loader-shared.ts` (single source for filter dropdowns).
+   The data-quality CLI's drift check (`runBrandDriftCheck`) flags it if
+   you forget either.
+3. **Data files** — write `FOOBAR-tablets.json`, `FOOBAR-pens.json`, etc.
+   See `scripts/gen-brand-data.example.mjs` for a generator template that
+   handles UUIDs, derived display dimensions, and EntityId derivation.
+4. **`Model.Family` convention** — the value must be the tablet-family
+   **EntityId** (e.g. `"foobar.tabletfamily.fooseries"`), **not** the
+   `FamilyName`. The CLI's `runCrossEntityChecks` flags any orphaned
+   reference. Older Wacom entries with plain names like `"Cintiq"` are
+   legacy and produce orphan-reference warnings — don't follow that example.
+5. **Validate** — `npm run data-quality` (alias for
+   `tsx data-repo/lib/run-data-quality.ts`). Expect zero issues introduced
+   by your changes; existing pre-existing issues (HUION/WACOM EntityId
+   mismatches, legacy Wacom plain-name family refs, VEIKK brand drift) are
+   unrelated.
+
+What's automated (no manual action needed):
+
+- **Loader gating** — the URL and disk loaders both attempt every brand in
+  `BRANDS` and silently skip files that don't exist. There's no per-entity
+  brand list to maintain.
+- **Field-def Brand enums** — every `*-fields.ts` Brand field uses
+  `enumValues: [...BRANDS]`. Adding a brand to `BRANDS` propagates to every
+  filter dropdown automatically.
+- **`static/` symlinks** — `npm install` wires up the static directory.
+- **Cross-entity orphan checks** — typos in `Model.Family`, `PenFamily`,
+  `PenCompat.PenId`, or `PenCompat.TabletIds` fail validation.
 
 ## UI component architecture
 

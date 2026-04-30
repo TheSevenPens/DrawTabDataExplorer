@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "description": "Data explorer for DrawTabData",
   "scripts": {
+    "postinstall": "node scripts/setup-static.mjs",
+    "setup-static": "node scripts/setup-static.mjs",
     "update-data": "cd data-repo && git pull origin master",
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "data-quality": "npx tsx data-repo/lib/run-data-quality.ts"
   },
   "keywords": [],
   "author": "",
