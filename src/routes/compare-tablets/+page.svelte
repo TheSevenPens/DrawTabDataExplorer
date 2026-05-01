@@ -32,6 +32,7 @@
 	let tabletTabs = $derived([
 		{ href: '/', label: 'Tablet models' },
 		{ href: '/tablet-families', label: 'Tablet families' },
+		{ href: '/tablet-analysis', label: 'Analysis' },
 		{ href: '/compare-tablets', label: 'Compare', badge: $flaggedCount },
 	]);
 

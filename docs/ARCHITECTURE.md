@@ -123,10 +123,10 @@ page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 under a single parent link via the `LinkSpec.altActive` array, which
 lists additional pathnames that should also mark the link as active:
 
-- **Tablets** (`/`) — also active on `/tablet-families`, `/compare-tablets`
+- **Tablets** (`/`) — also active on `/tablet-families`,
+  `/tablet-analysis`, `/compare-tablets`
 - **Pens** (`/pens`) — also active on `/pen-families`, `/pressure-response`
-- **Data** (`/tablet-analysis`) — also active on `/reference`,
-  `/data-quality`, `/pen-compat`
+- **Data** (`/reference`) — also active on `/data-quality`, `/pen-compat`
 
 The settings dropdown (gear icon) holds the metric/imperial toggle,
 the alt-units toggle, and the theme toggle.
@@ -139,9 +139,9 @@ the flagged-tablets count on the Tablets ▸ Compare sub-tab).
 
 The sub-tab sets per parent:
 
-- **Tablets** (3 tabs): _Tablet models_ / _Tablet families_ / _Compare_
+- **Tablets** (4 tabs): _Tablet models_ / _Tablet families_ / _Analysis_ / _Compare_
 - **Pens** (3 tabs): _Pen models_ / _Pen families_ / _Pressure Response_
-- **Data** (4 tabs): _Analysis_ / _Reference_ / _Data Quality_ / _Pen Compat_
+- **Data** (3 tabs): _Reference_ / _Data Quality_ / _Pen Compat_
 
 ## Compare feature
 

@@ -21,7 +21,6 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 
 	const dataTabs = [
-		{ href: '/tablet-analysis', label: 'Analysis' },
 		{ href: '/reference', label: 'Reference' },
 		{ href: '/data-quality', label: 'Data Quality' },
 		{ href: '/pen-compat', label: 'Pen Compat' },

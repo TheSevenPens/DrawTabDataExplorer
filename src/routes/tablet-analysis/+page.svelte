@@ -4,13 +4,14 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import { flaggedCount } from '$lib/flagged-store.js';
 
-	const dataTabs = [
+	let tabletTabs = $derived([
+		{ href: '/', label: 'Tablet models' },
+		{ href: '/tablet-families', label: 'Tablet families' },
 		{ href: '/tablet-analysis', label: 'Analysis' },
-		{ href: '/reference', label: 'Reference' },
-		{ href: '/data-quality', label: 'Data Quality' },
-		{ href: '/pen-compat', label: 'Pen Compat' },
-	];
+		{ href: '/compare-tablets', label: 'Compare', badge: $flaggedCount },
+	]);
 	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import {
 		getDiagonal,
@@ -320,7 +321,7 @@
 </script>
 
 <Nav />
-<SubNav tabs={dataTabs} />
+<SubNav tabs={tabletTabs} />
 <h1>Analysis</h1>
 
 <div class="tree-layout">

@@ -23,12 +23,12 @@ browser's localStorage.
 The top navigation collapses related views under a single parent:
 
 - **Brands** — every manufacturer in the dataset (Wacom, XP-Pen, Huion, …).
-- **Tablets** — sub-tabs: _Tablet models_, _Tablet families_, _Compare_.
+- **Tablets** — sub-tabs: _Tablet models_, _Tablet families_, _Analysis_, _Compare_.
 - **Pens** — sub-tabs: _Pen models_, _Pen families_, _Pressure Response_.
 - **Drivers** — driver releases, mostly Wacom for now.
 - **Inventory** — your personal pen/tablet records (sub-tabs Pens / Tablets).
 - **Timeline** — year-by-year view of releases.
-- **Data** — sub-tabs: _Analysis_, _Reference_, _Data Quality_, _Pen Compat_.
+- **Data** — sub-tabs: _Reference_, _Data Quality_, _Pen Compat_.
 - **About** — credits and links to related tools.
 
 Click any name in a list to open its detail page. Detail pages show all
