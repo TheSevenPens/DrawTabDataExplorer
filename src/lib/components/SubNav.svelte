@@ -22,8 +22,8 @@
 		margin-bottom: 14px;
 	}
 	a {
-		padding: 5px 14px;
-		font-size: 12px;
+		padding: 7px 16px;
+		font-size: 16px;
 		border: 1px solid transparent;
 		border-bottom: none;
 		border-radius: 4px 4px 0 0;
@@ -45,14 +45,14 @@
 	}
 	.badge {
 		display: inline-block;
-		margin-left: 4px;
-		padding: 0 5px;
-		font-size: 10px;
+		margin-left: 6px;
+		padding: 0 7px;
+		font-size: 12px;
 		font-weight: 700;
-		line-height: 14px;
+		line-height: 18px;
 		background: #d97706;
 		color: #fff;
-		border-radius: 7px;
+		border-radius: 9px;
 		vertical-align: middle;
 	}
 </style>
