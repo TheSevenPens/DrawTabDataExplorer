@@ -157,21 +157,25 @@ for comparing driver JSON files during data maintenance — belongs in
    Phase 2:** surface the matched driver range on the tablet detail
    page itself (currently visible only via the Driver Compat
    listing).
-3. **Relocate the JSON merger.** Move `JsonMerger.svelte` into
-   `data-repo/scripts/` as a Node CLI or dev-only HTML page;
-   document in `data-repo/docs/UPDATING-DRIVERS.md` (already exists).
-   (~half day)
+3. ✅ **JsonMerger — dropped as obsolete (no port).** (2026-05-01)
+   Investigation showed the component was built for a workflow that
+   no longer exists: it merges a flat `wacom-drivers.json` array
+   against an additions JSON, but the legacy flat file was removed
+   from Wacom-Driver-List in commit `dea89c2` and the current driver
+   updates go through `data-repo/scripts/Add-WacomDriver.ps1`
+   directly (no merge step). The component isn't reachable from any
+   nav link in the Wacom-Driver-List app today either. Nothing to
+   port; the file dies when the repo is archived.
 
-After Phase 3 the standalone tool is fully redundant — archive the
-repo.
+After the TabletDetail sub-task in Phase 2 lands, the workstream is
+fully done — archive the repo.
 
 **Open:**
 
-- Augment existing `WACOM-tablets.json` records with `DriverMin` /
-  `DriverMax` (drives the join automatically, but `update.xml`
-  product `name` may not match our `Model.Name` cleanly), or add a
-  new top-level `data/wacom-update/` directory? Leaning toward the
-  former.
+- TabletDetail integration: surface the driver range from
+  `wacom-update/products.json` on the tablet detail page itself when
+  the join hits (via dashless `Model.Id` or `Model.SensorId`).
+  Currently the data is only visible via the Driver Compat listing.
 - Archive vs. leave-live, same question as DrawTabInventory.
 
 ## Suggested execution order for the consumer-merge workstreams
