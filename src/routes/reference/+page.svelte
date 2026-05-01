@@ -1,12 +1,71 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { loadISOPaperSizesFromURL, loadUSPaperSizesFromURL, loadTabletsFromURL, type ISOPaperSize, type USPaperSize, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN } from '$lib/tablet-size-ranges.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import BandsChart, { type Band } from '$lib/components/BandsChart.svelte';
 
-	let activeTab: 'tablet-sizes' | 'iso-paper-a' | 'iso-paper-b' | 'us-paper' | 'display-resolutions' = $state('tablet-sizes');
+	interface SectionDef {
+		id: string;
+		category: string;
+		label: string;
+	}
+
+	const sectionDefs: SectionDef[] = [
+		{ id: 'tablet-sizes',        category: 'Tablets',      label: 'Tablet Sizes' },
+		{ id: 'display-resolutions', category: 'Tablets',      label: 'Display Resolutions' },
+		{ id: 'iso-paper-a',         category: 'Paper Sizes',  label: 'ISO A Paper Sizes' },
+		{ id: 'iso-paper-b',         category: 'Paper Sizes',  label: 'ISO B Paper Sizes' },
+		{ id: 'us-paper',            category: 'Paper Sizes',  label: 'US Paper Sizes' },
+		{ id: 'iaf-ranking',         category: 'Pen Pressure', label: 'IAF Ranking' },
+		{ id: 'max-pressure',        category: 'Pen Pressure', label: 'Max Physical Pressure' },
+	];
+
+	const sectionIds = new Set(sectionDefs.map((s) => s.id));
+	const defaultSection = 'tablet-sizes';
+
+	const groupedSections: [string, SectionDef[]][] = (() => {
+		const map = new Map<string, SectionDef[]>();
+		for (const s of sectionDefs) {
+			if (!map.has(s.category)) map.set(s.category, []);
+			map.get(s.category)!.push(s);
+		}
+		return [...map.entries()];
+	})();
+
+	let activeSection: string = $derived.by(() => {
+		const hash = page.url.hash.slice(1);
+		return sectionIds.has(hash) ? hash : defaultSection;
+	});
+
+	function setSection(id: string) {
+		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
+	}
+
+	// IAF Ranking — bands of pen Initial Activation Force in gram-force.
+	// Lower IAF = lighter touch needed to register pressure = better.
+	const iafBands: Band[] = [
+		{ min: 0,   max: 1,    label: 'EXCELLENT' },
+		{ min: 1,   max: 2,    label: 'GREAT' },
+		{ min: 2,   max: 3.5,  label: 'GOOD' },
+		{ min: 3.5, max: 5,    label: 'OK' },
+		{ min: 5,   max: null, label: 'AVOID' },
+	];
+
+	// Max Physical Pressure — maximum force a digitizer can register, in gram-force.
+	// Higher = more dynamic range before the pen saturates; too high = excessive
+	// arm fatigue to reach full pressure.
+	const maxPressureBands: Band[] = [
+		{ min: 100, max: 200,  label: 'LIMITED' },
+		{ min: 200, max: 350,  label: 'OK' },
+		{ min: 350, max: 500,  label: 'GOOD' },
+		{ min: 500, max: 900,  label: 'EXCELLENT' },
+		{ min: 900, max: null, label: 'EXCESSIVE' },
+	];
 	let paperSizes: ISOPaperSize[] = $state([]);
 	let usPaperSizes: USPaperSize[] = $state([]);
 	let allTablets: Tablet[] = $state([]);
@@ -99,25 +158,31 @@
 <Nav />
 <h1>Reference</h1>
 
-<div class="tabs">
-	<button class:active={activeTab === 'tablet-sizes'} onclick={() => activeTab = 'tablet-sizes'}>
-		Tablet Sizes
-	</button>
-	<button class:active={activeTab === 'iso-paper-a'} onclick={() => activeTab = 'iso-paper-a'}>
-		ISO A Paper Sizes
-	</button>
-	<button class:active={activeTab === 'iso-paper-b'} onclick={() => activeTab = 'iso-paper-b'}>
-		ISO B Paper Sizes
-	</button>
-	<button class:active={activeTab === 'us-paper'} onclick={() => activeTab = 'us-paper'}>
-		US Paper Sizes
-	</button>
-	<button class:active={activeTab === 'display-resolutions'} onclick={() => activeTab = 'display-resolutions'}>
-		Display Resolutions
-	</button>
-</div>
+<div class="ref-layout">
+	<nav class="ref-tree" aria-label="Reference sections">
+		{#each groupedSections as [category, items]}
+			<div class="tree-cat">
+				<div class="tree-cat-label">{category}</div>
+				<ul>
+					{#each items as item}
+						<li>
+							<button
+								type="button"
+								class:active={activeSection === item.id}
+								onclick={() => setSection(item.id)}
+							>
+								<span class="tree-label">{item.label}</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/each}
+	</nav>
 
-{#if activeTab === 'tablet-sizes'}
+	<main class="ref-content">
+
+{#if activeSection === 'tablet-sizes'}
 	<section>
 		<div class="section-header">
 			<h2>Pen Tablet Size Categories</h2>
@@ -185,7 +250,7 @@
 			</tbody>
 		</table>
 	</section>
-{:else if activeTab === 'iso-paper-a'}
+{:else if activeSection ==='iso-paper-a'}
 	<section>
 		<div class="section-header">
 			<h2>ISO A Paper Sizes</h2>
@@ -223,7 +288,7 @@
 			<p class="no-data">Loading...</p>
 		{/if}
 	</section>
-{:else if activeTab === 'iso-paper-b'}
+{:else if activeSection ==='iso-paper-b'}
 	<section>
 		<div class="section-header">
 			<h2>ISO B Paper Sizes</h2>
@@ -261,7 +326,7 @@
 			<p class="no-data">Loading...</p>
 		{/if}
 	</section>
-{:else if activeTab === 'us-paper'}
+{:else if activeSection ==='us-paper'}
 	<section>
 		<div class="section-header">
 			<h2>US Paper Sizes</h2>
@@ -300,7 +365,7 @@
 			<p class="no-data">Loading...</p>
 		{/if}
 	</section>
-{:else if activeTab === 'display-resolutions'}
+{:else if activeSection ==='display-resolutions'}
 	<section>
 		<div class="section-header">
 			<h2>Display Resolution Categories</h2>
@@ -362,7 +427,69 @@
 			</tbody>
 		</table>
 	</section>
+{:else if activeSection ==='iaf-ranking'}
+	<section>
+		<div class="section-header">
+			<h2>IAF Ranking</h2>
+			<button class="copy-btn" onclick={() => openExport(
+				'IAF Ranking',
+				'iaf-ranking',
+				['Rank', 'Range (gf)'],
+				iafBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`]),
+			)}>Export</button>
+		</div>
+		<p class="ref-blurb">
+			Initial Activation Force is the minimum force required for a pen tip
+			to register pressure. Lower is better — a lighter touch means more
+			natural shading and less hand fatigue.
+		</p>
+		<BandsChart bands={iafBands} axisMax={10} axisStep={1} unit="gf" title="IAF Ranking" />
+		<table class="ref-table" style="margin-top: 16px;">
+			<thead><tr><th>Rank</th><th>Range</th></tr></thead>
+			<tbody>
+				{#each iafBands as b}
+					<tr>
+						<td>{b.label}</td>
+						<td>{b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</section>
+{:else if activeSection ==='max-pressure'}
+	<section>
+		<div class="section-header">
+			<h2>Max Physical Pressure</h2>
+			<button class="copy-btn" onclick={() => openExport(
+				'Max Physical Pressure',
+				'max-physical-pressure',
+				['Rank', 'Range (gf)'],
+				maxPressureBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`]),
+			)}>Export</button>
+		</div>
+		<p class="ref-blurb">
+			Maximum physical pressure is the force at which the digitizer
+			saturates (reports its maximum pressure value). More headroom gives a
+			wider dynamic range; too much forces the user to push harder than is
+			comfortable to reach full pressure.
+		</p>
+		<BandsChart bands={maxPressureBands} axisMax={1000} axisStep={100} unit="gf" title="Max Physical Pressure" />
+		<table class="ref-table" style="margin-top: 16px;">
+			<thead><tr><th>Rank</th><th>Range</th></tr></thead>
+			<tbody>
+				{#each maxPressureBands as b}
+					<tr>
+						<td>{b.label}</td>
+						<td>{b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</section>
 {/if}
+
+	</main>
+</div>
 
 {#if exportDialog}
 	<ExportDialog
@@ -380,31 +507,86 @@
 		margin-bottom: 16px;
 	}
 
-	.tabs {
+	.ref-layout {
 		display: flex;
-		gap: 4px;
-		margin-bottom: 20px;
+		gap: 24px;
+		align-items: flex-start;
 	}
 
-	.tabs button {
-		padding: 7px 16px;
+	.ref-tree {
+		flex: 0 0 240px;
+		position: sticky;
+		top: 16px;
+		max-height: calc(100vh - 32px);
+		overflow-y: auto;
+		border-right: 1px solid var(--border, #e0e0e0);
+		padding: 4px 12px 4px 0;
 		font-size: 13px;
-		border: 1px solid var(--border-light);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
 	}
 
-	.tabs button:hover {
-		border-color: #2563eb;
+	.ref-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.tree-cat {
+		margin-bottom: 14px;
+	}
+
+	.tree-cat-label {
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-muted, #888);
+		padding: 0 8px;
+		margin-bottom: 4px;
+	}
+
+	.tree-cat ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.tree-cat li {
+		margin: 0;
+	}
+
+	.tree-cat button {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		width: 100%;
+		padding: 5px 10px;
+		font-size: 13px;
+		text-align: left;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		background: transparent;
+		color: var(--text, #333);
+		cursor: pointer;
+		line-height: 1.3;
+	}
+
+	.tree-cat button:hover {
+		background: #eff6ff;
 		color: #2563eb;
 	}
 
-	.tabs button.active {
-		background: #2563eb;
-		color: #fff;
-		border-color: #2563eb;
+	.tree-cat button.active {
+		background: #dbeafe;
+		color: #1e40af;
+		font-weight: 600;
+	}
+
+	.tree-label {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	section {
@@ -463,6 +645,14 @@
 		font-size: 13px;
 		color: var(--text-dim);
 		font-style: italic;
+	}
+
+	.ref-blurb {
+		font-size: 13px;
+		color: var(--text-muted);
+		max-width: 800px;
+		margin: 0 0 16px;
+		line-height: 1.5;
 	}
 
 	.cat-name {
