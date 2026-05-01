@@ -125,7 +125,7 @@ under a single parent link via the `LinkSpec.altActive` array, which
 lists additional pathnames that should also mark the link as active:
 
 - **Tablets** (`/tablets`) — also active on `/tablet-families`,
-  `/tablet-analysis`, `/compare-tablets` (the bare `/` redirects to
+  `/tablet-analysis`, `/tablet-compare` (the bare `/` redirects to
   `/tablets`)
 - **Pens** (`/pens`) — also active on `/pen-families`, `/pressure-response`
 - **Data** (`/reference`) — also active on `/data-quality`, `/pen-compat`
@@ -163,7 +163,7 @@ several files:
 - **Flag from detail page** — Tablet detail page shows a Flag/Unflag
   button in the title row.
 
-- **Compare page** (`/compare-tablets`) — Two tabs:
+- **Compare page** (`/tablet-compare`) — Two tabs:
   - _Flagged_ — list of flagged tablets with unflag buttons and clear all.
   - _Compare_ — side-by-side spec table with specs as rows and tablets
     as columns. Rows are grouped by field group (Model, Digitizer,

@@ -16,7 +16,7 @@
 		{
 			href: '/tablets',
 			label: 'Tablets',
-			altActive: ['/tablet-families', '/tablet-analysis', '/compare-tablets'],
+			altActive: ['/tablet-families', '/tablet-analysis', '/tablet-compare'],
 		},
 		{ href: '/pens', label: 'Pens', altActive: ['/pen-families', '/pressure-response'] },
 		{ href: '/drivers', label: 'Drivers' },

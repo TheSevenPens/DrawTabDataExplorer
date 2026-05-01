@@ -18,7 +18,7 @@
 		{ href: '/tablets', label: 'Tablet models' },
 		{ href: '/tablet-families', label: 'Tablet families' },
 		{ href: '/tablet-analysis', label: 'Analysis' },
-		{ href: '/compare-tablets', label: 'Compare', badge: $flaggedCount },
+		{ href: '/tablet-compare', label: 'Compare', badge: $flaggedCount },
 	]);
 
 	let data: any[] = $state([]);
