@@ -25,7 +25,10 @@
 	let tablets: InventoryTablet[] = $state([]);
 
 	onMount(async () => {
-		tablets = (await loadInventoryTabletsFromURL(base, 'sevenpens')) as unknown as InventoryTablet[];
+		tablets = (await loadInventoryTabletsFromURL(
+			base,
+			'sevenpens',
+		)) as unknown as InventoryTablet[];
 	});
 </script>
 

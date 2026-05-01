@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadInventoryPensFromURL, loadPensFromURL, brandName } from '$data/lib/drawtab-loader.js';
+	import {
+		loadInventoryPensFromURL,
+		loadPensFromURL,
+		brandName,
+	} from '$data/lib/drawtab-loader.js';
 	import {
 		type InventoryPen,
 		INVENTORY_PEN_FIELDS,
@@ -60,7 +64,10 @@
 			const name = penNameMap[item.PenEntityId];
 			if (!name)
 				return [
-					{ label: item.PenEntityId, href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}` },
+					{
+						label: item.PenEntityId,
+						href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}`,
+					},
 				];
 			return [{ label: name, href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}` }];
 		},
