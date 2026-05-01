@@ -91,27 +91,89 @@ bundle cost — all still open per FUTURE.md.
 ## Merge consumer project: DrawTabInventory
 
 **Status:** [DrawTabInventory](https://github.com/TheSevenPens/DrawTabInventory)
-is a separate consumer of the data repo. The Explorer is already a
-superset — `/pen-inventory` and `/tablet-inventory` cover the same
-ground.
+is a single-file static HTML page (`index.html`, 33 KB) that fetches
+the inventory JSON from the data submodule at runtime and renders two
+tabs (Tablets / Pens) with search, brand+type filters, sort, and a
+row count. No README in the repo today.
 
-**Next:** update the DrawTabInventory README to mark the project
-deprecated and point users to the Explorer's Inventory sub-tabs.
+The Explorer is already a **full superset** — `/pen-inventory` and
+`/tablet-inventory` use `EntityExplorer` (better search, multiple
+filters, sort, column picker, saved views). Nothing to port.
 
-**Open:** is there any DrawTabInventory feature not yet in the
-Explorer that should be ported before deprecation?
+**Next (one PR, ~30 min):**
+
+1. Add `README.md` to DrawTabInventory marking it deprecated with a
+   link to the Explorer's two inventory sub-tabs.
+2. Add an in-page deprecation banner to `index.html` so visitors to
+   the live URL see the notice immediately.
+3. Update `docs/OVERVIEW.md` with the same notice.
+4. Optionally archive the GitHub repo.
+
+**Open:** archive the repo or leave it live (deprecated)? Archiving
+prevents future stars/forks; leaving it live keeps existing URLs
+functional.
 
 ## Merge consumer project: Wacom-Driver-List
 
 **Status:** [Wacom-Driver-List](https://github.com/TheSevenPens/Wacom-Driver-List)
-is a separate consumer of the data repo. The Explorer is already a
-superset — `/drivers` covers the same ground.
+is a SvelteKit static site (~50 KB Svelte) with five routes:
 
-**Next:** update the Wacom-Driver-List README to mark the project
-deprecated and point users to the Explorer's Drivers tab.
+| Route                                                     | Explorer status             |
+| --------------------------------------------------------- | --------------------------- |
+| `/drivers` (list, filter, sort, JSON export)              | ✓ present at `/drivers`     |
+| `/drivers/[version]` (per-version detail + download URLs) | ✓ present at `/entity/<id>` |
+| `/tablets` (Wacom products with compat driver range)      | ✗ data missing              |
+| `/tablets/[name]` (per-tablet driver range)               | ✗ data missing              |
+| `/notes` (static info + links)                            | ~ half-covered by `/about`  |
 
-**Open:** is there any Wacom-Driver-List feature not yet in the
-Explorer that should be ported before deprecation?
+The interesting gap: Wacom-Driver-List has its own
+`wacom-products.json` (~333 entries with `name`, `model`,
+`platforms[]`, `drivermin`, `drivermax`) extracted from
+`link.wacom.com/wdc/update.xml` via `scripts/extract-products.js`.
+**This data isn't in DrawTabData yet.** It's the only piece the
+Explorer doesn't already cover.
+
+There's also a hidden `JsonMerger.svelte` developer utility (~8 KB)
+for comparing driver JSON files during data maintenance — belongs in
+`data-repo/scripts/`, not the user-facing app.
+
+**Next (3 phases):**
+
+1. **Deprecation banner.** Add `README.md` + in-page banner pointing
+   to Explorer's `/drivers`. Mirrors DrawTabInventory Phase 1.
+   (~30 min)
+2. **Port the driver-range data.** Move `wacom-products.json` and
+   `extract-products.js` into the data submodule. Add `DriverMin` /
+   `DriverMax` fields to the tablet schema (or a new top-level
+   data file). Surface on tablet detail pages or as a tablet
+   sub-view. (~1 day)
+3. **Relocate the JSON merger.** Move `JsonMerger.svelte` into
+   `data-repo/scripts/` as a Node CLI or dev-only HTML page;
+   document in `data-repo/docs/UPDATING-DRIVERS.md` (already exists).
+   (~half day)
+
+After Phase 3 the standalone tool is fully redundant — archive the
+repo.
+
+**Open:**
+
+- Augment existing `WACOM-tablets.json` records with `DriverMin` /
+  `DriverMax` (drives the join automatically, but `update.xml`
+  product `name` may not match our `Model.Name` cleanly), or add a
+  new top-level `data/wacom-update/` directory? Leaning toward the
+  former.
+- Archive vs. leave-live, same question as DrawTabInventory.
+
+## Suggested execution order for the consumer-merge workstreams
+
+1. **Both deprecation banners** (~1 hour total) — DrawTabInventory
+   Phase 1 + Wacom-Driver-List Phase 1. Quickest user-visible win.
+2. **Wacom-Driver-List Phase 2** — port driver-range data; finishes
+   the only feature gap.
+3. **Wacom-Driver-List Phase 3** — relocate the merger script,
+   archive both Wacom-Driver-List and DrawTabInventory.
+4. **PenPressureData** — much larger, separate workstream tracked
+   below.
 
 ## Merge consumer project: PenPressureData
 
