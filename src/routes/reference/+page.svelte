@@ -444,7 +444,7 @@
 				'IAF Ranking',
 				'iaf-ranking',
 				['Rank', 'Range (gf)'],
-				iafBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`]),
+				iafBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`]),
 			)}>Export</button>
 		</div>
 		<table class="ref-table">
@@ -453,7 +453,7 @@
 				{#each iafBands as b}
 					<tr>
 						<td>{b.label}</td>
-						<td>{b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`}</td>
+						<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
 					</tr>
 				{/each}
 			</tbody>
@@ -477,7 +477,7 @@
 				'Max Physical Pressure',
 				'max-physical-pressure',
 				['Rank', 'Range (gf)'],
-				maxPressureBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`]),
+				maxPressureBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`]),
 			)}>Export</button>
 		</div>
 		<table class="ref-table">
@@ -486,7 +486,7 @@
 				{#each maxPressureBands as b}
 					<tr>
 						<td>{b.label}</td>
-						<td>{b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`}</td>
+						<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
 					</tr>
 				{/each}
 			</tbody>
