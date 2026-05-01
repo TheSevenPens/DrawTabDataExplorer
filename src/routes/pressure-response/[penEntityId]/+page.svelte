@@ -1,154 +1,78 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadPressureResponseFromURL, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 
-	let penEntityId = $state('');
-	let sessions: PressureResponse[] = $state([]);
+	const PEN_PRESSURE_DATA_URL = 'https://thesevenpens.github.io/PenPressureData/';
 
-	interface InventorySummary {
-		inventoryId: string;
-		sessions: PressureResponse[];
-	}
-
-	let inventorySummaries: InventorySummary[] = $state([]);
-
-	onMount(async () => {
-		penEntityId = decodeURIComponent(page.params.penEntityId!);
-		const all = await loadPressureResponseFromURL(base);
-		sessions = all.filter(s => s.PenEntityId === penEntityId);
-
-		const invMap = new Map<string, PressureResponse[]>();
-		for (const s of sessions) {
-			const list = invMap.get(s.InventoryId);
-			if (list) { list.push(s); } else { invMap.set(s.InventoryId, [s]); }
-		}
-
-		inventorySummaries = [...invMap.entries()]
-			.map(([inventoryId, sess]) => ({ inventoryId, sessions: sess.sort((a, b) => a.Date.localeCompare(b.Date)) }))
-			.sort((a, b) => a.inventoryId.localeCompare(b.inventoryId));
-	});
+	let penEntityId = $derived(decodeURIComponent(page.params.penEntityId ?? ''));
 </script>
 
 <Nav />
 
 <h1>Pressure Response: {penEntityId}</h1>
 
-<p class="summary">
-	{sessions.length} sessions across {inventorySummaries.length} pens
-</p>
-
-{#each inventorySummaries as inv}
-	<section class="inventory-section">
-		<h2>{inv.inventoryId}</h2>
-		<table>
-			<thead>
-				<tr>
-					<th>Date</th>
-					<th>Tablet</th>
-					<th>Driver</th>
-					<th>OS</th>
-					<th>Data Points</th>
-					<th>Max Force (gf)</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each inv.sessions as session}
-					<tr>
-						<td>{session.Date}</td>
-						<td>{session.TabletEntityId}</td>
-						<td>{session.Driver}</td>
-						<td>{session.OS}</td>
-						<td>{session.Records.length}</td>
-						<td>{session.Records.length > 0 ? Math.max(...session.Records.map(r => r[0])).toFixed(1) : ''}</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-
-		{#each inv.sessions as session}
-			<details class="session-details">
-				<summary>{session.Date} — {session.Records.length} points, max {session.Records.length > 0 ? Math.max(...session.Records.map(r => r[0])).toFixed(1) : '?'} gf</summary>
-				<table class="data-table">
-					<thead>
-						<tr><th>Force (gf)</th><th>Output (%)</th></tr>
-					</thead>
-					<tbody>
-						{#each session.Records as [gf, pct]}
-							<tr><td>{gf}</td><td>{pct}</td></tr>
-						{/each}
-					</tbody>
-				</table>
-			</details>
-		{/each}
-	</section>
-{/each}
+<div class="card">
+	<p>
+		Per-pen pressure-response charts have moved to a dedicated tool with a
+		better viewing experience:
+	</p>
+	<p>
+		<a class="cta" href={PEN_PRESSURE_DATA_URL} target="_blank" rel="noopener">
+			Open PenPressureData →
+		</a>
+	</p>
+	<p class="note">
+		Look for <code>{penEntityId}</code> in the PenPressureData listing.
+	</p>
+</div>
 
 <style>
-	h1 { margin-bottom: 8px; }
+	h1 {
+		margin-bottom: 16px;
+		font-size: 18px;
+	}
 
-	.summary {
+	.card {
+		max-width: 600px;
+		padding: 24px;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--bg-card);
+	}
+
+	.card p {
+		margin: 0 0 12px;
 		font-size: 14px;
-		color: #666;
-		margin-bottom: 20px;
+		line-height: 1.5;
 	}
 
-	.inventory-section {
-		margin-bottom: 32px;
+	.card p:last-child {
+		margin-bottom: 0;
 	}
 
-	.inventory-section h2 {
-		font-size: 15px;
-		font-weight: 600;
-		color: #6b21a8;
-		margin-bottom: 8px;
-		padding-bottom: 4px;
-		border-bottom: 2px solid #e0e0e0;
-	}
-
-	table {
-		width: auto;
-		border-collapse: collapse;
-		background: #fff;
-		font-size: 13px;
-		margin-bottom: 8px;
-	}
-
-	th, td {
-		text-align: left;
-		padding: 5px 10px;
-		border-bottom: 1px solid #e0e0e0;
-	}
-
-	th {
-		background: #333;
+	.cta {
+		display: inline-block;
+		padding: 8px 16px;
+		background: #2563eb;
 		color: #fff;
+		text-decoration: none;
+		border-radius: 4px;
+		font-weight: 500;
 	}
 
-	tr:hover td { background: #f0f7ff; }
+	.cta:hover {
+		background: #1d4ed8;
+	}
 
-	.session-details {
-		margin-bottom: 8px;
+	.note {
 		font-size: 13px;
+		color: var(--text-muted);
 	}
 
-	.session-details summary {
-		cursor: pointer;
-		color: #2563eb;
-		padding: 4px 0;
-	}
-
-	.session-details summary:hover { text-decoration: underline; }
-
-	.data-table {
-		margin-top: 4px;
-		margin-left: 16px;
-	}
-
-	.data-table td {
-		font-family: monospace;
-		text-align: right;
+	code {
+		background: var(--code-bg, rgba(0, 0, 0, 0.05));
+		padding: 1px 6px;
+		border-radius: 3px;
+		font-size: 12px;
 	}
 </style>
