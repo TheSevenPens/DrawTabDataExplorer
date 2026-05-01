@@ -431,12 +431,6 @@
 	<section>
 		<div class="section-header">
 			<h2>IAF Ranking</h2>
-			<button class="copy-btn" onclick={() => openExport(
-				'IAF Ranking',
-				'iaf-ranking',
-				['Rank', 'Range (gf)'],
-				iafBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`]),
-			)}>Export</button>
 		</div>
 		<p class="ref-blurb">
 			Initial Activation Force is the minimum force required for a pen tip
@@ -444,7 +438,16 @@
 			natural shading and less hand fatigue.
 		</p>
 		<BandsChart bands={iafBands} axisMax={10} axisStep={1} unit="gf" title="IAF Ranking" />
-		<table class="ref-table" style="margin-top: 16px;">
+		<div class="subsection-header">
+			<h3>Ranking Bands</h3>
+			<button class="copy-btn" onclick={() => openExport(
+				'IAF Ranking',
+				'iaf-ranking',
+				['Rank', 'Range (gf)'],
+				iafBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`]),
+			)}>Export</button>
+		</div>
+		<table class="ref-table">
 			<thead><tr><th>Rank</th><th>Range</th></tr></thead>
 			<tbody>
 				{#each iafBands as b}
@@ -460,12 +463,6 @@
 	<section>
 		<div class="section-header">
 			<h2>Max Physical Pressure</h2>
-			<button class="copy-btn" onclick={() => openExport(
-				'Max Physical Pressure',
-				'max-physical-pressure',
-				['Rank', 'Range (gf)'],
-				maxPressureBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`]),
-			)}>Export</button>
 		</div>
 		<p class="ref-blurb">
 			Maximum physical pressure is the force at which the digitizer
@@ -474,7 +471,16 @@
 			comfortable to reach full pressure.
 		</p>
 		<BandsChart bands={maxPressureBands} axisMax={1000} axisStep={100} unit="gf" title="Max Physical Pressure" />
-		<table class="ref-table" style="margin-top: 16px;">
+		<div class="subsection-header">
+			<h3>Ranking Bands</h3>
+			<button class="copy-btn" onclick={() => openExport(
+				'Max Physical Pressure',
+				'max-physical-pressure',
+				['Rank', 'Range (gf)'],
+				maxPressureBands.map((b) => [b.label, b.max === null ? `> ${b.min} gf` : `${b.min} – ${b.max} gf`]),
+			)}>Export</button>
+		</div>
+		<table class="ref-table">
 			<thead><tr><th>Rank</th><th>Range</th></tr></thead>
 			<tbody>
 				{#each maxPressureBands as b}
@@ -607,6 +613,23 @@
 		font-weight: 600;
 		color: #6b21a8;
 		margin-bottom: 0;
+	}
+
+	.subsection-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 20px;
+		margin-bottom: 6px;
+		padding-bottom: 3px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.subsection-header h3 {
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-muted);
+		margin: 0;
 	}
 
 	.copy-btn {
