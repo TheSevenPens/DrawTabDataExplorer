@@ -25,7 +25,11 @@
 		},
 		{ href: '/drivers', label: 'Drivers' },
 		{ href: '/timeline', label: 'Timeline' },
-		{ href: '/reference', label: 'Data', altActive: ['/data-quality', '/pen-compat'] },
+		{
+			href: '/reference',
+			label: 'Data',
+			altActive: ['/data-quality', '/pen-compat', '/wacom-driver-compat'],
+		},
 		{ href: '/about', label: 'About' },
 	];
 

@@ -143,11 +143,20 @@ for comparing driver JSON files during data maintenance — belongs in
    `+layout.svelte` (visible on every route), and notice at top of
    `docs/OVERVIEW.md` (Wacom-Driver-List commit `2478d0a`,
    2026-05-01).
-2. **Port the driver-range data.** Move `wacom-products.json` and
-   `extract-products.js` into the data submodule. Add `DriverMin` /
-   `DriverMax` fields to the tablet schema (or a new top-level
-   data file). Surface on tablet detail pages or as a tablet
-   sub-view. (~1 day)
+2. ✅ **Port the driver-range data.** (2026-05-01) Went with the
+   hybrid approach (option 3 in the original analysis): manifest
+   data lives at `data-repo/data/wacom-update/products.json` (98
+   entries, plus the source XML for reproducibility) extracted by
+   `data-repo/scripts/extract-wacom-products.mjs`. Added an optional
+   `Model.SensorId` field to the tablet schema for the per-tablet
+   join, and a new **Data ▸ Driver Compat** sub-tab
+   (`/wacom-driver-compat`) that lists every manifest entry with its
+   driver range and links to matching tablets. 18 of 98 entries
+   match by dashless `Model.Id` already; SensorId fill-in will close
+   the rest as a slow incremental workstream. **Still TODO inside
+   Phase 2:** surface the matched driver range on the tablet detail
+   page itself (currently visible only via the Driver Compat
+   listing).
 3. **Relocate the JSON merger.** Move `JsonMerger.svelte` into
    `data-repo/scripts/` as a Node CLI or dev-only HTML page;
    document in `data-repo/docs/UPDATING-DRIVERS.md` (already exists).

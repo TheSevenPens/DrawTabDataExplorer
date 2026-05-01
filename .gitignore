@@ -12,6 +12,7 @@ static/pressure-response
 static/inventory
 static/brands
 static/reference
+static/wacom-update
 static/version.json
 .claude/
 playwright-report/
