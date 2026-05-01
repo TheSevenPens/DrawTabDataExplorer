@@ -1,0 +1,179 @@
+# DrawTabDataExplorer — User Manual
+
+A tour of what's in the app and how to get around. Each section is short
+on purpose — the app is meant to be self-explanatory once you know what's
+there.
+
+Live site: <https://thesevenpens.github.io/DrawTabDataExplorer/>
+
+## What it is
+
+A read-only browser for the [DrawTabData](https://github.com/TheSevenPens/DrawTabData)
+dataset — drawing tablets, pens, pen families, brands, drivers, and
+related metadata. Think of it as a multi-tabbed spreadsheet over the data,
+with detail pages for every entity.
+
+All data lives client-side after the initial page load, so filtering,
+sorting, and switching views is instant. There is no account, no sync,
+and no telemetry — your saved views and flagged tablets stay in your
+browser's localStorage.
+
+## Browsing entities
+
+The top navigation has one entry per entity type:
+
+- **Brands** — every manufacturer in the dataset (Wacom, XP-Pen, Huion, …).
+- **Tablets** — the main list. The sub-tabs switch between *Tablet models*
+  (one row per product) and *Tablet families* (groupings like "Wacom
+  Intuos Pro 2017 series").
+- **Pens** — same idea: *Pen models* sub-tab and *Pen families* sub-tab.
+- **Pen Compat** — which pens work with which tablets.
+- **Drivers** — driver releases, mostly Wacom for now.
+
+Click any name in a list to open its detail page. Detail pages show all
+populated fields grouped into categories (Model / Digitizer / Display /
+Physical / Standalone), plus context — for example a tablet detail shows
+its family, included pens, size comparison against other tablets, and
+ISO paper-size equivalents.
+
+The canonical URL for any entity is `/entity/<entity-id>` (e.g.
+`/entity/wacom.tablet.ctl4100`). The typed routes
+(`/tablets/<id>`, `/pens/<id>`, …) redirect to the canonical form.
+
+## Searching and filtering
+
+Every list page has the same toolbar:
+
+```
+[ Search... ] [ QuickFilter ▾ ]   [ Filters ] [ Sort ] [ Columns N ] [ Views ]
+```
+
+- **Search box** — case-insensitive substring search across the row's
+  searchable fields (the entity name, ID, alternate names, etc.).
+- **QuickFilter dropdown** — a one-click brand or category filter,
+  populated from values present in the loaded data.
+- **Filters** button — opens a panel for compound filters with operators
+  (`contains`, `eq`, `lt`, `gte`, `isempty`, …). Multiple filters AND
+  together. Drag a filter pill out to remove it.
+- **Sort** button — multi-key sort. Drag to reorder the keys; click a
+  pill to flip ascending / descending.
+- **Columns** button — choose which columns appear and in what order.
+  Drag pills to reorder.
+- **Views** button — saved view manager (see next section).
+
+Active filters and sorts show inline in the toolbar — an amber count badge
+on Filters, the primary sort field on Sort, the column count on Columns.
+
+## Saved views
+
+A *view* captures the current filter / sort / column / search state for
+the page you're on. Click **Views → Save current view**, give it a name,
+and it's stored in localStorage. Switch between saved views from the same
+dropdown. Each entity type has its own set of views, so saving "My Wacoms"
+on the Tablets page won't clutter the Pens page.
+
+There's always a built-in **Default** view that resets everything.
+
+## Compare tablets
+
+To compare specs side by side:
+
+1. On the Tablets list, click the flag icon in the leftmost column for
+   each tablet you want to compare (max 6). The flag count appears as a
+   badge on the **Compare** nav link.
+2. Open **Compare**. The *Flagged* tab lists what you've selected; the
+   *Compare* tab is a side-by-side spec table with the tablets as columns
+   and specs as rows. Cells with differing values are highlighted.
+3. Use **Copy as HTML** or **Export as HTML** to share the table.
+
+Below the spec table, size histograms show your flagged tablets as
+markers against the full distribution — useful for "is this in the small
+or large category" at a glance.
+
+You can also flag/unflag from a tablet detail page.
+
+## Reference
+
+The **Reference** page has a left-hand navigation grouped into three
+categories — **Tablets**, **Paper Sizes**, and **Pen Pressure** — that
+collect measurement vocabularies other pages rely on:
+
+- **Tablet Sizes** — pen-tablet and pen-display size categories with cm,
+  inch, and closest ISO A paper-size equivalents.
+- **ISO A / ISO B / US Paper Sizes** — full tables with diagonal in cm
+  and inches.
+- **Display Resolutions** — Full HD / 2.5K / 3K / 4K categories with
+  counts of how many tablets in the dataset fall into each.
+- **IAF Ranking** — Initial Activation Force bands (gram-force) for pen
+  pressure, from EXCELLENT (≤ 1 gf) to AVOID (> 5 gf). Shown as a
+  number-line band chart and table.
+- **Max Physical Pressure** — digitizer saturation pressure bands
+  (gram-force), from LIMITED (100–200 gf) to EXCESSIVE (> 900 gf).
+
+Every section has an **Export** button that produces a CSV / TSV / HTML
+copy of the table.
+
+## Pressure Response
+
+Pen pressure-response data has moved to a dedicated tool with a better
+viewing experience:
+<https://thesevenpens.github.io/PenPressureData/>. The Pressure Response
+nav entry in this app currently links there. The local viewer will be
+rebuilt and reintroduced once the new UX is finalized.
+
+## Inventory
+
+A personal record of physical pens and tablets you own — purchase date,
+vendor, defects, notes. Two sub-tabs (Pens / Tablets) follow the same
+EntityExplorer pattern as the main lists, with the same filter / sort /
+columns / saved-views toolbar. Only one user (`sevenpens`) is wired up
+today.
+
+## Timeline
+
+A year-by-year view of tablet and pen releases. Useful for spotting
+launch-window patterns and discontinuations.
+
+## Force Proportions
+
+On a pen-tablet detail page, the **Force Proportions** tab visualises
+how much of the tablet's active area is wasted when its native ratio is
+forced to fit a 16:9 or 16:10 monitor. Three SVG panels per ratio show
+the tablet's actual proportions, the target shape, and the result with
+the lost strip highlighted. PEN displays and standalones already match
+their own screen ratio, so this tab is hidden for them.
+
+## Analysis
+
+Custom analyses that don't fit the standard list-page pattern — pricing
+trends, brand market share over time, and similar exploratory views.
+
+## Data Quality
+
+A health dashboard for the underlying dataset. Schema-level issues
+(required fields, whitespace, enum values) are listed first; below that,
+cross-entity issues — orphaned compat references, orphaned family
+references, tablets with no compat coverage — and field-completion
+percentages per entity type. Each section has its own Export button.
+
+The CLI version of these checks runs via `npm run data-quality`; see
+[CLAUDE.md](../CLAUDE.md) for contributor details.
+
+## Settings
+
+The gear icon in the top-right opens a small dropdown:
+
+- **Units** — switch between metric (mm/cm) and imperial (inches). The
+  toggle propagates everywhere dimensions are shown.
+- **Show alt units** — when on, every dimension shows both unit systems
+  side by side, e.g. `225 × 145 mm (8.86 × 5.71 in)`.
+- **Theme** — light / dark.
+
+Settings are remembered across sessions.
+
+## Sharing
+
+Every detail page has a stable URL (`/entity/<entity-id>`), so links to
+specific tablets or pens are safe to share. Saved views currently live
+only in your browser — there's no URL-encoded state yet (this is on the
+future-improvements list).
