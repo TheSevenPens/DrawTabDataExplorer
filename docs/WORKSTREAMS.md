@@ -116,20 +116,75 @@ Explorer that should be ported before deprecation?
 ## Merge consumer project: PenPressureData
 
 **Status:** [PenPressureData](https://github.com/TheSevenPens/PenPressureData)
-is a separate consumer of the data repo. The Explorer's
-`/pressure-response` page is currently a stub that just links there;
-the original in-app viewer was removed when the new UX wasn't
-finalized. PenPressureData currently has UX that the Explorer
-doesn't.
+is a separate consumer of the data repo (Svelte 5 + SvelteKit static
+site, same stack as the Explorer, ~146 KB of Svelte, version 0.13).
+The Explorer's `/pressure-response` page is currently a stub that
+just links there; the in-app viewer was removed when the new UX
+wasn't finalized. The Explorer already loads the `pressureResponse`
+dataset via `loadAllData()` — it just doesn't visualize it.
 
-**Next:** inventory PenPressureData's features, then plan a
-migration into the Explorer (likely under **Pens > Pressure
-Response**).
+What PenPressureData has that the Explorer doesn't:
 
-**Open:** which subset moves over first — the per-pen response
-curve only, or also the side-by-side comparison view? Once the
-migration is complete, deprecate PenPressureData the same way as
-DrawTabInventory and Wacom-Driver-List.
+- `PressureChart.svelte` — Chart.js scatter of force (gf) vs.
+  pressure (%); zoom modes (normal / IAF detail 0-20gf / max
+  pressure 95-100%); data view modes (raw / raw+estimates /
+  standardized / envelope); envelope range options (Min/Max /
+  P05/P95 / P25/P75); PNG + HTML export
+- `interpolate.js` — 17-percentile P-value computation with
+  spring-decay extrapolation for IAF (P00) and Max Pressure (P100)
+  when raw data doesn't reach those endpoints. Per their architecture
+  doc, this should eventually move into the shared DrawTabData lib.
+- Defects-aware behaviour — auto-hides defective sessions on charts,
+  excludes them from aggregates, shows "Excluding N defective" notes
+- Three-tier flagging — pens (inventory IDs), models (pen entity
+  IDs), families (family entity IDs); each in its own localStorage
+  key
+- Per-session detail pages (`/session/<sessionId>`)
+- Compare with named groups — most complex feature; named groups of
+  any mix of pens/models/families/tags, per-group colour, overlap
+  warnings, saved views
+- Pressure-specific data quality checks — non-monotonic sessions,
+  missing low-end data, single-session pens, stale measurements
+
+**Next (phased migration):**
+
+1. **Replace the stub.** Add `chart.js` dep; port `interpolate.js`
+   into `data-repo/lib/pressure/`; port `PressureChart.svelte`;
+   rewrite `/pressure-response` from stub → Sessions list with
+   detail drill-down. (~1-2 days)
+2. **Light up existing pen detail pages.** Add a "Pressure Response"
+   section to `PenDetail.svelte` and `PenFamilyDetail.svelte`
+   showing all sessions for that pen/family. Port
+   `ChartLegendTable` and `ModelStats`. (~1 day)
+3. **Data Quality integration.** Port the pressure-specific checks
+   into the existing `/data-quality` page. (~half day)
+4. **Extend flagging to pens/models/families.** Generalize
+   `flagged-store.ts` from tablet-only to handle three new sets.
+   Add a Flagged sub-tab under Pens. (~1 day)
+5. **Compare with named groups.** Deepest feature; could land as
+   `/pen-compare` or be deferred indefinitely if simpler flagging
+   covers the workflow. (~2-3 days)
+
+After Phase 5 the standalone tool can be deprecated, mirroring the
+DrawTabInventory and Wacom-Driver-List workstreams.
+
+**Open:**
+
+- **Chart library** — Chart.js (~200 KB lazy-loaded) for a fast
+  port, or rebuild in SVG to match the Explorer's existing
+  `ValueHistogram.svelte` pattern? SVG is consistent and
+  bundle-friendly but adds 1-2 days. Recommendation: Chart.js for
+  Phase 1, revisit later.
+- **`interpolate.js` location** — confirm we land it in
+  `data-repo/lib/pressure/` per the upstream's stated intent (one
+  data-repo PR + outer-repo pointer bump).
+- **Per-session URLs** — PenPressureData uses
+  `/session/wap.0004_2024-09-02`. Explorer uses `/entity/<id>`
+  canonically. Should sessions get an EntityId in the data
+  (`<brand>.session.<id>`?) or stay outside the entity scheme with
+  their own route?
+- **Phase 5 scope** — keep Compare-with-named-groups, or call it
+  YAGNI and rely on Phase 4 flagging?
 
 ---
 
