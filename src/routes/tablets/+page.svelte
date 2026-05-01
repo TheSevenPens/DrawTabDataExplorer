@@ -19,7 +19,7 @@
 	import { flaggedTablets, flaggedCount, toggleFlag } from '$lib/flagged-store.js';
 
 	let tabletTabs = $derived([
-		{ href: '/', label: 'Tablet models' },
+		{ href: '/tablets', label: 'Tablet models' },
 		{ href: '/tablet-families', label: 'Tablet families' },
 		{ href: '/tablet-analysis', label: 'Analysis' },
 		{ href: '/compare-tablets', label: 'Compare', badge: $flaggedCount },

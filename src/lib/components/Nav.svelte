@@ -14,7 +14,7 @@
 	const links: LinkSpec[] = [
 		{ href: '/brands', label: 'Brands' },
 		{
-			href: '/',
+			href: '/tablets',
 			label: 'Tablets',
 			altActive: ['/tablet-families', '/tablet-analysis', '/compare-tablets'],
 		},

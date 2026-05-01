@@ -12,9 +12,10 @@ DrawTabDataExplorer/
 │   ├── routes/                   # SvelteKit pages
 │   │   ├── +layout.ts            # load() fetches version info for layout
 │   │   ├── +layout.svelte        # Nav + version banner
-│   │   ├── +page.svelte          # Tablets list
+│   │   ├── +page.ts              # Redirects / -> /tablets
 │   │   ├── about/                # About page (links to related tools)
-│   │   ├── tablets/[entityId]/   # Tablet detail (+page.ts + +page.svelte)
+│   │   ├── tablets/              # Tablets list (+page.svelte) +
+│   │   │                         # detail [entityId] (+page.ts redirect)
 │   │   ├── pens/                 # Pens list + detail (+page.ts)
 │   │   ├── pen-families/         # Pen families list + detail (+page.ts)
 │   │   ├── tablet-families/      # Tablet families list + detail (+page.ts)
@@ -123,8 +124,9 @@ page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 under a single parent link via the `LinkSpec.altActive` array, which
 lists additional pathnames that should also mark the link as active:
 
-- **Tablets** (`/`) — also active on `/tablet-families`,
-  `/tablet-analysis`, `/compare-tablets`
+- **Tablets** (`/tablets`) — also active on `/tablet-families`,
+  `/tablet-analysis`, `/compare-tablets` (the bare `/` redirects to
+  `/tablets`)
 - **Pens** (`/pens`) — also active on `/pen-families`, `/pressure-response`
 - **Data** (`/reference`) — also active on `/data-quality`, `/pen-compat`
 

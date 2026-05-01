@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { base } from '$app/paths';
 	import Nav from '$lib/components/Nav.svelte';
 </script>
 
@@ -17,7 +18,7 @@
 	{#if $page.error?.message}
 		<p class="error-message">{$page.error.message}</p>
 	{/if}
-	<a class="back-link" href="/">← Back to tablets</a>
+	<a class="back-link" href="{base}/tablets">← Back to tablets</a>
 </div>
 
 <style>

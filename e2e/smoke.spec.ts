@@ -4,7 +4,7 @@ import { test, expect, type Page } from '@playwright/test';
 // proves the SPA hydrated and rendered the route — a blank shell would
 // fail it.
 const ROUTES: { path: string; h1: RegExp }[] = [
-	{ path: '/', h1: /Tablets|Tablet Models|Drawing Tablets/i },
+	{ path: '/tablets', h1: /Tablets|Tablet Models|Drawing Tablets/i },
 	{ path: '/brands', h1: /Brands/i },
 	{ path: '/tablet-families', h1: /Tablet Families/i },
 	{ path: '/pens', h1: /Pens/i },
@@ -50,7 +50,7 @@ test.describe('Smoke — every route renders without console errors', () => {
 
 test.describe('List → detail navigation', () => {
 	test('Tablets list → tablet detail page', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await page.goto('/tablets', { waitUntil: 'networkidle' });
 		// Wait for the table to populate. The first link in the results table
 		// should point at /entity/<brand>.tablet.<id>.
 		const firstTabletLink = page.locator('a[href*="/entity/"][href*=".tablet."]').first();
@@ -99,7 +99,7 @@ test.describe('Reference left-nav sections', () => {
 
 test.describe('Compare workflow', () => {
 	test('flag a tablet from the list, then see it on /compare-tablets', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await page.goto('/tablets', { waitUntil: 'networkidle' });
 
 		// Flag the first tablet. The flag-toggle button at the start of every
 		// row is `<button class="flag-btn" title="Flag for comparison">`.
