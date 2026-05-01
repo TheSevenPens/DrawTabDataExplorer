@@ -19,7 +19,7 @@
 		{ href: '/inventory', label: 'Inventory' },
 		{ href: '/timeline', label: 'Timeline' },
 		{
-			href: '/analysis',
+			href: '/tablet-analysis',
 			label: 'Data',
 			altActive: ['/reference', '/data-quality', '/pen-compat'],
 		},

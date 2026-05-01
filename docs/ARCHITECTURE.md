@@ -125,8 +125,8 @@ lists additional pathnames that should also mark the link as active:
 
 - **Tablets** (`/`) — also active on `/tablet-families`, `/compare-tablets`
 - **Pens** (`/pens`) — also active on `/pen-families`, `/pressure-response`
-- **Data** (`/analysis`) — also active on `/reference`, `/data-quality`,
-  `/pen-compat`
+- **Data** (`/tablet-analysis`) — also active on `/reference`,
+  `/data-quality`, `/pen-compat`
 
 The settings dropdown (gear icon) holds the metric/imperial toggle,
 the alt-units toggle, and the theme toggle.
