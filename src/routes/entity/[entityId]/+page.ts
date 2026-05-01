@@ -22,6 +22,7 @@ import { type PenFamily } from '$data/lib/entities/pen-family-fields.js';
 import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
 import { type Driver } from '$data/lib/entities/driver-fields.js';
 import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
+import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 
 export async function load({ params }) {
 	const entityId = decodeURIComponent(params.entityId);
@@ -95,6 +96,17 @@ export async function load({ params }) {
 			if (!family) error(404, 'Tablet family not found');
 			const familyTablets = allTablets.filter((t) => t.Model.Family === family.EntityId);
 			return { entityType, family, familyTablets, allTablets, isoSizes };
+		}
+
+		case 'session': {
+			const [allPressure, allPens] = await Promise.all([
+				loadPressureResponseFromURL(base) as Promise<PressureResponse[]>,
+				loadPensFromURL(base) as Promise<Pen[]>,
+			]);
+			const session = allPressure.find((s) => sessionEntityId(s) === entityId);
+			if (!session) error(404, 'Pressure-response session not found');
+			const pen = allPens.find((p) => p.EntityId === session.PenEntityId);
+			return { entityType, session, pen };
 		}
 
 		case 'brand': {

@@ -222,12 +222,19 @@ What PenPressureData has that the Explorer doesn't:
 - Pressure-specific data quality checks — non-monotonic sessions,
   missing low-end data, single-session pens, stale measurements
 
-**Next (phased migration):**
+**Phases (Phase 5 dropped — see Open below):**
 
-1. **Replace the stub.** Add `chart.js` dep; port `interpolate.js`
-   into `data-repo/lib/pressure/`; port `PressureChart.svelte`;
-   rewrite `/pressure-response` from stub → Sessions list with
-   detail drill-down. (~1-2 days)
+1. ✅ **Stub replaced.** (2026-05-01) Added `chart.js` dep; ported
+   `interpolate.js` to `data-repo/lib/pressure/interpolate.ts` (typed)
+   plus a `session-id.ts` helper that derives the canonical
+   `<brand>.session.<inventoryid>_<date>` EntityId from the raw
+   session record. New `PressureChart.svelte` (Chart.js scatter,
+   raw + P00/P100 estimate dashed extensions) and `SessionDetail.svelte`.
+   `/pressure-response` is now a Sessions list (124 entries) with
+   brand/pen filters; rows link to `/entity/<sessionEntityId>` which
+   renders the chart, P00/P100 stats, and the raw record table.
+   **Deferred to later phases:** zoom modes, envelope view, PNG/HTML
+   export menus, multi-session overlay UI.
 2. **Light up existing pen detail pages.** Add a "Pressure Response"
    section to `PenDetail.svelte` and `PenFamilyDetail.svelte`
    showing all sessions for that pen/family. Port
@@ -237,30 +244,24 @@ What PenPressureData has that the Explorer doesn't:
 4. **Extend flagging to pens/models/families.** Generalize
    `flagged-store.ts` from tablet-only to handle three new sets.
    Add a Flagged sub-tab under Pens. (~1 day)
-5. **Compare with named groups.** Deepest feature; could land as
-   `/pen-compare` or be deferred indefinitely if simpler flagging
-   covers the workflow. (~2-3 days)
 
-After Phase 5 the standalone tool can be deprecated, mirroring the
+After Phase 4 the standalone tool can be deprecated, mirroring the
 DrawTabInventory and Wacom-Driver-List workstreams.
 
 **Open:**
 
-- **Chart library** — Chart.js (~200 KB lazy-loaded) for a fast
-  port, or rebuild in SVG to match the Explorer's existing
-  `ValueHistogram.svelte` pattern? SVG is consistent and
-  bundle-friendly but adds 1-2 days. Recommendation: Chart.js for
-  Phase 1, revisit later.
-- **`interpolate.js` location** — confirm we land it in
-  `data-repo/lib/pressure/` per the upstream's stated intent (one
-  data-repo PR + outer-repo pointer bump).
-- **Per-session URLs** — PenPressureData uses
-  `/session/wap.0004_2024-09-02`. Explorer uses `/entity/<id>`
-  canonically. Should sessions get an EntityId in the data
-  (`<brand>.session.<id>`?) or stay outside the entity scheme with
-  their own route?
-- **Phase 5 scope** — keep Compare-with-named-groups, or call it
-  YAGNI and rely on Phase 4 flagging?
+- ~~Chart library~~ — went with **Chart.js** for Phase 1 (lazy-loaded
+  via the chart component). Revisit if bundle size becomes an issue.
+- ~~`interpolate.js` location~~ — landed in
+  [`data-repo/lib/pressure/interpolate.ts`](../data-repo/lib/pressure/interpolate.ts).
+- ~~Per-session URLs~~ — using canonical
+  `<brand>.session.<inventoryid>_<date>` EntityId at
+  `/entity/<id>`. Derived on the fly via
+  [`data-repo/lib/pressure/session-id.ts`](../data-repo/lib/pressure/session-id.ts);
+  not stored in the JSON yet (could be added later if needed).
+- ~~Phase 5 (Compare with named groups)~~ — **dropped** as YAGNI;
+  Phase 4 flagging is expected to cover the cross-pen comparison
+  use case. Can be revived if a real need emerges.
 
 ---
 

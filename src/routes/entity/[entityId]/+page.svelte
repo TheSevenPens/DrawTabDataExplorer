@@ -5,6 +5,7 @@
 	import DriverDetail from '$lib/components/DriverDetail.svelte';
 	import PenFamilyDetail from '$lib/components/PenFamilyDetail.svelte';
 	import TabletFamilyDetail from '$lib/components/TabletFamilyDetail.svelte';
+	import SessionDetail from '$lib/components/SessionDetail.svelte';
 
 	let { data } = $props();
 </script>
@@ -21,6 +22,8 @@
 	<PenFamilyDetail data={data as any} />
 {:else if data.entityType === 'tabletfamily'}
 	<TabletFamilyDetail data={data as any} />
+{:else if data.entityType === 'session'}
+	<SessionDetail data={data as any} />
 {:else}
 	<h1>Unknown entity</h1>
 	<p>Entity type not recognised.</p>
