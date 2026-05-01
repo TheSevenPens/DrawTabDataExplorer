@@ -39,7 +39,7 @@ export async function load({ params }) {
 			const tablet = allTablets.find((t) => t.Meta.EntityId === entityId);
 			if (!tablet) error(404, 'Tablet not found');
 			const compatPenIds = new Set(
-				allCompat.filter((c) => c.TabletId === tablet.Model.Id).map((c) => c.PenId)
+				allCompat.filter((c) => c.TabletId === tablet.Model.Id).map((c) => c.PenId),
 			);
 			const compatiblePens = allPens.filter((p) => compatPenIds.has(p.PenId));
 			return { entityType, tablet, allTablets, allPens, compatiblePens, isoSizes };
@@ -55,11 +55,11 @@ export async function load({ params }) {
 			const pen = allPens.find((p) => p.EntityId === entityId);
 			if (!pen) error(404, 'Pen not found');
 			const compatTabletIds = new Set(
-				allCompat.filter((c) => c.PenId === pen.PenId).map((c) => c.TabletId)
+				allCompat.filter((c) => c.PenId === pen.PenId).map((c) => c.TabletId),
 			);
 			const compatibleTablets = allTablets.filter((t) => compatTabletIds.has(t.Model.Id));
-			const includedWithTablets = allTablets.filter(
-				(t) => (t.Model.IncludedPen ?? []).some((p) => p === entityId)
+			const includedWithTablets = allTablets.filter((t) =>
+				(t.Model.IncludedPen ?? []).some((p) => p === entityId),
 			);
 			const pressureSessionCount = allPressure.filter((s) => s.PenEntityId === entityId).length;
 			return { entityType, pen, compatibleTablets, includedWithTablets, pressureSessionCount };

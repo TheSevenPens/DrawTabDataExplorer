@@ -23,10 +23,10 @@ browser's localStorage.
 The top navigation has one entry per entity type:
 
 - **Brands** — every manufacturer in the dataset (Wacom, XP-Pen, Huion, …).
-- **Tablets** — the main list. The sub-tabs switch between *Tablet models*
-  (one row per product) and *Tablet families* (groupings like "Wacom
+- **Tablets** — the main list. The sub-tabs switch between _Tablet models_
+  (one row per product) and _Tablet families_ (groupings like "Wacom
   Intuos Pro 2017 series").
-- **Pens** — same idea: *Pen models* sub-tab and *Pen families* sub-tab.
+- **Pens** — same idea: _Pen models_ sub-tab and _Pen families_ sub-tab.
 - **Pen Compat** — which pens work with which tablets.
 - **Drivers** — driver releases, mostly Wacom for now.
 
@@ -66,7 +66,7 @@ on Filters, the primary sort field on Sort, the column count on Columns.
 
 ## Saved views
 
-A *view* captures the current filter / sort / column / search state for
+A _view_ captures the current filter / sort / column / search state for
 the page you're on. Click **Views → Save current view**, give it a name,
 and it's stored in localStorage. Switch between saved views from the same
 dropdown. Each entity type has its own set of views, so saving "My Wacoms"
@@ -81,8 +81,8 @@ To compare specs side by side:
 1. On the Tablets list, click the flag icon in the leftmost column for
    each tablet you want to compare (max 6). The flag count appears as a
    badge on the **Compare** nav link.
-2. Open **Compare**. The *Flagged* tab lists what you've selected; the
-   *Compare* tab is a side-by-side spec table with the tablets as columns
+2. Open **Compare**. The _Flagged_ tab lists what you've selected; the
+   _Compare_ tab is a side-by-side spec table with the tablets as columns
    and specs as rows. Cells with differing values are highlighted.
 3. Use **Copy as HTML** or **Export as HTML** to share the table.
 

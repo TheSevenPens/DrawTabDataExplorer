@@ -2,7 +2,13 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadDriversFromURL } from '$data/lib/drawtab-loader.js';
-	import { type Driver, DRIVER_FIELDS, DRIVER_FIELD_GROUPS, DRIVER_DEFAULT_COLUMNS, DRIVER_DEFAULT_VIEW } from '$data/lib/entities/driver-fields.js';
+	import {
+		type Driver,
+		DRIVER_FIELDS,
+		DRIVER_FIELD_GROUPS,
+		DRIVER_DEFAULT_COLUMNS,
+		DRIVER_DEFAULT_VIEW,
+	} from '$data/lib/entities/driver-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 
@@ -27,5 +33,5 @@
 	linkField="DriverName"
 	defaultFilterField="OSFamily"
 	defaultSortField="ReleaseDate"
-	quickFilterFields={["Brand"]}
+	quickFilterFields={['Brand']}
 />

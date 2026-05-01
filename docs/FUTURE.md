@@ -8,6 +8,7 @@ would catch runtime crashes that `svelte-check` misses (e.g. the `gcd`
 recursive-`{@const}` crash, the `closestISO` blank-page bug).
 
 Suggested scope for a first suite:
+
 - Every top-level route renders a non-empty `<main>` / `<h1>`
 - Every tab on Reference, Compare, and Inventory renders without a JS error
 - Navigating to a tablet/pen detail page from the list page renders the detail

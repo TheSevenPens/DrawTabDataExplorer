@@ -4,16 +4,21 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
-	import { getDiagonal, type Tablet, type ISOPaperSize, type USPaperSize } from '$data/lib/drawtab-loader.js';
 	import {
-		aspectRatioCategory,
-		ASPECT_RATIO_CATEGORIES,
-	} from '$data/lib/aspect-ratio.js';
+		getDiagonal,
+		type Tablet,
+		type ISOPaperSize,
+		type USPaperSize,
+	} from '$data/lib/drawtab-loader.js';
+	import { aspectRatioCategory, ASPECT_RATIO_CATEGORIES } from '$data/lib/aspect-ratio.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import {
-		penTabletRangesCm, penTabletRangesIn,
-		displayRangesCm, displayRangesIn,
-		MM_TO_IN, MM_TO_CM,
+		penTabletRangesCm,
+		penTabletRangesIn,
+		displayRangesCm,
+		displayRangesIn,
+		MM_TO_IN,
+		MM_TO_CM,
 	} from '$lib/tablet-size-ranges.js';
 
 	let { data } = $props();
@@ -33,9 +38,17 @@
 	// entry is one tree leaf, grouped under a category heading.
 	const sectionDefs: SectionDef[] = [
 		{ id: 'aspect-pen-tablet', category: 'Aspect Ratio', label: 'Pen Tablets' },
-		{ id: 'aspect-pen-tablet-by-category', category: 'Aspect Ratio', label: 'Pen Tablets — by Category' },
+		{
+			id: 'aspect-pen-tablet-by-category',
+			category: 'Aspect Ratio',
+			label: 'Pen Tablets — by Category',
+		},
 		{ id: 'aspect-pen-display', category: 'Aspect Ratio', label: 'Pen Displays' },
-		{ id: 'aspect-pen-display-by-category', category: 'Aspect Ratio', label: 'Pen Displays — by Category' },
+		{
+			id: 'aspect-pen-display-by-category',
+			category: 'Aspect Ratio',
+			label: 'Pen Displays — by Category',
+		},
 		{ id: 'panel-tech', category: 'Display Tech', label: 'Panel Technology' },
 		{ id: 'pressure-levels', category: 'Tablet Features', label: 'Pressure Levels' },
 		{ id: 'touch-support', category: 'Tablet Features', label: 'Touch Support' },
@@ -91,7 +104,8 @@
 		if (!w || !h) return '';
 		const x = (h / w) * 16;
 		const rounded = Math.round(x * 100) / 100;
-		const display = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(2).replace(/\.?0+$/, '');
+		const display =
+			rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(2).replace(/\.?0+$/, '');
 		return `16:${display}`;
 	}
 
@@ -108,10 +122,10 @@
 
 	// --- Aspect Ratio tab ---
 
-	let penTablets = $derived(allTablets.filter(t => t.Model.Type === 'PENTABLET'));
-	let penDisplays = $derived(allTablets.filter(
-		t => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE'
-	));
+	let penTablets = $derived(allTablets.filter((t) => t.Model.Type === 'PENTABLET'));
+	let penDisplays = $derived(
+		allTablets.filter((t) => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE'),
+	);
 
 	function ratioDecimal(label: string): string {
 		const [w, h] = label.split(':').map(Number);
@@ -127,9 +141,11 @@
 
 	function arRows(tablets: Tablet[]) {
 		return countBy(
-			tablets.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null),
-			t => aspectRatioLabel(t.Digitizer!.Dimensions!.Width!, t.Digitizer!.Dimensions!.Height!)
-		).map(r => ({
+			tablets.filter(
+				(t) => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null,
+			),
+			(t) => aspectRatioLabel(t.Digitizer!.Dimensions!.Width!, t.Digitizer!.Dimensions!.Height!),
+		).map((r) => ({
 			...r,
 			ratio16: ratio16(r.label),
 			decimal: ratioDecimal(r.label),
@@ -152,9 +168,10 @@
 			if (cat == null) continue;
 			counts.set(cat, (counts.get(cat) ?? 0) + 1);
 		}
-		return ASPECT_RATIO_CATEGORIES
-			.filter((c) => counts.has(c))
-			.map((c) => ({ label: c, count: counts.get(c)! }));
+		return ASPECT_RATIO_CATEGORIES.filter((c) => counts.has(c)).map((c) => ({
+			label: c,
+			count: counts.get(c)!,
+		}));
 	}
 
 	let ptARCat = $derived(arCategoryRows(penTablets));
@@ -162,26 +179,21 @@
 
 	// --- Display Tech tab ---
 
-	let displaysWithTech = $derived(
-		penDisplays.filter(t => t.Display?.PanelTech != null)
-	);
+	let displaysWithTech = $derived(penDisplays.filter((t) => t.Display?.PanelTech != null));
 
-	let panelTechRows = $derived(
-		countBy(displaysWithTech, t => t.Display!.PanelTech!)
-	);
+	let panelTechRows = $derived(countBy(displaysWithTech, (t) => t.Display!.PanelTech!));
 
 	let panelTechTotal = $derived(displaysWithTech.length);
 	let panelTechCovered = $derived(penDisplays.length);
 
 	// --- Pressure Levels tab ---
 
-	let tabletsWithPressure = $derived(
-		allTablets.filter(t => t.Digitizer?.PressureLevels != null)
-	);
+	let tabletsWithPressure = $derived(allTablets.filter((t) => t.Digitizer?.PressureLevels != null));
 
 	let pressureRows = $derived(
-		countBy(tabletsWithPressure, t => t.Digitizer!.PressureLevels!)
-			.sort((a, b) => Number(a.label) - Number(b.label))
+		countBy(tabletsWithPressure, (t) => t.Digitizer!.PressureLevels!).sort(
+			(a, b) => Number(a.label) - Number(b.label),
+		),
 	);
 
 	let pressureTotal = $derived(tabletsWithPressure.length);
@@ -197,7 +209,10 @@
 			const key = v === 'YES' || v === 'NO' ? v : '(not specified)';
 			counts.set(key, (counts.get(key) ?? 0) + 1);
 		}
-		return TOUCH_ORDER.filter(k => counts.has(k)).map(k => ({ label: k, count: counts.get(k)! }));
+		return TOUCH_ORDER.filter((k) => counts.has(k)).map((k) => ({
+			label: k,
+			count: counts.get(k)!,
+		}));
 	});
 
 	let touchTotal = $derived(touchSupportRows.reduce((s, r) => s + r.count, 0));
@@ -240,8 +255,12 @@
 
 	const currentYear = new Date().getFullYear();
 
-	function filterByYears(tablets: Tablet[], type: 'PENTABLET' | 'PENDISPLAY', years: number | null): Tablet[] {
-		return tablets.filter(t => {
+	function filterByYears(
+		tablets: Tablet[],
+		type: 'PENTABLET' | 'PENDISPLAY',
+		years: number | null,
+	): Tablet[] {
+		return tablets.filter((t) => {
 			if (type === 'PENTABLET' && t.Model.Type !== 'PENTABLET') return false;
 			if (type === 'PENDISPLAY' && t.Model.Type === 'PENTABLET') return false;
 			if (years !== null) {
@@ -254,7 +273,7 @@
 
 	function diagsOf(tablets: Tablet[]): number[] {
 		return tablets
-			.map(t => {
+			.map((t) => {
 				const d = getDiagonal(t.Digitizer?.Dimensions);
 				return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
 			})
@@ -266,8 +285,10 @@
 	let ptSizesRanges = $derived(isMetric ? penTabletRangesCm : penTabletRangesIn);
 	let pdSizesRanges = $derived(isMetric ? displayRangesCm : displayRangesIn);
 
-	function paperMarkers(sizes: { Name: string; Width_mm: number; Height_mm: number }[]): HistogramMarker[] {
-		return sizes.map(p => {
+	function paperMarkers(
+		sizes: { Name: string; Width_mm: number; Height_mm: number }[],
+	): HistogramMarker[] {
+		return sizes.map((p) => {
 			const diagMm = Math.sqrt(p.Width_mm ** 2 + p.Height_mm ** 2);
 			return { value: isMetric ? diagMm / 10 : diagMm * MM_TO_IN, label: p.Name };
 		});
@@ -275,10 +296,14 @@
 
 	function markersFor(overlay: Overlay): HistogramMarker[] {
 		switch (overlay) {
-			case 'iso-a': return paperMarkers(isoPaperSizes.filter(p => p.Series === 'A'));
-			case 'iso-b': return paperMarkers(isoPaperSizes.filter(p => p.Series === 'B'));
-			case 'us':    return paperMarkers(usPaperSizes.filter(p => p.Series === 'Common'));
-			default:      return [];
+			case 'iso-a':
+				return paperMarkers(isoPaperSizes.filter((p) => p.Series === 'A'));
+			case 'iso-b':
+				return paperMarkers(isoPaperSizes.filter((p) => p.Series === 'B'));
+			case 'us':
+				return paperMarkers(usPaperSizes.filter((p) => p.Series === 'Common'));
+			default:
+				return [];
 		}
 	}
 
@@ -312,338 +337,353 @@
 	</nav>
 
 	<main class="tree-content">
-
-{#if activeSection === 'aspect-pen-tablet'}
-
-		<section class="section">
-			<div class="section-header">
-				<h2>Pen Tablets ({penTablets.length})</h2>
-				<button class="export-trigger" disabled={ptAR.length === 0} onclick={() => {
-					const total = ptAR.reduce((s, r) => s + r.count, 0);
-					openExport(
-						'Aspect Ratio: Pen Tablets',
-						'analysis-aspect-ratio-pen-tablets',
-						['Ratio', 'Decimal', 'Category', 'Count', '%'],
-						ptAR.map(r => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
-					);
-				}}>Export</button>
-			</div>
-			<table class="stat-table">
-				<thead><tr><th>Ratio</th><th>Decimal</th><th>Category</th><th>Count</th><th></th></tr></thead>
-				<tbody>
-					{#each ptAR as row}
-						{@const pct = (row.count / ptAR.reduce((s, r) => s + r.count, 0) * 100).toFixed(1)}
-						<tr>
-							<td class="decimal">{row.ratio16}</td>
-							<td class="decimal">{row.decimal}</td>
-							<td class="mono">{row.category}</td>
-							<td class="count">{row.count}</td>
-							<td class="bar-cell">
-								<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
-								<span class="pct">{pct}%</span>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-{/if}
-
-{#if activeSection === 'aspect-pen-tablet-by-category'}
-
-		<section class="section">
-			<div class="section-header">
-				<h2>Pen Tablets — by Category ({penTablets.length})</h2>
-				<button class="export-trigger" disabled={ptARCat.length === 0} onclick={() => {
-					const total = ptARCat.reduce((s, r) => s + r.count, 0);
-					openExport(
-						'Aspect Ratio Category: Pen Tablets',
-						'analysis-aspect-ratio-category-pen-tablets',
-						['Category', 'Count', '%'],
-						ptARCat.map(r => [r.label, r.count, pct(r.count, total)]),
-					);
-				}}>Export</button>
-			</div>
-			<p class="description">
-				Buckets each tablet's digitizer aspect ratio into a popular ratio
-				(16:9, 16:10, 3:2, 4:3, 5:4, 1:1) at one of three closeness tiers
-				(EXACT ≤ 0.005, VERYCLOSE ≤ 0.02, CLOSE ≤ 0.05), or OTHER.
-			</p>
-			<table class="stat-table">
-				<thead><tr><th>Category</th><th>Count</th><th></th></tr></thead>
-				<tbody>
-					{#each ptARCat as row}
-						{@const total = ptARCat.reduce((s, r) => s + r.count, 0)}
-						{@const pctVal = (row.count / total * 100).toFixed(1)}
-						<tr>
-							<td class="label mono">{row.label}</td>
-							<td class="count">{row.count}</td>
-							<td class="bar-cell">
-								<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
-								<span class="pct">{pctVal}%</span>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-{/if}
-
-{#if activeSection === 'aspect-pen-display'}
-
-		<section class="section">
-			<div class="section-header">
-				<h2>Pen Displays &amp; Standalones ({penDisplays.length})</h2>
-				<button class="export-trigger" disabled={pdAR.length === 0} onclick={() => {
-					const total = pdAR.reduce((s, r) => s + r.count, 0);
-					openExport(
-						'Aspect Ratio: Pen Displays & Standalones',
-						'analysis-aspect-ratio-pen-displays',
-						['Ratio', 'Decimal', 'Category', 'Count', '%'],
-						pdAR.map(r => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
-					);
-				}}>Export</button>
-			</div>
-			<table class="stat-table">
-				<thead><tr><th>Ratio</th><th>Decimal</th><th>Category</th><th>Count</th><th></th></tr></thead>
-				<tbody>
-					{#each pdAR as row}
-						{@const pct = (row.count / pdAR.reduce((s, r) => s + r.count, 0) * 100).toFixed(1)}
-						<tr>
-							<td class="decimal">{row.ratio16}</td>
-							<td class="decimal">{row.decimal}</td>
-							<td class="mono">{row.category}</td>
-							<td class="count">{row.count}</td>
-							<td class="bar-cell">
-								<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
-								<span class="pct">{pct}%</span>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-{/if}
-
-{#if activeSection === 'aspect-pen-display-by-category'}
-
-		<section class="section">
-			<div class="section-header">
-				<h2>Pen Displays &amp; Standalones — by Category ({penDisplays.length})</h2>
-				<button class="export-trigger" disabled={pdARCat.length === 0} onclick={() => {
-					const total = pdARCat.reduce((s, r) => s + r.count, 0);
-					openExport(
-						'Aspect Ratio Category: Pen Displays & Standalones',
-						'analysis-aspect-ratio-category-pen-displays',
-						['Category', 'Count', '%'],
-						pdARCat.map(r => [r.label, r.count, pct(r.count, total)]),
-					);
-				}}>Export</button>
-			</div>
-			<p class="description">
-				Buckets each pen display's (or standalone's) aspect ratio into a
-				popular ratio at one of three closeness tiers, or OTHER.
-			</p>
-			<table class="stat-table">
-				<thead><tr><th>Category</th><th>Count</th><th></th></tr></thead>
-				<tbody>
-					{#each pdARCat as row}
-						{@const total = pdARCat.reduce((s, r) => s + r.count, 0)}
-						{@const pctVal = (row.count / total * 100).toFixed(1)}
-						<tr>
-							<td class="label mono">{row.label}</td>
-							<td class="count">{row.count}</td>
-							<td class="bar-cell">
-								<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
-								<span class="pct">{pctVal}%</span>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-{/if}
-
-{#if activeSection === 'panel-tech'}
-
-	<section class="section">
-		<div class="section-header">
-			<h2>Panel Technology</h2>
-			<button class="export-trigger" disabled={panelTechRows.length === 0} onclick={() => openExport(
-				'Panel Technology',
-				'analysis-panel-tech',
-				['Panel Tech', 'Count', '%'],
-				panelTechRows.map(r => [r.label, r.count, pct(r.count, panelTechTotal)]),
-			)}>Export</button>
-		</div>
-		<p class="description">
-			{displaysWithTech.length} of {panelTechCovered} pen displays and standalones have panel tech data.
-		</p>
-		<table class="stat-table">
-			<thead><tr><th>Panel Tech</th><th>Count</th><th></th></tr></thead>
-			<tbody>
-				{#each panelTechRows as row}
-					{@const pct = (row.count / panelTechTotal * 100).toFixed(1)}
-					<tr>
-						<td class="label">{row.label}</td>
-						<td class="count">{row.count}</td>
-						<td class="bar-cell">
-							<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
-							<span class="pct">{pct}%</span>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</section>
-
-{/if}
-
-{#if activeSection === 'pressure-levels'}
-
-	<section class="section">
-		<div class="section-header">
-			<h2>Pressure Levels</h2>
-			<button class="export-trigger" disabled={pressureRows.length === 0} onclick={() => openExport(
-				'Pressure Levels',
-				'analysis-pressure-levels',
-				['Pressure Levels', 'Count', '%'],
-				pressureRows.map(r => [Number(r.label), r.count, pct(r.count, pressureTotal)]),
-			)}>Export</button>
-		</div>
-		<p class="description">
-			{pressureTotal} of {allTablets.length} tablets have pressure level data.
-		</p>
-		<table class="stat-table">
-			<thead><tr><th>Pressure Levels</th><th>Count</th><th></th></tr></thead>
-			<tbody>
-				{#each pressureRows as row}
-					{@const pct = (row.count / pressureTotal * 100).toFixed(1)}
-					<tr>
-						<td class="label">{Number(row.label).toLocaleString()}</td>
-						<td class="count">{row.count}</td>
-						<td class="bar-cell">
-							<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
-							<span class="pct">{pct}%</span>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</section>
-
-{/if}
-
-{#if activeSection === 'touch-support'}
-
-	<section class="section">
-		<div class="section-header">
-			<h2>Touch Support</h2>
-			<button class="export-trigger" disabled={touchSupportRows.length === 0} onclick={() => openExport(
-				'Touch Support',
-				'analysis-touch-support',
-				['Touch', 'Count', '%'],
-				touchSupportRows.map(r => [r.label, r.count, pct(r.count, touchTotal)]),
-			)}>Export</button>
-		</div>
-		<p class="description">
-			Distribution of {allTablets.length} tablets by digitizer touch support.
-		</p>
-		<table class="stat-table">
-			<thead><tr><th>Touch</th><th>Count</th><th></th></tr></thead>
-			<tbody>
-				{#each touchSupportRows as row}
-					{@const pctVal = (row.count / touchTotal * 100).toFixed(1)}
-					<tr>
-						<td class="label">{row.label}</td>
-						<td class="count">{row.count}</td>
-						<td class="bar-cell">
-							<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
-							<span class="pct">{pctVal}%</span>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</section>
-
-{/if}
-
-{#if activeSection === 'sizes-pen-tablet'}
-
-	<section class="section">
-		<div class="section-header">
-			<h2>Pen Tablet diagonal ({ptSizesValues.length})</h2>
-			<label class="overlay-select">
-				Overlay:
-				<select bind:value={ptOverlay}>
-					{#each OVERLAY_OPTIONS as opt}
-						<option value={opt.value}>{opt.label}</option>
-					{/each}
-				</select>
-			</label>
-		</div>
-		<p class="description">
-			Distribution of pen-tablet active-area diagonals. Use the overlay
-			control to project paper-size markers onto the chart.
-		</p>
-		{#if ptSizesValues.length > 0}
-			<ValueHistogram
-				title="Pen tablet active area diagonal"
-				values={ptSizesValues}
-				currentValue={null}
-				ranges={ptSizesRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={ptSizesYears}
-				markers={ptMarkers}
-			/>
+		{#if activeSection === 'aspect-pen-tablet'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Pen Tablets ({penTablets.length})</h2>
+					<button
+						class="export-trigger"
+						disabled={ptAR.length === 0}
+						onclick={() => {
+							const total = ptAR.reduce((s, r) => s + r.count, 0);
+							openExport(
+								'Aspect Ratio: Pen Tablets',
+								'analysis-aspect-ratio-pen-tablets',
+								['Ratio', 'Decimal', 'Category', 'Count', '%'],
+								ptAR.map((r) => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
+							);
+						}}>Export</button
+					>
+				</div>
+				<table class="stat-table">
+					<thead
+						><tr><th>Ratio</th><th>Decimal</th><th>Category</th><th>Count</th><th></th></tr></thead
+					>
+					<tbody>
+						{#each ptAR as row}
+							{@const pct = ((row.count / ptAR.reduce((s, r) => s + r.count, 0)) * 100).toFixed(1)}
+							<tr>
+								<td class="decimal">{row.ratio16}</td>
+								<td class="decimal">{row.decimal}</td>
+								<td class="mono">{row.category}</td>
+								<td class="count">{row.count}</td>
+								<td class="bar-cell">
+									<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
+									<span class="pct">{pct}%</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</section>
 		{/if}
-	</section>
 
-{/if}
-
-{#if activeSection === 'sizes-pen-display'}
-
-	<section class="section">
-		<div class="section-header">
-			<h2>Pen Display diagonal ({pdSizesValues.length})</h2>
-			<label class="overlay-select">
-				Overlay:
-				<select bind:value={pdOverlay}>
-					{#each OVERLAY_OPTIONS as opt}
-						<option value={opt.value}>{opt.label}</option>
-					{/each}
-				</select>
-			</label>
-		</div>
-		<p class="description">
-			Distribution of pen-display (and standalone) active-area
-			diagonals. Use the overlay control to project paper-size markers
-			onto the chart.
-		</p>
-		{#if pdSizesValues.length > 0}
-			<ValueHistogram
-				title="Pen display active area diagonal"
-				values={pdSizesValues}
-				currentValue={null}
-				ranges={pdSizesRanges}
-				unit={isMetric ? ' cm' : '"'}
-				binSize={isMetric ? 1 : 0.5}
-				bandwidthMultiplier={0.2}
-				bind:compareYears={pdSizesYears}
-				markers={pdMarkers}
-			/>
+		{#if activeSection === 'aspect-pen-tablet-by-category'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Pen Tablets — by Category ({penTablets.length})</h2>
+					<button
+						class="export-trigger"
+						disabled={ptARCat.length === 0}
+						onclick={() => {
+							const total = ptARCat.reduce((s, r) => s + r.count, 0);
+							openExport(
+								'Aspect Ratio Category: Pen Tablets',
+								'analysis-aspect-ratio-category-pen-tablets',
+								['Category', 'Count', '%'],
+								ptARCat.map((r) => [r.label, r.count, pct(r.count, total)]),
+							);
+						}}>Export</button
+					>
+				</div>
+				<p class="description">
+					Buckets each tablet's digitizer aspect ratio into a popular ratio (16:9, 16:10, 3:2, 4:3,
+					5:4, 1:1) at one of three closeness tiers (EXACT ≤ 0.005, VERYCLOSE ≤ 0.02, CLOSE ≤ 0.05),
+					or OTHER.
+				</p>
+				<table class="stat-table">
+					<thead><tr><th>Category</th><th>Count</th><th></th></tr></thead>
+					<tbody>
+						{#each ptARCat as row}
+							{@const total = ptARCat.reduce((s, r) => s + r.count, 0)}
+							{@const pctVal = ((row.count / total) * 100).toFixed(1)}
+							<tr>
+								<td class="label mono">{row.label}</td>
+								<td class="count">{row.count}</td>
+								<td class="bar-cell">
+									<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
+									<span class="pct">{pctVal}%</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</section>
 		{/if}
-	</section>
 
-{/if}
+		{#if activeSection === 'aspect-pen-display'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Pen Displays &amp; Standalones ({penDisplays.length})</h2>
+					<button
+						class="export-trigger"
+						disabled={pdAR.length === 0}
+						onclick={() => {
+							const total = pdAR.reduce((s, r) => s + r.count, 0);
+							openExport(
+								'Aspect Ratio: Pen Displays & Standalones',
+								'analysis-aspect-ratio-pen-displays',
+								['Ratio', 'Decimal', 'Category', 'Count', '%'],
+								pdAR.map((r) => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
+							);
+						}}>Export</button
+					>
+				</div>
+				<table class="stat-table">
+					<thead
+						><tr><th>Ratio</th><th>Decimal</th><th>Category</th><th>Count</th><th></th></tr></thead
+					>
+					<tbody>
+						{#each pdAR as row}
+							{@const pct = ((row.count / pdAR.reduce((s, r) => s + r.count, 0)) * 100).toFixed(1)}
+							<tr>
+								<td class="decimal">{row.ratio16}</td>
+								<td class="decimal">{row.decimal}</td>
+								<td class="mono">{row.category}</td>
+								<td class="count">{row.count}</td>
+								<td class="bar-cell">
+									<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
+									<span class="pct">{pct}%</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</section>
+		{/if}
 
+		{#if activeSection === 'aspect-pen-display-by-category'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Pen Displays &amp; Standalones — by Category ({penDisplays.length})</h2>
+					<button
+						class="export-trigger"
+						disabled={pdARCat.length === 0}
+						onclick={() => {
+							const total = pdARCat.reduce((s, r) => s + r.count, 0);
+							openExport(
+								'Aspect Ratio Category: Pen Displays & Standalones',
+								'analysis-aspect-ratio-category-pen-displays',
+								['Category', 'Count', '%'],
+								pdARCat.map((r) => [r.label, r.count, pct(r.count, total)]),
+							);
+						}}>Export</button
+					>
+				</div>
+				<p class="description">
+					Buckets each pen display's (or standalone's) aspect ratio into a popular ratio at one of
+					three closeness tiers, or OTHER.
+				</p>
+				<table class="stat-table">
+					<thead><tr><th>Category</th><th>Count</th><th></th></tr></thead>
+					<tbody>
+						{#each pdARCat as row}
+							{@const total = pdARCat.reduce((s, r) => s + r.count, 0)}
+							{@const pctVal = ((row.count / total) * 100).toFixed(1)}
+							<tr>
+								<td class="label mono">{row.label}</td>
+								<td class="count">{row.count}</td>
+								<td class="bar-cell">
+									<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
+									<span class="pct">{pctVal}%</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</section>
+		{/if}
+
+		{#if activeSection === 'panel-tech'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Panel Technology</h2>
+					<button
+						class="export-trigger"
+						disabled={panelTechRows.length === 0}
+						onclick={() =>
+							openExport(
+								'Panel Technology',
+								'analysis-panel-tech',
+								['Panel Tech', 'Count', '%'],
+								panelTechRows.map((r) => [r.label, r.count, pct(r.count, panelTechTotal)]),
+							)}>Export</button
+					>
+				</div>
+				<p class="description">
+					{displaysWithTech.length} of {panelTechCovered} pen displays and standalones have panel tech
+					data.
+				</p>
+				<table class="stat-table">
+					<thead><tr><th>Panel Tech</th><th>Count</th><th></th></tr></thead>
+					<tbody>
+						{#each panelTechRows as row}
+							{@const pct = ((row.count / panelTechTotal) * 100).toFixed(1)}
+							<tr>
+								<td class="label">{row.label}</td>
+								<td class="count">{row.count}</td>
+								<td class="bar-cell">
+									<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
+									<span class="pct">{pct}%</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</section>
+		{/if}
+
+		{#if activeSection === 'pressure-levels'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Pressure Levels</h2>
+					<button
+						class="export-trigger"
+						disabled={pressureRows.length === 0}
+						onclick={() =>
+							openExport(
+								'Pressure Levels',
+								'analysis-pressure-levels',
+								['Pressure Levels', 'Count', '%'],
+								pressureRows.map((r) => [Number(r.label), r.count, pct(r.count, pressureTotal)]),
+							)}>Export</button
+					>
+				</div>
+				<p class="description">
+					{pressureTotal} of {allTablets.length} tablets have pressure level data.
+				</p>
+				<table class="stat-table">
+					<thead><tr><th>Pressure Levels</th><th>Count</th><th></th></tr></thead>
+					<tbody>
+						{#each pressureRows as row}
+							{@const pct = ((row.count / pressureTotal) * 100).toFixed(1)}
+							<tr>
+								<td class="label">{Number(row.label).toLocaleString()}</td>
+								<td class="count">{row.count}</td>
+								<td class="bar-cell">
+									<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
+									<span class="pct">{pct}%</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</section>
+		{/if}
+
+		{#if activeSection === 'touch-support'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Touch Support</h2>
+					<button
+						class="export-trigger"
+						disabled={touchSupportRows.length === 0}
+						onclick={() =>
+							openExport(
+								'Touch Support',
+								'analysis-touch-support',
+								['Touch', 'Count', '%'],
+								touchSupportRows.map((r) => [r.label, r.count, pct(r.count, touchTotal)]),
+							)}>Export</button
+					>
+				</div>
+				<p class="description">
+					Distribution of {allTablets.length} tablets by digitizer touch support.
+				</p>
+				<table class="stat-table">
+					<thead><tr><th>Touch</th><th>Count</th><th></th></tr></thead>
+					<tbody>
+						{#each touchSupportRows as row}
+							{@const pctVal = ((row.count / touchTotal) * 100).toFixed(1)}
+							<tr>
+								<td class="label">{row.label}</td>
+								<td class="count">{row.count}</td>
+								<td class="bar-cell">
+									<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
+									<span class="pct">{pctVal}%</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</section>
+		{/if}
+
+		{#if activeSection === 'sizes-pen-tablet'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Pen Tablet diagonal ({ptSizesValues.length})</h2>
+					<label class="overlay-select">
+						Overlay:
+						<select bind:value={ptOverlay}>
+							{#each OVERLAY_OPTIONS as opt}
+								<option value={opt.value}>{opt.label}</option>
+							{/each}
+						</select>
+					</label>
+				</div>
+				<p class="description">
+					Distribution of pen-tablet active-area diagonals. Use the overlay control to project
+					paper-size markers onto the chart.
+				</p>
+				{#if ptSizesValues.length > 0}
+					<ValueHistogram
+						title="Pen tablet active area diagonal"
+						values={ptSizesValues}
+						currentValue={null}
+						ranges={ptSizesRanges}
+						unit={isMetric ? ' cm' : '"'}
+						binSize={isMetric ? 1 : 0.5}
+						bandwidthMultiplier={0.2}
+						bind:compareYears={ptSizesYears}
+						markers={ptMarkers}
+					/>
+				{/if}
+			</section>
+		{/if}
+
+		{#if activeSection === 'sizes-pen-display'}
+			<section class="section">
+				<div class="section-header">
+					<h2>Pen Display diagonal ({pdSizesValues.length})</h2>
+					<label class="overlay-select">
+						Overlay:
+						<select bind:value={pdOverlay}>
+							{#each OVERLAY_OPTIONS as opt}
+								<option value={opt.value}>{opt.label}</option>
+							{/each}
+						</select>
+					</label>
+				</div>
+				<p class="description">
+					Distribution of pen-display (and standalone) active-area diagonals. Use the overlay
+					control to project paper-size markers onto the chart.
+				</p>
+				{#if pdSizesValues.length > 0}
+					<ValueHistogram
+						title="Pen display active area diagonal"
+						values={pdSizesValues}
+						currentValue={null}
+						ranges={pdSizesRanges}
+						unit={isMetric ? ' cm' : '"'}
+						binSize={isMetric ? 1 : 0.5}
+						bandwidthMultiplier={0.2}
+						bind:compareYears={pdSizesYears}
+						markers={pdMarkers}
+					/>
+				{/if}
+			</section>
+		{/if}
 	</main>
 </div>
 
@@ -659,7 +699,9 @@
 {/if}
 
 <style>
-	h1 { margin-bottom: 16px; }
+	h1 {
+		margin-bottom: 16px;
+	}
 
 	.tree-layout {
 		display: flex;
@@ -750,7 +792,9 @@
 		gap: 12px;
 		margin-bottom: 8px;
 	}
-	.section-header h2 { margin: 0; }
+	.section-header h2 {
+		margin: 0;
+	}
 
 	.export-trigger {
 		display: inline-flex;
@@ -764,8 +808,14 @@
 		color: var(--text-muted);
 		cursor: pointer;
 	}
-	.export-trigger:hover { border-color: var(--text-dim); color: var(--text); }
-	.export-trigger:disabled { opacity: 0.4; cursor: not-allowed; }
+	.export-trigger:hover {
+		border-color: var(--text-dim);
+		color: var(--text);
+	}
+	.export-trigger:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
 
 	.overlay-select {
 		display: inline-flex;
@@ -783,7 +833,9 @@
 		color: var(--text);
 	}
 
-	.section { margin-bottom: 32px; }
+	.section {
+		margin-bottom: 32px;
+	}
 
 	h2 {
 		font-size: 15px;
@@ -819,11 +871,22 @@
 		border-bottom: 1px solid var(--border);
 	}
 
-	.stat-table tr:hover td { background: var(--hover-bg); }
+	.stat-table tr:hover td {
+		background: var(--hover-bg);
+	}
 
-	.label { font-weight: 600; }
-	.decimal { color: var(--text-muted); font-variant-numeric: tabular-nums; width: 60px; }
-	.count { color: var(--text-muted); width: 50px; }
+	.label {
+		font-weight: 600;
+	}
+	.decimal {
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+		width: 60px;
+	}
+	.count {
+		color: var(--text-muted);
+		width: 50px;
+	}
 
 	.bar-cell {
 		display: flex;

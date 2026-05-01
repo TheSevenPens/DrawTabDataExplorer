@@ -2,12 +2,26 @@
 	import { base } from '$app/paths';
 	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
-	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS } from '$data/lib/entities/tablet-family-fields.js';
+	import {
+		type TabletFamily,
+		TABLET_FAMILY_FIELDS,
+		TABLET_FAMILY_FIELD_GROUPS,
+	} from '$data/lib/entities/tablet-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
-	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import ValueHistogram, {
+		type HistogramRange,
+		type HistogramMarker,
+	} from '$lib/components/ValueHistogram.svelte';
 	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
 	import { unitPreference } from '$lib/unit-store.js';
-	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
+	import {
+		penTabletRangesCm,
+		penTabletRangesIn,
+		displayRangesCm,
+		displayRangesIn,
+		MM_TO_IN,
+		MM_TO_CM,
+	} from '$lib/tablet-size-ranges.js';
 
 	let { data } = $props();
 	let family: TabletFamily = $derived(data.family);
@@ -15,39 +29,49 @@
 	let allTablets: Tablet[] = $derived(data.allTablets);
 	let dimsItems = $derived(
 		familyTablets
-			.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null)
-			.map(t => ({ dims: t.Digitizer!.Dimensions!, label: t.Model.Name }))
+			.filter(
+				(t) => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null,
+			)
+			.map((t) => ({ dims: t.Digitizer!.Dimensions!, label: t.Model.Name })),
 	);
 
 	let isMetric = $derived($unitPreference === 'metric');
 
 	let familyType = $derived(
-		familyTablets.find(t => getDiagonal(t.Digitizer?.Dimensions) !== null)?.Model.Type ?? 'PENTABLET'
+		familyTablets.find((t) => getDiagonal(t.Digitizer?.Dimensions) !== null)?.Model.Type ??
+			'PENTABLET',
 	);
 
 	let histogramRanges = $derived<HistogramRange[]>(
 		familyType === 'PENTABLET'
-			? (isMetric ? penTabletRangesCm : penTabletRangesIn)
-			: (isMetric ? displayRangesCm : displayRangesIn)
+			? isMetric
+				? penTabletRangesCm
+				: penTabletRangesIn
+			: isMetric
+				? displayRangesCm
+				: displayRangesIn,
 	);
 
 	let histogramValues = $derived(
 		allTablets
-			.filter(t => t.Model.Type === familyType)
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
-			.filter((d): d is number => d !== null)
+			.filter((t) => t.Model.Type === familyType)
+			.map((t) => {
+				const d = getDiagonal(t.Digitizer?.Dimensions);
+				return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
+			})
+			.filter((d): d is number => d !== null),
 	);
 
 	let stackedDims = $state(false);
 
 	let histogramMarkers = $derived<HistogramMarker[]>(
 		familyTablets
-			.map(t => {
+			.map((t) => {
 				const d = getDiagonal(t.Digitizer?.Dimensions);
 				if (!d) return null;
 				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: t.Model.Name };
 			})
-			.filter((m): m is HistogramMarker => m !== null)
+			.filter((m): m is HistogramMarker => m !== null),
 	);
 </script>
 
@@ -77,14 +101,40 @@
 					{@const d = tablet.Digitizer?.Dimensions}
 					{@const isPenTablet = tablet.Model.Type === 'PENTABLET'}
 					<tr>
-						<td><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}">{tablet.Model.Id}</a></td>
+						<td
+							><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}"
+								>{tablet.Model.Id}</a
+							></td
+						>
 						<td>{tablet.Model.Name}</td>
 						<td>{(tablet.Model.AlternateNames ?? []).join(', ')}</td>
 						<td>{tablet.Model.Type}</td>
 						<td>{tablet.Model.LaunchYear || ''}</td>
 						<td>{tablet.Model.Status || ''}</td>
-						<td>{#if isPenTablet && d?.Width && d?.Height}{(() => { const w=d.Width,h=d.Height,r=16/9,cur=w/h,nw=cur>r?h*r:w,nh=cur>r?h:w/r,loss=((w*h-nw*nh)/(w*h))*100; return loss<0.05?'0%':loss.toFixed(1)+'%'; })()}{/if}</td>
-						<td>{#if isPenTablet && d?.Width && d?.Height}{(() => { const w=d.Width,h=d.Height,r=16/10,cur=w/h,nw=cur>r?h*r:w,nh=cur>r?h:w/r,loss=((w*h-nw*nh)/(w*h))*100; return loss<0.05?'0%':loss.toFixed(1)+'%'; })()}{/if}</td>
+						<td
+							>{#if isPenTablet && d?.Width && d?.Height}{(() => {
+									const w = d.Width,
+										h = d.Height,
+										r = 16 / 9,
+										cur = w / h,
+										nw = cur > r ? h * r : w,
+										nh = cur > r ? h : w / r,
+										loss = ((w * h - nw * nh) / (w * h)) * 100;
+									return loss < 0.05 ? '0%' : loss.toFixed(1) + '%';
+								})()}{/if}</td
+						>
+						<td
+							>{#if isPenTablet && d?.Width && d?.Height}{(() => {
+									const w = d.Width,
+										h = d.Height,
+										r = 16 / 10,
+										cur = w / h,
+										nw = cur > r ? h * r : w,
+										nh = cur > r ? h : w / r,
+										loss = ((w * h - nw * nh) / (w * h)) * 100;
+									return loss < 0.05 ? '0%' : loss.toFixed(1) + '%';
+								})()}{/if}</td
+						>
 					</tr>
 				{/each}
 			</tbody>
@@ -111,7 +161,11 @@
 			<div class="dim-chart-header">
 				<h3 class="dim-chart-title">Active Area — Family Comparison</h3>
 				{#if dimsItems.length > 1}
-					<button class="stack-toggle" class:active={stackedDims} onclick={() => stackedDims = !stackedDims}>
+					<button
+						class="stack-toggle"
+						class:active={stackedDims}
+						onclick={() => (stackedDims = !stackedDims)}
+					>
 						{stackedDims ? 'Side by side' : 'Stacked'}
 					</button>
 				{/if}
@@ -122,7 +176,9 @@
 {/if}
 
 <style>
-	.family-section { margin-top: 32px; }
+	.family-section {
+		margin-top: 32px;
+	}
 
 	.family-section h2 {
 		font-size: 15px;
@@ -133,15 +189,41 @@
 		border-bottom: 2px solid #e0e0e0;
 	}
 
-	table { width: 100%; border-collapse: collapse; background: #fff; font-size: 13px; }
-	th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #e0e0e0; }
-	th { background: #333; color: #fff; }
-	tr:hover td { background: #f0f7ff; }
-	td a { color: #2563eb; text-decoration: none; }
-	td a:hover { text-decoration: underline; }
-	.no-data { font-size: 13px; color: #999; font-style: italic; }
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		background: #fff;
+		font-size: 13px;
+	}
+	th,
+	td {
+		text-align: left;
+		padding: 6px 10px;
+		border-bottom: 1px solid #e0e0e0;
+	}
+	th {
+		background: #333;
+		color: #fff;
+	}
+	tr:hover td {
+		background: #f0f7ff;
+	}
+	td a {
+		color: #2563eb;
+		text-decoration: none;
+	}
+	td a:hover {
+		text-decoration: underline;
+	}
+	.no-data {
+		font-size: 13px;
+		color: #999;
+		font-style: italic;
+	}
 
-	.dim-chart-section { margin-top: 24px; }
+	.dim-chart-section {
+		margin-top: 24px;
+	}
 
 	.dim-chart-header {
 		display: flex;
@@ -167,7 +249,10 @@
 		cursor: pointer;
 	}
 
-	.stack-toggle:hover { color: var(--text); border-color: var(--text-muted); }
+	.stack-toggle:hover {
+		color: var(--text);
+		border-color: var(--text-muted);
+	}
 
 	.stack-toggle.active {
 		background: #ede9fe;

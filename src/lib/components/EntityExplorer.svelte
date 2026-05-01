@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { type Step, type FilterStep as FilterStepType, type SortStep as SortStepType, type SelectStep as SelectStepType, type FieldDef, type AnyFieldDef, executePipeline } from '$data/lib/pipeline/index.js';
+	import {
+		type Step,
+		type FilterStep as FilterStepType,
+		type SortStep as SortStepType,
+		type SelectStep as SelectStepType,
+		type FieldDef,
+		type AnyFieldDef,
+		executePipeline,
+	} from '$data/lib/pipeline/index.js';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
@@ -17,8 +25,8 @@
 		fieldGroups,
 		defaultColumns,
 		defaultView,
-		detailBasePath = "",
-		linkField = "EntityId",
+		detailBasePath = '',
+		linkField = 'EntityId',
 		cellLinks = {} as Record<string, (item: any) => { label: string; href: string }[]>,
 		quickFilterFields = [],
 		defaultFilterField,
@@ -70,26 +78,28 @@
 		// Check URL for ?filter=Field:operator:value params
 		const urlFilters = page.url.searchParams.getAll('filter');
 		if (urlFilters.length > 0) {
-			return urlFilters.map(f => {
-				const parts = f.split(':');
-				return {
-					field: parts[0] ?? '',
-					operator: parts[1] ?? '==',
-					value: parts.slice(2).join(':'),
-				};
-			}).filter(f => f.field);
+			return urlFilters
+				.map((f) => {
+					const parts = f.split(':');
+					return {
+						field: parts[0] ?? '',
+						operator: parts[1] ?? '==',
+						value: parts.slice(2).join(':'),
+					};
+				})
+				.filter((f) => f.field);
 		}
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
 		return parsed
 			.filter((s): s is FilterStepType => s.kind === 'filter')
-			.map(s => ({ field: s.field, operator: s.operator, value: s.value }));
+			.map((s) => ({ field: s.field, operator: s.operator, value: s.value }));
 	}
 
 	function getInitialSorts(): SortItem[] {
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
 		return parsed
 			.filter((s): s is SortStepType => s.kind === 'sort')
-			.map(s => ({ field: s.field, direction: s.direction }));
+			.map((s) => ({ field: s.field, direction: s.direction }));
 	}
 
 	let filters: FilterItem[] = $state(getInitialFilters());
@@ -107,16 +117,18 @@
 	}
 
 	let quickFilterOptions = $derived.by((): QuickFilterOption[] => {
-		return quickFilterFields.map(key => {
-			const fieldDef = fields.find(f => f.key === key);
-			if (!fieldDef) return null;
-			const vals = new Set<string>();
-			for (const row of data) {
-				const v = String(fieldDef.getValue(row) ?? '').trim();
-				if (v && v !== '-') vals.add(v);
-			}
-			return { fieldDef, values: [...vals].sort() };
-		}).filter(Boolean) as QuickFilterOption[];
+		return quickFilterFields
+			.map((key) => {
+				const fieldDef = fields.find((f) => f.key === key);
+				if (!fieldDef) return null;
+				const vals = new Set<string>();
+				for (const row of data) {
+					const v = String(fieldDef.getValue(row) ?? '').trim();
+					if (v && v !== '-') vals.add(v);
+				}
+				return { fieldDef, values: [...vals].sort() };
+			})
+			.filter(Boolean) as QuickFilterOption[];
 	});
 
 	onMount(() => {
@@ -154,26 +166,28 @@
 		// Apply quick filters
 		const activeQuick = Object.entries(quickFilters).filter(([, v]) => v !== '');
 		if (activeQuick.length > 0) {
-			filtered = filtered.filter(row =>
+			filtered = filtered.filter((row) =>
 				activeQuick.every(([key, val]) => {
-					const fd = fields.find(f => f.key === key);
+					const fd = fields.find((f) => f.key === key);
 					if (!fd) return true;
 					return String(fd.getValue(row) ?? '') === val;
-				})
+				}),
 			);
 		}
 
 		// Apply search — check visible fields plus any fields marked alwaysSearch
 		if (searchText.trim()) {
 			const q = searchText.trim().toLowerCase();
-			const visibleDefs = r.visibleFields.map(key => fields.find(f => f.key === key)).filter(Boolean);
-			const alwaysDefs = fields.filter(f => f.alwaysSearch && !r.visibleFields.includes(f.key));
+			const visibleDefs = r.visibleFields
+				.map((key) => fields.find((f) => f.key === key))
+				.filter(Boolean);
+			const alwaysDefs = fields.filter((f) => f.alwaysSearch && !r.visibleFields.includes(f.key));
 			const searchDefs = [...visibleDefs, ...alwaysDefs];
-			filtered = filtered.filter(row =>
-				searchDefs.some(f => {
+			filtered = filtered.filter((row) =>
+				searchDefs.some((f) => {
 					const val = f!.getValue(row);
 					return val != null && String(val).toLowerCase().includes(q);
-				})
+				}),
 			);
 		}
 
@@ -189,10 +203,10 @@
 		selectedColumns = selectStep ? [...selectStep.fields] : [...defaultColumns];
 		filters = loaded
 			.filter((s): s is FilterStepType => s.kind === 'filter')
-			.map(s => ({ field: s.field, operator: s.operator, value: s.value }));
+			.map((s) => ({ field: s.field, operator: s.operator, value: s.value }));
 		sorts = loaded
 			.filter((s): s is SortStepType => s.kind === 'sort')
-			.map(s => ({ field: s.field, direction: s.direction }));
+			.map((s) => ({ field: s.field, direction: s.direction }));
 		refresh();
 	}
 
@@ -213,9 +227,18 @@
 <div class="title-row">
 	<svelte:element this={resolvedTitleTag}>{title}</svelte:element>
 	<span class="results-count">Showing {result.data.length} of {data.length} {entityLabel}</span>
-	<button class="export-btn" onclick={() => showExport = true} title="Export data">
-		<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-			<path d="M8 2v8M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/>
+	<button class="export-btn" onclick={() => (showExport = true)} title="Export data">
+		<svg
+			width="14"
+			height="14"
+			viewBox="0 0 16 16"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="1.8"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
+			<path d="M8 2v8M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" />
 		</svg>
 		Export
 	</button>
@@ -228,7 +251,7 @@
 		allFields={fields}
 		visibleFields={result.visibleFields}
 		{entityType}
-		onclose={() => showExport = false}
+		onclose={() => (showExport = false)}
 	/>
 {/if}
 
@@ -236,10 +259,35 @@
 
 <div class="top-bar">
 	<SearchBar bind:searchText bind:quickFilters {quickFilterOptions} />
-	<QueryPipelineBar bind:filters bind:sorts bind:columns={selectedColumns} {fields} {fieldGroups} {defaultFilterField} onchange={refresh} steps={stepsForSave} {entityType} {defaultView} onload={loadView} />
+	<QueryPipelineBar
+		bind:filters
+		bind:sorts
+		bind:columns={selectedColumns}
+		{fields}
+		{fieldGroups}
+		{defaultFilterField}
+		onchange={refresh}
+		steps={stepsForSave}
+		{entityType}
+		{defaultView}
+		onload={loadView}
+	/>
 </div>
 
-<ResultsTable data={result.data} visibleFields={result.visibleFields} {fields} total={data.length} {entityLabel} {detailBasePath} {linkField} {cellLinks} bind:columnWidths onwidthchange={onWidthChange} {flaggedIds} {onToggleFlag} />
+<ResultsTable
+	data={result.data}
+	visibleFields={result.visibleFields}
+	{fields}
+	total={data.length}
+	{entityLabel}
+	{detailBasePath}
+	{linkField}
+	{cellLinks}
+	bind:columnWidths
+	onwidthchange={onWidthChange}
+	{flaggedIds}
+	{onToggleFlag}
+/>
 
 <style>
 	.title-row {
@@ -249,7 +297,9 @@
 		margin-bottom: 8px;
 	}
 
-	h1 { margin: 0; }
+	h1 {
+		margin: 0;
+	}
 
 	h2 {
 		margin: 0;
@@ -290,6 +340,4 @@
 		flex-wrap: wrap;
 		margin-bottom: 12px;
 	}
-
-
 </style>

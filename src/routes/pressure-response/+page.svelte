@@ -9,19 +9,15 @@
 <h1>Pressure Response</h1>
 
 <div class="card">
-	<p>
-		Pen pressure data has moved to a dedicated tool with a better viewing
-		experience:
-	</p>
+	<p>Pen pressure data has moved to a dedicated tool with a better viewing experience:</p>
 	<p>
 		<a class="cta" href={PEN_PRESSURE_DATA_URL} target="_blank" rel="noopener">
 			Open PenPressureData →
 		</a>
 	</p>
 	<p class="note">
-		The pressure-response viewer that previously lived here is being rebuilt
-		in PenPressureData. We'll bring those features back into this site once
-		the new UX has been refined.
+		The pressure-response viewer that previously lived here is being rebuilt in PenPressureData.
+		We'll bring those features back into this site once the new UX has been refined.
 	</p>
 </div>
 

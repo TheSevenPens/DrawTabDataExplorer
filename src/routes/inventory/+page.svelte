@@ -1,14 +1,25 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadInventoryPensFromURL, loadInventoryTabletsFromURL, loadPensFromURL, brandName } from '$data/lib/drawtab-loader.js';
 	import {
-		type InventoryPen, INVENTORY_PEN_FIELDS, INVENTORY_PEN_FIELD_GROUPS,
-		INVENTORY_PEN_DEFAULT_COLUMNS, INVENTORY_PEN_DEFAULT_VIEW,
+		loadInventoryPensFromURL,
+		loadInventoryTabletsFromURL,
+		loadPensFromURL,
+		brandName,
+	} from '$data/lib/drawtab-loader.js';
+	import {
+		type InventoryPen,
+		INVENTORY_PEN_FIELDS,
+		INVENTORY_PEN_FIELD_GROUPS,
+		INVENTORY_PEN_DEFAULT_COLUMNS,
+		INVENTORY_PEN_DEFAULT_VIEW,
 	} from '$data/lib/entities/inventory-pen-fields.js';
 	import {
-		type InventoryTablet, INVENTORY_TABLET_FIELDS, INVENTORY_TABLET_FIELD_GROUPS,
-		INVENTORY_TABLET_DEFAULT_COLUMNS, INVENTORY_TABLET_DEFAULT_VIEW,
+		type InventoryTablet,
+		INVENTORY_TABLET_FIELDS,
+		INVENTORY_TABLET_FIELD_GROUPS,
+		INVENTORY_TABLET_DEFAULT_COLUMNS,
+		INVENTORY_TABLET_DEFAULT_VIEW,
 	} from '$data/lib/entities/inventory-tablet-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
@@ -26,9 +37,10 @@
 		]);
 		const map: Record<string, string> = {};
 		for (const pen of allPens) {
-			const name = pen.PenName === pen.PenId
-				? `${brandName(pen.Brand)} ${pen.PenId}`
-				: `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`;
+			const name =
+				pen.PenName === pen.PenId
+					? `${brandName(pen.Brand)} ${pen.PenId}`
+					: `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`;
 			map[pen.EntityId] = name;
 		}
 		penNameMap = map;
@@ -41,10 +53,10 @@
 <h1>Inventory (sevenpens)</h1>
 
 <div class="tabs">
-	<button class:active={activeTab === 'pens'} onclick={() => activeTab = 'pens'}>
+	<button class:active={activeTab === 'pens'} onclick={() => (activeTab = 'pens')}>
 		Pens ({pens.length})
 	</button>
-	<button class:active={activeTab === 'tablets'} onclick={() => activeTab = 'tablets'}>
+	<button class:active={activeTab === 'tablets'} onclick={() => (activeTab = 'tablets')}>
 		Tablets ({tablets.length})
 	</button>
 </div>
@@ -62,13 +74,19 @@
 		defaultView={INVENTORY_PEN_DEFAULT_VIEW}
 		defaultFilterField="Brand"
 		defaultSortField="InventoryId"
-		quickFilterFields={["Brand"]}
+		quickFilterFields={['Brand']}
 		cellLinks={{
 			PenEntityId: (item: InventoryPen) => {
 				const name = penNameMap[item.PenEntityId];
-				if (!name) return [{ label: item.PenEntityId, href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}` }];
+				if (!name)
+					return [
+						{
+							label: item.PenEntityId,
+							href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}`,
+						},
+					];
 				return [{ label: name, href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}` }];
-			}
+			},
 		}}
 	/>
 {:else}
@@ -84,12 +102,14 @@
 		defaultView={INVENTORY_TABLET_DEFAULT_VIEW}
 		defaultFilterField="Brand"
 		defaultSortField="InventoryId"
-		quickFilterFields={["Brand"]}
+		quickFilterFields={['Brand']}
 	/>
 {/if}
 
 <style>
-	h1 { margin-bottom: 16px; }
+	h1 {
+		margin-bottom: 16px;
+	}
 
 	.tabs {
 		display: flex;

@@ -2,7 +2,13 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadBrandsFromURL } from '$data/lib/drawtab-loader.js';
-	import { type Brand, BRAND_FIELDS, BRAND_FIELD_GROUPS, BRAND_DEFAULT_COLUMNS, BRAND_DEFAULT_VIEW } from '$data/lib/entities/brand-fields.js';
+	import {
+		type Brand,
+		BRAND_FIELDS,
+		BRAND_FIELD_GROUPS,
+		BRAND_DEFAULT_COLUMNS,
+		BRAND_DEFAULT_VIEW,
+	} from '$data/lib/entities/brand-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 

@@ -1,7 +1,16 @@
 <script lang="ts">
 	import type { FieldDef, AnyFieldDef } from '$data/lib/pipeline/index.js';
 
-	let { fields, fieldGroups, selected = '', exclude = [], onselect, onselectgroup, onremovegroup, onclose }: {
+	let {
+		fields,
+		fieldGroups,
+		selected = '',
+		exclude = [],
+		onselect,
+		onselectgroup,
+		onremovegroup,
+		onclose,
+	}: {
 		fields: AnyFieldDef[];
 		fieldGroups: string[];
 		selected?: string;
@@ -19,12 +28,12 @@
 	}
 
 	function toggleGroup(allGroupFields: AnyFieldDef[]) {
-		const allKeys = allGroupFields.map(f => f.key);
-		const allChosen = allKeys.every(k => excludeSet.has(k));
+		const allKeys = allGroupFields.map((f) => f.key);
+		const allChosen = allKeys.every((k) => excludeSet.has(k));
 		if (allChosen && onremovegroup) {
 			onremovegroup(allKeys);
 		} else if (onselectgroup) {
-			const available = allKeys.filter(k => !excludeSet.has(k));
+			const available = allKeys.filter((k) => !excludeSet.has(k));
 			onselectgroup(available);
 		}
 	}
@@ -34,15 +43,20 @@
 <div class="field-picker">
 	<div class="groups">
 		{#each fieldGroups as group}
-			{@const allGroupFields = fields.filter(f => f.group === group)}
-			{@const availableGroupFields = allGroupFields.filter(f => !excludeSet.has(f.key))}
-			{@const allChosen = allGroupFields.every(f => excludeSet.has(f.key))}
+			{@const allGroupFields = fields.filter((f) => f.group === group)}
+			{@const availableGroupFields = allGroupFields.filter((f) => !excludeSet.has(f.key))}
+			{@const allChosen = allGroupFields.every((f) => excludeSet.has(f.key))}
 			{#if allGroupFields.length > 0}
 				<div class="group">
 					<div class="group-header">
 						<span class="group-label">{group}</span>
 						{#if onselectgroup}
-							<button class="group-toggle" class:remove={allChosen} onclick={() => toggleGroup(allGroupFields)} title={allChosen ? `Remove all ${group}` : `Add all ${group}`}>
+							<button
+								class="group-toggle"
+								class:remove={allChosen}
+								onclick={() => toggleGroup(allGroupFields)}
+								title={allChosen ? `Remove all ${group}` : `Add all ${group}`}
+							>
 								{allChosen ? 'none' : 'all'}
 							</button>
 						{/if}
@@ -54,9 +68,12 @@
 							class:selected={f.key === selected}
 							class:chosen
 							disabled={chosen}
-							onclick={() => { if (!chosen) pick(f.key); }}
+							onclick={() => {
+								if (!chosen) pick(f.key);
+							}}
 						>
-							{f.label}{#if chosen} ✓{/if}
+							{f.label}{#if chosen}
+								✓{/if}
 						</button>
 					{/each}
 				</div>
@@ -83,7 +100,7 @@
 		background: var(--bg-card);
 		border: 1px solid var(--border-light);
 		border-radius: 6px;
-		box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 		z-index: 100;
 		padding: 8px;
 		min-width: 300px;

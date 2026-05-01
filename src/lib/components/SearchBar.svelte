@@ -6,15 +6,17 @@
 		values: string[];
 	}
 
-	let { searchText = $bindable(), quickFilters = $bindable(), quickFilterOptions }: {
+	let {
+		searchText = $bindable(),
+		quickFilters = $bindable(),
+		quickFilterOptions,
+	}: {
 		searchText: string;
 		quickFilters: Record<string, string>;
 		quickFilterOptions: QuickFilterOption[];
 	} = $props();
 
-	let isDirty = $derived(
-		searchText !== '' || Object.values(quickFilters).some(v => v !== '')
-	);
+	let isDirty = $derived(searchText !== '' || Object.values(quickFilters).some((v) => v !== ''));
 
 	function clear() {
 		searchText = '';
@@ -26,7 +28,9 @@
 	<div class="input-wrap">
 		<input type="text" placeholder="Search..." bind:value={searchText} />
 		{#if searchText !== ''}
-			<button class="input-clear" onclick={() => searchText = ''} aria-label="Clear search">×</button>
+			<button class="input-clear" onclick={() => (searchText = '')} aria-label="Clear search"
+				>×</button
+			>
 		{/if}
 	</div>
 	{#each quickFilterOptions as qf}

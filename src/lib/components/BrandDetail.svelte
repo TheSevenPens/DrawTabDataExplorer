@@ -14,17 +14,18 @@
 	let activeTab = $state<'tablets' | 'pens' | 'timeline'>('tablets');
 
 	let sortedTablets = $derived(
-		[...tablets].sort((a, b) => (b.Model.LaunchYear ?? '').localeCompare(a.Model.LaunchYear ?? ''))
+		[...tablets].sort((a, b) => (b.Model.LaunchYear ?? '').localeCompare(a.Model.LaunchYear ?? '')),
 	);
 	let sortedPens = $derived(
-		[...pens].sort((a, b) => (b.PenYear ?? '').localeCompare(a.PenYear ?? ''))
+		[...pens].sort((a, b) => (b.PenYear ?? '').localeCompare(a.PenYear ?? '')),
 	);
 
 	let timeline = $derived.by(() => {
 		const yearMap = new Map<string, { tablets: Tablet[]; pens: Pen[] }>();
 		for (const t of tablets) {
 			if (!t.Model.LaunchYear) continue;
-			if (!yearMap.has(t.Model.LaunchYear)) yearMap.set(t.Model.LaunchYear, { tablets: [], pens: [] });
+			if (!yearMap.has(t.Model.LaunchYear))
+				yearMap.set(t.Model.LaunchYear, { tablets: [], pens: [] });
 			yearMap.get(t.Model.LaunchYear)!.tablets.push(t);
 		}
 		for (const p of pens) {
@@ -44,21 +45,29 @@
 	<h1>{brand.BrandName}</h1>
 </div>
 
-<DetailView
-	item={brand}
-	fields={BRAND_FIELDS}
-	fieldGroups={BRAND_FIELD_GROUPS}
-/>
+<DetailView item={brand} fields={BRAND_FIELDS} fieldGroups={BRAND_FIELD_GROUPS} />
 
 <div class="tabs-section">
 	<div class="tab-bar">
-		<button class="tab-btn" class:active={activeTab === 'tablets'} onclick={() => activeTab = 'tablets'}>
+		<button
+			class="tab-btn"
+			class:active={activeTab === 'tablets'}
+			onclick={() => (activeTab = 'tablets')}
+		>
 			Tablets ({tablets.length})
 		</button>
-		<button class="tab-btn" class:active={activeTab === 'pens'} onclick={() => activeTab = 'pens'}>
+		<button
+			class="tab-btn"
+			class:active={activeTab === 'pens'}
+			onclick={() => (activeTab = 'pens')}
+		>
 			Pens ({pens.length})
 		</button>
-		<button class="tab-btn" class:active={activeTab === 'timeline'} onclick={() => activeTab = 'timeline'}>
+		<button
+			class="tab-btn"
+			class:active={activeTab === 'timeline'}
+			onclick={() => (activeTab = 'timeline')}
+		>
 			Timeline
 		</button>
 	</div>
@@ -78,7 +87,11 @@
 					<tbody>
 						{#each sortedTablets as t}
 							<tr>
-								<td><a class="entity-link" href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{t.Model.Name} ({t.Model.Id})</a></td>
+								<td
+									><a class="entity-link" href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
+										>{t.Model.Name} ({t.Model.Id})</a
+									></td
+								>
 								<td>{(t.Model.AlternateNames ?? []).join(', ')}</td>
 								<td>{t.Model.Type}</td>
 								<td>{t.Model.LaunchYear ?? ''}</td>
@@ -102,7 +115,11 @@
 					<tbody>
 						{#each sortedPens as p}
 							<tr>
-								<td><a class="entity-link" href="{base}/entity/{encodeURIComponent(p.EntityId)}">{p.PenName}</a></td>
+								<td
+									><a class="entity-link" href="{base}/entity/{encodeURIComponent(p.EntityId)}"
+										>{p.PenName}</a
+									></td
+								>
 								<td>{p.PenId}</td>
 								<td>{p.PenYear ?? ''}</td>
 							</tr>
@@ -126,7 +143,10 @@
 										<h3>Tablets ({entry.tablets.length})</h3>
 										<div class="tl-items">
 											{#each entry.tablets as t}
-												<a class="tl-item tl-tablet" href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">
+												<a
+													class="tl-item tl-tablet"
+													href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
+												>
 													<span class="tl-name">{t.Model.Name}</span>
 													<span class="tl-id">{t.Model.Id}</span>
 													<span class="tl-type">{t.Model.Type}</span>
@@ -140,7 +160,10 @@
 										<h3>Pens ({entry.pens.length})</h3>
 										<div class="tl-items">
 											{#each entry.pens as p}
-												<a class="tl-item tl-pen" href="{base}/entity/{encodeURIComponent(p.EntityId)}">
+												<a
+													class="tl-item tl-pen"
+													href="{base}/entity/{encodeURIComponent(p.EntityId)}"
+												>
 													<span class="tl-name">{p.PenName}</span>
 													<span class="tl-id">{p.PenId}</span>
 												</a>
@@ -158,10 +181,16 @@
 </div>
 
 <style>
-	.title-row { margin-bottom: 16px; }
-	h1 { margin: 0; }
+	.title-row {
+		margin-bottom: 16px;
+	}
+	h1 {
+		margin: 0;
+	}
 
-	.tabs-section { margin-top: 24px; }
+	.tabs-section {
+		margin-top: 24px;
+	}
 
 	.tab-bar {
 		display: flex;
@@ -182,16 +211,24 @@
 		margin-bottom: -2px;
 	}
 
-	.tab-btn:hover { color: var(--text); }
+	.tab-btn:hover {
+		color: var(--text);
+	}
 
 	.tab-btn.active {
 		color: #6b21a8;
 		border-bottom-color: #6b21a8;
 	}
 
-	.tab-panel { padding-top: 12px; }
+	.tab-panel {
+		padding-top: 12px;
+	}
 
-	table { width: 100%; border-collapse: collapse; font-size: 13px; }
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 13px;
+	}
 
 	th {
 		text-align: left;
@@ -201,14 +238,28 @@
 		border-bottom: 2px solid var(--border);
 	}
 
-	td { padding: 5px 10px; border-bottom: 1px solid var(--border); }
+	td {
+		padding: 5px 10px;
+		border-bottom: 1px solid var(--border);
+	}
 
-	.entity-link { color: var(--link); text-decoration: none; }
-	.entity-link:hover { text-decoration: underline; }
+	.entity-link {
+		color: var(--link);
+		text-decoration: none;
+	}
+	.entity-link:hover {
+		text-decoration: underline;
+	}
 
-	.no-data { font-size: 13px; color: #999; font-style: italic; }
+	.no-data {
+		font-size: 13px;
+		color: #999;
+		font-style: italic;
+	}
 
-	.brand-timeline { padding-left: 64px; }
+	.brand-timeline {
+		padding-left: 64px;
+	}
 
 	.tl-year-block {
 		position: relative;
@@ -216,7 +267,9 @@
 		padding-bottom: 20px;
 		border-bottom: 1px solid var(--border);
 	}
-	.tl-year-block:last-child { border-bottom: none; }
+	.tl-year-block:last-child {
+		border-bottom: none;
+	}
 
 	.tl-year-label {
 		position: absolute;
@@ -229,7 +282,11 @@
 		text-align: right;
 	}
 
-	.tl-year-content { display: flex; flex-direction: column; gap: 10px; }
+	.tl-year-content {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
 
 	.tl-category h3 {
 		font-size: 12px;
@@ -240,7 +297,11 @@
 		letter-spacing: 0.4px;
 	}
 
-	.tl-items { display: flex; flex-wrap: wrap; gap: 6px; }
+	.tl-items {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
 
 	.tl-item {
 		display: inline-flex;
@@ -254,11 +315,29 @@
 		min-width: 120px;
 	}
 
-	.tl-tablet { border-left: 3px solid #2563eb; }
-	.tl-pen { border-left: 3px solid #7c3aed; }
-	.tl-item:hover { background: var(--hover-bg); border-color: var(--border); }
+	.tl-tablet {
+		border-left: 3px solid #2563eb;
+	}
+	.tl-pen {
+		border-left: 3px solid #7c3aed;
+	}
+	.tl-item:hover {
+		background: var(--hover-bg);
+		border-color: var(--border);
+	}
 
-	.tl-name { font-weight: 600; color: var(--text); }
-	.tl-id { font-size: 11px; color: var(--text-muted); font-weight: 700; }
-	.tl-type { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+	.tl-name {
+		font-weight: 600;
+		color: var(--text);
+	}
+	.tl-id {
+		font-size: 11px;
+		color: var(--text-muted);
+		font-weight: 700;
+	}
+	.tl-type {
+		font-size: 10px;
+		color: var(--text-dim);
+		text-transform: uppercase;
+	}
 </style>

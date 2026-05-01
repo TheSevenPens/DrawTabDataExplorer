@@ -3,11 +3,18 @@
 
 	export interface Band {
 		min: number;
-		max: number | null;  // null = "and above" (open-ended right edge)
+		max: number | null; // null = "and above" (open-ended right edge)
 		label: string;
 	}
 
-	let { bands, axisMax, axisStep = 1, unit, title, exportFilename }: {
+	let {
+		bands,
+		axisMax,
+		axisStep = 1,
+		unit,
+		title,
+		exportFilename,
+	}: {
 		bands: Band[];
 		axisMax: number;
 		axisStep?: number;
@@ -57,44 +64,73 @@
 			filename={exportFilename}
 		/>
 	</div>
-<svg bind:this={svgEl} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" class="bands-chart" role="img" aria-label="Range bands chart">
-	<rect x="0" y="0" width={W} height={H} fill="var(--bands-bg, #e5edf6)" />
+	<svg
+		bind:this={svgEl}
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox="0 0 {W} {H}"
+		class="bands-chart"
+		role="img"
+		aria-label="Range bands chart"
+	>
+		<rect x="0" y="0" width={W} height={H} fill="var(--bands-bg, #e5edf6)" />
 
-	<!-- Vertical band-divider dashed lines (between adjacent bands) -->
-	{#each bands as b, i}
-		{#if i > 0}
+		<!-- Vertical band-divider dashed lines (between adjacent bands) -->
+		{#each bands as b, i}
+			{#if i > 0}
+				<line
+					x1={x(b.min)}
+					y1={PAD_TOP - 50}
+					x2={x(b.min)}
+					y2={axisY}
+					stroke="var(--bands-divider, #6b94c2)"
+					stroke-width="2"
+					stroke-dasharray="6 4"
+				/>
+			{/if}
+		{/each}
+
+		<!-- Band labels (title + range) -->
+		{#each bands as b}
+			{@const cx = (x(b.min) + x(bandRight(b))) / 2}
+			{@const rangeText = b.max === null ? `${b.min} ↔ ∞` : `${b.min} ↔ ${b.max}`}
+			<text
+				x={cx}
+				y={PAD_TOP - 25}
+				text-anchor="middle"
+				class="band-label"
+				font-weight="700"
+				font-size="18">{b.label}</text
+			>
+			<text x={cx} y={PAD_TOP} text-anchor="middle" class="band-range" font-size="14"
+				>{rangeText}</text
+			>
+		{/each}
+
+		<!-- Main axis line -->
+		<line
+			x1={PAD_L}
+			y1={axisY}
+			x2={W - PAD_R}
+			y2={axisY}
+			stroke="var(--bands-axis, #111)"
+			stroke-width="3"
+		/>
+
+		<!-- Tick marks + tick labels -->
+		{#each ticks as t}
 			<line
-				x1={x(b.min)} y1={PAD_TOP - 50}
-				x2={x(b.min)} y2={axisY}
-				stroke="var(--bands-divider, #6b94c2)"
+				x1={x(t)}
+				y1={axisY - 8}
+				x2={x(t)}
+				y2={axisY + 8}
+				stroke="var(--bands-axis, #111)"
 				stroke-width="2"
-				stroke-dasharray="6 4"
 			/>
-		{/if}
-	{/each}
-
-	<!-- Band labels (title + range) -->
-	{#each bands as b}
-		{@const cx = (x(b.min) + x(bandRight(b))) / 2}
-		{@const rangeText = b.max === null ? `${b.min} ↔ ∞` : `${b.min} ↔ ${b.max}`}
-		<text x={cx} y={PAD_TOP - 25} text-anchor="middle"
-			class="band-label" font-weight="700" font-size="18">{b.label}</text>
-		<text x={cx} y={PAD_TOP} text-anchor="middle"
-			class="band-range" font-size="14">{rangeText}</text>
-	{/each}
-
-	<!-- Main axis line -->
-	<line x1={PAD_L} y1={axisY} x2={W - PAD_R} y2={axisY}
-		stroke="var(--bands-axis, #111)" stroke-width="3" />
-
-	<!-- Tick marks + tick labels -->
-	{#each ticks as t}
-		<line x1={x(t)} y1={axisY - 8} x2={x(t)} y2={axisY + 8}
-			stroke="var(--bands-axis, #111)" stroke-width="2" />
-		<text x={x(t)} y={axisY + 28} text-anchor="middle"
-			class="axis-tick" font-size="14">{t} {unit}</text>
-	{/each}
-</svg>
+			<text x={x(t)} y={axisY + 28} text-anchor="middle" class="axis-tick" font-size="14"
+				>{t} {unit}</text
+			>
+		{/each}
+	</svg>
 </div>
 
 <style>

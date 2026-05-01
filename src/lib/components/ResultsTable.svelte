@@ -4,7 +4,20 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
-	let { data, visibleFields, fields, total, entityLabel = "records", detailBasePath = "", linkField = "EntityId", cellLinks = {}, columnWidths = $bindable({}), onwidthchange, flaggedIds, onToggleFlag }: {
+	let {
+		data,
+		visibleFields,
+		fields,
+		total,
+		entityLabel = 'records',
+		detailBasePath = '',
+		linkField = 'EntityId',
+		cellLinks = {},
+		columnWidths = $bindable({}),
+		onwidthchange,
+		flaggedIds,
+		onToggleFlag,
+	}: {
 		data: any[];
 		visibleFields: string[];
 		fields: AnyFieldDef[];
@@ -22,7 +35,7 @@
 	let showFlags = $derived(!!flaggedIds && !!onToggleFlag);
 
 	let fieldDefs = $derived(
-		visibleFields.map((k) => getFieldDef(k, fields)).filter((f) => f !== undefined)
+		visibleFields.map((k) => getFieldDef(k, fields)).filter((f) => f !== undefined),
 	);
 
 	let resizing: { key: string; startX: number; startWidth: number } | null = $state(null);
@@ -59,9 +72,7 @@
 					<th class="flag-col"></th>
 				{/if}
 				{#each fieldDefs as f}
-					<th
-						style={columnWidths[f.key] ? `width: ${columnWidths[f.key]}px` : ''}
-					>
+					<th style={columnWidths[f.key] ? `width: ${columnWidths[f.key]}px` : ''}>
 						<div class="th-content">
 							<span>{getFieldLabel(f.label, f.unit, $unitPreference)}</span>
 							<div
@@ -87,7 +98,8 @@
 								class:flagged={flaggedIds!.has(eid)}
 								onclick={() => onToggleFlag!(eid)}
 								title={flaggedIds!.has(eid) ? 'Unflag' : 'Flag for comparison'}
-							>{flaggedIds!.has(eid) ? '\u2691' : '\u2690'}</button>
+								>{flaggedIds!.has(eid) ? '\u2691' : '\u2690'}</button
+							>
 						</td>
 					{/if}
 					{#each fieldDefs as f}
@@ -97,13 +109,18 @@
 							{@const links = cellLinks[f.key](item)}
 							<td class:dim={links.length === 0}>
 								{#each links as link, i}
-									{#if i > 0}, {/if}
+									{#if i > 0},
+									{/if}
 									<a class="entity-link" href={link.href}>{link.label}</a>
 								{/each}
 							</td>
 						{:else if f.key === linkField && detailBasePath}
 							{@const entityId = item.Meta?.EntityId ?? item.EntityId ?? val}
-							<td><a class="entity-link" href="{base}{detailBasePath}/{encodeURIComponent(entityId)}">{displayVal}</a></td>
+							<td
+								><a class="entity-link" href="{base}{detailBasePath}/{encodeURIComponent(entityId)}"
+									>{displayVal}</a
+								></td
+							>
 						{:else}
 							<td class:dim={!val || val === '-'}>{displayVal}</td>
 						{/if}

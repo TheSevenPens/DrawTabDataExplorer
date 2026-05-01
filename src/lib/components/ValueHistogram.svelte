@@ -12,7 +12,20 @@
 		label: string;
 	}
 
-	let { title = '', values, currentValue, currentLabel = '', ranges, unit = '"', binSize = 0.5, chartHeight = 280, bandwidthMultiplier = 1.0, compareYears = $bindable<number | null | undefined>(undefined), compareYearOptions = [10, 15, 20, null] as (number | null)[], markers = [] as HistogramMarker[] }: {
+	let {
+		title = '',
+		values,
+		currentValue,
+		currentLabel = '',
+		ranges,
+		unit = '"',
+		binSize = 0.5,
+		chartHeight = 280,
+		bandwidthMultiplier = 1.0,
+		compareYears = $bindable<number | null | undefined>(undefined),
+		compareYearOptions = [10, 15, 20, null] as (number | null)[],
+		markers = [] as HistogramMarker[],
+	}: {
 		title?: string;
 		values: number[];
 		currentValue: number | null;
@@ -34,13 +47,15 @@
 	let titleHeight = $derived(title ? 28 : 0);
 	let padTop = $derived(40 + titleHeight);
 	const padBottom = 65;
-	let markerExtraHeight = $derived(markers.length > 0 ? (Math.min(MARKER_TIERS, markers.length) - 1) * 14 + 10 : 0);
+	let markerExtraHeight = $derived(
+		markers.length > 0 ? (Math.min(MARKER_TIERS, markers.length) - 1) * 14 + 10 : 0,
+	);
 	let totalHeight = $derived(chartHeight + titleHeight + markerExtraHeight);
 	let chartW = $derived(width - padLeft - padRight);
 	let chartH = $derived(chartHeight - 40 - padBottom);
 
-	let scaleMin = $derived(Math.min(...ranges.map(r => r.min)) - 1);
-	let scaleMax = $derived(Math.max(...ranges.map(r => r.max)) + 1);
+	let scaleMin = $derived(Math.min(...ranges.map((r) => r.min)) - 1);
+	let scaleMax = $derived(Math.max(...ranges.map((r) => r.max)) + 1);
 
 	function xScale(val: number): number {
 		return padLeft + ((val - scaleMin) / (scaleMax - scaleMin)) * chartW;
@@ -99,7 +114,7 @@
 		return `M${firstX},${bottom} L${points.join(' L')} L${lastX},${bottom} Z`;
 	});
 
-	let tickStep = $derived((scaleMax - scaleMin) > 40 ? 5 : 2);
+	let tickStep = $derived(scaleMax - scaleMin > 40 ? 5 : 2);
 	let tickStart = $derived(Math.ceil(scaleMin / tickStep) * tickStep);
 	let tickCount = $derived(Math.floor((scaleMax - tickStart) / tickStep) + 1);
 	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
@@ -111,7 +126,7 @@
 	const LABEL_PAD = 8; // extra gap between labels
 
 	// Measure actual rendered label widths via SVG getComputedTextLength()
-	let uniqueLabels = $derived([...new Set(markers.map(m => m.label))]);
+	let uniqueLabels = $derived([...new Set(markers.map((m) => m.label))]);
 	let labelMeasureEls: SVGTextElement[] = [];
 	let measuredLabelWidths = $state(new Map<string, number>());
 	$effect(() => {
@@ -125,8 +140,8 @@
 
 	let positionedMarkers = $derived.by(() => {
 		const visible = markers
-			.filter(m => m.value >= scaleMin && m.value <= scaleMax)
-			.map(m => ({
+			.filter((m) => m.value >= scaleMin && m.value <= scaleMax)
+			.map((m) => ({
 				...m,
 				x: xScale(m.value),
 				labelW: measuredLabelWidths.get(m.label) ?? m.label.length * CHAR_WIDTH_FALLBACK,
@@ -139,7 +154,7 @@
 		// Picking from the left end → label sits LEFT of the line (text-anchor="end").
 		// Picking from the right end → label sits RIGHT of the line (text-anchor="start").
 		// This lets markers from each side share tiers, halving tower height.
-		const order: Array<{ m: typeof visible[0]; side: 'left' | 'right' }> = [];
+		const order: Array<{ m: (typeof visible)[0]; side: 'left' | 'right' }> = [];
 		for (let lo = 0, hi = visible.length - 1; lo <= hi; lo++, hi--) {
 			order.push({ m: visible[lo], side: 'left' });
 			if (lo !== hi) order.push({ m: visible[hi], side: 'right' });
@@ -148,19 +163,22 @@
 		// Per-tier occupation:
 		// leftEdge[i]  — rightmost x of any left-side label on tier i
 		// rightEdge[i] — leftmost  x of any right-side label on tier i
-		const leftEdge  = new Array<number>(MARKER_TIERS).fill(-Infinity);
+		const leftEdge = new Array<number>(MARKER_TIERS).fill(-Infinity);
 		const rightEdge = new Array<number>(MARKER_TIERS).fill(Infinity);
 
 		const placed: Array<{ x: number; tier: number; lL: number; lR: number }> = [];
-		const results = new Map<typeof visible[0], { tier: number; side: 'left' | 'right' }>();
+		const results = new Map<(typeof visible)[0], { tier: number; side: 'left' | 'right' }>();
 
 		const tryTier = (
-			m: typeof visible[0], side: 'left' | 'right',
-			lL: number, lR: number, strict: boolean
+			m: (typeof visible)[0],
+			side: 'left' | 'right',
+			lL: number,
+			lR: number,
+			strict: boolean,
 		): number => {
 			for (let i = 0; i < MARKER_TIERS; i++) {
 				// No text overlap with labels already on this tier
-				if (lL < leftEdge[i]  + LABEL_PAD) continue;
+				if (lL < leftEdge[i] + LABEL_PAD) continue;
 				if (lR > rightEdge[i] - LABEL_PAD) continue;
 
 				if (strict) {
@@ -168,16 +186,16 @@
 					// down to tier p.tier) must not pass through my label span.
 					// Only deeper-tier markers (p.tier > i) reach tier i.
 					const ok1 = placed
-						.filter(p => p.tier > i)
-						.every(p => p.x < lL - LABEL_PAD || p.x > lR + LABEL_PAD);
+						.filter((p) => p.tier > i)
+						.every((p) => p.x < lL - LABEL_PAD || p.x > lR + LABEL_PAD);
 					if (!ok1) continue;
 
 					// Concern 2 — my own dashed line (at m.x, reaching down to
 					// tier i) must not pass through any already-placed label at a
 					// shallower tier (p.tier < i), whose label row my line crosses.
 					const ok2 = placed
-						.filter(p => p.tier < i)
-						.every(p => m.x < p.lL - LABEL_PAD || m.x > p.lR + LABEL_PAD);
+						.filter((p) => p.tier < i)
+						.every((p) => m.x < p.lL - LABEL_PAD || m.x > p.lR + LABEL_PAD);
 					if (!ok2) continue;
 				}
 
@@ -188,19 +206,19 @@
 
 		for (const { m, side } of order) {
 			const lL = side === 'left' ? m.x - m.labelW : m.x;
-			const lR = side === 'left' ? m.x            : m.x + m.labelW;
+			const lR = side === 'left' ? m.x : m.x + m.labelW;
 
-			let tier = tryTier(m, side, lL, lR, true);   // Pass 1 — strict
+			let tier = tryTier(m, side, lL, lR, true); // Pass 1 — strict
 			if (tier === -1) tier = tryTier(m, side, lL, lR, false); // Pass 2 — lenient
-			if (tier === -1) tier = MARKER_TIERS - 1;                // Pass 3 — fallback
+			if (tier === -1) tier = MARKER_TIERS - 1; // Pass 3 — fallback
 
-			if (side === 'left') leftEdge[tier]  = Math.max(leftEdge[tier],  m.x);
-			else                 rightEdge[tier] = Math.min(rightEdge[tier], m.x);
+			if (side === 'left') leftEdge[tier] = Math.max(leftEdge[tier], m.x);
+			else rightEdge[tier] = Math.min(rightEdge[tier], m.x);
 			placed.push({ x: m.x, tier, lL, lR });
 			results.set(m, { tier, side });
 		}
 
-		return visible.map(m => ({ ...m, ...results.get(m)! }));
+		return visible.map((m) => ({ ...m, ...results.get(m)! }));
 	});
 
 	let svgEl: SVGSVGElement | undefined = $state();
@@ -221,16 +239,23 @@
 			{/if}
 			<ChartExportButton getSvg={() => svgEl} title={title || 'histogram'} />
 		</div>
-		<svg bind:this={svgEl} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {totalHeight}" class="histogram" style="font-family: 'Google Sans', sans-serif;">
+		<svg
+			bind:this={svgEl}
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 {width} {totalHeight}"
+			class="histogram"
+			style="font-family: 'Google Sans', sans-serif;"
+		>
 			<!-- Hidden texts for measuring actual label widths -->
 			{#each uniqueLabels as label, i}
 				<text
 					bind:this={labelMeasureEls[i]}
-					x="0" y="-1000"
+					x="0"
+					y="-1000"
 					font-size="10"
 					font-weight="600"
-					visibility="hidden"
-				>{label}</text>
+					visibility="hidden">{label}</text
+				>
 			{/each}
 
 			{#if title}
@@ -240,8 +265,8 @@
 					text-anchor="middle"
 					font-size="14"
 					font-weight="600"
-					fill="var(--text)"
-				>{title}</text>
+					fill="var(--text)">{title}</text
+				>
 			{/if}
 			<!-- Range backgrounds -->
 			{#each ranges as range, i}
@@ -258,15 +283,15 @@
 					y={padTop - 24}
 					text-anchor="middle"
 					font-size="12"
-					fill="var(--text-muted)"
-				>{range.label}</text>
+					fill="var(--text-muted)">{range.label}</text
+				>
 				<text
 					x={(xScale(range.min) + xScale(range.max)) / 2}
 					y={padTop - 10}
 					text-anchor="middle"
 					font-size="10"
-					fill="var(--text-dim)"
-				>{range.min}{unit}–{range.max}{unit}</text>
+					fill="var(--text-dim)">{range.min}{unit}–{range.max}{unit}</text
+				>
 			{/each}
 
 			<!-- X axis -->
@@ -294,11 +319,10 @@
 						y={padTop + chartH + 15}
 						text-anchor="middle"
 						font-size="11"
-						fill="var(--text-dim)"
-					>{val}{unit}</text>
+						fill="var(--text-dim)">{val}{unit}</text
+					>
 				{/if}
 			{/each}
-
 
 			<!-- Histogram bars -->
 			{#each bins as count, i}
@@ -343,8 +367,8 @@
 					text-anchor={marker.side === 'left' ? 'end' : 'start'}
 					font-size="10"
 					font-weight="600"
-					fill="#e11d48"
-				>{marker.label}</text>
+					fill="#e11d48">{marker.label}</text
+				>
 			{/each}
 
 			<!-- Current value indicator -->
@@ -363,16 +387,12 @@
 					text-anchor="middle"
 					font-size="12"
 					font-weight="bold"
-					fill="#e11d48"
-				>{currentValue.toFixed(1)}{unit}</text>
+					fill="#e11d48">{currentValue.toFixed(1)}{unit}</text
+				>
 				{#if currentLabel}
-					<text
-						x={tx}
-						y={padTop + chartH + 56}
-						text-anchor="middle"
-						font-size="11"
-						fill="#e11d48"
-					>{currentLabel}</text>
+					<text x={tx} y={padTop + chartH + 56} text-anchor="middle" font-size="11" fill="#e11d48"
+						>{currentLabel}</text
+					>
 				{/if}
 			{/if}
 		</svg>
@@ -416,6 +436,4 @@
 		background: var(--bg-card);
 		color: var(--text);
 	}
-
-
 </style>

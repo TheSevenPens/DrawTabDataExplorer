@@ -1,9 +1,9 @@
 <script lang="ts">
-	import TabletDetail      from '$lib/components/TabletDetail.svelte';
-	import PenDetail         from '$lib/components/PenDetail.svelte';
-	import BrandDetail       from '$lib/components/BrandDetail.svelte';
-	import DriverDetail      from '$lib/components/DriverDetail.svelte';
-	import PenFamilyDetail   from '$lib/components/PenFamilyDetail.svelte';
+	import TabletDetail from '$lib/components/TabletDetail.svelte';
+	import PenDetail from '$lib/components/PenDetail.svelte';
+	import BrandDetail from '$lib/components/BrandDetail.svelte';
+	import DriverDetail from '$lib/components/DriverDetail.svelte';
+	import PenFamilyDetail from '$lib/components/PenFamilyDetail.svelte';
 	import TabletFamilyDetail from '$lib/components/TabletFamilyDetail.svelte';
 
 	let { data } = $props();

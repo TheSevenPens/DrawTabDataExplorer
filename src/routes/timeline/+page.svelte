@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadTabletsFromURL, loadPensFromURL, brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
+	import {
+		loadTabletsFromURL,
+		loadPensFromURL,
+		brandName,
+		type Tablet,
+		type Pen,
+	} from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 
 	interface YearEntry {
@@ -20,18 +26,18 @@
 	let yearTo = $state('');
 
 	onMount(async () => {
-		const [tablets, pens] = await Promise.all([
-			loadTabletsFromURL(base),
-			loadPensFromURL(base),
-		]);
+		const [tablets, pens] = await Promise.all([loadTabletsFromURL(base), loadPensFromURL(base)]);
 
-		brands = [...new Set([...tablets.map(t => t.Model.Brand), ...pens.map(p => p.Brand)])].sort();
+		brands = [
+			...new Set([...tablets.map((t) => t.Model.Brand), ...pens.map((p) => p.Brand)]),
+		].sort();
 
 		const yearMap = new Map<string, { tablets: Tablet[]; pens: Pen[] }>();
 
 		for (const t of tablets) {
 			if (!t.Model.LaunchYear) continue;
-			if (!yearMap.has(t.Model.LaunchYear)) yearMap.set(t.Model.LaunchYear, { tablets: [], pens: [] });
+			if (!yearMap.has(t.Model.LaunchYear))
+				yearMap.set(t.Model.LaunchYear, { tablets: [], pens: [] });
 			yearMap.get(t.Model.LaunchYear)!.tablets.push(t);
 		}
 
@@ -41,7 +47,7 @@
 			yearMap.get(p.PenYear)!.pens.push(p);
 		}
 
-		const years = [...yearMap.keys()].map(Number).filter(y => !isNaN(y));
+		const years = [...yearMap.keys()].map(Number).filter((y) => !isNaN(y));
 		allYears = years.sort((a, b) => a - b);
 		yearFrom = String(Math.min(...years));
 		yearTo = String(Math.max(...years));
@@ -66,7 +72,7 @@
 		const from = Number(yearFrom);
 		const to = Number(yearTo);
 		if (!isNaN(from) && !isNaN(to)) {
-			result = result.filter(e => {
+			result = result.filter((e) => {
 				const y = Number(e.year);
 				return !isNaN(y) && y >= from && y <= to;
 			});
@@ -74,15 +80,15 @@
 		if (sortOrder === 'oldest') {
 			result = [...result].reverse();
 		}
-		return result.map(entry => {
+		return result.map((entry) => {
 			let tablets = entry.tablets;
 			let pens = entry.pens;
 			if (filterBrand) {
-				tablets = tablets.filter(t => t.Model.Brand === filterBrand);
-				pens = pens.filter(p => p.Brand === filterBrand);
+				tablets = tablets.filter((t) => t.Model.Brand === filterBrand);
+				pens = pens.filter((p) => p.Brand === filterBrand);
 			}
 			if (filterType) {
-				tablets = tablets.filter(t => t.Model.Type === filterType);
+				tablets = tablets.filter((t) => t.Model.Type === filterType);
 			}
 			return { year: entry.year, tablets, pens };
 		});
@@ -96,7 +102,9 @@
 
 <div class="title-row">
 	<h1>Timeline</h1>
-	<span class="subtitle">{filteredTimeline.length} years, {totalTablets} tablets, {totalPens} pens</span>
+	<span class="subtitle"
+		>{filteredTimeline.length} years, {totalTablets} tablets, {totalPens} pens</span
+	>
 </div>
 
 <div class="filters">
@@ -120,7 +128,13 @@
 		<label for="year-from">From</label>
 		<input id="year-from" type="number" bind:value={yearFrom} min={allYears[0]} max={yearTo} />
 		<label for="year-to">To</label>
-		<input id="year-to" type="number" bind:value={yearTo} min={yearFrom} max={allYears[allYears.length - 1]} />
+		<input
+			id="year-to"
+			type="number"
+			bind:value={yearTo}
+			min={yearFrom}
+			max={allYears[allYears.length - 1]}
+		/>
 	</span>
 </div>
 
@@ -142,8 +156,13 @@
 									class="item tablet"
 									role="link"
 									tabindex="0"
-									ondblclick={() => { window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`; }}
-									onkeydown={(e) => { if (e.key === 'Enter') window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`; }}
+									ondblclick={() => {
+										window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`;
+									}}
+									onkeydown={(e) => {
+										if (e.key === 'Enter')
+											window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`;
+									}}
 								>
 									<span class="item-brand">{brandName(t.Model.Brand)}</span>
 									<span class="item-name">{t.Model.Name}</span>
@@ -181,7 +200,9 @@
 		margin-bottom: 12px;
 	}
 
-	h1 { margin: 0; }
+	h1 {
+		margin: 0;
+	}
 
 	.subtitle {
 		font-size: 14px;

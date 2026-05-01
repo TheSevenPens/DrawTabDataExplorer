@@ -2,7 +2,14 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadPensFromURL, loadPenFamiliesFromURL } from '$data/lib/drawtab-loader.js';
-	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS, PEN_DEFAULT_COLUMNS, PEN_DEFAULT_VIEW, setPenFamilyNames } from '$data/lib/entities/pen-fields.js';
+	import {
+		type Pen,
+		PEN_FIELDS,
+		PEN_FIELD_GROUPS,
+		PEN_DEFAULT_COLUMNS,
+		PEN_DEFAULT_VIEW,
+		setPenFamilyNames,
+	} from '$data/lib/entities/pen-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
@@ -41,5 +48,5 @@
 	detailBasePath="/entity"
 	defaultFilterField="PenFamily"
 	defaultSortField="PenId"
-	quickFilterFields={["Brand"]}
+	quickFilterFields={['Brand']}
 />

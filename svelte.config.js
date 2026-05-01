@@ -10,7 +10,15 @@ const config = {
 			handleUnseenRoutes: 'ignore',
 		},
 		paths: {
-			base: process.env.NODE_ENV === 'production' ? '/DrawTabDataExplorer' : '',
+			// BASE_PATH override lets the e2e build serve at `/` instead of
+			// the GitHub Pages prefix. Default: production = pages prefix,
+			// dev = empty.
+			base:
+				process.env.BASE_PATH !== undefined
+					? process.env.BASE_PATH
+					: process.env.NODE_ENV === 'production'
+						? '/DrawTabDataExplorer'
+						: '',
 		},
 		files: {
 			routes: 'src/routes',
@@ -19,9 +27,10 @@ const config = {
 			assets: 'static',
 		},
 		alias: {
-			'$data': process.env.VITE_DATA_DIR && process.env.VITE_DATA_DIR !== 'data-repo'
-				? process.env.VITE_DATA_DIR
-				: 'data-repo',
+			$data:
+				process.env.VITE_DATA_DIR && process.env.VITE_DATA_DIR !== 'data-repo'
+					? process.env.VITE_DATA_DIR
+					: 'data-repo',
 		},
 	},
 };

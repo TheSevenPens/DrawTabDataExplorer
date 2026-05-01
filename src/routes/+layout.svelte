@@ -1,9 +1,20 @@
 <script lang="ts">
 	import { theme } from '$lib/theme-store.js';
 	import DevErrorBanner from '$lib/components/DevErrorBanner.svelte';
+	import ModalRoot from '$lib/components/ModalRoot.svelte';
+	import { SUPPORTED_SCHEMA_MAJOR } from '$lib/schema-version.js';
 	let { children, data } = $props();
 
 	let version = $derived(data.version);
+
+	// Compatibility status: "ok" when the dataset's schemaVersion matches
+	// what this app supports; "mismatch" when it doesn't; "missing" when
+	// version.json is unavailable (corrupt/missing dataset).
+	let schemaStatus = $derived.by((): 'ok' | 'mismatch' | 'missing' => {
+		if (!version) return 'missing';
+		if (typeof version.schemaVersion !== 'number') return 'missing';
+		return version.schemaVersion === SUPPORTED_SCHEMA_MAJOR ? 'ok' : 'mismatch';
+	});
 
 	let useLocalData = $state(false);
 
@@ -27,6 +38,29 @@
 	}
 </script>
 
+{#if schemaStatus !== 'ok'}
+	<div class="schema-banner" role="alert">
+		{#if schemaStatus === 'missing'}
+			<strong>Dataset version unavailable.</strong>
+			This build expects schema v{SUPPORTED_SCHEMA_MAJOR} but couldn't read
+			<code>version.json</code> — the data submodule may be missing or misconfigured. See the
+			<a
+				href="https://github.com/TheSevenPens/DrawTabDataExplorer#setup"
+				target="_blank"
+				rel="noopener">setup guide</a
+			>.
+		{:else}
+			<strong>Schema mismatch.</strong>
+			Dataset is schema v{version?.schemaVersion}; this app supports v{SUPPORTED_SCHEMA_MAJOR}. Some
+			pages may render incorrectly. Update the explorer or roll the dataset back — see the
+			<a
+				href="https://github.com/TheSevenPens/DrawTabDataExplorer#setup"
+				target="_blank"
+				rel="noopener">setup guide</a
+			>.
+		{/if}
+	</div>
+{/if}
 {#if __DEV_LOCAL_DATA_AVAILABLE__}
 	<div class="local-data-banner" class:active={useLocalData}>
 		{#if useLocalData}
@@ -41,6 +75,8 @@
 {/if}
 {@render children()}
 
+<ModalRoot />
+
 {#if import.meta.env.DEV}
 	<DevErrorBanner />
 {/if}
@@ -49,7 +85,11 @@
 	<footer class="data-version">
 		<span>Data {version.version}</span>
 		<span class="sep">·</span>
-		<a href="https://github.com/TheSevenPens/DrawTabData/commit/{version.commit}" target="_blank" rel="noopener">
+		<a
+			href="https://github.com/TheSevenPens/DrawTabData/commit/{version.commit}"
+			target="_blank"
+			rel="noopener"
+		>
 			{version.shortCommit}
 		</a>
 		<span class="sep">·</span>
@@ -63,6 +103,28 @@
 {/if}
 
 <style>
+	.schema-banner {
+		background: #fef3c7;
+		color: #78350f;
+		border-bottom: 2px solid #f59e0b;
+		padding: 10px 16px;
+		font-size: 13px;
+		line-height: 1.4;
+		margin: -24px -24px 16px -24px;
+	}
+
+	.schema-banner a {
+		color: inherit;
+		text-decoration: underline;
+	}
+
+	.schema-banner code {
+		background: rgba(0, 0, 0, 0.06);
+		padding: 1px 5px;
+		border-radius: 3px;
+		font-size: 12px;
+	}
+
 	.local-data-banner {
 		display: flex;
 		align-items: center;
@@ -151,7 +213,7 @@
 		--separator-color: #ddd;
 	}
 
-	:global([data-theme="dark"]) {
+	:global([data-theme='dark']) {
 		--bg: #1a1a2e;
 		--bg-card: #16213e;
 		--text: #e0e0e0;
@@ -176,10 +238,21 @@
 		--separator-color: #3a3a5a;
 	}
 
-	:global(*) { box-sizing: border-box; margin: 0; padding: 0; font-family: inherit; }
+	:global(*) {
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+		font-family: inherit;
+	}
 
 	:global(body) {
-		font-family: "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		font-family:
+			'Google Sans',
+			-apple-system,
+			BlinkMacSystemFont,
+			'Segoe UI',
+			Roboto,
+			sans-serif;
 		padding: 24px;
 		background: var(--bg);
 		color: var(--text);
@@ -221,7 +294,9 @@
 		color: var(--text);
 	}
 
-	:global(.step-controls input) { width: 160px; }
+	:global(.step-controls input) {
+		width: 160px;
+	}
 
 	:global(.step-remove) {
 		background: none;
@@ -233,7 +308,9 @@
 		line-height: 1;
 	}
 
-	:global(.step-remove:hover) { color: #e11d48; }
+	:global(.step-remove:hover) {
+		color: #e11d48;
+	}
 
 	:global(.pipe-connector) {
 		padding: 2px 0 2px 18px;
@@ -248,7 +325,9 @@
 		margin-bottom: 10px;
 	}
 
-	:global(.table-wrap) { overflow-x: auto; }
+	:global(.table-wrap) {
+		overflow-x: auto;
+	}
 
 	:global(table) {
 		width: 100%;
@@ -257,7 +336,8 @@
 		font-size: 13px;
 	}
 
-	:global(th), :global(td) {
+	:global(th),
+	:global(td) {
 		text-align: left;
 		padding: 6px 10px;
 		border-bottom: 1px solid var(--border);
@@ -273,9 +353,15 @@
 		border-bottom: 2px solid var(--border);
 	}
 
-	:global(tr:hover td) { background: var(--hover-bg); }
+	:global(tr:hover td) {
+		background: var(--hover-bg);
+	}
 
-	:global(.dim) { color: var(--text-dim); }
+	:global(.dim) {
+		color: var(--text-dim);
+	}
 
-	:global(a) { color: var(--link); }
+	:global(a) {
+		color: var(--link);
+	}
 </style>

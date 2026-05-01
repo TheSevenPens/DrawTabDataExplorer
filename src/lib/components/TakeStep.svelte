@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { TakeStep } from '$data/lib/pipeline/index.js';
 
-	let { step = $bindable(), onchange, onremove }: { step: TakeStep; onchange: () => void; onremove: () => void } = $props();
+	let {
+		step = $bindable(),
+		onchange,
+		onremove,
+	}: { step: TakeStep; onchange: () => void; onremove: () => void } = $props();
 </script>
 
 <div class="step">
@@ -12,7 +16,13 @@
 			min="1"
 			value={step.count}
 			style="width: 80px"
-			oninput={(e) => { const n = parseInt((e.target as HTMLInputElement).value, 10); if (n > 0) { step.count = n; onchange(); } }}
+			oninput={(e) => {
+				const n = parseInt((e.target as HTMLInputElement).value, 10);
+				if (n > 0) {
+					step.count = n;
+					onchange();
+				}
+			}}
 		/>
 		records
 	</div>

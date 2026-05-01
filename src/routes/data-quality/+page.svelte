@@ -2,7 +2,10 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadAllFromURL, type DrawTabDataAll } from '$data/lib/drawtab-all.js';
-	import { loadInventoryPensFromURL, loadInventoryTabletsFromURL } from '$data/lib/drawtab-loader.js';
+	import {
+		loadInventoryPensFromURL,
+		loadInventoryTabletsFromURL,
+	} from '$data/lib/drawtab-loader.js';
 	import { buildFilterUrl } from '$lib/filter-url.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
@@ -51,11 +54,36 @@
 	const sectionDefs: SectionDef[] = [
 		{ id: 'entity-counts', category: 'Summary', label: 'Entity Counts' },
 		{ id: 'issues', category: 'Summary', label: 'Issues', count: () => issues.length },
-		{ id: 'orphaned-compat', category: 'Compatibility', label: 'Orphaned Compat References', count: () => orphanedCompat.length },
-		{ id: 'wacom-no-compat', category: 'Compatibility', label: 'Wacom Tablets Missing Compat', count: () => tabletsNoCompat.length },
-		{ id: 'pens-no-compat', category: 'Compatibility', label: 'Pens Missing Compat', count: () => pensNoCompat.length },
-		{ id: 'included-pen-no-compat', category: 'Compatibility', label: 'Included Pens Missing Compat', count: () => includedPenMissingCompat.length },
-		{ id: 'orphaned-families', category: 'Compatibility', label: 'Orphaned Family References', count: () => orphanedFamilies.length },
+		{
+			id: 'orphaned-compat',
+			category: 'Compatibility',
+			label: 'Orphaned Compat References',
+			count: () => orphanedCompat.length,
+		},
+		{
+			id: 'wacom-no-compat',
+			category: 'Compatibility',
+			label: 'Wacom Tablets Missing Compat',
+			count: () => tabletsNoCompat.length,
+		},
+		{
+			id: 'pens-no-compat',
+			category: 'Compatibility',
+			label: 'Pens Missing Compat',
+			count: () => pensNoCompat.length,
+		},
+		{
+			id: 'included-pen-no-compat',
+			category: 'Compatibility',
+			label: 'Included Pens Missing Compat',
+			count: () => includedPenMissingCompat.length,
+		},
+		{
+			id: 'orphaned-families',
+			category: 'Compatibility',
+			label: 'Orphaned Family References',
+			count: () => orphanedFamilies.length,
+		},
 		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
 		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
 		{ id: 'completion-pen', category: 'Field Completion', label: 'Pens' },
@@ -122,7 +150,11 @@
 		return (getByPath(rec, 'Meta.EntityId') as string) ?? rec.EntityId ?? rec._id ?? 'UNKNOWN';
 	}
 
-	function checkRequired(records: Record<string, any>[], entity: string, requiredFields: string[]): Issue[] {
+	function checkRequired(
+		records: Record<string, any>[],
+		entity: string,
+		requiredFields: string[],
+	): Issue[] {
 		const found: Issue[] = [];
 		for (const rec of records) {
 			const eid = getEntityId(rec);
@@ -142,7 +174,13 @@
 			for (const [field, value] of Object.entries(obj)) {
 				const path = prefix ? `${prefix}.${field}` : field;
 				if (typeof value === 'string' && value !== value.trim()) {
-					found.push({ entity, entityId: eid, field: path, issue: 'leading/trailing whitespace', value });
+					found.push({
+						entity,
+						entityId: eid,
+						field: path,
+						issue: 'leading/trailing whitespace',
+						value,
+					});
 				} else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
 					traverse(value as Record<string, any>, eid, path);
 				}
@@ -156,18 +194,25 @@
 
 	function computeCompletion(records: Record<string, any>[], fields: string[]): CompletionStat[] {
 		const total = records.length;
-		return fields.map(field => {
-			const populated = records.filter(r => {
-				const v = getByPath(r, field);
-				return v !== undefined && v !== null && v !== '';
-			}).length;
-			return { field, populated, total, percent: total > 0 ? ((populated / total) * 100).toFixed(1) : '0' };
-		}).sort((a, b) => parseFloat(a.percent) - parseFloat(b.percent));
+		return fields
+			.map((field) => {
+				const populated = records.filter((r) => {
+					const v = getByPath(r, field);
+					return v !== undefined && v !== null && v !== '';
+				}).length;
+				return {
+					field,
+					populated,
+					total,
+					percent: total > 0 ? ((populated / total) * 100).toFixed(1) : '0',
+				};
+			})
+			.sort((a, b) => parseFloat(a.percent) - parseFloat(b.percent));
 	}
 
 	function findOrphanedCompat(ds: DrawTabDataAll): { type: string; id: string }[] {
-		const tabletIds = new Set(ds.tablets.map(t => t.Model.Id));
-		const penIds = new Set(ds.pens.map(p => p.PenId));
+		const tabletIds = new Set(ds.tablets.map((t) => t.Model.Id));
+		const penIds = new Set(ds.pens.map((p) => p.PenId));
 		const orphans: { type: string; id: string }[] = [];
 		const seenTablets = new Set<string>();
 		const seenPens = new Set<string>();
@@ -209,15 +254,44 @@
 		const allIssues: Issue[] = [];
 
 		// Required field checks
-		allIssues.push(...checkRequired(ds.tablets, 'Tablet', ['Meta.EntityId', 'Model.Brand', 'Model.Id', 'Model.Name', 'Model.Type']));
+		allIssues.push(
+			...checkRequired(ds.tablets, 'Tablet', [
+				'Meta.EntityId',
+				'Model.Brand',
+				'Model.Id',
+				'Model.Name',
+				'Model.Type',
+			]),
+		);
 		allIssues.push(...checkRequired(ds.pens, 'Pen', ['EntityId', 'Brand', 'PenId', 'PenName']));
-		allIssues.push(...checkRequired(ds.drivers, 'Driver', ['EntityId', 'Brand', 'DriverVersion', 'DriverName', 'OSFamily', 'ReleaseDate']));
-		allIssues.push(...checkRequired(ds.penFamilies, 'PenFamily', ['EntityId', 'Brand', 'FamilyName']));
-		allIssues.push(...checkRequired(ds.tabletFamilies, 'TabletFamily', ['EntityId', 'Brand', 'FamilyName']));
+		allIssues.push(
+			...checkRequired(ds.drivers, 'Driver', [
+				'EntityId',
+				'Brand',
+				'DriverVersion',
+				'DriverName',
+				'OSFamily',
+				'ReleaseDate',
+			]),
+		);
+		allIssues.push(
+			...checkRequired(ds.penFamilies, 'PenFamily', ['EntityId', 'Brand', 'FamilyName']),
+		);
+		allIssues.push(
+			...checkRequired(ds.tabletFamilies, 'TabletFamily', ['EntityId', 'Brand', 'FamilyName']),
+		);
 		allIssues.push(...checkRequired(ds.penCompat, 'PenCompat', ['Brand', 'TabletId', 'PenId']));
 
 		// Pressure response checks
-		allIssues.push(...checkRequired(ds.pressureResponse, 'PressureResponse', ['Brand', 'PenEntityId', 'InventoryId', 'Date', 'TabletEntityId']));
+		allIssues.push(
+			...checkRequired(ds.pressureResponse, 'PressureResponse', [
+				'Brand',
+				'PenEntityId',
+				'InventoryId',
+				'Date',
+				'TabletEntityId',
+			]),
+		);
 
 		// Whitespace checks
 		allIssues.push(...checkWhitespace(ds.tablets, 'Tablet'));
@@ -229,44 +303,68 @@
 
 		// Completion stats
 		tabletCompletion = computeCompletion(ds.tablets, [
-			'Model.LaunchYear', 'Model.Audience', 'Model.Family', 'Model.Status', 'Model.IncludedPen',
-			'Digitizer.Type', 'Digitizer.PressureLevels', 'Digitizer.Dimensions', 'Digitizer.Density',
-			'Digitizer.ReportRate', 'Digitizer.Tilt', 'Digitizer.AccuracyCenter', 'Digitizer.AccuracyCorner',
-			'Digitizer.MaxHover', 'Digitizer.SupportsTouch',
-			'Physical.Dimensions', 'Physical.Weight', 'Model.ProductLink',
+			'Model.LaunchYear',
+			'Model.Audience',
+			'Model.Family',
+			'Model.Status',
+			'Model.IncludedPen',
+			'Digitizer.Type',
+			'Digitizer.PressureLevels',
+			'Digitizer.Dimensions',
+			'Digitizer.Density',
+			'Digitizer.ReportRate',
+			'Digitizer.Tilt',
+			'Digitizer.AccuracyCenter',
+			'Digitizer.AccuracyCorner',
+			'Digitizer.MaxHover',
+			'Digitizer.SupportsTouch',
+			'Physical.Dimensions',
+			'Physical.Weight',
+			'Model.ProductLink',
 		]);
 
-		const displayTablets = ds.tablets.filter(t => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE');
+		const displayTablets = ds.tablets.filter(
+			(t) => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE',
+		);
 		displayTabletCount = displayTablets.length;
 		displayCompletion = computeCompletion(displayTablets, [
-			'Display.PixelDimensions', 'Display.PanelTech', 'Display.Brightness', 'Display.Contrast',
-			'Display.ColorBitDepth', 'Display.ColorGamuts', 'Display.Lamination',
+			'Display.PixelDimensions',
+			'Display.PanelTech',
+			'Display.Brightness',
+			'Display.Contrast',
+			'Display.ColorBitDepth',
+			'Display.ColorGamuts',
+			'Display.Lamination',
 		]);
 
 		penCompletion = computeCompletion(ds.pens, ['PenName', 'PenFamily', 'PenYear']);
 
 		driverCompletion = computeCompletion(ds.drivers, [
-			'DriverURLWacom', 'DriverURLArchiveDotOrg', 'ReleaseNotesURL',
+			'DriverURLWacom',
+			'DriverURLArchiveDotOrg',
+			'ReleaseNotesURL',
 		]);
 
-		pressureResponseCompletion = computeCompletion(ds.pressureResponse, [
-			'PenFamily', 'Notes',
-		]);
+		pressureResponseCompletion = computeCompletion(ds.pressureResponse, ['PenFamily', 'Notes']);
 
 		inventoryPenCompletion = computeCompletion(invPens, [
-			'PenEntityId', 'PenTech', 'WithTabletInventoryId',
+			'PenEntityId',
+			'PenTech',
+			'WithTabletInventoryId',
 		]);
 
 		inventoryTabletCompletion = computeCompletion(invTablets, [
-			'TabletEntityId', 'Vendor', 'OrderDate',
+			'TabletEntityId',
+			'Vendor',
+			'OrderDate',
 		]);
 
 		// Orphaned compat references
 		orphanedCompat = findOrphanedCompat(ds);
 
 		// Orphaned family references
-		const penFamilyIds = new Set(ds.penFamilies.map(f => f.EntityId));
-		const tabletFamilyIds = new Set(ds.tabletFamilies.map(f => f.EntityId));
+		const penFamilyIds = new Set(ds.penFamilies.map((f) => f.EntityId));
+		const tabletFamilyIds = new Set(ds.tabletFamilies.map((f) => f.EntityId));
 		const orphFamilies: typeof orphanedFamilies = [];
 		for (const pen of ds.pens) {
 			if (pen.PenFamily && !penFamilyIds.has(pen.PenFamily)) {
@@ -275,7 +373,11 @@
 		}
 		for (const tab of ds.tablets) {
 			if (tab.Model.Family && !tabletFamilyIds.has(tab.Model.Family)) {
-				orphFamilies.push({ type: 'TabletFamily', id: tab.Model.Family, referencedBy: tab.Model.Id });
+				orphFamilies.push({
+					type: 'TabletFamily',
+					id: tab.Model.Family,
+					referencedBy: tab.Model.Id,
+				});
 			}
 		}
 		orphanedFamilies = orphFamilies;
@@ -294,21 +396,21 @@
 		];
 
 		// Compat coverage
-		const wacomTablets = ds.tablets.filter(t => t.Model.Brand === 'WACOM');
+		const wacomTablets = ds.tablets.filter((t) => t.Model.Brand === 'WACOM');
 		tabletsNoCompat = wacomTablets
-			.filter(t => !ds!.tabletToPens.has(t.Model.Id))
-			.map(t => ({ id: t.Model.Id, name: t.Model.Name }));
+			.filter((t) => !ds!.tabletToPens.has(t.Model.Id))
+			.map((t) => ({ id: t.Model.Id, name: t.Model.Name }));
 
 		pensNoCompat = ds.pens
-			.filter(p => !ds!.penToTablets.has(p.PenId))
-			.map(p => ({ id: p.PenId, name: p.PenName }));
+			.filter((p) => !ds!.penToTablets.has(p.PenId))
+			.map((p) => ({ id: p.PenId, name: p.PenName }));
 
 		// Included pens missing compatibility info.
 		// IncludedPen holds pen EntityIds (e.g. "wacom.pen.kp503e"); pen-compat
 		// rows hold bare PenIds (e.g. "KP-503E"). Resolve each IncludedPen
 		// EntityId to its pen record, then check that a pen-compat row exists
 		// linking the tablet's Model.Id to that pen's PenId.
-		const penByEntityId = new Map(ds.pens.map(p => [p.EntityId, p]));
+		const penByEntityId = new Map(ds.pens.map((p) => [p.EntityId, p]));
 		const compatPairs = new Set<string>();
 		for (const row of ds.penCompat) {
 			compatPairs.add(`${row.TabletId}::${row.PenId}`);
@@ -343,7 +445,6 @@
 {#if !ds}
 	<p>Loading...</p>
 {:else}
-
 	<div class="dq-layout">
 		<nav class="dq-tree" aria-label="Data quality sections">
 			{#each groupedSections as [category, items]}
@@ -369,374 +470,596 @@
 		</nav>
 
 		<main class="dq-content">
-
-	{#if activeSection === 'entity-counts'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Entity Counts</h2>
-				<button class="export-trigger" disabled={entityCounts.length === 0} onclick={() => openExport('Entity Counts', 'data-quality-entity-counts', ['Entity', 'Count'], entityCounts.map(r => [r.entity, r.count]))}>Export</button>
-			</div>
-			<table class="compact">
-				<thead><tr><th>Entity</th><th>Count</th></tr></thead>
-				<tbody>
-					{#each entityCounts as row}
-						<tr><td>{row.entity}</td><td>{row.count}</td></tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-	{/if}
-
-	{#if activeSection === 'issues'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Issues ({issues.length})</h2>
-				<button class="export-trigger" disabled={issues.length === 0} onclick={() => openExport('Issues', 'data-quality-issues', ['Entity', 'Entity ID', 'Field', 'Issue', 'Value'], issues.map(i => [i.entity, i.entityId, i.field, i.issue, i.value ?? '']))}>Export</button>
-			</div>
-			{#if issues.length === 0}
-				<p class="good">No issues found.</p>
-			{:else}
-				<table>
-					<thead><tr><th>Entity</th><th>Entity ID</th><th>Field</th><th>Issue</th><th>Value</th></tr></thead>
-					<tbody>
-						{#each issues as issue}
-							<tr>
-								<td>{issue.entity}</td>
-								<td class="mono">{issue.entityId}</td>
-								<td>{issue.field}</td>
-								<td>{issue.issue}</td>
-								<td class="mono">{issue.value ?? ''}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+			{#if activeSection === 'entity-counts'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Entity Counts</h2>
+						<button
+							class="export-trigger"
+							disabled={entityCounts.length === 0}
+							onclick={() =>
+								openExport(
+									'Entity Counts',
+									'data-quality-entity-counts',
+									['Entity', 'Count'],
+									entityCounts.map((r) => [r.entity, r.count]),
+								)}>Export</button
+						>
+					</div>
+					<table class="compact">
+						<thead><tr><th>Entity</th><th>Count</th></tr></thead>
+						<tbody>
+							{#each entityCounts as row}
+								<tr><td>{row.entity}</td><td>{row.count}</td></tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
 			{/if}
-		</section>
 
-	{/if}
-
-	{#if activeSection === 'orphaned-compat'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Orphaned Compat References ({orphanedCompat.length})</h2>
-				<button class="export-trigger" disabled={orphanedCompat.length === 0} onclick={() => openExport('Orphaned Compat References', 'data-quality-orphaned-compat', ['Type', 'ID'], orphanedCompat.map(o => [o.type, o.id]))}>Export</button>
-			</div>
-			<p class="description">IDs in pen-compat that don't match any record in the referenced entity.</p>
-			{#if orphanedCompat.length === 0}
-				<p class="good">No orphaned references.</p>
-			{:else}
-				<table class="compact">
-					<thead><tr><th>Type</th><th>ID</th></tr></thead>
-					<tbody>
-						{#each orphanedCompat as orphan}
-							<tr><td>{orphan.type}</td><td class="mono">{orphan.id}</td></tr>
-						{/each}
-					</tbody>
-				</table>
+			{#if activeSection === 'issues'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Issues ({issues.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={issues.length === 0}
+							onclick={() =>
+								openExport(
+									'Issues',
+									'data-quality-issues',
+									['Entity', 'Entity ID', 'Field', 'Issue', 'Value'],
+									issues.map((i) => [i.entity, i.entityId, i.field, i.issue, i.value ?? '']),
+								)}>Export</button
+						>
+					</div>
+					{#if issues.length === 0}
+						<p class="good">No issues found.</p>
+					{:else}
+						<table>
+							<thead
+								><tr><th>Entity</th><th>Entity ID</th><th>Field</th><th>Issue</th><th>Value</th></tr
+								></thead
+							>
+							<tbody>
+								{#each issues as issue}
+									<tr>
+										<td>{issue.entity}</td>
+										<td class="mono">{issue.entityId}</td>
+										<td>{issue.field}</td>
+										<td>{issue.issue}</td>
+										<td class="mono">{issue.value ?? ''}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
 			{/if}
-		</section>
 
-	{/if}
-
-	{#if activeSection === 'wacom-no-compat'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Wacom Tablets with No Pen Compatibility Data ({tabletsNoCompat.length})</h2>
-				<button class="export-trigger" disabled={tabletsNoCompat.length === 0} onclick={() => openExport('Wacom Tablets with No Pen Compatibility Data', 'data-quality-wacom-no-compat', ['Model ID', 'Name'], tabletsNoCompat.map(t => [t.id, t.name]))}>Export</button>
-			</div>
-			<p class="description">Wacom tablets that have no entries in pen-compat.</p>
-			{#if tabletsNoCompat.length === 0}
-				<p class="good">All Wacom tablets have compatibility data.</p>
-			{:else}
-				<table class="compact">
-					<thead><tr><th>Model ID</th><th>Name</th></tr></thead>
-					<tbody>
-						{#each tabletsNoCompat as t}
-							<tr><td class="mono">{t.id}</td><td>{t.name}</td></tr>
-						{/each}
-					</tbody>
-				</table>
+			{#if activeSection === 'orphaned-compat'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Orphaned Compat References ({orphanedCompat.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={orphanedCompat.length === 0}
+							onclick={() =>
+								openExport(
+									'Orphaned Compat References',
+									'data-quality-orphaned-compat',
+									['Type', 'ID'],
+									orphanedCompat.map((o) => [o.type, o.id]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						IDs in pen-compat that don't match any record in the referenced entity.
+					</p>
+					{#if orphanedCompat.length === 0}
+						<p class="good">No orphaned references.</p>
+					{:else}
+						<table class="compact">
+							<thead><tr><th>Type</th><th>ID</th></tr></thead>
+							<tbody>
+								{#each orphanedCompat as orphan}
+									<tr><td>{orphan.type}</td><td class="mono">{orphan.id}</td></tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
 			{/if}
-		</section>
 
-	{/if}
-
-	{#if activeSection === 'pens-no-compat'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Pens with No Tablet Compatibility Data ({pensNoCompat.length})</h2>
-				<button class="export-trigger" disabled={pensNoCompat.length === 0} onclick={() => openExport('Pens with No Tablet Compatibility Data', 'data-quality-pens-no-compat', ['Pen ID', 'Name'], pensNoCompat.map(p => [p.id, p.name]))}>Export</button>
-			</div>
-			<p class="description">Pens that have no entries in pen-compat.</p>
-			{#if pensNoCompat.length === 0}
-				<p class="good">All pens have compatibility data.</p>
-			{:else}
-				<table class="compact">
-					<thead><tr><th>Pen ID</th><th>Name</th></tr></thead>
-					<tbody>
-						{#each pensNoCompat as p}
-							<tr><td class="mono">{p.id}</td><td>{p.name}</td></tr>
-						{/each}
-					</tbody>
-				</table>
+			{#if activeSection === 'wacom-no-compat'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Wacom Tablets with No Pen Compatibility Data ({tabletsNoCompat.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={tabletsNoCompat.length === 0}
+							onclick={() =>
+								openExport(
+									'Wacom Tablets with No Pen Compatibility Data',
+									'data-quality-wacom-no-compat',
+									['Model ID', 'Name'],
+									tabletsNoCompat.map((t) => [t.id, t.name]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">Wacom tablets that have no entries in pen-compat.</p>
+					{#if tabletsNoCompat.length === 0}
+						<p class="good">All Wacom tablets have compatibility data.</p>
+					{:else}
+						<table class="compact">
+							<thead><tr><th>Model ID</th><th>Name</th></tr></thead>
+							<tbody>
+								{#each tabletsNoCompat as t}
+									<tr><td class="mono">{t.id}</td><td>{t.name}</td></tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
 			{/if}
-		</section>
 
-	{/if}
-
-	{#if activeSection === 'included-pen-no-compat'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Included Pens Missing Compatibility Info ({includedPenMissingCompat.length})</h2>
-				<button class="export-trigger" disabled={includedPenMissingCompat.length === 0} onclick={() => openExport('Included Pens Missing Compatibility Info', 'data-quality-included-pens-no-compat', ['Tablet ID', 'Tablet Name', 'Pen EntityId', 'Pen Name'], includedPenMissingCompat.map(r => [r.tabletId, r.tabletName, r.penEntityId, r.penName]))}>Export</button>
-			</div>
-			<p class="description">Tablets whose <code>Model.IncludedPen</code> references a pen, but no pen-compat row links the tablet and pen. These should always be present — an included pen is by definition compatible with its tablet.</p>
-			{#if includedPenMissingCompat.length === 0}
-				<p class="good">All included pens have a matching pen-compat row.</p>
-			{:else}
-				<table class="compact">
-					<thead><tr><th>Tablet ID</th><th>Tablet Name</th><th>Pen EntityId</th><th>Pen Name</th></tr></thead>
-					<tbody>
-						{#each includedPenMissingCompat as r}
-							<tr>
-								<td class="mono">{r.tabletId}</td>
-								<td>{r.tabletName}</td>
-								<td class="mono">{r.penEntityId}</td>
-								<td>{r.penName}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+			{#if activeSection === 'pens-no-compat'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Pens with No Tablet Compatibility Data ({pensNoCompat.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={pensNoCompat.length === 0}
+							onclick={() =>
+								openExport(
+									'Pens with No Tablet Compatibility Data',
+									'data-quality-pens-no-compat',
+									['Pen ID', 'Name'],
+									pensNoCompat.map((p) => [p.id, p.name]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">Pens that have no entries in pen-compat.</p>
+					{#if pensNoCompat.length === 0}
+						<p class="good">All pens have compatibility data.</p>
+					{:else}
+						<table class="compact">
+							<thead><tr><th>Pen ID</th><th>Name</th></tr></thead>
+							<tbody>
+								{#each pensNoCompat as p}
+									<tr><td class="mono">{p.id}</td><td>{p.name}</td></tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
 			{/if}
-		</section>
 
-	{/if}
-
-	{#if activeSection === 'orphaned-families'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Orphaned Family References ({orphanedFamilies.length})</h2>
-				<button class="export-trigger" disabled={orphanedFamilies.length === 0} onclick={() => openExport('Orphaned Family References', 'data-quality-orphaned-families', ['Type', 'Family ID', 'Referenced By'], orphanedFamilies.map(o => [o.type, o.id, o.referencedBy]))}>Export</button>
-			</div>
-			<p class="description">Family IDs referenced by pens or tablets that don't exist in the family entities.</p>
-			{#if orphanedFamilies.length === 0}
-				<p class="good">No orphaned family references.</p>
-			{:else}
-				<table class="compact">
-					<thead><tr><th>Type</th><th>Family ID</th><th>Referenced By</th></tr></thead>
-					<tbody>
-						{#each orphanedFamilies as o}
-							<tr><td>{o.type}</td><td class="mono">{o.id}</td><td class="mono">{o.referencedBy}</td></tr>
-						{/each}
-					</tbody>
-				</table>
+			{#if activeSection === 'included-pen-no-compat'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Included Pens Missing Compatibility Info ({includedPenMissingCompat.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={includedPenMissingCompat.length === 0}
+							onclick={() =>
+								openExport(
+									'Included Pens Missing Compatibility Info',
+									'data-quality-included-pens-no-compat',
+									['Tablet ID', 'Tablet Name', 'Pen EntityId', 'Pen Name'],
+									includedPenMissingCompat.map((r) => [
+										r.tabletId,
+										r.tabletName,
+										r.penEntityId,
+										r.penName,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						Tablets whose <code>Model.IncludedPen</code> references a pen, but no pen-compat row links
+						the tablet and pen. These should always be present — an included pen is by definition compatible
+						with its tablet.
+					</p>
+					{#if includedPenMissingCompat.length === 0}
+						<p class="good">All included pens have a matching pen-compat row.</p>
+					{:else}
+						<table class="compact">
+							<thead
+								><tr
+									><th>Tablet ID</th><th>Tablet Name</th><th>Pen EntityId</th><th>Pen Name</th></tr
+								></thead
+							>
+							<tbody>
+								{#each includedPenMissingCompat as r}
+									<tr>
+										<td class="mono">{r.tabletId}</td>
+										<td>{r.tabletName}</td>
+										<td class="mono">{r.penEntityId}</td>
+										<td>{r.penName}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
 			{/if}
-		</section>
 
-	{/if}
+			{#if activeSection === 'orphaned-families'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Orphaned Family References ({orphanedFamilies.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={orphanedFamilies.length === 0}
+							onclick={() =>
+								openExport(
+									'Orphaned Family References',
+									'data-quality-orphaned-families',
+									['Type', 'Family ID', 'Referenced By'],
+									orphanedFamilies.map((o) => [o.type, o.id, o.referencedBy]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						Family IDs referenced by pens or tablets that don't exist in the family entities.
+					</p>
+					{#if orphanedFamilies.length === 0}
+						<p class="good">No orphaned family references.</p>
+					{:else}
+						<table class="compact">
+							<thead><tr><th>Type</th><th>Family ID</th><th>Referenced By</th></tr></thead>
+							<tbody>
+								{#each orphanedFamilies as o}
+									<tr
+										><td>{o.type}</td><td class="mono">{o.id}</td><td class="mono"
+											>{o.referencedBy}</td
+										></tr
+									>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
 
-	{#if activeSection === 'completion-tablet'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Tablet Field Completion</h2>
-				<button class="export-trigger" disabled={tabletCompletion.length === 0} onclick={() => openExport('Tablet Field Completion', 'data-quality-tablet-completion', ['Field', 'Populated', '%'], tabletCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
-			</div>
-			<p class="description">How many of the {ds.tablets.length} tablets have each field populated.</p>
-			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
-				<tbody>
-					{#each tabletCompletion as stat}
-						<tr>
-							<td>{stat.field}</td>
-							<td>{stat.populated} / {stat.total}</td>
-							<td>{stat.percent}%</td>
-							<td>
-								<div class="bar-bg">
-									<div class="bar-fill" style="width: {stat.percent}%"></div>
-								</div>
-							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
+			{#if activeSection === 'completion-tablet'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Tablet Field Completion</h2>
+						<button
+							class="export-trigger"
+							disabled={tabletCompletion.length === 0}
+							onclick={() =>
+								openExport(
+									'Tablet Field Completion',
+									'data-quality-tablet-completion',
+									['Field', 'Populated', '%'],
+									tabletCompletion.map((s) => [
+										s.field,
+										`${s.populated}/${s.total}`,
+										`${s.percent}%`,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						How many of the {ds.tablets.length} tablets have each field populated.
+					</p>
+					<table class="compact">
+						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
+						<tbody>
+							{#each tabletCompletion as stat}
+								<tr>
+									<td>{stat.field}</td>
+									<td>{stat.populated} / {stat.total}</td>
+									<td>{stat.percent}%</td>
+									<td>
+										<div class="bar-bg">
+											<div class="bar-fill" style="width: {stat.percent}%"></div>
+										</div>
+									</td>
+									<td
+										>{#if stat.populated < stat.total}<a
+												class="view-link"
+												href={buildFilterUrl('/', [
+													{ field: stat.field, operator: 'empty', value: '' },
+												])}>show</a
+											>{/if}</td
+									>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{/if}
 
-	{/if}
+			{#if activeSection === 'completion-display'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Display Field Completion</h2>
+						<button
+							class="export-trigger"
+							disabled={displayCompletion.length === 0}
+							onclick={() =>
+								openExport(
+									'Display Field Completion',
+									'data-quality-display-completion',
+									['Field', 'Populated', '%'],
+									displayCompletion.map((s) => [
+										s.field,
+										`${s.populated}/${s.total}`,
+										`${s.percent}%`,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						How many of the {displayTabletCount} pen displays and standalone tablets have each display
+						field populated.
+					</p>
+					<table class="compact">
+						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
+						<tbody>
+							{#each displayCompletion as stat}
+								<tr>
+									<td>{stat.field}</td>
+									<td>{stat.populated} / {stat.total}</td>
+									<td>{stat.percent}%</td>
+									<td>
+										<div class="bar-bg">
+											<div class="bar-fill" style="width: {stat.percent}%"></div>
+										</div>
+									</td>
+									<td
+										>{#if stat.populated < stat.total}<a
+												class="view-link"
+												href={buildFilterUrl('/', [
+													{ field: stat.field, operator: 'empty', value: '' },
+												])}>show</a
+											>{/if}</td
+									>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{/if}
 
-	{#if activeSection === 'completion-display'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Display Field Completion</h2>
-				<button class="export-trigger" disabled={displayCompletion.length === 0} onclick={() => openExport('Display Field Completion', 'data-quality-display-completion', ['Field', 'Populated', '%'], displayCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
-			</div>
-			<p class="description">How many of the {displayTabletCount} pen displays and standalone tablets have each display field populated.</p>
-			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
-				<tbody>
-					{#each displayCompletion as stat}
-						<tr>
-							<td>{stat.field}</td>
-							<td>{stat.populated} / {stat.total}</td>
-							<td>{stat.percent}%</td>
-							<td>
-								<div class="bar-bg">
-									<div class="bar-fill" style="width: {stat.percent}%"></div>
-								</div>
-							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
+			{#if activeSection === 'completion-pen'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Pen Field Completion</h2>
+						<button
+							class="export-trigger"
+							disabled={penCompletion.length === 0}
+							onclick={() =>
+								openExport(
+									'Pen Field Completion',
+									'data-quality-pen-completion',
+									['Field', 'Populated', '%'],
+									penCompletion.map((s) => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						How many of the {ds.pens.length} pens have each optional field populated.
+					</p>
+					<table class="compact">
+						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
+						<tbody>
+							{#each penCompletion as stat}
+								<tr>
+									<td>{stat.field}</td>
+									<td>{stat.populated} / {stat.total}</td>
+									<td>{stat.percent}%</td>
+									<td>
+										<div class="bar-bg">
+											<div class="bar-fill" style="width: {stat.percent}%"></div>
+										</div>
+									</td>
+									<td
+										>{#if stat.populated < stat.total}<a
+												class="view-link"
+												href={buildFilterUrl('/pens', [
+													{ field: stat.field, operator: 'empty', value: '' },
+												])}>show</a
+											>{/if}</td
+									>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{/if}
 
-	{/if}
+			{#if activeSection === 'completion-driver'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Driver Field Completion</h2>
+						<button
+							class="export-trigger"
+							disabled={driverCompletion.length === 0}
+							onclick={() =>
+								openExport(
+									'Driver Field Completion',
+									'data-quality-driver-completion',
+									['Field', 'Populated', '%'],
+									driverCompletion.map((s) => [
+										s.field,
+										`${s.populated}/${s.total}`,
+										`${s.percent}%`,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						How many of the {ds.drivers.length} drivers have each optional field populated.
+					</p>
+					<table class="compact">
+						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
+						<tbody>
+							{#each driverCompletion as stat}
+								<tr>
+									<td>{stat.field}</td>
+									<td>{stat.populated} / {stat.total}</td>
+									<td>{stat.percent}%</td>
+									<td>
+										<div class="bar-bg">
+											<div class="bar-fill" style="width: {stat.percent}%"></div>
+										</div>
+									</td>
+									<td
+										>{#if stat.populated < stat.total}<a
+												class="view-link"
+												href={buildFilterUrl('/drivers', [
+													{ field: stat.field, operator: 'empty', value: '' },
+												])}>show</a
+											>{/if}</td
+									>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{/if}
 
-	{#if activeSection === 'completion-pen'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Pen Field Completion</h2>
-				<button class="export-trigger" disabled={penCompletion.length === 0} onclick={() => openExport('Pen Field Completion', 'data-quality-pen-completion', ['Field', 'Populated', '%'], penCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
-			</div>
-			<p class="description">How many of the {ds.pens.length} pens have each optional field populated.</p>
-			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
-				<tbody>
-					{#each penCompletion as stat}
-						<tr>
-							<td>{stat.field}</td>
-							<td>{stat.populated} / {stat.total}</td>
-							<td>{stat.percent}%</td>
-							<td>
-								<div class="bar-bg">
-									<div class="bar-fill" style="width: {stat.percent}%"></div>
-								</div>
-							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/pens', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
+			{#if activeSection === 'completion-pressure'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Pressure Response Field Completion</h2>
+						<button
+							class="export-trigger"
+							disabled={pressureResponseCompletion.length === 0}
+							onclick={() =>
+								openExport(
+									'Pressure Response Field Completion',
+									'data-quality-pressure-response-completion',
+									['Field', 'Populated', '%'],
+									pressureResponseCompletion.map((s) => [
+										s.field,
+										`${s.populated}/${s.total}`,
+										`${s.percent}%`,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						How many of the {ds.pressureResponse.length} sessions have each optional field populated.
+					</p>
+					<table class="compact">
+						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
+						<tbody>
+							{#each pressureResponseCompletion as stat}
+								<tr>
+									<td>{stat.field}</td>
+									<td>{stat.populated} / {stat.total}</td>
+									<td>{stat.percent}%</td>
+									<td>
+										<div class="bar-bg">
+											<div class="bar-fill" style="width: {stat.percent}%"></div>
+										</div>
+									</td>
+									<td
+										>{#if stat.populated < stat.total}<a
+												class="view-link"
+												href={buildFilterUrl('/pressure-response', [
+													{ field: stat.field, operator: 'empty', value: '' },
+												])}>show</a
+											>{/if}</td
+									>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{/if}
 
-	{/if}
+			{#if activeSection === 'completion-inv-pen'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Inventory Pen Field Completion</h2>
+						<button
+							class="export-trigger"
+							disabled={inventoryPenCompletion.length === 0}
+							onclick={() =>
+								openExport(
+									'Inventory Pen Field Completion',
+									'data-quality-inventory-pen-completion',
+									['Field', 'Populated', '%'],
+									inventoryPenCompletion.map((s) => [
+										s.field,
+										`${s.populated}/${s.total}`,
+										`${s.percent}%`,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						How many of the {inventoryPenCount} inventory pens have each optional field populated.
+					</p>
+					<table class="compact">
+						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+						<tbody>
+							{#each inventoryPenCompletion as stat}
+								<tr>
+									<td>{stat.field}</td>
+									<td>{stat.populated} / {stat.total}</td>
+									<td>{stat.percent}%</td>
+									<td>
+										<div class="bar-bg">
+											<div class="bar-fill" style="width: {stat.percent}%"></div>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{/if}
 
-	{#if activeSection === 'completion-driver'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Driver Field Completion</h2>
-				<button class="export-trigger" disabled={driverCompletion.length === 0} onclick={() => openExport('Driver Field Completion', 'data-quality-driver-completion', ['Field', 'Populated', '%'], driverCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
-			</div>
-			<p class="description">How many of the {ds.drivers.length} drivers have each optional field populated.</p>
-			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
-				<tbody>
-					{#each driverCompletion as stat}
-						<tr>
-							<td>{stat.field}</td>
-							<td>{stat.populated} / {stat.total}</td>
-							<td>{stat.percent}%</td>
-							<td>
-								<div class="bar-bg">
-									<div class="bar-fill" style="width: {stat.percent}%"></div>
-								</div>
-							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/drivers', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-	{/if}
-
-	{#if activeSection === 'completion-pressure'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Pressure Response Field Completion</h2>
-				<button class="export-trigger" disabled={pressureResponseCompletion.length === 0} onclick={() => openExport('Pressure Response Field Completion', 'data-quality-pressure-response-completion', ['Field', 'Populated', '%'], pressureResponseCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
-			</div>
-			<p class="description">How many of the {ds.pressureResponse.length} sessions have each optional field populated.</p>
-			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
-				<tbody>
-					{#each pressureResponseCompletion as stat}
-						<tr>
-							<td>{stat.field}</td>
-							<td>{stat.populated} / {stat.total}</td>
-							<td>{stat.percent}%</td>
-							<td>
-								<div class="bar-bg">
-									<div class="bar-fill" style="width: {stat.percent}%"></div>
-								</div>
-							</td>
-							<td>{#if stat.populated < stat.total}<a class="view-link" href={buildFilterUrl('/pressure-response', [{field: stat.field, operator: 'empty', value: ''}])}>show</a>{/if}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-	{/if}
-
-	{#if activeSection === 'completion-inv-pen'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Inventory Pen Field Completion</h2>
-				<button class="export-trigger" disabled={inventoryPenCompletion.length === 0} onclick={() => openExport('Inventory Pen Field Completion', 'data-quality-inventory-pen-completion', ['Field', 'Populated', '%'], inventoryPenCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
-			</div>
-			<p class="description">How many of the {inventoryPenCount} inventory pens have each optional field populated.</p>
-			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
-				<tbody>
-					{#each inventoryPenCompletion as stat}
-						<tr>
-							<td>{stat.field}</td>
-							<td>{stat.populated} / {stat.total}</td>
-							<td>{stat.percent}%</td>
-							<td>
-								<div class="bar-bg">
-									<div class="bar-fill" style="width: {stat.percent}%"></div>
-								</div>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-	{/if}
-
-	{#if activeSection === 'completion-inv-tablet'}
-		<section class="section">
-			<div class="section-header">
-				<h2>Inventory Tablet Field Completion</h2>
-				<button class="export-trigger" disabled={inventoryTabletCompletion.length === 0} onclick={() => openExport('Inventory Tablet Field Completion', 'data-quality-inventory-tablet-completion', ['Field', 'Populated', '%'], inventoryTabletCompletion.map(s => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]))}>Export</button>
-			</div>
-			<p class="description">How many of the {inventoryTabletCount} inventory tablets have each optional field populated.</p>
-			<table class="compact">
-				<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
-				<tbody>
-					{#each inventoryTabletCompletion as stat}
-						<tr>
-							<td>{stat.field}</td>
-							<td>{stat.populated} / {stat.total}</td>
-							<td>{stat.percent}%</td>
-							<td>
-								<div class="bar-bg">
-									<div class="bar-fill" style="width: {stat.percent}%"></div>
-								</div>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</section>
-
-	{/if}
-
+			{#if activeSection === 'completion-inv-tablet'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Inventory Tablet Field Completion</h2>
+						<button
+							class="export-trigger"
+							disabled={inventoryTabletCompletion.length === 0}
+							onclick={() =>
+								openExport(
+									'Inventory Tablet Field Completion',
+									'data-quality-inventory-tablet-completion',
+									['Field', 'Populated', '%'],
+									inventoryTabletCompletion.map((s) => [
+										s.field,
+										`${s.populated}/${s.total}`,
+										`${s.percent}%`,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						How many of the {inventoryTabletCount} inventory tablets have each optional field populated.
+					</p>
+					<table class="compact">
+						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
+						<tbody>
+							{#each inventoryTabletCompletion as stat}
+								<tr>
+									<td>{stat.field}</td>
+									<td>{stat.populated} / {stat.total}</td>
+									<td>{stat.percent}%</td>
+									<td>
+										<div class="bar-bg">
+											<div class="bar-fill" style="width: {stat.percent}%"></div>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{/if}
 		</main>
 	</div>
 
@@ -750,11 +1073,12 @@
 			onclose={() => (exportDialog = null)}
 		/>
 	{/if}
-
 {/if}
 
 <style>
-	h1 { margin-bottom: 16px; }
+	h1 {
+		margin-bottom: 16px;
+	}
 
 	.dq-layout {
 		display: flex;
@@ -932,9 +1256,12 @@
 		margin-bottom: 8px;
 	}
 
-	table.compact { width: auto; }
+	table.compact {
+		width: auto;
+	}
 
-	th, td {
+	th,
+	td {
 		text-align: left;
 		padding: 5px 10px;
 		border-bottom: 1px solid #e0e0e0;
@@ -945,7 +1272,9 @@
 		color: #fff;
 	}
 
-	tr:hover td { background: #f0f7ff; }
+	tr:hover td {
+		background: #f0f7ff;
+	}
 
 	.mono {
 		font-family: monospace;
@@ -974,5 +1303,7 @@
 		white-space: nowrap;
 	}
 
-	.view-link:hover { text-decoration: underline; }
+	.view-link:hover {
+		text-decoration: underline;
+	}
 </style>

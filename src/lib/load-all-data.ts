@@ -36,17 +36,36 @@ export interface AllData {
 
 /** Load every dataset in parallel. Callers can destructure only what they need. */
 export async function loadAllData(base: string): Promise<AllData> {
-	const [tablets, pens, penCompat, drivers, brands, penFamilies, tabletFamilies, isoSizes, pressureResponse] =
-		await Promise.all([
-			loadTabletsFromURL(base) as Promise<Tablet[]>,
-			loadPensFromURL(base) as Promise<Pen[]>,
-			loadPenCompatFromURL(base) as Promise<PenCompat[]>,
-			loadDriversFromURL(base) as Promise<Driver[]>,
-			loadBrandsFromURL(base) as Promise<Brand[]>,
-			loadPenFamiliesFromURL(base) as Promise<PenFamily[]>,
-			loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
-			loadISOPaperSizesFromURL(base),
-			loadPressureResponseFromURL(base) as Promise<PressureResponse[]>,
-		]);
-	return { tablets, pens, penCompat, drivers, brands, penFamilies, tabletFamilies, isoSizes, pressureResponse };
+	const [
+		tablets,
+		pens,
+		penCompat,
+		drivers,
+		brands,
+		penFamilies,
+		tabletFamilies,
+		isoSizes,
+		pressureResponse,
+	] = await Promise.all([
+		loadTabletsFromURL(base) as Promise<Tablet[]>,
+		loadPensFromURL(base) as Promise<Pen[]>,
+		loadPenCompatFromURL(base) as Promise<PenCompat[]>,
+		loadDriversFromURL(base) as Promise<Driver[]>,
+		loadBrandsFromURL(base) as Promise<Brand[]>,
+		loadPenFamiliesFromURL(base) as Promise<PenFamily[]>,
+		loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
+		loadISOPaperSizesFromURL(base),
+		loadPressureResponseFromURL(base) as Promise<PressureResponse[]>,
+	]);
+	return {
+		tablets,
+		pens,
+		penCompat,
+		drivers,
+		brands,
+		penFamilies,
+		tabletFamilies,
+		isoSizes,
+		pressureResponse,
+	};
 }

@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadTabletsFromURL, loadPensFromURL, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
+	import {
+		loadTabletsFromURL,
+		loadPensFromURL,
+		type Tablet,
+		type Pen,
+	} from '$data/lib/drawtab-loader.js';
 	import {
 		TABLET_FIELDS,
 		TABLET_FIELD_GROUPS,
@@ -34,10 +39,7 @@
 	});
 
 	onMount(async () => {
-		[data, pens] = await Promise.all([
-			loadTabletsFromURL(base),
-			loadPensFromURL(base),
-		]);
+		[data, pens] = await Promise.all([loadTabletsFromURL(base), loadPensFromURL(base)]);
 	});
 </script>
 
@@ -57,7 +59,7 @@
 	{cellLinks}
 	defaultFilterField="Brand"
 	defaultSortField="Brand"
-	quickFilterFields={["Brand", "ModelType", "DigitizerSizeCategory"]}
+	quickFilterFields={['Brand', 'ModelType', 'DigitizerSizeCategory']}
 	flaggedIds={flaggedSet}
 	onToggleFlag={toggleFlag}
 />

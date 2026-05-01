@@ -195,7 +195,6 @@
 		</div>
 
 		<div class="dialog-body">
-
 			{#if !simpleMode}
 				<!-- Rows -->
 				<fieldset>
@@ -268,7 +267,6 @@
 					Save as file
 				</label>
 			</fieldset>
-
 		</div>
 
 		<div class="dialog-footer">
@@ -333,7 +331,10 @@
 		padding: 2px 6px;
 		border-radius: 4px;
 	}
-	.close-btn:hover { background: var(--hover-bg); color: var(--text); }
+	.close-btn:hover {
+		background: var(--hover-bg);
+		color: var(--text);
+	}
 
 	.dialog-body {
 		padding: 12px 16px;
@@ -400,11 +401,22 @@
 		font-weight: 500;
 		background: var(--bg-card);
 		color: var(--text-muted);
-		transition: border-color 0.1s, color 0.1s;
+		transition:
+			border-color 0.1s,
+			color 0.1s;
 	}
-	.format-opt input { display: none; }
-	.format-opt:hover { border-color: var(--text-dim); color: var(--text); }
-	.format-opt.selected { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+	.format-opt input {
+		display: none;
+	}
+	.format-opt:hover {
+		border-color: var(--text-dim);
+		color: var(--text);
+	}
+	.format-opt.selected {
+		border-color: #2563eb;
+		color: #2563eb;
+		background: #eff6ff;
+	}
 
 	.dialog-footer {
 		display: flex;
@@ -431,7 +443,10 @@
 		color: var(--text-muted);
 		cursor: pointer;
 	}
-	.cancel-btn:hover { border-color: var(--text-dim); color: var(--text); }
+	.cancel-btn:hover {
+		border-color: var(--text-dim);
+		color: var(--text);
+	}
 
 	.export-btn {
 		padding: 6px 16px;
@@ -443,6 +458,12 @@
 		cursor: pointer;
 		font-weight: 500;
 	}
-	.export-btn:hover:not(:disabled) { background: #1d4ed8; border-color: #1d4ed8; }
-	.export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+	.export-btn:hover:not(:disabled) {
+		background: #1d4ed8;
+		border-color: #1d4ed8;
+	}
+	.export-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
 </style>

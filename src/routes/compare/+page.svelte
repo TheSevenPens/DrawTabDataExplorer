@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { brandName, getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
-	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import ValueHistogram, {
+		type HistogramRange,
+		type HistogramMarker,
+	} from '$lib/components/ValueHistogram.svelte';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue } from '$data/lib/units.js';
@@ -10,7 +13,16 @@
 	import TabletPicker from '$lib/components/TabletPicker.svelte';
 	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
-	import { penTabletRangesCm, penTabletRangesIn, displayRangesCm, displayRangesIn, mixedRangesCm, mixedRangesIn, MM_TO_IN, MM_TO_CM } from '$lib/tablet-size-ranges.js';
+	import {
+		penTabletRangesCm,
+		penTabletRangesIn,
+		displayRangesCm,
+		displayRangesIn,
+		mixedRangesCm,
+		mixedRangesIn,
+		MM_TO_IN,
+		MM_TO_CM,
+	} from '$lib/tablet-size-ranges.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 
@@ -24,10 +36,12 @@
 	let penNameMap = $derived(buildPenNameMap(allPens));
 
 	let flaggedItems = $derived(
-		$flaggedTablets.map(id => allTablets.find(t => t.Meta.EntityId === id)).filter((t): t is Tablet => !!t)
+		$flaggedTablets
+			.map((id) => allTablets.find((t) => t.Meta.EntityId === id))
+			.filter((t): t is Tablet => !!t),
 	);
 
-	function getDisplayVal(f: typeof TABLET_FIELDS[0], tablet: Tablet): string {
+	function getDisplayVal(f: (typeof TABLET_FIELDS)[0], tablet: Tablet): string {
 		if (f.key === 'ModelIncludedPen') {
 			return formatPenIds(tablet.Model.IncludedPen ?? [], penNameMap);
 		}
@@ -40,14 +54,17 @@
 	// Group fields and filter out those with no data across all flagged tablets
 	let comparisonGroups = $derived.by(() => {
 		if (flaggedItems.length === 0) return [];
-		const groups: { group: string; fields: { label: string; values: string[]; differs: boolean }[] }[] = [];
+		const groups: {
+			group: string;
+			fields: { label: string; values: string[]; differs: boolean }[];
+		}[] = [];
 		for (const groupName of TABLET_FIELD_GROUPS) {
-			const groupFields = TABLET_FIELDS.filter(f => f.group === groupName);
+			const groupFields = TABLET_FIELDS.filter((f) => f.group === groupName);
 			const rows: { label: string; values: string[]; differs: boolean }[] = [];
 			for (const f of groupFields) {
-				const values = flaggedItems.map(t => getDisplayVal(f, t));
-				if (values.every(v => v === '')) continue;
-				const unique = new Set(values.filter(v => v !== ''));
+				const values = flaggedItems.map((t) => getDisplayVal(f, t));
+				if (values.every((v) => v === '')) continue;
+				const unique = new Set(values.filter((v) => v !== ''));
 				rows.push({
 					label: stripUnit(f.label, f.unit),
 					values,
@@ -66,20 +83,28 @@
 	let compareYearsPD = $state<number | null>(15);
 	let compareYearsMixed = $state<number | null>(15);
 
-	let hasFlaggedPenTablets  = $derived(flaggedItems.some(t => t.Model.Type === 'PENTABLET'));
-	let hasFlaggedPenDisplays = $derived(flaggedItems.some(t => t.Model.Type !== 'PENTABLET'));
+	let hasFlaggedPenTablets = $derived(flaggedItems.some((t) => t.Model.Type === 'PENTABLET'));
+	let hasFlaggedPenDisplays = $derived(flaggedItems.some((t) => t.Model.Type !== 'PENTABLET'));
 	let hasMixedTypes = $derived(hasFlaggedPenTablets && hasFlaggedPenDisplays);
 
 	let dimCompItems = $derived(
 		flaggedItems
-			.filter(t => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null)
-			.map(t => ({ dims: t.Digitizer!.Dimensions!, label: `${brandName(t.Model.Brand)} ${t.Model.Name}` }))
+			.filter(
+				(t) => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null,
+			)
+			.map((t) => ({
+				dims: t.Digitizer!.Dimensions!,
+				label: `${brandName(t.Model.Brand)} ${t.Model.Name}`,
+			})),
 	);
 	let stackedDims = $state(true);
 
-	function histValues(typeFilter: 'PENTABLET' | 'PENDISPLAY' | 'ALL', compareYears: number | null): number[] {
+	function histValues(
+		typeFilter: 'PENTABLET' | 'PENDISPLAY' | 'ALL',
+		compareYears: number | null,
+	): number[] {
 		return allTablets
-			.filter(t => {
+			.filter((t) => {
 				if (typeFilter === 'PENTABLET' && t.Model.Type !== 'PENTABLET') return false;
 				if (typeFilter === 'PENDISPLAY' && t.Model.Type === 'PENTABLET') return false;
 				if (compareYears !== null) {
@@ -88,22 +113,25 @@
 				}
 				return true;
 			})
-			.map(t => { const d = getDiagonal(t.Digitizer?.Dimensions); return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null; })
+			.map((t) => {
+				const d = getDiagonal(t.Digitizer?.Dimensions);
+				return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
+			})
 			.filter((d): d is number => d !== null);
 	}
 
-	let ptHistValues    = $derived(histValues('PENTABLET', compareYearsPT));
-	let pdHistValues    = $derived(histValues('PENDISPLAY', compareYearsPD));
+	let ptHistValues = $derived(histValues('PENTABLET', compareYearsPT));
+	let pdHistValues = $derived(histValues('PENDISPLAY', compareYearsPD));
 	let mixedHistValues = $derived(histValues('ALL', compareYearsMixed));
 
 	function flaggedMarkers(typeFilter: 'PENTABLET' | 'PENDISPLAY' | 'ALL'): HistogramMarker[] {
 		return flaggedItems
-			.filter(t => {
+			.filter((t) => {
 				if (typeFilter === 'PENTABLET') return t.Model.Type === 'PENTABLET';
 				if (typeFilter === 'PENDISPLAY') return t.Model.Type !== 'PENTABLET';
 				return true;
 			})
-			.map(t => {
+			.map((t) => {
 				const d = getDiagonal(t.Digitizer?.Dimensions);
 				if (!d) return null;
 				return { value: isMetric ? d * MM_TO_CM : d * MM_TO_IN, label: t.Model.Name };
@@ -111,22 +139,25 @@
 			.filter((m): m is HistogramMarker => m !== null);
 	}
 
-	let ptMarkers    = $derived(flaggedMarkers('PENTABLET'));
-	let pdMarkers    = $derived(flaggedMarkers('PENDISPLAY'));
+	let ptMarkers = $derived(flaggedMarkers('PENTABLET'));
+	let pdMarkers = $derived(flaggedMarkers('PENDISPLAY'));
 	let mixedMarkers = $derived(flaggedMarkers('ALL'));
 
 	let copyFlaggedStatus = $state('');
 	function copyFlaggedList() {
 		const text = flaggedItems
-			.map(t => `${brandName(t.Model.Brand)} ${t.Model.Name} (${t.Model.Id})`)
+			.map((t) => `${brandName(t.Model.Brand)} ${t.Model.Name} (${t.Model.Id})`)
 			.join('\n');
-		navigator.clipboard.writeText(text).then(() => {
-			copyFlaggedStatus = 'Copied!';
-			setTimeout(() => (copyFlaggedStatus = ''), 2000);
-		}).catch(() => {
-			copyFlaggedStatus = 'Failed';
-			setTimeout(() => (copyFlaggedStatus = ''), 2000);
-		});
+		navigator.clipboard
+			.writeText(text)
+			.then(() => {
+				copyFlaggedStatus = 'Copied!';
+				setTimeout(() => (copyFlaggedStatus = ''), 2000);
+			})
+			.catch(() => {
+				copyFlaggedStatus = 'Failed';
+				setTimeout(() => (copyFlaggedStatus = ''), 2000);
+			});
 	}
 
 	// Build a flat headers + rows pair for the comparison table, suitable
@@ -152,20 +183,19 @@
 		}
 		return out;
 	});
-
 </script>
 
 <Nav />
 <h1>Compare Tablets</h1>
 
 <div class="tabs">
-	<button class:active={activeTab === 'flagged'} onclick={() => activeTab = 'flagged'}>
+	<button class:active={activeTab === 'flagged'} onclick={() => (activeTab = 'flagged')}>
 		Flagged ({$flaggedTablets.length})
 	</button>
-	<button class:active={activeTab === 'compare'} onclick={() => activeTab = 'compare'}>
+	<button class:active={activeTab === 'compare'} onclick={() => (activeTab = 'compare')}>
 		Compare
 	</button>
-	<button class:active={activeTab === 'sizes'} onclick={() => activeTab = 'sizes'}>
+	<button class:active={activeTab === 'sizes'} onclick={() => (activeTab = 'sizes')}>
 		Compare sizes
 	</button>
 </div>
@@ -177,7 +207,8 @@
 			onclick={() => (showPicker = true)}
 			disabled={$flaggedTablets.length >= 6}
 			title={$flaggedTablets.length >= 6 ? 'All 6 slots are used' : 'Add a tablet to compare'}
-		>+ Add tablet</button>
+			>+ Add tablet</button
+		>
 		{#if flaggedItems.length > 0}
 			<button class="copy-btn" onclick={copyFlaggedList}>{copyFlaggedStatus || 'Copy list'}</button>
 		{/if}
@@ -187,20 +218,34 @@
 		<ul class="flagged-list">
 			{#each flaggedItems as t}
 				<li>
-					<button class="unflag-btn" onclick={() => toggleFlag(t.Meta.EntityId)} title="Unflag">&#x2691;</button>
-					<a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a>
+					<button class="unflag-btn" onclick={() => toggleFlag(t.Meta.EntityId)} title="Unflag"
+						>&#x2691;</button
+					>
+					<a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
+						>{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a
+					>
 				</li>
 			{/each}
 		</ul>
 	{:else}
-		<p class="no-data">No tablets added yet. Use the button above, or flag tablets from the <a href="{base}/">tablets list</a> or individual tablet pages.</p>
+		<p class="no-data">
+			No tablets added yet. Use the button above, or flag tablets from the <a href="{base}/"
+				>tablets list</a
+			> or individual tablet pages.
+		</p>
 	{/if}
 {:else if activeTab === 'compare'}
 	{#if flaggedItems.length < 2}
-		<p class="no-data">Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.</p>
+		<p class="no-data">
+			Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.
+		</p>
 	{:else}
 		<div class="compare-toolbar">
-			<button class="copy-btn" onclick={() => (showExport = true)} disabled={compareExportRows.length === 0}>Export</button>
+			<button
+				class="copy-btn"
+				onclick={() => (showExport = true)}
+				disabled={compareExportRows.length === 0}>Export</button
+			>
 		</div>
 		<div class="compare-wrap">
 			<table id="compare-table" class="compare-table">
@@ -208,7 +253,11 @@
 					<tr>
 						<th class="spec-col">Spec</th>
 						{#each flaggedItems as t}
-							<th><a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{brandName(t.Model.Brand)} {t.Model.Name}</a></th>
+							<th
+								><a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
+									>{brandName(t.Model.Brand)} {t.Model.Name}</a
+								></th
+							>
 						{/each}
 					</tr>
 				</thead>
@@ -232,13 +281,19 @@
 	{/if}
 {:else if activeTab === 'sizes'}
 	{#if flaggedItems.length < 2}
-		<p class="no-data">Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.</p>
+		<p class="no-data">
+			Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.
+		</p>
 	{:else}
 		{#if dimCompItems.length >= 2}
 			<section class="hist-section">
 				<div class="dim-chart-header">
 					<h2>Digitizer Dimensions</h2>
-					<button class="stack-toggle" class:active={stackedDims} onclick={() => stackedDims = !stackedDims}>
+					<button
+						class="stack-toggle"
+						class:active={stackedDims}
+						onclick={() => (stackedDims = !stackedDims)}
+					>
 						{stackedDims ? 'Side by side' : 'Stacked'}
 					</button>
 				</div>
@@ -300,11 +355,7 @@
 {/if}
 
 {#if showPicker && allTablets.length > 0}
-	<TabletPicker
-		{allTablets}
-		flaggedIds={$flaggedTablets}
-		onclose={() => (showPicker = false)}
-	/>
+	<TabletPicker {allTablets} flaggedIds={$flaggedTablets} onclose={() => (showPicker = false)} />
 {/if}
 
 {#if showExport}
@@ -319,7 +370,9 @@
 {/if}
 
 <style>
-	h1 { margin-bottom: 16px; }
+	h1 {
+		margin-bottom: 16px;
+	}
 
 	.hist-section {
 		margin-top: 24px;
@@ -346,8 +399,16 @@
 		cursor: pointer;
 	}
 
-	.stack-toggle:hover { background: var(--hover-bg); color: var(--text); }
-	.stack-toggle.active { background: #ede9fe; border-color: #7c3aed; color: #6b21a8; font-weight: 600; }
+	.stack-toggle:hover {
+		background: var(--hover-bg);
+		color: var(--text);
+	}
+	.stack-toggle.active {
+		background: #ede9fe;
+		border-color: #7c3aed;
+		color: #6b21a8;
+		font-weight: 600;
+	}
 
 	.hist-section h2 {
 		font-size: 14px;
@@ -434,7 +495,6 @@
 		color: #fff;
 	}
 
-
 	.flagged-list {
 		list-style: none;
 		padding: 0;
@@ -453,7 +513,9 @@
 		text-decoration: none;
 	}
 
-	.flagged-list a:hover { text-decoration: underline; }
+	.flagged-list a:hover {
+		text-decoration: underline;
+	}
 
 	.unflag-btn {
 		background: none;
@@ -465,7 +527,9 @@
 		line-height: 1;
 	}
 
-	.unflag-btn:hover { color: #b45309; }
+	.unflag-btn:hover {
+		color: #b45309;
+	}
 
 	.compare-toolbar {
 		display: flex;
@@ -498,7 +562,8 @@
 		min-width: 100%;
 	}
 
-	.compare-table th, .compare-table td {
+	.compare-table th,
+	.compare-table td {
 		padding: 4px 10px;
 		text-align: left;
 		border-bottom: 1px solid var(--border);
@@ -518,7 +583,9 @@
 		text-decoration: none;
 	}
 
-	.compare-table th a:hover { text-decoration: underline; }
+	.compare-table th a:hover {
+		text-decoration: underline;
+	}
 
 	.spec-col {
 		min-width: 150px;

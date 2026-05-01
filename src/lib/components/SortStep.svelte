@@ -1,7 +1,12 @@
 <script lang="ts">
 	import type { FieldDef, SortStep, AnyFieldDef } from '$data/lib/pipeline/index.js';
 
-	let { step = $bindable(), fields, onchange, onremove }: {
+	let {
+		step = $bindable(),
+		fields,
+		onchange,
+		onremove,
+	}: {
 		step: SortStep;
 		fields: AnyFieldDef[];
 		onchange: () => void;
@@ -12,13 +17,25 @@
 <div class="step">
 	<div class="step-type">sort by</div>
 	<div class="step-controls">
-		<select value={step.field} onchange={(e) => { step.field = (e.target as HTMLSelectElement).value; onchange(); }}>
+		<select
+			value={step.field}
+			onchange={(e) => {
+				step.field = (e.target as HTMLSelectElement).value;
+				onchange();
+			}}
+		>
 			{#each fields as f}
 				<option value={f.key} selected={f.key === step.field}>{f.label}</option>
 			{/each}
 		</select>
 
-		<select value={step.direction} onchange={(e) => { step.direction = (e.target as HTMLSelectElement).value as 'asc' | 'desc'; onchange(); }}>
+		<select
+			value={step.direction}
+			onchange={(e) => {
+				step.direction = (e.target as HTMLSelectElement).value as 'asc' | 'desc';
+				onchange();
+			}}
+		>
 			<option value="asc" selected={step.direction === 'asc'}>ascending</option>
 			<option value="desc" selected={step.direction === 'desc'}>descending</option>
 		</select>

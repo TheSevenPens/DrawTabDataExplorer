@@ -35,8 +35,20 @@ jobs:
         # static/<entity> to data-repo/data/<entity>. adapter-static
         # follows symlinks at build time and writes real files to build/.
 
+      - name: Lint
+        run: npm run lint
+
       - name: Type-check
         run: npx svelte-kit sync && npm run check
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: npm run test:e2e
 
       - name: Build
         run: npm run build

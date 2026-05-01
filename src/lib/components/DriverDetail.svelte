@@ -1,6 +1,10 @@
 <script lang="ts">
 	import Nav from '$lib/components/Nav.svelte';
-	import { type Driver, DRIVER_FIELDS, DRIVER_FIELD_GROUPS } from '$data/lib/entities/driver-fields.js';
+	import {
+		type Driver,
+		DRIVER_FIELDS,
+		DRIVER_FIELD_GROUPS,
+	} from '$data/lib/entities/driver-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 
 	let { data } = $props();

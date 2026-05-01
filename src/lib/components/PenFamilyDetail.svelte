@@ -3,7 +3,11 @@
 	import { brandName } from '$data/lib/drawtab-loader.js';
 	import type { Pen } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
-	import { type PenFamily, PEN_FAMILY_FIELDS, PEN_FAMILY_FIELD_GROUPS } from '$data/lib/entities/pen-family-fields.js';
+	import {
+		type PenFamily,
+		PEN_FAMILY_FIELDS,
+		PEN_FAMILY_FIELD_GROUPS,
+	} from '$data/lib/entities/pen-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 
 	let { data } = $props();
@@ -28,7 +32,8 @@
 					<tr>
 						<td>
 							<a href="{base}/entity/{encodeURIComponent(p.EntityId)}">
-								{brandName(p.Brand)} {p.PenName}
+								{brandName(p.Brand)}
+								{p.PenName}
 								{#if p.PenName !== p.PenId}<span class="dim">({p.PenId})</span>{/if}
 							</a>
 						</td>
@@ -43,13 +48,41 @@
 </section>
 
 <style>
-	.members { margin-top: 24px; }
-	.members h2 { font-size: 16px; margin-bottom: 8px; }
-	.pen-table { border-collapse: collapse; font-size: 13px; width: 100%; }
-	.pen-table th { text-align: left; padding: 5px 10px; background: var(--th-bg); color: var(--th-text); border-bottom: 1px solid var(--border); }
-	.pen-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); }
-	.pen-table tr:hover td { background: var(--hover-bg); }
-	.pen-table a { color: var(--link); text-decoration: none; }
-	.pen-table a:hover { text-decoration: underline; }
-	.year { color: var(--text-muted); width: 60px; }
+	.members {
+		margin-top: 24px;
+	}
+	.members h2 {
+		font-size: 16px;
+		margin-bottom: 8px;
+	}
+	.pen-table {
+		border-collapse: collapse;
+		font-size: 13px;
+		width: 100%;
+	}
+	.pen-table th {
+		text-align: left;
+		padding: 5px 10px;
+		background: var(--th-bg);
+		color: var(--th-text);
+		border-bottom: 1px solid var(--border);
+	}
+	.pen-table td {
+		padding: 5px 10px;
+		border-bottom: 1px solid var(--border);
+	}
+	.pen-table tr:hover td {
+		background: var(--hover-bg);
+	}
+	.pen-table a {
+		color: var(--link);
+		text-decoration: none;
+	}
+	.pen-table a:hover {
+		text-decoration: underline;
+	}
+	.year {
+		color: var(--text-muted);
+		width: 60px;
+	}
 </style>

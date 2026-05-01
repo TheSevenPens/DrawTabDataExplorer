@@ -4,7 +4,11 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
-	let { item, fields, fieldGroups }: {
+	let {
+		item,
+		fields,
+		fieldGroups,
+	}: {
 		item: Record<string, any> | null;
 		fields: AnyFieldDef[];
 		fieldGroups: string[];
@@ -27,7 +31,9 @@
 				<dl>
 					{#each groupFields as f}
 						{@const val = f.getValue(item)}
-						{@const displayVal = f.getDisplayValue ? f.getDisplayValue(item) : formatValue(val, f.unit, $unitPreference)}
+						{@const displayVal = f.getDisplayValue
+							? f.getDisplayValue(item)
+							: formatValue(val, f.unit, $unitPreference)}
 						{@const href = f.getHref ? f.getHref(item) : null}
 						{#if val}
 							<div class="field-row">
@@ -98,7 +104,9 @@
 		text-decoration: none;
 	}
 
-	dd a:hover { text-decoration: underline; }
+	dd a:hover {
+		text-decoration: underline;
+	}
 
 	.computed-badge {
 		display: inline-block;

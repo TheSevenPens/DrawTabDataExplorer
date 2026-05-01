@@ -2,7 +2,14 @@
 	import type { Dimensions, ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 
-	let { dims, items, isoSizes = [], showISO = true, stacked = false, title = 'tablet-dimensions' }: {
+	let {
+		dims,
+		items,
+		isoSizes = [],
+		showISO = true,
+		stacked = false,
+		title = 'tablet-dimensions',
+	}: {
 		dims?: Dimensions;
 		items?: Array<{ dims: Dimensions; label: string }>;
 		isoSizes?: ISOPaperSize[];
@@ -13,41 +20,44 @@
 
 	let svgEl: SVGSVGElement | undefined = $state();
 
-	const STACK_FILLS   = ['#dbeafe', '#dcfce7', '#fef9c3', '#fce7f3', '#ede9fe'];
+	const STACK_FILLS = ['#dbeafe', '#dcfce7', '#fef9c3', '#fce7f3', '#ede9fe'];
 	const STACK_STROKES = ['#2563eb', '#16a34a', '#ca8a04', '#db2777', '#7c3aed'];
 
 	const CHART_H = 200;
-	const PAD_TOP = 26;  // room for labels above rects
-	const PAD_BOT = 32;  // room for labels below rects
-	const GAP = 10;      // px gap between rects
+	const PAD_TOP = 26; // room for labels above rects
+	const PAD_BOT = 32; // room for labels below rects
+	const GAP = 10; // px gap between rects
 
 	interface ChartItem {
 		label: string;
 		dimsLabel: string;
-		wMm: number;  // landscape orientation
+		wMm: number; // landscape orientation
 		hMm: number;
 		isTablet: boolean;
 	}
 
 	interface ChartRect {
-		x: number; sw: number; sh: number;
-		isTablet: boolean; label: string; dimsLabel: string;
+		x: number;
+		sw: number;
+		sh: number;
+		isTablet: boolean;
+		label: string;
+		dimsLabel: string;
 		colorIdx?: number;
 	}
 
 	// Normalize to array — either explicit items or the single dims prop
 	let tabletItems = $derived.by((): Array<{ dims: Dimensions; label: string }> => {
 		if (items && items.length > 0)
-			return items.filter(i => i.dims.Width != null && i.dims.Height != null);
-		if (dims && dims.Width != null && dims.Height != null)
-			return [{ dims, label: 'Active Area' }];
+			return items.filter((i) => i.dims.Width != null && i.dims.Height != null);
+		if (dims && dims.Width != null && dims.Height != null) return [{ dims, label: 'Active Area' }];
 		return [];
 	});
 
 	let aSeries = $derived(
 		isoSizes
-			.filter(p => p.Series === 'A')
-			.sort((a, b) => (b.Width_mm * b.Height_mm) - (a.Width_mm * a.Height_mm))
+			.filter((p) => p.Series === 'A')
+			.sort((a, b) => b.Width_mm * b.Height_mm - a.Width_mm * a.Height_mm),
 	);
 
 	// Use the largest tablet as the reference for selecting the ISO range
@@ -62,12 +72,22 @@
 
 	// Find closest A size index by area
 	let closestISOIdx = $derived.by(() => {
-		if (!referenceDims || referenceDims.Width == null || referenceDims.Height == null || aSeries.length === 0) return -1;
+		if (
+			!referenceDims ||
+			referenceDims.Width == null ||
+			referenceDims.Height == null ||
+			aSeries.length === 0
+		)
+			return -1;
 		const refArea = referenceDims.Width * referenceDims.Height;
-		let best = 0, bestDist = Infinity;
+		let best = 0,
+			bestDist = Infinity;
 		aSeries.forEach((p, i) => {
 			const d = Math.abs(p.Width_mm * p.Height_mm - refArea);
-			if (d < bestDist) { bestDist = d; best = i; }
+			if (d < bestDist) {
+				bestDist = d;
+				best = i;
+			}
 		});
 		return best;
 	});
@@ -82,7 +102,7 @@
 
 	let chartItems = $derived.by((): ChartItem[] => {
 		if (tabletItems.length === 0) return [];
-		const isoItems: ChartItem[] = (showISO ? isoSlice : []).map(p => ({
+		const isoItems: ChartItem[] = (showISO ? isoSlice : []).map((p) => ({
 			label: p.Name,
 			dimsLabel: `${p.Width_mm}×${p.Height_mm}`,
 			wMm: Math.max(p.Width_mm, p.Height_mm),
@@ -100,34 +120,49 @@
 				isTablet: true,
 			};
 		});
-		return [...isoItems, ...tabItems].sort((a, b) => (b.wMm * b.hMm) - (a.wMm * a.hMm));
+		return [...isoItems, ...tabItems].sort((a, b) => b.wMm * b.hMm - a.wMm * a.hMm);
 	});
 
 	let layout = $derived.by((): { rects: ChartRect[]; svgW: number } | null => {
 		if (chartItems.length === 0) return null;
-		const maxH = Math.max(...chartItems.map(it => it.hMm));
+		const maxH = Math.max(...chartItems.map((it) => it.hMm));
 		const scale = CHART_H / maxH;
 
 		if (stacked) {
 			// Sort largest-first so smallest renders on top
-			const sorted = [...chartItems].sort((a, b) => (b.wMm * b.hMm) - (a.wMm * a.hMm));
-			const maxW = Math.max(...sorted.map(it => it.wMm));
+			const sorted = [...chartItems].sort((a, b) => b.wMm * b.hMm - a.wMm * a.hMm);
+			const maxW = Math.max(...sorted.map((it) => it.wMm));
 			const svgW = Math.round(maxW * scale);
 			const centerX = svgW / 2;
 			const rects: ChartRect[] = sorted.map((it, i) => {
 				const sw = Math.round(it.wMm * scale);
 				const sh = Math.round(it.hMm * scale);
 				const x = centerX - sw / 2;
-				return { x, sw, sh, isTablet: it.isTablet, label: it.label, dimsLabel: it.dimsLabel, colorIdx: i };
+				return {
+					x,
+					sw,
+					sh,
+					isTablet: it.isTablet,
+					label: it.label,
+					dimsLabel: it.dimsLabel,
+					colorIdx: i,
+				};
 			});
 			return { rects, svgW };
 		}
 
 		let x = 0;
-		const rects: ChartRect[] = chartItems.map(it => {
+		const rects: ChartRect[] = chartItems.map((it) => {
 			const sw = Math.round(it.wMm * scale);
 			const sh = Math.round(it.hMm * scale);
-			const r: ChartRect = { x, sw, sh, isTablet: it.isTablet, label: it.label, dimsLabel: it.dimsLabel };
+			const r: ChartRect = {
+				x,
+				sw,
+				sh,
+				isTablet: it.isTablet,
+				label: it.label,
+				dimsLabel: it.dimsLabel,
+			};
 			x += sw + GAP;
 			return r;
 		});
@@ -168,8 +203,8 @@
 							font-size="11"
 							font-weight="700"
 							fill={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}
-							font-family="inherit"
-						>{r.label}</text>
+							font-family="inherit">{r.label}</text
+						>
 					{:else}
 						<rect
 							x={r.x}
@@ -182,14 +217,11 @@
 							x={r.x + r.sw / 2}
 							y={CHART_H - r.sh - 6}
 							text-anchor="middle"
-							class={r.isTablet ? 'lbl-tablet' : 'lbl-iso'}
-						>{r.label}</text>
-						<text
-							x={r.x + r.sw / 2}
-							y={CHART_H + 14}
-							text-anchor="middle"
-							class="lbl-dims"
-						>{r.dimsLabel}</text>
+							class={r.isTablet ? 'lbl-tablet' : 'lbl-iso'}>{r.label}</text
+						>
+						<text x={r.x + r.sw / 2} y={CHART_H + 14} text-anchor="middle" class="lbl-dims"
+							>{r.dimsLabel}</text
+						>
 					{/if}
 				{/each}
 				<line x1="0" y1={CHART_H} x2={layout.svgW} y2={CHART_H} class="baseline" />
@@ -201,7 +233,12 @@
 			{#each layout.rects as r}
 				{#if r.colorIdx != null}
 					<div class="legend-item">
-						<span class="legend-swatch" style="background:{STACK_FILLS[r.colorIdx % STACK_FILLS.length]};border-color:{STACK_STROKES[r.colorIdx % STACK_STROKES.length]}"></span>
+						<span
+							class="legend-swatch"
+							style="background:{STACK_FILLS[
+								r.colorIdx % STACK_FILLS.length
+							]};border-color:{STACK_STROKES[r.colorIdx % STACK_STROKES.length]}"
+						></span>
 						<span class="legend-label">{r.label}</span>
 						<span class="legend-dims">{r.dimsLabel} mm</span>
 					</div>

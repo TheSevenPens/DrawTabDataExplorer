@@ -16,9 +16,7 @@
 	let filterBrand = $state('');
 	let filterType = $state('');
 
-	let brands = $derived(
-		[...new Set(allTablets.map((t) => t.Model.Brand))].sort()
-	);
+	let brands = $derived([...new Set(allTablets.map((t) => t.Model.Brand))].sort());
 
 	let filteredTablets = $derived.by(() => {
 		const q = searchText.trim().toLowerCase();
@@ -27,7 +25,8 @@
 			if (filterType && t.Model.Type !== filterType) return false;
 			if (q) {
 				const altNames = (t.Model.AlternateNames ?? []).join(' ');
-				const hay = `${brandName(t.Model.Brand)} ${t.Model.Name} ${t.Model.Id} ${altNames}`.toLowerCase();
+				const hay =
+					`${brandName(t.Model.Brand)} ${t.Model.Name} ${t.Model.Id} ${altNames}`.toLowerCase();
 				if (!hay.includes(q)) return false;
 			}
 			return true;
@@ -55,11 +54,19 @@
 <svelte:window onkeydown={onKeydown} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="backdrop" onclick={onBackdropClick} role="dialog" aria-modal="true" aria-label="Add tablet">
+<div
+	class="backdrop"
+	onclick={onBackdropClick}
+	role="dialog"
+	aria-modal="true"
+	aria-label="Add tablet"
+>
 	<div class="modal">
 		<div class="modal-header">
 			<h2>Add Tablet</h2>
-			<span class="slot-count" class:full={isFull}>{flaggedIds.length}/{MAX_FLAGGED} slots used</span>
+			<span class="slot-count" class:full={isFull}
+				>{flaggedIds.length}/{MAX_FLAGGED} slots used</span
+			>
 			<button class="close-btn" onclick={onclose} aria-label="Close">✕</button>
 		</div>
 
@@ -85,7 +92,9 @@
 			</select>
 		</div>
 
-		<div class="results-count">{filteredTablets.length} tablet{filteredTablets.length === 1 ? '' : 's'}</div>
+		<div class="results-count">
+			{filteredTablets.length} tablet{filteredTablets.length === 1 ? '' : 's'}
+		</div>
 
 		<ul class="tablet-list" role="list">
 			{#each filteredTablets as t (t.Meta.EntityId)}
@@ -96,7 +105,8 @@
 						<span class="tablet-name">{t.Model.Name}</span>
 						<span class="tablet-id">{t.Model.Id}</span>
 					</div>
-					<span class="type-badge type-{t.Model.Type.toLowerCase()}">{typeLabel(t.Model.Type)}</span>
+					<span class="type-badge type-{t.Model.Type.toLowerCase()}">{typeLabel(t.Model.Type)}</span
+					>
 					{#if alreadyAdded}
 						<button class="add-btn is-added" disabled>✓ Added</button>
 					{:else}
@@ -104,8 +114,8 @@
 							class="add-btn"
 							disabled={isFull}
 							onclick={() => toggleFlag(t.Meta.EntityId)}
-							title={isFull ? 'Maximum 6 tablets reached' : `Add ${t.Model.Name}`}
-						>+ Add</button>
+							title={isFull ? 'Maximum 6 tablets reached' : `Add ${t.Model.Name}`}>+ Add</button
+						>
 					{/if}
 				</li>
 			{/each}
@@ -295,9 +305,18 @@
 		flex-shrink: 0;
 	}
 
-	.type-pentablet  { background: #dbeafe; color: #1d4ed8; }
-	.type-pendisplay { background: #ede9fe; color: #6d28d9; }
-	.type-standalone { background: #d1fae5; color: #065f46; }
+	.type-pentablet {
+		background: #dbeafe;
+		color: #1d4ed8;
+	}
+	.type-pendisplay {
+		background: #ede9fe;
+		color: #6d28d9;
+	}
+	.type-standalone {
+		background: #d1fae5;
+		color: #065f46;
+	}
 
 	.add-btn {
 		flex-shrink: 0;

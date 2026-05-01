@@ -1,7 +1,14 @@
 <script lang="ts">
 	import type { FieldDef, SelectStep, AnyFieldDef } from '$data/lib/pipeline/index.js';
 
-	let { step = $bindable(), fields, fieldGroups, onchange, onremove, removable = true }: {
+	let {
+		step = $bindable(),
+		fields,
+		fieldGroups,
+		onchange,
+		onremove,
+		removable = true,
+	}: {
 		step: SelectStep;
 		fields: AnyFieldDef[];
 		fieldGroups: string[];
@@ -48,7 +55,8 @@
 	<div class="step-type">columns</div>
 	<div class="step-controls">
 		{#if collapsed}
-			<span class="collapsed-summary">{step.fields.length} of {fields.length} columns selected</span>
+			<span class="collapsed-summary">{step.fields.length} of {fields.length} columns selected</span
+			>
 		{:else}
 			<div class="columns-groups">
 				{#each fieldGroups as group}
@@ -59,7 +67,7 @@
 							<input
 								type="checkbox"
 								{checked}
-								indeterminate={indeterminate}
+								{indeterminate}
 								onchange={(e) => toggleGroup(group, (e.target as HTMLInputElement).checked)}
 							/>
 							<strong>{group}</strong>
@@ -82,7 +90,9 @@
 		{/if}
 	</div>
 	<div class="step-actions">
-		<button class="step-collapse" onclick={() => collapsed = !collapsed}>{collapsed ? '▼' : '▲'}</button>
+		<button class="step-collapse" onclick={() => (collapsed = !collapsed)}
+			>{collapsed ? '▼' : '▲'}</button
+		>
 		{#if removable}
 			<button class="step-remove" onclick={onremove}>&times;</button>
 		{/if}
@@ -126,8 +136,8 @@
 		cursor: pointer;
 	}
 
-	:global(.group-fields input[type="checkbox"]),
-	:global(.group-header input[type="checkbox"]) {
+	:global(.group-fields input[type='checkbox']),
+	:global(.group-header input[type='checkbox']) {
 		margin: 0 2px 0 0 !important;
 		width: 14px;
 		height: 14px;
@@ -155,5 +165,7 @@
 		line-height: 1;
 	}
 
-	.step-collapse:hover { color: #2563eb; }
+	.step-collapse:hover {
+		color: #2563eb;
+	}
 </style>

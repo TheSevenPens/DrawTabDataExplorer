@@ -13,4 +13,6 @@ static/inventory
 static/brands
 static/reference
 static/version.json
-.claude/settings.local.json
+.claude/
+playwright-report/
+test-results/

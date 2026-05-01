@@ -35,13 +35,19 @@
 		let usedH: number;
 		let strip: 'horizontal' | 'vertical' | 'none';
 		if (Math.abs(r_t - r) < EPS) {
-			usedW = width; usedH = height; strip = 'none';
+			usedW = width;
+			usedH = height;
+			strip = 'none';
 		} else if (r_t < r) {
 			// tablet narrower than target → fit width, lose height (strip at bottom)
-			usedW = width; usedH = width / r; strip = 'horizontal';
+			usedW = width;
+			usedH = width / r;
+			strip = 'horizontal';
 		} else {
 			// tablet wider than target → fit height, lose width (strip at right)
-			usedW = height * r; usedH = height; strip = 'vertical';
+			usedW = height * r;
+			usedH = height;
+			strip = 'vertical';
 		}
 
 		const usedFraction = (usedW * usedH) / (width * height);
@@ -128,10 +134,10 @@
 {:else}
 	<div class="intro">
 		<p>
-			"Force Proportions" is a driver setting that scales the X and Y axes by the same
-			factor so a circle drawn on the tablet renders as a circle on screen. To do that,
-			the driver must crop the tablet's active area to match the display's aspect ratio.
-			Below, we show the loss against the two most common monitor ratios.
+			"Force Proportions" is a driver setting that scales the X and Y axes by the same factor so a
+			circle drawn on the tablet renders as a circle on screen. To do that, the driver must crop the
+			tablet's active area to match the display's aspect ratio. Below, we show the loss against the
+			two most common monitor ratios.
 		</p>
 	</div>
 	{#each calcs as c}
@@ -162,7 +168,11 @@
 						</text>
 					</svg>
 					<div class="caption">
-						<div><span class="lbl">Dimensions:</span> {fmtLen(width)} × {fmtLen(height)} {lenUnit}</div>
+						<div>
+							<span class="lbl">Dimensions:</span>
+							{fmtLen(width)} × {fmtLen(height)}
+							{lenUnit}
+						</div>
 						<div><span class="lbl">Diagonal:</span> {fmtLen(diag(width, height))} {lenUnit}</div>
 						<div><span class="lbl">Area:</span> {fmtArea(width, height)} {areaUnit}</div>
 					</div>
@@ -171,7 +181,12 @@
 				<div class="arrow">
 					<span>Force to</span>
 					<svg width="44" height="14" aria-hidden="true">
-						<path d="M 0 7 L 38 7 M 32 2 L 38 7 L 32 12" stroke="#1a374d" stroke-width="2" fill="none" />
+						<path
+							d="M 0 7 L 38 7 M 32 2 L 38 7 L 32 12"
+							stroke="#1a374d"
+							stroke-width="2"
+							fill="none"
+						/>
 					</svg>
 				</div>
 
@@ -203,7 +218,12 @@
 
 				<div class="arrow">
 					<svg width="44" height="14" aria-hidden="true">
-						<path d="M 0 7 L 38 7 M 32 2 L 38 7 L 32 12" stroke="#1a374d" stroke-width="2" fill="none" />
+						<path
+							d="M 0 7 L 38 7 M 32 2 L 38 7 L 32 12"
+							stroke="#1a374d"
+							stroke-width="2"
+							fill="none"
+						/>
 					</svg>
 				</div>
 
@@ -277,12 +297,24 @@
 						<div><span class="swatch lost"></span> LOST: {fmtPct(c.lostFraction)}%</div>
 					</div>
 					<div class="caption">
-						<div><span class="lbl">Dimensions:</span> {fmtLen(c.usedW)} × {fmtLen(c.usedH)} {lenUnit}</div>
 						<div>
-							<span class="lbl">Diagonal:</span> {fmtLen(diag(c.usedW, c.usedH))} {lenUnit}{#if c.strip !== 'none'}{' '}<span class="delta">({fmtLen(diag(c.usedW, c.usedH) - diag(width, height))} {lenUnit})</span>{/if}
+							<span class="lbl">Dimensions:</span>
+							{fmtLen(c.usedW)} × {fmtLen(c.usedH)}
+							{lenUnit}
 						</div>
 						<div>
-							<span class="lbl">Area:</span> {fmtArea(c.usedW, c.usedH)} {areaUnit}{#if c.strip !== 'none'}{' '}<span class="delta">({fmtAreaDelta(c.usedW * c.usedH - width * height)} {areaUnit})</span>{/if}
+							<span class="lbl">Diagonal:</span>
+							{fmtLen(diag(c.usedW, c.usedH))}
+							{lenUnit}{#if c.strip !== 'none'}{' '}<span class="delta"
+									>({fmtLen(diag(c.usedW, c.usedH) - diag(width, height))} {lenUnit})</span
+								>{/if}
+						</div>
+						<div>
+							<span class="lbl">Area:</span>
+							{fmtArea(c.usedW, c.usedH)}
+							{areaUnit}{#if c.strip !== 'none'}{' '}<span class="delta"
+									>({fmtAreaDelta(c.usedW * c.usedH - width * height)} {areaUnit})</span
+								>{/if}
 						</div>
 					</div>
 				</div>
@@ -364,8 +396,12 @@
 		vertical-align: middle;
 		border: 1px solid #1a374d;
 	}
-	.swatch.used { background: #5bc0eb; }
-	.swatch.lost { background: #bfe5f5; }
+	.swatch.used {
+		background: #5bc0eb;
+	}
+	.swatch.lost {
+		background: #bfe5f5;
+	}
 	.no-data {
 		font-size: 13px;
 		color: var(--text-dim);

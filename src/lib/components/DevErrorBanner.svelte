@@ -15,7 +15,7 @@
 	}
 
 	function dismiss(id: number) {
-		errors = errors.filter(e => e.id !== id);
+		errors = errors.filter((e) => e.id !== id);
 	}
 
 	function dismissAll() {
@@ -24,17 +24,15 @@
 
 	onMount(() => {
 		function onError(event: ErrorEvent) {
-			const source = [event.filename, event.lineno, event.colno]
-				.filter(Boolean).join(':');
+			const source = [event.filename, event.lineno, event.colno].filter(Boolean).join(':');
 			addError(event.message ?? 'Unknown error', source);
 		}
 
 		function onUnhandledRejection(event: PromiseRejectionEvent) {
 			const reason = event.reason;
 			const message = reason instanceof Error ? reason.message : String(reason);
-			const source = reason instanceof Error && reason.stack
-				? reason.stack.split('\n')[1]?.trim() ?? ''
-				: '';
+			const source =
+				reason instanceof Error && reason.stack ? (reason.stack.split('\n')[1]?.trim() ?? '') : '';
 			addError(message, source);
 		}
 
@@ -51,7 +49,8 @@
 {#if errors.length > 0}
 	<div class="dev-banner" role="alert">
 		<div class="banner-header">
-			<span class="banner-title">⚠ {errors.length} runtime error{errors.length > 1 ? 's' : ''}</span>
+			<span class="banner-title">⚠ {errors.length} runtime error{errors.length > 1 ? 's' : ''}</span
+			>
 			<button class="dismiss-all" onclick={dismissAll}>Dismiss all</button>
 		</div>
 		{#each errors as err (err.id)}
@@ -101,7 +100,7 @@
 
 	.dismiss-all {
 		background: none;
-		border: 1px solid rgba(255,255,255,0.5);
+		border: 1px solid rgba(255, 255, 255, 0.5);
 		border-radius: 3px;
 		color: #fff;
 		font-size: 11px;
@@ -110,7 +109,7 @@
 	}
 
 	.dismiss-all:hover {
-		background: rgba(255,255,255,0.15);
+		background: rgba(255, 255, 255, 0.15);
 	}
 
 	.error-row {

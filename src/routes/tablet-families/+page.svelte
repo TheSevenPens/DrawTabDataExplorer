@@ -2,7 +2,13 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { loadTabletFamiliesFromURL, loadTabletsFromURL } from '$data/lib/drawtab-loader.js';
-	import { type TabletFamily, TABLET_FAMILY_FIELDS, TABLET_FAMILY_FIELD_GROUPS, TABLET_FAMILY_DEFAULT_COLUMNS, TABLET_FAMILY_DEFAULT_VIEW } from '$data/lib/entities/tablet-family-fields.js';
+	import {
+		type TabletFamily,
+		TABLET_FAMILY_FIELDS,
+		TABLET_FAMILY_FIELD_GROUPS,
+		TABLET_FAMILY_DEFAULT_COLUMNS,
+		TABLET_FAMILY_DEFAULT_VIEW,
+	} from '$data/lib/entities/tablet-family-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
@@ -61,5 +67,5 @@
 	detailBasePath="/entity"
 	defaultFilterField="FamilyName"
 	defaultSortField="FamilyName"
-	quickFilterFields={["Brand"]}
+	quickFilterFields={['Brand']}
 />

@@ -24,10 +24,10 @@ similar in its terminal output. Re-run `npm run setup-static` to fix.
 
 ## Key aliases
 
-| Alias   | Resolves to                                              |
-|---------|----------------------------------------------------------|
-| `$data` | `data-repo/` (the submodule root, where TS lib lives)   |
-| `$lib`  | `src/lib/`                                               |
+| Alias   | Resolves to                                           |
+| ------- | ----------------------------------------------------- |
+| `$data` | `data-repo/` (the submodule root, where TS lib lives) |
+| `$lib`  | `src/lib/`                                            |
 
 ## Data loading patterns
 
@@ -137,6 +137,7 @@ What's automated (no manual action needed):
 The main list-page component. Renders a title row, a top-bar, and a results table.
 
 **Top-bar layout** (one flex row):
+
 ```
 [ Search... ] [ QuickFilter ▾ ] ...   [ Filters ] [ Sort ] [ Columns N ] [ Views ]
 └─────────────── SearchBar ──────────┘ └──────────── QueryPipelineBar ────────────┘
@@ -150,6 +151,7 @@ The main list-page component. Renders a title row, a top-bar, and a results tabl
 A thin coordinator component that renders **FilterBar**, **SortBar**, **ColumnBar**, and the Views dropdown side-by-side. It owns only the `openPanel` state (`'filter' | 'sort' | 'columns' | 'views' | null`) and passes `isOpen` + `ontoggle` to each sub-component.
 
 Each sub-component is self-contained:
+
 - **FilterBar** — filter pills, editor row, field picker, context menu, drag-to-remove
 - **SortBar** — sort pills, direction toggle, drag-to-reorder, context menu
 - **ColumnBar** — column pills, drag-to-reorder, context menu
@@ -157,6 +159,7 @@ Each sub-component is self-contained:
 All panels are `position: absolute` dropdowns that open on button click and close on any outside click (`<svelte:window onclick>`). Clicks inside the panel use `stopPropagation` to stay open.
 
 Active state indicators:
+
 - Filters button turns amber + shows count badge when filters are active
 - Sort button turns blue + shows the primary sort field and direction inline
 - Columns button always shows a count badge
@@ -177,6 +180,7 @@ export type AnyFieldDef = FieldDef<any>;
 ```
 
 Import it alongside other pipeline types:
+
 ```ts
 import type { AnyFieldDef } from '$data/lib/pipeline/types.js';
 ```
@@ -186,14 +190,14 @@ import type { AnyFieldDef } from '$data/lib/pipeline/types.js';
 All EntityIds are **lowercase**. The second dot-segment encodes the entity type,
 making EntityIds self-describing.
 
-| Entity         | Format                          | Example                             |
-|----------------|---------------------------------|-------------------------------------|
-| Tablet         | `brand.tablet.modelid`          | `wacom.tablet.ctl4100`              |
-| Pen            | `brand.pen.penid`               | `wacom.pen.kp503e`                  |
-| Driver         | `brand.driver.version_os`       | `wacom.driver.4.78-2_macos`         |
-| Pen Family     | `brand.penfamily.familyid`      | `wacom.penfamily.wacomkpgen3`       |
-| Tablet Family  | `brand.tabletfamily.familyid`   | `wacom.tabletfamily.wacomintuosprogen8` |
-| Brand          | `brand`                         | `wacom`                             |
+| Entity        | Format                        | Example                                 |
+| ------------- | ----------------------------- | --------------------------------------- |
+| Tablet        | `brand.tablet.modelid`        | `wacom.tablet.ctl4100`                  |
+| Pen           | `brand.pen.penid`             | `wacom.pen.kp503e`                      |
+| Driver        | `brand.driver.version_os`     | `wacom.driver.4.78-2_macos`             |
+| Pen Family    | `brand.penfamily.familyid`    | `wacom.penfamily.wacomkpgen3`           |
+| Tablet Family | `brand.tabletfamily.familyid` | `wacom.tabletfamily.wacomintuosprogen8` |
+| Brand         | `brand`                       | `wacom`                                 |
 
 Brand EntityIds have no dots (just the brand name) because the
 `brand.brand.brand` pattern adds no information.

@@ -33,16 +33,26 @@
 	let dragIndex: number | null = $state(null);
 	let droppedInside = false;
 
-	let activeCount = $derived(filters.filter(f => !f.disabled).length);
+	let activeCount = $derived(filters.filter((f) => !f.disabled).length);
 
-	function getLabel(key: string) { return fields.find(f => f.key === key)?.label ?? key; }
+	function getLabel(key: string) {
+		return fields.find((f) => f.key === key)?.label ?? key;
+	}
 
 	function getOpLabel(op: string): string {
 		const labels: Record<string, string> = {
-			'==': '=', '!=': '!=', '>': '>', '>=': '>=', '<': '<', '<=': '<=',
-			'contains': 'contains', 'notcontains': 'does not contain',
-			'startswith': 'starts with', 'notstartswith': 'does not start with',
-			'empty': 'is empty', 'notempty': 'is not empty',
+			'==': '=',
+			'!=': '!=',
+			'>': '>',
+			'>=': '>=',
+			'<': '<',
+			'<=': '<=',
+			contains: 'contains',
+			notcontains: 'does not contain',
+			startswith: 'starts with',
+			notstartswith: 'does not start with',
+			empty: 'is empty',
+			notempty: 'is not empty',
 		};
 		return labels[op] ?? op;
 	}
@@ -55,9 +65,10 @@
 	}
 
 	function addFilter() {
-		const initialField = (defaultFilterField && fields.some(f => f.key === defaultFilterField))
-			? defaultFilterField
-			: (fields[0]?.key ?? '');
+		const initialField =
+			defaultFilterField && fields.some((f) => f.key === defaultFilterField)
+				? defaultFilterField
+				: (fields[0]?.key ?? '');
 		filters.push({ field: initialField, operator: '==', value: '' });
 		editingIndex = filters.length - 1;
 		if (!isOpen) ontoggle();
@@ -73,7 +84,10 @@
 
 	function toggleDisabled(index: number) {
 		const f = filters[index];
-		if (f) { f.disabled = !f.disabled; onchange(); }
+		if (f) {
+			f.disabled = !f.disabled;
+			onchange();
+		}
 		contextMenu = null;
 	}
 
@@ -82,27 +96,36 @@
 		f.field = newField;
 		const fieldDef = getFieldDef(newField, fields);
 		const ops = fieldDef ? getOperatorsForField(fieldDef) : [];
-		if (!ops.some(o => o.value === f.operator)) f.operator = ops[0]?.value ?? '==';
+		if (!ops.some((o) => o.value === f.operator)) f.operator = ops[0]?.value ?? '==';
 		f.value = '';
 		onchange();
 	}
 
-	function onOpChange(index: number, newOp: string) { filters[index]!.operator = newOp; onchange(); }
-	function onValueChange(index: number, v: string) { filters[index]!.value = v; onchange(); }
+	function onOpChange(index: number, newOp: string) {
+		filters[index]!.operator = newOp;
+		onchange();
+	}
+	function onValueChange(index: number, v: string) {
+		filters[index]!.value = v;
+		onchange();
+	}
 
 	function onContextMenu(e: MouseEvent, index: number) {
 		e.preventDefault();
 		contextMenu = { index, x: e.clientX, y: e.clientY };
 	}
 
-	function onDragStart(index: number) { dragIndex = index; droppedInside = false; }
+	function onDragStart(index: number) {
+		dragIndex = index;
+		droppedInside = false;
+	}
 	function onDragEnd() {
 		if (!droppedInside && dragIndex !== null) removeFilter(dragIndex);
 		dragIndex = null;
 	}
 </script>
 
-<svelte:window onclick={() => contextMenu = null} />
+<svelte:window onclick={() => (contextMenu = null)} />
 
 <div class="toolbar-item">
 	<button
@@ -124,12 +147,13 @@
 						class:disabled={filter.disabled}
 						class:dragging={dragIndex === i}
 						draggable="true"
-						onclick={() => editingIndex = editingIndex === i ? null : i}
+						onclick={() => (editingIndex = editingIndex === i ? null : i)}
 						oncontextmenu={(e) => onContextMenu(e, i)}
 						ondragstart={() => onDragStart(i)}
 						ondragend={onDragEnd}
 						title="Click to edit. Right-click for options. Drag out to remove."
-					>{pillText(filter)}</button>
+						>{pillText(filter)}</button
+					>
 				{/each}
 				<button class="add-btn filter-add" onclick={addFilter} title="Add filter">+</button>
 			</div>
@@ -143,7 +167,7 @@
 				{@const needsValue = filter.operator !== 'empty' && filter.operator !== 'notempty'}
 				<div class="editor">
 					<div class="field-select-wrapper">
-						<button class="field-select-btn" onclick={() => showFieldPicker = !showFieldPicker}>
+						<button class="field-select-btn" onclick={() => (showFieldPicker = !showFieldPicker)}>
 							{getLabel(filter.field)} ▾
 						</button>
 						{#if showFieldPicker}
@@ -151,18 +175,29 @@
 								{fields}
 								{fieldGroups}
 								selected={filter.field}
-								onselect={(key) => { onFieldChange(editingIndex!, key); showFieldPicker = false; }}
-								onclose={() => showFieldPicker = false}
+								onselect={(key) => {
+									onFieldChange(editingIndex!, key);
+									showFieldPicker = false;
+								}}
+								onclose={() => (showFieldPicker = false)}
 							/>
 						{/if}
 					</div>
-					<select value={filter.operator} onchange={(e) => onOpChange(editingIndex!, (e.target as HTMLSelectElement).value)}>
+					<select
+						value={filter.operator}
+						onchange={(e) => onOpChange(editingIndex!, (e.target as HTMLSelectElement).value)}
+					>
 						{#each operators as op}
 							<option value={op.value} selected={op.value === filter.operator}>{op.label}</option>
 						{/each}
 					</select>
 					{#if needsValue && fieldDef?.type === 'enum' && fieldDef.enumValues}
-						<select value={filter.value} onchange={(e) => { onValueChange(editingIndex!, (e.target as HTMLSelectElement).value); }}>
+						<select
+							value={filter.value}
+							onchange={(e) => {
+								onValueChange(editingIndex!, (e.target as HTMLSelectElement).value);
+							}}
+						>
 							<option value="">-- select --</option>
 							{#each fieldDef.enumValues as v}
 								<option value={v} selected={v === filter.value}>{v}</option>
@@ -176,7 +211,7 @@
 							oninput={(e) => onValueChange(editingIndex!, (e.target as HTMLInputElement).value)}
 						/>
 					{/if}
-					<button class="done-btn" onclick={() => editingIndex = null}>Done</button>
+					<button class="done-btn" onclick={() => (editingIndex = null)}>Done</button>
 				</div>
 			{/if}
 		</div>
@@ -185,7 +220,13 @@
 
 {#if contextMenu}
 	<div class="context-menu" style="left: {contextMenu.x}px; top: {contextMenu.y}px;">
-		<button onclick={() => { editingIndex = contextMenu!.index; if (!isOpen) ontoggle(); contextMenu = null; }}>Edit</button>
+		<button
+			onclick={() => {
+				editingIndex = contextMenu!.index;
+				if (!isOpen) ontoggle();
+				contextMenu = null;
+			}}>Edit</button
+		>
 		<button onclick={() => toggleDisabled(contextMenu!.index)}>
 			{filters[contextMenu.index]?.disabled ? 'Enable' : 'Disable'}
 		</button>
@@ -195,85 +236,217 @@
 {/if}
 
 <style>
-	.toolbar-item { position: relative; }
+	.toolbar-item {
+		position: relative;
+	}
 
 	.toolbar-btn {
-		display: inline-flex; align-items: center; gap: 5px;
-		padding: 5px 10px; font-size: 13px; min-height: 28px;
-		border: 1px solid var(--border); border-radius: 4px;
-		background: var(--bg-card); color: var(--text-muted);
-		cursor: pointer; white-space: nowrap; line-height: 1;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 5px 10px;
+		font-size: 13px;
+		min-height: 28px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+		white-space: nowrap;
+		line-height: 1;
 	}
-	.toolbar-btn:hover, .toolbar-btn.open { border-color: var(--text-dim); color: var(--text); background: var(--hover-bg); }
-	.filter-btn.has-active { border-color: #d97706; color: #d97706; }
-	.filter-btn.has-active:hover, .filter-btn.has-active.open { background: #fffbeb; }
+	.toolbar-btn:hover,
+	.toolbar-btn.open {
+		border-color: var(--text-dim);
+		color: var(--text);
+		background: var(--hover-bg);
+	}
+	.filter-btn.has-active {
+		border-color: #d97706;
+		color: #d97706;
+	}
+	.filter-btn.has-active:hover,
+	.filter-btn.has-active.open {
+		background: #fffbeb;
+	}
 
 	.badge {
-		display: inline-flex; align-items: center; justify-content: center;
-		min-width: 18px; height: 18px; padding: 0 4px;
-		font-size: 11px; font-weight: 600; border-radius: 9px; line-height: 1;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 4px;
+		font-size: 11px;
+		font-weight: 600;
+		border-radius: 9px;
+		line-height: 1;
 	}
-	.filter-badge { background: #d97706; color: #fff; }
+	.filter-badge {
+		background: #d97706;
+		color: #fff;
+	}
 
 	.panel {
-		position: absolute; top: calc(100% + 4px); left: 0; z-index: 100;
-		background: var(--bg-card); border: 1px solid var(--border-light);
-		border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-		padding: 10px 12px; min-width: 260px;
+		position: absolute;
+		top: calc(100% + 4px);
+		left: 0;
+		z-index: 100;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
+		border-radius: 6px;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+		padding: 10px 12px;
+		min-width: 260px;
 	}
-	.filter-panel { min-width: 520px; }
+	.filter-panel {
+		min-width: 520px;
+	}
 
-	.panel-pills { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-	.empty-hint { font-size: 12px; color: var(--text-muted); margin: 6px 0 0; font-style: italic; }
+	.panel-pills {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-wrap: wrap;
+	}
+	.empty-hint {
+		font-size: 12px;
+		color: var(--text-muted);
+		margin: 6px 0 0;
+		font-style: italic;
+	}
 
 	.pill {
-		display: inline-flex; align-items: center; padding: 3px 10px;
-		font-size: 13px; border-radius: 16px; cursor: pointer; color: var(--text); user-select: none;
+		display: inline-flex;
+		align-items: center;
+		padding: 3px 10px;
+		font-size: 13px;
+		border-radius: 16px;
+		cursor: pointer;
+		color: var(--text);
+		user-select: none;
 	}
-	.pill.dragging { opacity: 0.3; }
-	.filter-pill { background: var(--pill-filter-bg); border: 1px solid var(--pill-filter-border); }
-	.filter-pill:hover { background: var(--pill-filter-hover); border-color: #f59e0b; }
-	.filter-pill.active { border-color: #d97706; box-shadow: 0 0 0 2px rgba(217,119,6,0.2); }
-	.filter-pill.disabled { opacity: 0.45; text-decoration: line-through; }
+	.pill.dragging {
+		opacity: 0.3;
+	}
+	.filter-pill {
+		background: var(--pill-filter-bg);
+		border: 1px solid var(--pill-filter-border);
+	}
+	.filter-pill:hover {
+		background: var(--pill-filter-hover);
+		border-color: #f59e0b;
+	}
+	.filter-pill.active {
+		border-color: #d97706;
+		box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+	}
+	.filter-pill.disabled {
+		opacity: 0.45;
+		text-decoration: line-through;
+	}
 
 	.add-btn {
-		width: 26px; height: 26px; border: 1px dashed var(--border); border-radius: 50%;
-		background: var(--bg-card); cursor: pointer; font-size: 14px;
-		color: var(--text-muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+		width: 26px;
+		height: 26px;
+		border: 1px dashed var(--border);
+		border-radius: 50%;
+		background: var(--bg-card);
+		cursor: pointer;
+		font-size: 14px;
+		color: var(--text-muted);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
 	}
-	.filter-add:hover { border-color: #d97706; color: #d97706; }
+	.filter-add:hover {
+		border-color: #d97706;
+		color: #d97706;
+	}
 
 	.editor {
-		display: flex; align-items: center; gap: 6px; padding: 8px 0 2px;
-		border-top: 1px solid var(--border-light); margin-top: 8px; flex-wrap: wrap;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 0 2px;
+		border-top: 1px solid var(--border-light);
+		margin-top: 8px;
+		flex-wrap: wrap;
 	}
-	.editor select, .editor input {
-		padding: 4px 8px; font-size: 13px; border: 1px solid var(--border);
-		border-radius: 4px; background: var(--bg-card); color: var(--text);
+	.editor select,
+	.editor input {
+		padding: 4px 8px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
-	.editor input { width: 160px; }
-	.field-select-wrapper { position: relative; }
+	.editor input {
+		width: 160px;
+	}
+	.field-select-wrapper {
+		position: relative;
+	}
 	.field-select-btn {
-		padding: 4px 10px; font-size: 13px; border: 1px solid var(--border);
-		border-radius: 4px; background: var(--bg-card); color: var(--text); cursor: pointer;
+		padding: 4px 10px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+		cursor: pointer;
 	}
-	.field-select-btn:hover { border-color: var(--link); }
+	.field-select-btn:hover {
+		border-color: var(--link);
+	}
 	.done-btn {
-		padding: 4px 10px; font-size: 13px; border: 1px solid #d97706;
-		background: var(--bg-card); border-radius: 4px; cursor: pointer; color: #d97706;
+		padding: 4px 10px;
+		font-size: 13px;
+		border: 1px solid #d97706;
+		background: var(--bg-card);
+		border-radius: 4px;
+		cursor: pointer;
+		color: #d97706;
 	}
-	.done-btn:hover { background: #d97706; color: #fff; }
+	.done-btn:hover {
+		background: #d97706;
+		color: #fff;
+	}
 
 	.context-menu {
-		position: fixed; background: var(--bg-card); border: 1px solid var(--border-light);
-		border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 200; min-width: 150px;
+		position: fixed;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
+		border-radius: 6px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		z-index: 200;
+		min-width: 150px;
 	}
 	.context-menu button {
-		display: block; width: 100%; text-align: left; padding: 6px 12px;
-		font-size: 13px; border: none; background: none; cursor: pointer; color: var(--text);
+		display: block;
+		width: 100%;
+		text-align: left;
+		padding: 6px 12px;
+		font-size: 13px;
+		border: none;
+		background: none;
+		cursor: pointer;
+		color: var(--text);
 	}
-	.context-menu button:hover { background: var(--hover-bg); }
-	.context-menu button.delete { color: #e11d48; }
-	.context-menu button.delete:hover { background: #fef2f2; }
-	.context-menu hr { border: none; border-top: 1px solid var(--border); margin: 2px 0; }
+	.context-menu button:hover {
+		background: var(--hover-bg);
+	}
+	.context-menu button.delete {
+		color: #e11d48;
+	}
+	.context-menu button.delete:hover {
+		background: #fef2f2;
+	}
+	.context-menu hr {
+		border: none;
+		border-top: 1px solid var(--border);
+		margin: 2px 0;
+	}
 </style>

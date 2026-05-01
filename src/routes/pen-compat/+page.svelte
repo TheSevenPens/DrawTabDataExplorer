@@ -1,8 +1,21 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadPenCompatFromURL, loadTabletsFromURL, loadPensFromURL, brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
-	import { type EnrichedPenCompat, PEN_COMPAT_FIELDS, PEN_COMPAT_FIELD_GROUPS, PEN_COMPAT_DEFAULT_COLUMNS, PEN_COMPAT_DEFAULT_VIEW } from '$data/lib/entities/pen-compat-fields.js';
+	import {
+		loadPenCompatFromURL,
+		loadTabletsFromURL,
+		loadPensFromURL,
+		brandName,
+		type Tablet,
+		type Pen,
+	} from '$data/lib/drawtab-loader.js';
+	import {
+		type EnrichedPenCompat,
+		PEN_COMPAT_FIELDS,
+		PEN_COMPAT_FIELD_GROUPS,
+		PEN_COMPAT_DEFAULT_COLUMNS,
+		PEN_COMPAT_DEFAULT_VIEW,
+	} from '$data/lib/entities/pen-compat-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 
@@ -25,14 +38,16 @@
 			penMap.set(p.PenId, p);
 		}
 
-		data = compat.map(c => {
+		data = compat.map((c) => {
 			const tablet = tabletMap.get(c.TabletId);
 			const pen = penMap.get(c.PenId);
 			const tabletFullName = tablet
 				? `${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`
 				: `${brandName(c.Brand)} ${c.TabletId}`;
 			const penFullName = pen
-				? (pen.PenName === pen.PenId ? `${brandName(pen.Brand)} ${pen.PenId}` : `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`)
+				? pen.PenName === pen.PenId
+					? `${brandName(pen.Brand)} ${pen.PenId}`
+					: `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`
 				: `${brandName(c.Brand)} ${c.PenId}`;
 			return { ...c, TabletFullName: tabletFullName, PenFullName: penFullName };
 		});
@@ -51,5 +66,5 @@
 	defaultView={PEN_COMPAT_DEFAULT_VIEW}
 	defaultFilterField="TabletFullName"
 	defaultSortField="TabletFullName"
-	quickFilterFields={["Brand"]}
+	quickFilterFields={['Brand']}
 />

@@ -1,13 +1,16 @@
 <script lang="ts">
 	import Nav from '$lib/components/Nav.svelte';
-	import ValueHistogram, { type HistogramRange, type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import ValueHistogram, {
+		type HistogramRange,
+		type HistogramMarker,
+	} from '$lib/components/ValueHistogram.svelte';
 
 	// Shared x-axis ranges (pen display scale, inches)
 	const ranges: HistogramRange[] = [
-		{ label: 'Small',  min: 10, max: 13 },
+		{ label: 'Small', min: 10, max: 13 },
 		{ label: 'Medium', min: 13, max: 16 },
-		{ label: 'Large',  min: 16, max: 22 },
-		{ label: 'XL',     min: 22, max: 27 },
+		{ label: 'Large', min: 16, max: 22 },
+		{ label: 'XL', min: 22, max: 27 },
 	];
 
 	// Synthetic background population — uniform-ish spread across 10–27"
@@ -63,7 +66,8 @@
 		},
 		{
 			title: 'Dense cluster — 5 markers in a narrow band',
-			description: 'Kamvas-style: 12", 13", 15.6", 16", 19". Should spread cleanly across tiers without piling up.',
+			description:
+				'Kamvas-style: 12", 13", 15.6", 16", 19". Should spread cleanly across tiers without piling up.',
 			markers: [
 				{ value: 11.9, label: 'KAM12' },
 				{ value: 13.3, label: 'KAM13' },
@@ -74,7 +78,8 @@
 		},
 		{
 			title: 'Extreme cluster — all at same value',
-			description: 'All five markers at 15.6". Every label should fall on its own tier (or gracefully overlap on deepest tier).',
+			description:
+				'All five markers at 15.6". Every label should fall on its own tier (or gracefully overlap on deepest tier).',
 			markers: [
 				{ value: 15.6, label: 'AAAA' },
 				{ value: 15.6, label: 'BBBB' },
@@ -85,7 +90,8 @@
 		},
 		{
 			title: 'Two clusters separated by a gap',
-			description: 'Left cluster (10–13") and right cluster (20–23") should each lay out independently.',
+			description:
+				'Left cluster (10–13") and right cluster (20–23") should each lay out independently.',
 			markers: [
 				{ value: 10.1, label: 'S1' },
 				{ value: 11.0, label: 'S2' },
@@ -123,13 +129,14 @@
 			description: 'A marker near x=10 — label should not clip outside the SVG.',
 			markers: [
 				{ value: 10.05, label: 'EDGE' },
-				{ value: 15.6,  label: 'MID'  },
-				{ value: 26.9,  label: 'FAR'  },
+				{ value: 15.6, label: 'MID' },
+				{ value: 26.9, label: 'FAR' },
 			],
 		},
 		{
 			title: 'With currentValue indicator',
-			description: 'The red current-value line should not conflict visually with nearby marker lines.',
+			description:
+				'The red current-value line should not conflict visually with nearby marker lines.',
 			markers: [
 				{ value: 15.4, label: 'KAM15' },
 				{ value: 16.0, label: 'KAM16' },
@@ -154,43 +161,46 @@
 		},
 		{
 			title: 'Compare page — 6 flagged pen displays (max allowed)',
-			description: 'Simulates the worst case on the compare page: all 6 flagged slots used, all pen displays. With MARKER_TIERS < 6 the 5th and 6th items pile up on the last tier. All 6 should be readable with MARKER_TIERS = 6.',
+			description:
+				'Simulates the worst case on the compare page: all 6 flagged slots used, all pen displays. With MARKER_TIERS < 6 the 5th and 6th items pile up on the last tier. All 6 should be readable with MARKER_TIERS = 6.',
 			markers: [
-				{ value: 12.6, label: 'Kamvas 12'           },
-				{ value: 13.6, label: 'Wacom One 13'        },
-				{ value: 15.6, label: 'Kamvas 16 GEN3'      },
-				{ value: 15.8, label: 'Artist 16 3rd'       },
-				{ value: 16.0, label: 'Intuos Pro 16'       },
-				{ value: 21.5, label: 'Kamvas 22 Plus'      },
+				{ value: 12.6, label: 'Kamvas 12' },
+				{ value: 13.6, label: 'Wacom One 13' },
+				{ value: 15.6, label: 'Kamvas 16 GEN3' },
+				{ value: 15.8, label: 'Artist 16 3rd' },
+				{ value: 16.0, label: 'Intuos Pro 16' },
+				{ value: 21.5, label: 'Kamvas 22 Plus' },
 			],
 		},
 		{
 			title: 'Real data — Huion Kamvas family (flagged tablets)',
-			description: 'Actual diagonals + model names from HUION-tablets.json. Two pairs nearly coincide: Kamvas 13 / Kamvas 13 GEN3 both at 13.27", and Kamvas 16 (2021) / Kamvas 16 GEN3 at 15.55" / 15.81". Long labels like "Kamvas 16 (2021)" (16 chars) make this a realistic stress test.',
+			description:
+				'Actual diagonals + model names from HUION-tablets.json. Two pairs nearly coincide: Kamvas 13 / Kamvas 13 GEN3 both at 13.27", and Kamvas 16 (2021) / Kamvas 16 GEN3 at 15.55" / 15.81". Long labels like "Kamvas 16 (2021)" (16 chars) make this a realistic stress test.',
 			markers: [
-				{ value: 11.56, label: 'Kamvas 12'         },
-				{ value: 13.27, label: 'Kamvas 13'         },
-				{ value: 13.27, label: 'Kamvas 13 GEN3'    },
-				{ value: 15.55, label: 'Kamvas 16 (2021)'  },
-				{ value: 15.81, label: 'Kamvas 16 GEN3'    },
+				{ value: 11.56, label: 'Kamvas 12' },
+				{ value: 13.27, label: 'Kamvas 13' },
+				{ value: 13.27, label: 'Kamvas 13 GEN3' },
+				{ value: 15.55, label: 'Kamvas 16 (2021)' },
+				{ value: 15.81, label: 'Kamvas 16 GEN3' },
 				{ value: 16.03, label: 'Inspiroy Giano G930L' },
 			],
 		},
 		{
 			title: 'Real data — 6 Huion tablets as shown on compare page',
-			description: 'These 6 tablets flagged together as they appear on the compare page histogram (label = Model.Name). Two coincident pairs at 13.27" and close together at 15.55"/15.81"/16.03" make this the primary real-world stress test.',
+			description:
+				'These 6 tablets flagged together as they appear on the compare page histogram (label = Model.Name). Two coincident pairs at 13.27" and close together at 15.55"/15.81"/16.03" make this the primary real-world stress test.',
 			ranges: [
-				{ label: 'Small',  min:  8, max: 13 },
+				{ label: 'Small', min: 8, max: 13 },
 				{ label: 'Medium', min: 13, max: 16 },
-				{ label: 'Large',  min: 16, max: 22 },
-				{ label: 'XL',     min: 22, max: 34 },
+				{ label: 'Large', min: 16, max: 22 },
+				{ label: 'XL', min: 22, max: 34 },
 			],
 			markers: [
-				{ value: 11.56, label: 'Kamvas 12'            },
-				{ value: 13.27, label: 'Kamvas 13'            },
-				{ value: 13.27, label: 'Kamvas 13 GEN3'       },
-				{ value: 15.55, label: 'Kamvas 16 (2021)'     },
-				{ value: 15.81, label: 'Kamvas 16 GEN3'       },
+				{ value: 11.56, label: 'Kamvas 12' },
+				{ value: 13.27, label: 'Kamvas 13' },
+				{ value: 13.27, label: 'Kamvas 13 GEN3' },
+				{ value: 15.55, label: 'Kamvas 16 (2021)' },
+				{ value: 15.81, label: 'Kamvas 16 GEN3' },
 				{ value: 16.03, label: 'Inspiroy Giano G930L' },
 			],
 		},
@@ -202,9 +212,9 @@
 <div class="debug-page">
 	<h1>Marker Layout Debug</h1>
 	<p class="intro">
-		Each section below is a standalone test case for the <code>ValueHistogram</code> marker tier
-		placement algorithm. When changing the algorithm, work through all cases and verify they look
-		correct before merging.
+		Each section below is a standalone test case for the <code>ValueHistogram</code> marker tier placement
+		algorithm. When changing the algorithm, work through all cases and verify they look correct before
+		merging.
 	</p>
 
 	{#each testCases as tc, i}
@@ -227,7 +237,7 @@
 				values={bgValues}
 				currentValue={tc.currentValue ?? null}
 				ranges={tc.ranges ?? ranges}
-				unit='"'
+				unit={'"'}
 				binSize={0.5}
 				bandwidthMultiplier={0.3}
 				markers={tc.markers}

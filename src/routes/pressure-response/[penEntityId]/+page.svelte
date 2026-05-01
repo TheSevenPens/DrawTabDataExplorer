@@ -13,8 +13,8 @@
 
 <div class="card">
 	<p>
-		Per-pen pressure-response charts have moved to a dedicated tool with a
-		better viewing experience:
+		Per-pen pressure-response charts have moved to a dedicated tool with a better viewing
+		experience:
 	</p>
 	<p>
 		<a class="cta" href={PEN_PRESSURE_DATA_URL} target="_blank" rel="noopener">

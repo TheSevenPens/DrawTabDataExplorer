@@ -2,17 +2,21 @@
 	import { onMount } from 'svelte';
 	import type { Step } from '$data/lib/pipeline/index.js';
 	import { type SavedView, loadViews, saveView, deleteView, renameView } from '$lib/views.js';
+	import { promptModal } from '$lib/modal-store.js';
 
-	let { steps, entityType, defaultView, onload }: {
+	let {
+		steps,
+		entityType,
+		defaultView,
+		onload,
+	}: {
 		steps: Step[];
 		entityType: string;
 		defaultView: Step[];
 		onload: (steps: Step[]) => void;
 	} = $props();
 
-	const BUILTIN_VIEWS: SavedView[] = [
-		{ name: 'Default', steps: defaultView },
-	];
+	const BUILTIN_VIEWS: SavedView[] = [{ name: 'Default', steps: defaultView }];
 
 	let userViews = $state<SavedView[]>([]);
 	let selectedName = $state('Default');
@@ -32,12 +36,12 @@
 
 	let selectedView = $derived(allViews.find((v) => v.name === selectedName) ?? null);
 
-	function handleCreate() {
-		const name = prompt('View name:');
-		if (!name || !name.trim()) return;
-		saveView(entityType, name.trim(), steps);
+	async function handleCreate() {
+		const name = await promptModal('Save view as', '', { confirmLabel: 'Save' });
+		if (!name) return;
+		saveView(entityType, name, steps);
 		refreshViews();
-		selectedName = name.trim();
+		selectedName = name;
 	}
 
 	function handleDelete() {
@@ -106,8 +110,14 @@
 			<button class="action-btn" onclick={finishRename}>OK</button>
 			<button class="action-btn" onclick={cancelRename}>Cancel</button>
 		{:else}
-			<button class="action-btn" onclick={startRename} disabled={selectedView === null || isBuiltin}>Rename</button>
-			<button class="action-btn delete" onclick={handleDelete} disabled={selectedView === null || isBuiltin}>Delete</button>
+			<button class="action-btn" onclick={startRename} disabled={selectedView === null || isBuiltin}
+				>Rename</button
+			>
+			<button
+				class="action-btn delete"
+				onclick={handleDelete}
+				disabled={selectedView === null || isBuiltin}>Delete</button
+			>
 		{/if}
 
 		<span class="separator"></span>

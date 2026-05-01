@@ -49,7 +49,9 @@
 		openPanel = openPanel === name ? null : name;
 	}
 
-	function closeAll() { openPanel = null; }
+	function closeAll() {
+		openPanel = null;
+	}
 </script>
 
 <svelte:window onclick={closeAll} />
@@ -94,7 +96,15 @@
 		</button>
 		{#if openPanel === 'views'}
 			<div class="panel views-panel">
-				<SavedViews {steps} {entityType} {defaultView} onload={(s) => { onload(s); openPanel = null; }} />
+				<SavedViews
+					{steps}
+					{entityType}
+					{defaultView}
+					onload={(s) => {
+						onload(s);
+						openPanel = null;
+					}}
+				/>
 			</div>
 		{/if}
 	</div>
@@ -108,7 +118,9 @@
 		flex-wrap: wrap;
 	}
 
-	.toolbar-item { position: relative; }
+	.toolbar-item {
+		position: relative;
+	}
 
 	.toolbar-btn {
 		display: inline-flex;
@@ -140,7 +152,7 @@
 		background: var(--bg-card);
 		border: 1px solid var(--border-light);
 		border-radius: 6px;
-		box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 		padding: 10px 12px;
 		min-width: 260px;
 	}

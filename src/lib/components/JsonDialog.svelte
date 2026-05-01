@@ -52,7 +52,7 @@
 
 <dialog
 	bind:this={dialog}
-	onclose={onclose}
+	{onclose}
 	style={posX !== null ? `left: ${posX}px; top: ${posY}px; margin: 0;` : ''}
 >
 	<!-- Title bar -->
@@ -82,7 +82,9 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		box-shadow: 0 4px 6px rgba(0,0,0,0.15), 0 10px 40px rgba(0,0,0,0.20);
+		box-shadow:
+			0 4px 6px rgba(0, 0, 0, 0.15),
+			0 10px 40px rgba(0, 0, 0, 0.2);
 		position: fixed;
 	}
 

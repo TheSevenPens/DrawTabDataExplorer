@@ -129,9 +129,9 @@ pathnames that should mark it as active.
 
 **SubNav** — Generic sub-tab row rendered beneath `Nav` on the four
 list pages that share a top-level entry: `/` and `/tablet-families`
-share the **Tablets** parent (sub-tabs *Tablet models* / *Tablet
-families*); `/pens` and `/pen-families` share **Pens** (*Pen models*
-/ *Pen families*). Takes a `tabs: { href, label }[]` prop and
+share the **Tablets** parent (sub-tabs _Tablet models_ / _Tablet
+families_); `/pens` and `/pen-families` share **Pens** (_Pen models_
+/ _Pen families_). Takes a `tabs: { href, label }[]` prop and
 highlights the entry whose href matches the current pathname.
 
 ## Compare feature
@@ -153,8 +153,8 @@ several files:
   button in the title row.
 
 - **Compare page** (`/compare`) — Two tabs:
-  - *Flagged* — list of flagged tablets with unflag buttons and clear all.
-  - *Compare* — side-by-side spec table with specs as rows and tablets
+  - _Flagged_ — list of flagged tablets with unflag buttons and clear all.
+  - _Compare_ — side-by-side spec table with specs as rows and tablets
     as columns. Rows are grouped by field group (Model, Digitizer,
     Display, Physical). Cells with differing values are highlighted.
     Includes Copy as HTML and Export as HTML buttons. Below the table,
@@ -214,6 +214,7 @@ npm run dev
 ```
 
 To update the data submodule:
+
 ```bash
 cd data-repo
 git pull origin master
@@ -247,11 +248,11 @@ behaviour).
 
 ## npm scripts
 
-| Script    | Command       | Purpose                     |
-|-----------|---------------|-----------------------------|
-| `dev`     | `vite dev`    | Start dev server            |
-| `build`   | `vite build`  | Build static site           |
-| `preview` | `vite preview`| Preview built site          |
+| Script    | Command        | Purpose            |
+| --------- | -------------- | ------------------ |
+| `dev`     | `vite dev`     | Start dev server   |
+| `build`   | `vite build`   | Build static site  |
+| `preview` | `vite preview` | Preview built site |
 
 ## Local data quality checks
 
