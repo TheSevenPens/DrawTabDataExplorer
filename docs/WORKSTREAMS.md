@@ -100,14 +100,14 @@ The Explorer is already a **full superset** — `/pen-inventory` and
 `/tablet-inventory` use `EntityExplorer` (better search, multiple
 filters, sort, column picker, saved views). Nothing to port.
 
-**Next (one PR, ~30 min):**
+**Done:**
 
-1. Add `README.md` to DrawTabInventory marking it deprecated with a
-   link to the Explorer's two inventory sub-tabs.
-2. Add an in-page deprecation banner to `index.html` so visitors to
-   the live URL see the notice immediately.
-3. Update `docs/OVERVIEW.md` with the same notice.
-4. Optionally archive the GitHub repo.
+1. ✅ Added `README.md` with deprecation notice + Explorer links
+   (DrawTabInventory commit `5f2f50f`, 2026-05-01).
+2. ✅ Added in-page deprecation banner to `index.html`.
+3. ✅ Added deprecation notice at top of `docs/OVERVIEW.md`.
+
+**Next:** decide whether to archive the GitHub repo.
 
 **Open:** archive the repo or leave it live (deprecated)? Archiving
 prevents future stars/forks; leaving it live keeps existing URLs
@@ -137,11 +137,12 @@ There's also a hidden `JsonMerger.svelte` developer utility (~8 KB)
 for comparing driver JSON files during data maintenance — belongs in
 `data-repo/scripts/`, not the user-facing app.
 
-**Next (3 phases):**
+**Phases:**
 
-1. **Deprecation banner.** Add `README.md` + in-page banner pointing
-   to Explorer's `/drivers`. Mirrors DrawTabInventory Phase 1.
-   (~30 min)
+1. ✅ **Deprecation banner.** Added `README.md`, in-page banner in
+   `+layout.svelte` (visible on every route), and notice at top of
+   `docs/OVERVIEW.md` (Wacom-Driver-List commit `2478d0a`,
+   2026-05-01).
 2. **Port the driver-range data.** Move `wacom-products.json` and
    `extract-products.js` into the data submodule. Add `DriverMin` /
    `DriverMax` fields to the tablet schema (or a new top-level
