@@ -19,8 +19,16 @@
 		MM_TO_IN,
 	} from '$lib/tablet-size-ranges.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import BandsChart, { type Band } from '$lib/components/BandsChart.svelte';
+
+	const dataTabs = [
+		{ href: '/analysis', label: 'Analysis' },
+		{ href: '/reference', label: 'Reference' },
+		{ href: '/data-quality', label: 'Data Quality' },
+		{ href: '/pen-compat', label: 'Pen Compat' },
+	];
 
 	interface SectionDef {
 		id: string;
@@ -178,6 +186,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={dataTabs} />
 <h1>Reference</h1>
 
 <div class="ref-layout">

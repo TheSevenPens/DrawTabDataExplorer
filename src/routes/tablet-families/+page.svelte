@@ -12,11 +12,13 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import { flaggedCount } from '$lib/flagged-store.js';
 
-	const tabletTabs = [
+	let tabletTabs = $derived([
 		{ href: '/', label: 'Tablet models' },
 		{ href: '/tablet-families', label: 'Tablet families' },
-	];
+		{ href: '/compare', label: 'Compare', badge: $flaggedCount },
+	]);
 
 	let data: any[] = $state([]);
 

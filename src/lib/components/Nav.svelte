@@ -3,29 +3,26 @@
 	import { base } from '$app/paths';
 	import { unitPreference, toggleUnits, showAltUnits, toggleAltUnits } from '$lib/unit-store.js';
 	import { theme, toggleTheme } from '$lib/theme-store.js';
-	import { flaggedCount } from '$lib/flagged-store.js';
 
 	type LinkSpec = {
 		href: string;
 		label: string;
-		dynamic?: boolean;
 		// Additional pathnames (without base prefix) that should mark this link as active.
 		altActive?: string[];
 	};
 
 	const links: LinkSpec[] = [
 		{ href: '/brands', label: 'Brands' },
-		{ href: '/', label: 'Tablets', altActive: ['/tablet-families'] },
-		{ href: '/pens', label: 'Pens', altActive: ['/pen-families'] },
-		{ href: '/pen-compat', label: 'Pen Compat' },
+		{ href: '/', label: 'Tablets', altActive: ['/tablet-families', '/compare'] },
+		{ href: '/pens', label: 'Pens', altActive: ['/pen-families', '/pressure-response'] },
 		{ href: '/drivers', label: 'Drivers' },
-		{ href: '/pressure-response', label: 'Pressure Response' },
 		{ href: '/inventory', label: 'Inventory' },
 		{ href: '/timeline', label: 'Timeline' },
-		{ href: '/compare', label: 'Compare', dynamic: true },
-		{ href: '/analysis', label: 'Analysis' },
-		{ href: '/reference', label: 'Reference' },
-		{ href: '/data-quality', label: 'Data Quality' },
+		{
+			href: '/analysis',
+			label: 'Data',
+			altActive: ['/reference', '/data-quality', '/pen-compat'],
+		},
 		{ href: '/about', label: 'About' },
 	];
 
@@ -43,11 +40,7 @@
 <nav>
 	<div class="nav-links">
 		{#each links as link}
-			<a href="{base}{link.href}" class:active={isActive(link, page.url.pathname)}
-				>{link.label}{#if link.dynamic && $flaggedCount > 0}<span class="badge"
-						>{$flaggedCount}</span
-					>{/if}</a
-			>
+			<a href="{base}{link.href}" class:active={isActive(link, page.url.pathname)}>{link.label}</a>
 		{/each}
 	</div>
 	<div class="nav-toggles">
@@ -142,19 +135,6 @@
 		color: #2563eb;
 		border-color: var(--border);
 		font-weight: 600;
-	}
-
-	.badge {
-		display: inline-block;
-		margin-left: 4px;
-		padding: 0 5px;
-		font-size: 11px;
-		font-weight: 700;
-		line-height: 16px;
-		background: #d97706;
-		color: #fff;
-		border-radius: 8px;
-		vertical-align: middle;
 	}
 
 	.nav-toggles {

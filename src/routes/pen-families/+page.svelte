@@ -17,6 +17,7 @@
 	const penTabs = [
 		{ href: '/pens', label: 'Pen models' },
 		{ href: '/pen-families', label: 'Pen families' },
+		{ href: '/pressure-response', label: 'Pressure Response' },
 	];
 
 	let data: PenFamily[] = $state([]);

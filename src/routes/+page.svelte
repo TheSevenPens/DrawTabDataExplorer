@@ -16,12 +16,13 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import { flaggedTablets, flaggedCount, toggleFlag } from '$lib/flagged-store.js';
 
-	const tabletTabs = [
+	let tabletTabs = $derived([
 		{ href: '/', label: 'Tablet models' },
 		{ href: '/tablet-families', label: 'Tablet families' },
-	];
-	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
+		{ href: '/compare', label: 'Compare', badge: $flaggedCount },
+	]);
 	import { buildPenNameMap } from '$lib/pen-helpers.js';
 
 	let data: Tablet[] = $state([]);

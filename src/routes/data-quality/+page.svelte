@@ -8,7 +8,15 @@
 	} from '$data/lib/drawtab-loader.js';
 	import { buildFilterUrl } from '$lib/filter-url.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+
+	const dataTabs = [
+		{ href: '/analysis', label: 'Analysis' },
+		{ href: '/reference', label: 'Reference' },
+		{ href: '/data-quality', label: 'Data Quality' },
+		{ href: '/pen-compat', label: 'Pen Compat' },
+	];
 
 	interface Issue {
 		entity: string;
@@ -440,6 +448,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={dataTabs} />
 <h1>Data Quality</h1>
 
 {#if !ds}

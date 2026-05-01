@@ -119,20 +119,29 @@ paper sizes), and an optional `compareYears` dropdown to filter the
 dataset by release year. Used on the tablet detail page, the Reference
 page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 
-**Nav** — Navigation bar with links to all entity pages and a
-metric/imperial toggle button. Shows a badge on the Compare link with
-the current flagged tablet count. Tablets and tablet-families are
-collapsed under a single "Tablets" link (active for both `/` and
-`/tablet-families`); pens and pen-families likewise under "Pens".
-Each `LinkSpec` may declare an `altActive` array of additional
-pathnames that should mark it as active.
+**Nav** — Top-level navigation bar. Related routes are collapsed
+under a single parent link via the `LinkSpec.altActive` array, which
+lists additional pathnames that should also mark the link as active:
 
-**SubNav** — Generic sub-tab row rendered beneath `Nav` on the four
-list pages that share a top-level entry: `/` and `/tablet-families`
-share the **Tablets** parent (sub-tabs _Tablet models_ / _Tablet
-families_); `/pens` and `/pen-families` share **Pens** (_Pen models_
-/ _Pen families_). Takes a `tabs: { href, label }[]` prop and
-highlights the entry whose href matches the current pathname.
+- **Tablets** (`/`) — also active on `/tablet-families`, `/compare`
+- **Pens** (`/pens`) — also active on `/pen-families`, `/pressure-response`
+- **Data** (`/analysis`) — also active on `/reference`, `/data-quality`,
+  `/pen-compat`
+
+The settings dropdown (gear icon) holds the metric/imperial toggle,
+the alt-units toggle, and the theme toggle.
+
+**SubNav** — Generic sub-tab row rendered beneath `Nav` on every page
+that shares a top-level entry. Takes a `tabs: { href, label, badge? }[]`
+prop and highlights the entry whose href matches the current pathname.
+Optional `badge` shows a small count chip next to the label (used for
+the flagged-tablets count on the Tablets ▸ Compare sub-tab).
+
+The sub-tab sets per parent:
+
+- **Tablets** (3 tabs): _Tablet models_ / _Tablet families_ / _Compare_
+- **Pens** (3 tabs): _Pen models_ / _Pen families_ / _Pressure Response_
+- **Data** (4 tabs): _Analysis_ / _Reference_ / _Data Quality_ / _Pen Compat_
 
 ## Compare feature
 

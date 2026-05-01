@@ -18,6 +18,14 @@
 	} from '$data/lib/entities/pen-compat-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
+
+	const dataTabs = [
+		{ href: '/analysis', label: 'Analysis' },
+		{ href: '/reference', label: 'Reference' },
+		{ href: '/data-quality', label: 'Data Quality' },
+		{ href: '/pen-compat', label: 'Pen Compat' },
+	];
 
 	let data: EnrichedPenCompat[] = $state([]);
 
@@ -55,6 +63,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={dataTabs} />
 <EntityExplorer
 	title="Pen Compatibility"
 	entityType="pen-compat"

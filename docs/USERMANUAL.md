@@ -20,15 +20,16 @@ browser's localStorage.
 
 ## Browsing entities
 
-The top navigation has one entry per entity type:
+The top navigation collapses related views under a single parent:
 
 - **Brands** — every manufacturer in the dataset (Wacom, XP-Pen, Huion, …).
-- **Tablets** — the main list. The sub-tabs switch between _Tablet models_
-  (one row per product) and _Tablet families_ (groupings like "Wacom
-  Intuos Pro 2017 series").
-- **Pens** — same idea: _Pen models_ sub-tab and _Pen families_ sub-tab.
-- **Pen Compat** — which pens work with which tablets.
+- **Tablets** — sub-tabs: _Tablet models_, _Tablet families_, _Compare_.
+- **Pens** — sub-tabs: _Pen models_, _Pen families_, _Pressure Response_.
 - **Drivers** — driver releases, mostly Wacom for now.
+- **Inventory** — your personal pen/tablet records (sub-tabs Pens / Tablets).
+- **Timeline** — year-by-year view of releases.
+- **Data** — sub-tabs: _Analysis_, _Reference_, _Data Quality_, _Pen Compat_.
+- **About** — credits and links to related tools.
 
 Click any name in a list to open its detail page. Detail pages show all
 populated fields grouped into categories (Model / Digitizer / Display /
@@ -80,10 +81,11 @@ To compare specs side by side:
 
 1. On the Tablets list, click the flag icon in the leftmost column for
    each tablet you want to compare (max 6). The flag count appears as a
-   badge on the **Compare** nav link.
-2. Open **Compare**. The _Flagged_ tab lists what you've selected; the
-   _Compare_ tab is a side-by-side spec table with the tablets as columns
-   and specs as rows. Cells with differing values are highlighted.
+   badge on the **Compare** sub-tab under Tablets.
+2. Open **Tablets ▸ Compare**. The _Flagged_ tab lists what you've
+   selected; the _Compare_ tab is a side-by-side spec table with the
+   tablets as columns and specs as rows. Cells with differing values are
+   highlighted.
 3. Use **Copy as HTML** or **Export as HTML** to share the table.
 
 Below the spec table, size histograms show your flagged tablets as
@@ -117,9 +119,10 @@ copy of the table.
 
 Pen pressure-response data has moved to a dedicated tool with a better
 viewing experience:
-<https://thesevenpens.github.io/PenPressureData/>. The Pressure Response
-nav entry in this app currently links there. The local viewer will be
-rebuilt and reintroduced once the new UX is finalized.
+<https://thesevenpens.github.io/PenPressureData/>. The **Pressure
+Response** sub-tab under **Pens** in this app currently links there.
+The local viewer will be rebuilt and reintroduced once the new UX is
+finalized.
 
 ## Inventory
 

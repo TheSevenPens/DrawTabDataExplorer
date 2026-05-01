@@ -8,8 +8,9 @@
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue } from '$data/lib/units.js';
-	import { flaggedTablets, toggleFlag, clearFlags } from '$lib/flagged-store.js';
+	import { flaggedTablets, flaggedCount, toggleFlag, clearFlags } from '$lib/flagged-store.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
 	import TabletPicker from '$lib/components/TabletPicker.svelte';
 	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
@@ -27,6 +28,12 @@
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 
 	let { data } = $props();
+
+	let tabletTabs = $derived([
+		{ href: '/', label: 'Tablet models' },
+		{ href: '/tablet-families', label: 'Tablet families' },
+		{ href: '/compare', label: 'Compare', badge: $flaggedCount },
+	]);
 
 	let activeTab: 'flagged' | 'compare' | 'sizes' = $state('flagged');
 	let showPicker = $state(false);
@@ -186,6 +193,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={tabletTabs} />
 <h1>Compare Tablets</h1>
 
 <div class="tabs">

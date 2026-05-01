@@ -1,10 +1,18 @@
 <script lang="ts">
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
 
 	const PEN_PRESSURE_DATA_URL = 'https://thesevenpens.github.io/PenPressureData/';
+
+	const penTabs = [
+		{ href: '/pens', label: 'Pen models' },
+		{ href: '/pen-families', label: 'Pen families' },
+		{ href: '/pressure-response', label: 'Pressure Response' },
+	];
 </script>
 
 <Nav />
+<SubNav tabs={penTabs} />
 
 <h1>Pressure Response</h1>
 

@@ -2,12 +2,15 @@
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
 
-	let { tabs }: { tabs: { href: string; label: string }[] } = $props();
+	let { tabs }: { tabs: { href: string; label: string; badge?: number }[] } = $props();
 </script>
 
 <div class="sub-nav">
 	{#each tabs as t}
-		<a href="{base}{t.href}" class:active={page.url.pathname === base + t.href}>{t.label}</a>
+		<a href="{base}{t.href}" class:active={page.url.pathname === base + t.href}
+			>{t.label}{#if t.badge !== undefined && t.badge > 0}<span class="badge">{t.badge}</span
+				>{/if}</a
+		>
 	{/each}
 </div>
 
@@ -39,5 +42,17 @@
 		color: #2563eb;
 		border-color: var(--border);
 		font-weight: 600;
+	}
+	.badge {
+		display: inline-block;
+		margin-left: 4px;
+		padding: 0 5px;
+		font-size: 10px;
+		font-weight: 700;
+		line-height: 14px;
+		background: #d97706;
+		color: #fff;
+		border-radius: 7px;
+		vertical-align: middle;
 	}
 </style>
