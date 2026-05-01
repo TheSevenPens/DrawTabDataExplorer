@@ -22,8 +22,9 @@ DrawTabDataExplorer/
 │   │   ├── pen-compat/           # Pen compatibility list
 │   │   ├── drivers/              # Drivers list + detail (+page.ts)
 │   │   ├── brands/               # Brands list + detail (+page.ts)
-│   │   ├── pressure-response/    # Pressure response sessions
-│   │   ├── inventory/            # Inventory (pens/tablets sub-tabs)
+│   │   ├── pressure-response/    # Pressure response (sub-tab of Pens)
+│   │   ├── pen-inventory/        # Personal pen inventory (sub-tab of Pens)
+│   │   ├── tablet-inventory/     # Personal tablet inventory (sub-tab of Tablets)
 │   │   ├── timeline/             # Timeline of releases by year
 │   │   ├── reference/            # Reference (tablet sizes, ISO paper sizes)
 │   │   └── data-quality/         # Data quality dashboard
@@ -125,9 +126,10 @@ under a single parent link via the `LinkSpec.altActive` array, which
 lists additional pathnames that should also mark the link as active:
 
 - **Tablets** (`/tablets`) — also active on `/tablet-families`,
-  `/tablet-analysis`, `/tablet-compare` (the bare `/` redirects to
-  `/tablets`)
-- **Pens** (`/pens`) — also active on `/pen-families`, `/pressure-response`
+  `/tablet-analysis`, `/tablet-inventory`, `/tablet-compare` (the bare
+  `/` redirects to `/tablets`)
+- **Pens** (`/pens`) — also active on `/pen-families`, `/pen-inventory`,
+  `/pressure-response`
 - **Data** (`/reference`) — also active on `/data-quality`, `/pen-compat`
 
 The settings dropdown (gear icon) holds the metric/imperial toggle,
@@ -141,8 +143,8 @@ the flagged-tablets count on the Tablets ▸ Compare sub-tab).
 
 The sub-tab sets per parent:
 
-- **Tablets** (4 tabs): _Tablet models_ / _Tablet families_ / _Analysis_ / _Compare_
-- **Pens** (3 tabs): _Pen models_ / _Pen families_ / _Pressure Response_
+- **Tablets** (5 tabs): _Tablet models_ / _Tablet families_ / _Analysis_ / _Inventory_ / _Compare_
+- **Pens** (4 tabs): _Pen models_ / _Pen families_ / _Inventory_ / _Pressure Response_
 - **Data** (3 tabs): _Reference_ / _Data Quality_ / _Pen Compat_
 
 ## Compare feature

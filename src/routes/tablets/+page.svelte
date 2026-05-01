@@ -22,6 +22,7 @@
 		{ href: '/tablets', label: 'Tablet models' },
 		{ href: '/tablet-families', label: 'Tablet families' },
 		{ href: '/tablet-analysis', label: 'Analysis' },
+		{ href: '/tablet-inventory', label: 'Inventory' },
 		{ href: '/tablet-compare', label: 'Compare', badge: $flaggedCount },
 	]);
 	import { buildPenNameMap } from '$lib/pen-helpers.js';

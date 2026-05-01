@@ -7,6 +7,7 @@
 	const penTabs = [
 		{ href: '/pens', label: 'Pen models' },
 		{ href: '/pen-families', label: 'Pen families' },
+		{ href: '/pen-inventory', label: 'Inventory' },
 		{ href: '/pressure-response', label: 'Pressure Response' },
 	];
 </script>

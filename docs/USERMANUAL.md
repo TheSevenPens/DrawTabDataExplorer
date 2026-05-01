@@ -23,10 +23,9 @@ browser's localStorage.
 The top navigation collapses related views under a single parent:
 
 - **Brands** — every manufacturer in the dataset (Wacom, XP-Pen, Huion, …).
-- **Tablets** — sub-tabs: _Tablet models_, _Tablet families_, _Analysis_, _Compare_.
-- **Pens** — sub-tabs: _Pen models_, _Pen families_, _Pressure Response_.
+- **Tablets** — sub-tabs: _Tablet models_, _Tablet families_, _Analysis_, _Inventory_, _Compare_.
+- **Pens** — sub-tabs: _Pen models_, _Pen families_, _Inventory_, _Pressure Response_.
 - **Drivers** — driver releases, mostly Wacom for now.
-- **Inventory** — your personal pen/tablet records (sub-tabs Pens / Tablets).
 - **Timeline** — year-by-year view of releases.
 - **Data** — sub-tabs: _Reference_, _Data Quality_, _Pen Compat_.
 - **About** — credits and links to related tools.
@@ -127,10 +126,11 @@ finalized.
 ## Inventory
 
 A personal record of physical pens and tablets you own — purchase date,
-vendor, defects, notes. Two sub-tabs (Pens / Tablets) follow the same
-EntityExplorer pattern as the main lists, with the same filter / sort /
-columns / saved-views toolbar. Only one user (`sevenpens`) is wired up
-today.
+vendor, defects, notes. Lives as the **Inventory** sub-tab under
+**Pens** (your pens) and the **Inventory** sub-tab under **Tablets**
+(your tablets), each using the same EntityExplorer pattern with
+filter / sort / columns / saved-views. Only one user (`sevenpens`) is
+wired up today.
 
 ## Timeline
 
