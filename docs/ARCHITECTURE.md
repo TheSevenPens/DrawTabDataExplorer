@@ -123,7 +123,7 @@ page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 under a single parent link via the `LinkSpec.altActive` array, which
 lists additional pathnames that should also mark the link as active:
 
-- **Tablets** (`/`) — also active on `/tablet-families`, `/compare`
+- **Tablets** (`/`) — also active on `/tablet-families`, `/compare-tablets`
 - **Pens** (`/pens`) — also active on `/pen-families`, `/pressure-response`
 - **Data** (`/analysis`) — also active on `/reference`, `/data-quality`,
   `/pen-compat`
@@ -161,7 +161,7 @@ several files:
 - **Flag from detail page** — Tablet detail page shows a Flag/Unflag
   button in the title row.
 
-- **Compare page** (`/compare`) — Two tabs:
+- **Compare page** (`/compare-tablets`) — Two tabs:
   - _Flagged_ — list of flagged tablets with unflag buttons and clear all.
   - _Compare_ — side-by-side spec table with specs as rows and tablets
     as columns. Rows are grouped by field group (Model, Digitizer,

@@ -21,7 +21,7 @@
 	let tabletTabs = $derived([
 		{ href: '/', label: 'Tablet models' },
 		{ href: '/tablet-families', label: 'Tablet families' },
-		{ href: '/compare', label: 'Compare', badge: $flaggedCount },
+		{ href: '/compare-tablets', label: 'Compare', badge: $flaggedCount },
 	]);
 	import { buildPenNameMap } from '$lib/pen-helpers.js';
 

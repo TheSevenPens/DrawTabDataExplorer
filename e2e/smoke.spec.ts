@@ -14,7 +14,7 @@ const ROUTES: { path: string; h1: RegExp }[] = [
 	{ path: '/pressure-response', h1: /Pressure Response/i },
 	{ path: '/inventory', h1: /Inventory/i },
 	{ path: '/timeline', h1: /Timeline/i },
-	{ path: '/compare', h1: /Compare/i },
+	{ path: '/compare-tablets', h1: /Compare/i },
 	{ path: '/analysis', h1: /Analysis/i },
 	{ path: '/reference', h1: /Reference/i },
 	{ path: '/data-quality', h1: /Data Quality/i },
@@ -98,7 +98,7 @@ test.describe('Reference left-nav sections', () => {
 });
 
 test.describe('Compare workflow', () => {
-	test('flag a tablet from the list, then see it on /compare', async ({ page }) => {
+	test('flag a tablet from the list, then see it on /compare-tablets', async ({ page }) => {
 		await page.goto('/', { waitUntil: 'networkidle' });
 
 		// Flag the first tablet. The flag-toggle button at the start of every
@@ -107,12 +107,12 @@ test.describe('Compare workflow', () => {
 		await expect(firstFlagButton).toBeVisible({ timeout: 10_000 });
 		await firstFlagButton.click();
 
-		// Compare nav link should now show a count badge.
-		await expect(page.locator('a[href*="/compare"] .badge').first()).toBeVisible({
+		// Compare sub-tab should now show a count badge.
+		await expect(page.locator('a[href*="/compare-tablets"] .badge').first()).toBeVisible({
 			timeout: 5_000,
 		});
 
-		await page.goto('/compare', { waitUntil: 'networkidle' });
+		await page.goto('/compare-tablets', { waitUntil: 'networkidle' });
 		// Compare page should mention flagged tablets.
 		await expect(page.locator('body')).toContainText(/flagged/i);
 	});

@@ -13,7 +13,7 @@
 
 	const links: LinkSpec[] = [
 		{ href: '/brands', label: 'Brands' },
-		{ href: '/', label: 'Tablets', altActive: ['/tablet-families', '/compare'] },
+		{ href: '/', label: 'Tablets', altActive: ['/tablet-families', '/compare-tablets'] },
 		{ href: '/pens', label: 'Pens', altActive: ['/pen-families', '/pressure-response'] },
 		{ href: '/drivers', label: 'Drivers' },
 		{ href: '/inventory', label: 'Inventory' },
