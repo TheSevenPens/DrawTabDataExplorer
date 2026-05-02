@@ -170,16 +170,16 @@
 				title={`${pen.PenName} pressure response`}
 				hiddenIds={hiddenSessionIds}
 			/>
-			<SessionStats
-				sessions={pressureSessions}
-				title="Aggregated across sessions"
-				{defectsByInventoryId}
-			/>
 			<ChartLegendTable
 				sessions={pressureSessions}
 				colors={sessionColors}
 				hiddenIds={hiddenSessionIds}
 				onToggle={toggleSessionVisibility}
+				{defectsByInventoryId}
+			/>
+			<SessionStats
+				sessions={pressureSessions}
+				title="Aggregated across sessions"
 				{defectsByInventoryId}
 			/>
 		{:else}

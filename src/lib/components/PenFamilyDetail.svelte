@@ -109,11 +109,6 @@
 			title={`${family.FamilyName} pressure response`}
 			hiddenIds={hiddenSessionIds}
 		/>
-		<SessionStats
-			sessions={pressureSessions}
-			title="Aggregated across sessions in this family"
-			{defectsByInventoryId}
-		/>
 		<ChartLegendTable
 			sessions={pressureSessions}
 			colors={sessionColors}
@@ -122,6 +117,11 @@
 			penNameById={penLabelById}
 			{defectsByInventoryId}
 			showModel
+		/>
+		<SessionStats
+			sessions={pressureSessions}
+			title="Aggregated across sessions in this family"
+			{defectsByInventoryId}
 		/>
 	{:else}
 		<p class="dim">No pressure response data available for any pen in this family.</p>

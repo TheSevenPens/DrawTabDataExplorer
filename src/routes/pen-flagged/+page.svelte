@@ -178,11 +178,6 @@
 				title="Flagged sessions"
 				hiddenIds={hiddenSessionIds}
 			/>
-			<SessionStats
-				sessions={matchedSessions}
-				title="Aggregated across flagged sessions"
-				{defectsByInventoryId}
-			/>
 			<ChartLegendTable
 				sessions={matchedSessions}
 				colors={sessionColors}
@@ -192,6 +187,11 @@
 				{defectsByInventoryId}
 				showBrand
 				showModel
+			/>
+			<SessionStats
+				sessions={matchedSessions}
+				title="Aggregated across flagged sessions"
+				{defectsByInventoryId}
 			/>
 		</section>
 	{:else}
