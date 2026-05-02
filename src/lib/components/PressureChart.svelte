@@ -17,6 +17,7 @@
 		estimateP100,
 		interpolatePhysical,
 	} from '$data/lib/pressure/interpolate.js';
+	import { paletteColor } from '$lib/chart-palette.js';
 
 	Chart.register(
 		LineController,
@@ -30,6 +31,8 @@
 	);
 
 	export interface ChartSession {
+		/** Stable per-session id used by the parent's hidden-set filter. */
+		id?: string;
 		label: string;
 		records: readonly PressureRecord[];
 		color?: string;
@@ -45,10 +48,15 @@
 		sessions,
 		height = 360,
 		title = '',
+		hiddenIds,
 	}: {
 		sessions: ChartSession[];
 		height?: number;
 		title?: string;
+		/** When provided, sessions whose id is in the set are not drawn.
+		 * Lets a parent component synchronise visibility with a legend
+		 * table or other UI. */
+		hiddenIds?: ReadonlySet<string>;
 	} = $props();
 
 	let viewMode = $state<ViewMode>('estimates');
@@ -58,18 +66,11 @@
 	// toolbar only when at least one session is flagged.
 	let showDefective = $state(false);
 	let defectiveCount = $derived(sessions.filter((s) => s.defective).length);
-	let visibleSessions = $derived(showDefective ? sessions : sessions.filter((s) => !s.defective));
-
-	const PALETTE = [
-		'#2563eb',
-		'#d97706',
-		'#16a34a',
-		'#dc2626',
-		'#9333ea',
-		'#0891b2',
-		'#ca8a04',
-		'#db2777',
-	];
+	let visibleSessions = $derived(
+		sessions
+			.filter((s) => showDefective || !s.defective)
+			.filter((s) => !hiddenIds || !s.id || !hiddenIds.has(s.id)),
+	);
 
 	// Logical pressure percentiles used for standardized + envelope modes.
 	const STANDARD_PCTS = [0, 1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95, 99, 100];
@@ -78,7 +79,7 @@
 	let chart: Chart | null = null;
 
 	function colorFor(i: number, override?: string) {
-		return override ?? PALETTE[i % PALETTE.length];
+		return override ?? paletteColor(i);
 	}
 
 	function pctValue(sortedAsc: number[], pct: number): number {
@@ -262,6 +263,7 @@
 		void zoomMode;
 		void envelopeRange;
 		void showDefective;
+		void hiddenIds;
 		if (!canvas) return;
 		const datasets = buildDatasets();
 		const { x: xRange, y: yRange } = axisRange();

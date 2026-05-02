@@ -294,13 +294,20 @@ on the deprecation banner per direction on 2026-05-01.)
    (normal / IAF detail / max-pressure detail), Range (envelope
    Min/Max / P05-P95 / P25-P75), and 4 export buttons (copy PNG,
    download PNG, copy data HTML, download HTML doc).
-6. ✅ **Per-session interactivity covered by combination.** No
-   ChartLegendTable port needed — Chart.js's native legend
-   already toggles series visibility on click, and PenDetail's
-   per-session table already shows P-values (IAF, Max) per row
-   with links into the session detail page. The richer
-   PenPressureData component would duplicate UI without adding
-   value at this scope.
+6. ✅ **`ChartLegendTable.svelte` ported in full.** (2026-05-01)
+   Wide table with one row per session: show/hide checkbox, color
+   swatch matching the chart line, ⚠ defect badge with hover, links
+   to the canonical pen / session detail pages, and 17 P-value
+   columns (P00, P01, P05, P10, P20, P25, P30, P40, P50, P60, P70,
+   P75, P80, P90, P95, P99, P100) — each cell is the interpolated
+   physical force at that logical-pressure percentile. Show/hide
+   syncs with `<PressureChart>` via a shared `hiddenIds` set so
+   unchecking a row hides its line live. Color sync between chart
+   and legend goes through a shared `src/lib/chart-palette.ts`
+   helper. Replaces the simple session-summary table on PenDetail;
+   added beneath the chart on PenFamilyDetail and the Flagged
+   sub-tab too. Optional `showBrand` / `showModel` columns light up
+   on the cross-pen views.
 7. ✅ **`SessionStats.svelte`.** (2026-05-01) Min / median / max
    across sessions at P00 / P25 / P50 / P75 / P100. Defect-aware:
    excludes defective sessions and shows an "Excluding N

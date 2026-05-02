@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
-	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
-	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
@@ -10,7 +8,9 @@
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
+	import ChartLegendTable from '$lib/components/ChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
+	import { paletteColor } from '$lib/chart-palette.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
 	let { data } = $props();
@@ -23,17 +23,30 @@
 		data.defectsByInventoryId ?? new Map(),
 	);
 
+	let sessionColors = $derived(new Map(pressureSessions.map((s, i) => [s._id, paletteColor(i)])));
+
 	let chartSessions = $derived(
 		pressureSessions.map((s) => {
 			const info = defectsByInventoryId.get(s.InventoryId);
 			return {
+				id: s._id,
 				label: `${s.InventoryId} ${s.Date}`,
 				records: s.Records,
+				color: sessionColors.get(s._id),
 				defective: !!info,
 				defectInfo: info?.detailsLabel,
 			};
 		}),
 	);
+
+	let hiddenSessionIds = $state(new Set<string>());
+
+	function toggleSessionVisibility(id: string) {
+		const next = new Set(hiddenSessionIds);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		hiddenSessionIds = next;
+	}
 
 	let showJson = $state(false);
 	let activeTab = $state<'specs' | 'tablets' | 'included' | 'pressure'>('specs');
@@ -152,48 +165,23 @@
 			<p class="pr-summary">
 				{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} for this pen.
 			</p>
-			<PressureChart sessions={chartSessions} title={`${pen.PenName} pressure response`} />
+			<PressureChart
+				sessions={chartSessions}
+				title={`${pen.PenName} pressure response`}
+				hiddenIds={hiddenSessionIds}
+			/>
 			<SessionStats
 				sessions={pressureSessions}
 				title="Aggregated across sessions"
 				{defectsByInventoryId}
 			/>
-			<table class="session-table">
-				<thead>
-					<tr>
-						<th>Inventory ID</th>
-						<th>Date</th>
-						<th>Tablet</th>
-						<th>Driver</th>
-						<th>OS</th>
-						<th>Records</th>
-						<th>IAF (gf)</th>
-						<th>Max (gf)</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each pressureSessions as s (s._id)}
-						{@const defect = defectsByInventoryId.get(s.InventoryId)}
-						<tr class:defective={!!defect}>
-							<td class="mono">
-								<a href="{base}/entity/{encodeURIComponent(sessionEntityId(s))}">
-									{s.InventoryId}
-								</a>
-								{#if defect}
-									<span class="defect-badge" title={defect.detailsLabel}>⚠</span>
-								{/if}
-							</td>
-							<td class="mono">{s.Date}</td>
-							<td class="mono">{s.TabletEntityId}</td>
-							<td class="mono">{s.Driver}</td>
-							<td>{s.OS}</td>
-							<td class="num">{s.Records.length}</td>
-							<td class="num mono">{fmtP(estimateP00(s.Records))}</td>
-							<td class="num mono">{fmtP(estimateP100(s.Records))}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
+			<ChartLegendTable
+				sessions={pressureSessions}
+				colors={sessionColors}
+				hiddenIds={hiddenSessionIds}
+				onToggle={toggleSessionVisibility}
+				{defectsByInventoryId}
+			/>
 		{:else}
 			<p class="no-data">No pressure response data available for this pen model.</p>
 		{/if}
@@ -322,40 +310,6 @@
 		margin: 0 0 12px;
 	}
 
-	.session-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 13px;
-		margin-top: 16px;
-	}
-	.session-table th {
-		text-align: left;
-		padding: 6px 10px;
-		font-weight: 600;
-		color: var(--text-muted);
-		border-bottom: 2px solid var(--border);
-	}
-	.session-table td {
-		padding: 5px 10px;
-		border-bottom: 1px solid var(--border);
-	}
-	.session-table a {
-		color: var(--link);
-		text-decoration: none;
-	}
-	.session-table tr.defective {
-		color: var(--text-muted);
-	}
-	.defect-badge {
-		display: inline-block;
-		margin-left: 4px;
-		color: #d97706;
-		font-weight: 700;
-		cursor: help;
-	}
-	.session-table a:hover {
-		text-decoration: underline;
-	}
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 	}

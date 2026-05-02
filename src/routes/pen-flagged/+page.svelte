@@ -28,7 +28,9 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
+	import ChartLegendTable from '$lib/components/ChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
+	import { paletteColor } from '$lib/chart-palette.js';
 
 	let penTabs = $derived([
 		{ href: '/pens', label: 'Pen models' },
@@ -116,23 +118,37 @@
 		})(),
 	);
 
+	let sessionColors = $derived(new Map(matchedSessions.map((s, i) => [s._id, paletteColor(i)])));
+
+	let penNameById = $derived(
+		new Map(
+			pens.map((p) => [p.EntityId, p.PenName === p.PenId ? p.PenId : `${p.PenName} (${p.PenId})`]),
+		),
+	);
+
 	let chartSessions = $derived(
 		matchedSessions.map((s) => {
-			const pen = pensByEntityId.get(s.PenEntityId.toLowerCase());
-			const penLabel = pen
-				? pen.PenName === pen.PenId
-					? pen.PenId
-					: `${pen.PenName} (${pen.PenId})`
-				: s.PenEntityId;
+			const penLabel = penNameById.get(s.PenEntityId) ?? s.PenEntityId;
 			const info = defectsByInventoryId.get(s.InventoryId);
 			return {
+				id: s._id,
 				label: `${penLabel} · ${s.InventoryId} ${s.Date}`,
 				records: s.Records,
+				color: sessionColors.get(s._id),
 				defective: !!info,
 				defectInfo: info?.detailsLabel,
 			};
 		}),
 	);
+
+	let hiddenSessionIds = $state(new Set<string>());
+
+	function toggleSessionVisibility(id: string) {
+		const next = new Set(hiddenSessionIds);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		hiddenSessionIds = next;
+	}
 </script>
 
 <Nav />
@@ -157,11 +173,25 @@
 	{#if chartSessions.length > 0}
 		<section class="chart-section">
 			<h2>Pressure Response Overlay ({chartSessions.length} sessions)</h2>
-			<PressureChart sessions={chartSessions} title="Flagged sessions" />
+			<PressureChart
+				sessions={chartSessions}
+				title="Flagged sessions"
+				hiddenIds={hiddenSessionIds}
+			/>
 			<SessionStats
 				sessions={matchedSessions}
 				title="Aggregated across flagged sessions"
 				{defectsByInventoryId}
+			/>
+			<ChartLegendTable
+				sessions={matchedSessions}
+				colors={sessionColors}
+				hiddenIds={hiddenSessionIds}
+				onToggle={toggleSessionVisibility}
+				{penNameById}
+				{defectsByInventoryId}
+				showBrand
+				showModel
 			/>
 		</section>
 	{:else}

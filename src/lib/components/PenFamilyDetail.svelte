@@ -11,8 +11,10 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
+	import ChartLegendTable from '$lib/components/ChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
+	import { paletteColor } from '$lib/chart-palette.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 
 	let { data } = $props();
@@ -34,17 +36,30 @@
 		),
 	);
 
+	let sessionColors = $derived(new Map(pressureSessions.map((s, i) => [s._id, paletteColor(i)])));
+
 	let chartSessions = $derived(
 		pressureSessions.map((s) => {
 			const info = defectsByInventoryId.get(s.InventoryId);
 			return {
+				id: s._id,
 				label: `${penLabelById.get(s.PenEntityId) ?? s.PenEntityId} · ${s.InventoryId} ${s.Date}`,
 				records: s.Records,
+				color: sessionColors.get(s._id),
 				defective: !!info,
 				defectInfo: info?.detailsLabel,
 			};
 		}),
 	);
+
+	let hiddenSessionIds = $state(new Set<string>());
+
+	function toggleSessionVisibility(id: string) {
+		const next = new Set(hiddenSessionIds);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		hiddenSessionIds = next;
+	}
 </script>
 
 <Nav />
@@ -89,11 +104,24 @@
 <section class="pressure">
 	<h2>Pressure Response ({pressureSessions.length})</h2>
 	{#if pressureSessions.length > 0}
-		<PressureChart sessions={chartSessions} title={`${family.FamilyName} pressure response`} />
+		<PressureChart
+			sessions={chartSessions}
+			title={`${family.FamilyName} pressure response`}
+			hiddenIds={hiddenSessionIds}
+		/>
 		<SessionStats
 			sessions={pressureSessions}
 			title="Aggregated across sessions in this family"
 			{defectsByInventoryId}
+		/>
+		<ChartLegendTable
+			sessions={pressureSessions}
+			colors={sessionColors}
+			hiddenIds={hiddenSessionIds}
+			onToggle={toggleSessionVisibility}
+			penNameById={penLabelById}
+			{defectsByInventoryId}
+			showModel
 		/>
 	{:else}
 		<p class="dim">No pressure response data available for any pen in this family.</p>
