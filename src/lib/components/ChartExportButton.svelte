@@ -1,20 +1,31 @@
 <script lang="ts">
-	// Export trigger for chart components (currently SVG-based).
+	// Export trigger for chart components.
 	//
-	// Caller passes `getSvg`, a function that returns the live SVG element
-	// of its chart, plus a `title` used for the download filename. The
-	// component renders a small "Export ▾" dropdown with four actions:
-	// Copy PNG, Copy SVG, Download PNG, Download SVG.
+	// Two modes:
+	//   - SVG mode (caller passes `getSvg`): exports Copy PNG, Copy SVG,
+	//     Download PNG, Download SVG. Used by SVG-based charts
+	//     (ValueHistogram, BandsChart, TabletDimensionComparison).
+	//   - Canvas mode (caller passes `getCanvas`, optionally `getDataHtml`):
+	//     exports Copy PNG, Download PNG, and (when getDataHtml is set)
+	//     Copy data HTML, Download HTML doc. Used by Chart.js-based charts
+	//     (PressureChart).
 	//
-	// PNG is produced by serializing the SVG, drawing it onto a canvas at
-	// 2× scale on a white background (so transparent SVG fills don't
-	// produce a transparent PNG), and exporting via canvas.toBlob.
+	// PNG in SVG mode is produced by serializing the SVG, drawing it onto
+	// a canvas at 2× scale on a white background (so transparent SVG fills
+	// don't produce a transparent PNG). PNG in canvas mode reads from the
+	// chart's own canvas directly.
 	interface Props {
-		getSvg: () => SVGElement | null | undefined;
 		title: string;
 		filename?: string;
+		getSvg?: () => SVGElement | null | undefined;
+		getCanvas?: () => HTMLCanvasElement | null | undefined;
+		/** Returns an HTML string (a `<table>...`) for the data view. When
+		 * present, two extra menu items appear: "Copy data" and
+		 * "Download HTML". Only valid in canvas mode. */
+		getDataHtml?: () => string;
 	}
-	let { getSvg, title, filename }: Props = $props();
+	let { getSvg, getCanvas, getDataHtml, title, filename }: Props = $props();
+	const mode: 'svg' | 'canvas' = getCanvas ? 'canvas' : 'svg';
 
 	let open = $state(false);
 	let toast = $state<string | null>(null);
@@ -43,7 +54,7 @@
 	}
 
 	function getSvgString(): string | null {
-		const el = getSvg();
+		const el = getSvg?.();
 		if (!el) return null;
 		const clone = el.cloneNode(true) as SVGElement;
 		if (!clone.getAttribute('xmlns')) {
@@ -69,8 +80,20 @@
 		return { width: 800, height: 600 };
 	}
 
+	async function canvasToPngBlob(): Promise<Blob | null> {
+		const canvas = getCanvas?.();
+		if (!canvas) return null;
+		return new Promise<Blob | null>((resolve) => {
+			canvas.toBlob((b) => resolve(b), 'image/png');
+		});
+	}
+
+	async function getPngBlob(): Promise<Blob | null> {
+		return mode === 'canvas' ? canvasToPngBlob() : svgToPngBlob();
+	}
+
 	async function svgToPngBlob(): Promise<Blob | null> {
-		const el = getSvg();
+		const el = getSvg?.();
 		const svgString = getSvgString();
 		if (!el || !svgString) return null;
 		const { width, height } = getPixelDims(el);
@@ -120,7 +143,7 @@
 
 	async function copyPng(): Promise<void> {
 		open = false;
-		const blob = await svgToPngBlob();
+		const blob = await getPngBlob();
 		if (!blob) {
 			console.error('PNG export failed');
 			return;
@@ -150,13 +173,50 @@
 
 	async function downloadPng(): Promise<void> {
 		open = false;
-		const blob = await svgToPngBlob();
+		const blob = await getPngBlob();
 		if (!blob) {
 			console.error('PNG export failed');
 			return;
 		}
 		triggerDownload(blob, getFilename('png'));
 		showToast('Downloaded PNG ✓');
+	}
+
+	async function copyDataHtml(): Promise<void> {
+		open = false;
+		const html = getDataHtml?.();
+		if (!html) return;
+		try {
+			await navigator.clipboard.write([
+				new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) }),
+			]);
+			showToast('Copied data ✓');
+		} catch (err) {
+			console.error('Copy data failed', err);
+		}
+	}
+
+	function downloadDataHtml(): void {
+		open = false;
+		const html = getDataHtml?.();
+		if (!html) return;
+		const doc = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${escHtml(title || 'chart')}</title>
+<style>table{border-collapse:collapse;font-family:sans-serif;font-size:13px}th,td{padding:4px 10px;border-bottom:1px solid #ccc;text-align:left}</style>
+</head><body>
+<h2>${escHtml(title || 'chart')}</h2>
+${html}
+</body></html>`;
+		triggerDownload(new Blob([doc], { type: 'text/html' }), getFilename('html'));
+		showToast('Downloaded HTML ✓');
+	}
+
+	function escHtml(s: string): string {
+		return s
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;');
 	}
 
 	function downloadSvg(): void {
@@ -190,11 +250,23 @@
 	</button>
 	{#if open}
 		<div class="dropdown" role="menu" onclick={(e) => e.stopPropagation()}>
-			<button type="button" class="item" onclick={copyPng}>Copy as PNG</button>
-			<button type="button" class="item" onclick={copySvg}>Copy as SVG</button>
-			<div class="separator" role="separator"></div>
-			<button type="button" class="item" onclick={downloadPng}>Download PNG</button>
-			<button type="button" class="item" onclick={downloadSvg}>Download SVG</button>
+			{#if mode === 'svg'}
+				<button type="button" class="item" onclick={copyPng}>Copy as PNG</button>
+				<button type="button" class="item" onclick={copySvg}>Copy as SVG</button>
+				<div class="separator" role="separator"></div>
+				<button type="button" class="item" onclick={downloadPng}>Download PNG</button>
+				<button type="button" class="item" onclick={downloadSvg}>Download SVG</button>
+			{:else}
+				<button type="button" class="item" onclick={copyPng}>Copy as PNG</button>
+				{#if getDataHtml}
+					<button type="button" class="item" onclick={copyDataHtml}>Copy data as HTML</button>
+				{/if}
+				<div class="separator" role="separator"></div>
+				<button type="button" class="item" onclick={downloadPng}>Download PNG</button>
+				{#if getDataHtml}
+					<button type="button" class="item" onclick={downloadDataHtml}>Download HTML</button>
+				{/if}
+			{/if}
 		</div>
 	{/if}
 </div>

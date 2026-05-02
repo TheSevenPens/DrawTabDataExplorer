@@ -18,6 +18,7 @@
 		interpolatePhysical,
 	} from '$data/lib/pressure/interpolate.js';
 	import { paletteColor } from '$lib/chart-palette.js';
+	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 
 	Chart.register(
 		LineController,
@@ -327,38 +328,6 @@
 		chart = null;
 	});
 
-	function exportFilename() {
-		return title.replace(/[^\w-]+/g, '_') || 'pressure-response';
-	}
-
-	function chartPngBlob(): Promise<Blob | null> {
-		return new Promise((res) => {
-			if (!canvas) return res(null);
-			canvas.toBlob(res, 'image/png');
-		});
-	}
-
-	async function copyPng() {
-		const blob = await chartPngBlob();
-		if (!blob) return;
-		try {
-			await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-		} catch (e) {
-			console.error('Copy PNG failed:', e);
-		}
-	}
-
-	async function downloadPng() {
-		const blob = await chartPngBlob();
-		if (!blob) return;
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = `${exportFilename()}.png`;
-		a.click();
-		URL.revokeObjectURL(url);
-	}
-
 	function escHtml(s: string) {
 		return s
 			.replace(/&/g, '&amp;')
@@ -377,34 +346,6 @@
 			.map((r) => `<tr>${r.map((c) => `<td>${escHtml(String(c))}</td>`).join('')}</tr>`)
 			.join('\n');
 		return `<table><thead>${head}</thead><tbody>\n${body}\n</tbody></table>`;
-	}
-
-	async function copyData() {
-		const html = buildTableHtml();
-		try {
-			await navigator.clipboard.write([
-				new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) }),
-			]);
-		} catch (e) {
-			console.error('Copy data failed:', e);
-		}
-	}
-
-	function downloadData() {
-		const doc = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>${escHtml(title || 'Pressure response')}</title>
-<style>table{border-collapse:collapse;font-family:sans-serif;font-size:13px}th,td{padding:4px 10px;border-bottom:1px solid #ccc;text-align:left}</style>
-</head><body>
-<h2>${escHtml(title || 'Pressure response')}</h2>
-${buildTableHtml()}
-</body></html>`;
-		const blob = new Blob([doc], { type: 'text/html' });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = `${exportFilename()}.html`;
-		a.click();
-		URL.revokeObjectURL(url);
 	}
 </script>
 
@@ -443,18 +384,11 @@ ${buildTableHtml()}
 		</label>
 	{/if}
 	<span class="spacer"></span>
-	<button class="export" type="button" onclick={copyPng} title="Copy chart as PNG to clipboard">
-		Copy PNG
-	</button>
-	<button class="export" type="button" onclick={downloadPng} title="Download chart as PNG">
-		↓ PNG
-	</button>
-	<button class="export" type="button" onclick={copyData} title="Copy data as HTML table">
-		Copy data
-	</button>
-	<button class="export" type="button" onclick={downloadData} title="Download data as HTML">
-		↓ HTML
-	</button>
+	<ChartExportButton
+		title={title || 'pressure-response'}
+		getCanvas={() => canvas}
+		getDataHtml={buildTableHtml}
+	/>
 </div>
 
 <div class="chart-wrap" style="height: {height}px;">
@@ -485,19 +419,6 @@ ${buildTableHtml()}
 	.defective-toggle {
 		color: #b45309;
 		font-weight: 600;
-	}
-	.export {
-		padding: 3px 10px;
-		font-size: 12px;
-		border: 1px solid var(--border);
-		background: var(--bg-card);
-		color: var(--text);
-		border-radius: 4px;
-		cursor: pointer;
-	}
-	.export:hover {
-		border-color: #2563eb;
-		color: #2563eb;
 	}
 	.chart-wrap {
 		position: relative;
