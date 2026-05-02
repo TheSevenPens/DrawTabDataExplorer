@@ -28,7 +28,7 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
-	import ChartLegendTable from '$lib/components/ChartLegendTable.svelte';
+	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { paletteColor } from '$lib/chart-palette.js';
 
@@ -178,7 +178,7 @@
 				title="Flagged sessions"
 				hiddenIds={hiddenSessionIds}
 			/>
-			<ChartLegendTable
+			<PressureResponseChartLegendTable
 				sessions={matchedSessions}
 				colors={sessionColors}
 				hiddenIds={hiddenSessionIds}

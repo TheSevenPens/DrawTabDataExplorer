@@ -11,7 +11,7 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
-	import ChartLegendTable from '$lib/components/ChartLegendTable.svelte';
+	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
 	import { paletteColor } from '$lib/chart-palette.js';
@@ -109,7 +109,7 @@
 			title={`${family.FamilyName} pressure response`}
 			hiddenIds={hiddenSessionIds}
 		/>
-		<ChartLegendTable
+		<PressureResponseChartLegendTable
 			sessions={pressureSessions}
 			colors={sessionColors}
 			hiddenIds={hiddenSessionIds}

@@ -8,7 +8,7 @@
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
-	import ChartLegendTable from '$lib/components/ChartLegendTable.svelte';
+	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
@@ -170,7 +170,7 @@
 				title={`${pen.PenName} pressure response`}
 				hiddenIds={hiddenSessionIds}
 			/>
-			<ChartLegendTable
+			<PressureResponseChartLegendTable
 				sessions={pressureSessions}
 				colors={sessionColors}
 				hiddenIds={hiddenSessionIds}

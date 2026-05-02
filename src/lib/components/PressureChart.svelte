@@ -304,12 +304,10 @@
 				},
 				plugins: {
 					title: title ? { display: true, text: title } : undefined,
-					legend: {
-						position: 'bottom',
-						labels: {
-							filter: (item) => !(item.text ?? '').includes('est.'),
-						},
-					},
+					// Chart.js's native legend is suppressed because the
+					// companion <PressureResponseChartLegendTable> below the chart already
+					// shows colors, labels, and per-series toggles.
+					legend: { display: false },
 					tooltip: {
 						callbacks: {
 							label: (ctx) => {

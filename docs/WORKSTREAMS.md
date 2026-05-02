@@ -247,7 +247,7 @@ What PenPressureData has that the Explorer doesn't:
    prefixed by the pen name to disambiguate models.
    The entity loader was extended to return `pressureSessions:
 PressureResponse[]` for the `pen` and `penfamily` cases.
-   **Deferred from this phase:** ChartLegendTable (per-session
+   **Deferred from this phase:** PressureResponseChartLegendTable (per-session
    checkbox toggling + P-value table) and ModelStats (min/median/max
    aggregates) — the simpler session-table I added covers the
    immediate need; revive the more complex components if/when the
@@ -294,7 +294,7 @@ on the deprecation banner per direction on 2026-05-01.)
    (normal / IAF detail / max-pressure detail), Range (envelope
    Min/Max / P05-P95 / P25-P75), and 4 export buttons (copy PNG,
    download PNG, copy data HTML, download HTML doc).
-6. ✅ **`ChartLegendTable.svelte` ported in full.** (2026-05-01)
+6. ✅ **`PressureResponseChartLegendTable.svelte` ported in full.** (2026-05-01)
    Wide table with one row per session: show/hide checkbox, color
    swatch matching the chart line, ⚠ defect badge with hover, links
    to the canonical pen / session detail pages, and 17 P-value
@@ -332,7 +332,7 @@ on the deprecation banner per direction on 2026-05-01.)
     above ~6 series. Our chart relies on Chart.js's auto-wrapping
     bottom legend rather than inline-on-curve or in-plot labels,
     so labels can't overlap each other in the way their algorithm
-    is meant to fix. The richer `ChartLegendTable` (item 6) also
+    is meant to fix. The richer `PressureResponseChartLegendTable` (item 6) also
     gives a separate per-session table with matching color
     swatches for cases where the bottom legend gets long.
 
@@ -340,7 +340,7 @@ on the deprecation banner per direction on 2026-05-01.)
     will start eating plot height; if that becomes a problem,
     options would be: (a) move the legend to `position: 'right'`
     with internal scroll, (b) hide the bottom legend entirely and
-    rely on `ChartLegendTable` alone, (c) add inline endpoint
+    rely on `PressureResponseChartLegendTable` alone, (c) add inline endpoint
     labels with the tier algorithm from
     [`ValueHistogram.svelte`](../src/lib/components/ValueHistogram.svelte).
     None of these are needed at current data scales (max overlay
