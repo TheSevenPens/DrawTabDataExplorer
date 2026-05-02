@@ -284,23 +284,72 @@ PressureResponse[]` for the `pen` and `penfamily` cases.
    every pen-context page reflects the live total count.
 
 After Phase 4 the standalone tool can be deprecated, mirroring the
-DrawTabInventory and Wacom-Driver-List workstreams.
+DrawTabInventory and Wacom-Driver-List workstreams. (Holding off
+on the deprecation banner per direction on 2026-05-01.)
+
+**Phase 5+ — feature-parity punch list (Compare-with-named-groups
+intentionally excluded):**
+
+5. **Chart toolbar additions on `PressureChart.svelte`.**
+   - Zoom modes: normal range / IAF detail (0–20 gf) / max-pressure
+     detail (95–100%) — swap axis min/max.
+   - View modes: raw / raw + estimates / standardized (resampled at
+     17 percentile levels) / envelope (median line + min/max area
+     with range options Min/Max, P05/P95, P25/P75).
+   - Export buttons (4): copy PNG to clipboard, download PNG,
+     copy HTML data table, download HTML doc. Reference impl in
+     `../PenPressureData/app/src/lib/components/PressureChart.svelte`
+     `copyChart` / `exportPng` / `copyData` / `exportData`.
+6. **`ChartLegendTable.svelte` port.** Per-session checkbox in the
+   legend to toggle visibility live + P-value stats per row + links
+   into the canonical pen / session detail pages. Replaces the
+   simple session-summary table currently on `PenDetail`. Source:
+   `../PenPressureData/app/src/lib/components/ChartLegendTable.svelte`.
+7. **`ModelStats.svelte` port.** Min / median / max aggregates
+   across the sessions for a pen or family (e.g. "median IAF
+   across 13 sessions = 12.4 gf"). Sits between the chart and the
+   session list on detail pages. Source:
+   `../PenPressureData/app/src/lib/components/ModelStats.svelte`.
+8. **Defects-aware chart behaviour.** Defects field is already on
+   `InventoryPen` records (`Defects[]`, vocabulary in
+   `data-repo/data/reference/defect-kinds.json`); the Explorer
+   doesn't surface them yet on charts. Per PenPressureData:
+   - ⚠ indicator next to defective pens in legends and detail
+     headers, with hover for the defect kind + notes
+   - Auto-hide defective sessions on charts by default
+     (toggleable, dimmed in legend)
+   - Exclude defective sessions from `ModelStats` aggregates and
+     envelope curves with an explicit "Excluding N defective"
+     note
+9. **Multi-session overlay on the Sessions list.** Currently the
+   Sessions list at `/pressure-response` only links one session
+   at a time. Add a row checkbox + an "Overlay selected" mode
+   that drops a `<PressureChart>` below the table with the
+   selected sessions overlaid. (Workaround today: use the Flagged
+   sub-tab.)
+10. **Curve label collision when 6+ sessions overlay.** The
+    Chart.js legend handles this OK at the chart level, but
+    inline session labels next to lines get crowded. Could port
+    the tier-placement algorithm from
+    [`ValueHistogram.svelte`](../src/lib/components/ValueHistogram.svelte)
+    across; PenPressureData hasn't solved this cleanly either.
+11. ~~Compare with named groups~~ — deferred indefinitely (was
+    "Phase 5 dropped" in the original plan). Most complex feature
+    in PenPressureData; the Flagged sub-tab covers most of the
+    cross-pen comparison need. Revive only if a real workflow gap
+    emerges.
 
 **Pickup notes (resuming this work):**
 
-- Source repo is cloned as a sibling at `../PenPressureData/`. Pull
+- Source repo cloned as a sibling at `../PenPressureData/`. Pull
   it before referencing files (`cd ../PenPressureData && git pull`).
-- Already in place after Phase 1: `chart.js` dep, `PressureChart.svelte`,
-  `SessionDetail.svelte`, `data-repo/lib/pressure/{interpolate,session-id}.ts`,
-  `session` case in the `/entity/[entityId]` loader.
-- Deferred from Phase 1 (could land in any later phase or stay
-  punted): zoom modes (normal / IAF / max-pressure detail), envelope
-  view (median + min/max area), multi-session overlay UI on the
-  Sessions list, PNG and HTML export from the chart.
-- Drawing curve labels above 6 sessions gets visually busy in
-  PenPressureData's chart too — the marker-label tier algorithm in
-  Explorer's `ValueHistogram.svelte` could be ported across if/when
-  this becomes a problem.
+- Already in place: `chart.js` dep, `PressureChart.svelte`,
+  `SessionDetail.svelte`,
+  `data-repo/lib/pressure/{interpolate,session-id,data-quality}.ts`,
+  `FlagButton.svelte`, three pen flag stores, `/pen-flagged` route,
+  per-pen flag column on `/pen-inventory`, Pressure Response sections
+  on `PenDetail` and `PenFamilyDetail`, five pressure data-quality
+  checks under Data ▸ Data Quality.
 
 **Open:**
 
