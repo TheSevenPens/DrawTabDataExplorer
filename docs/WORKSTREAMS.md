@@ -107,11 +107,10 @@ filters, sort, column picker, saved views). Nothing to port.
 2. ✅ Added in-page deprecation banner to `index.html`.
 3. ✅ Added deprecation notice at top of `docs/OVERVIEW.md`.
 
-**Next:** decide whether to archive the GitHub repo.
+**Decision:** leave the repo live (not archived). The deprecation
+banner is sufficient; existing URLs continue to work.
 
-**Open:** archive the repo or leave it live (deprecated)? Archiving
-prevents future stars/forks; leaving it live keeps existing URLs
-functional.
+This workstream is **complete**.
 
 ## Merge consumer project: Wacom-Driver-List
 
@@ -167,27 +166,24 @@ for comparing driver JSON files during data maintenance — belongs in
    nav link in the Wacom-Driver-List app today either. Nothing to
    port; the file dies when the repo is archived.
 
-After the TabletDetail sub-task in Phase 2 lands, the workstream is
-fully done — archive the repo.
+**Deferred:**
 
-**Open:**
+- **TabletDetail integration sub-task** (Phase 2 leftover) — surface
+  the driver range from `wacom-update/products.json` on the tablet
+  detail page itself when the join hits (via dashless `Model.Id` or
+  `Model.SensorId`). Currently the data is only visible via the
+  Driver Compat listing. ~half day. **Punted on 2026-05-01** — the
+  Driver Compat listing covers the lookup case adequately for now;
+  inline-on-tablet integration can wait until someone actually
+  asks. The workstream is otherwise complete.
 
-- TabletDetail integration: surface the driver range from
-  `wacom-update/products.json` on the tablet detail page itself when
-  the join hits (via dashless `Model.Id` or `Model.SensorId`).
-  Currently the data is only visible via the Driver Compat listing.
-- Archive vs. leave-live, same question as DrawTabInventory.
+## Consumer-merge workstreams — status snapshot (2026-05-01)
 
-## Suggested execution order for the consumer-merge workstreams
-
-1. **Both deprecation banners** (~1 hour total) — DrawTabInventory
-   Phase 1 + Wacom-Driver-List Phase 1. Quickest user-visible win.
-2. **Wacom-Driver-List Phase 2** — port driver-range data; finishes
-   the only feature gap.
-3. **Wacom-Driver-List Phase 3** — relocate the merger script,
-   archive both Wacom-Driver-List and DrawTabInventory.
-4. **PenPressureData** — much larger, separate workstream tracked
-   below.
+| Project           | Status                                                                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| DrawTabInventory  | ✅ deprecation shipped; repo stays live                                                                                                         |
+| Wacom-Driver-List | ✅ banner + driver-range data port done; TabletDetail integration deferred; JsonMerger dropped as obsolete                                      |
+| PenPressureData   | ✅ banner shipped + 9 of 11 punch-list items done; Compare-with-named-groups (item 11) deferred indefinitely; repo stays live for that workflow |
 
 ## Merge consumer project: PenPressureData
 
@@ -283,9 +279,13 @@ PressureResponse[]` for the `pen` and `penfamily` cases.
    `<PressureChart>` for cross-pen comparison. Sub-nav badge in
    every pen-context page reflects the live total count.
 
-After Phase 4 the standalone tool can be deprecated, mirroring the
-DrawTabInventory and Wacom-Driver-List workstreams. (Holding off
-on the deprecation banner per direction on 2026-05-01.)
+**Deprecation banner shipped.** (PenPressureData commit `060f09f`,
+2026-05-01) Added a softer banner than the DrawTabInventory /
+Wacom-Driver-List ones: the Explorer covers everything _except_
+Compare-with-named-groups (item 11, deferred), so the banner notes
+that the standalone site stays live for that one workflow and
+points to the relevant Explorer pages for everything else. Repo
+stays live (not archived).
 
 **Phase 5+ — feature-parity punch list:**
 
