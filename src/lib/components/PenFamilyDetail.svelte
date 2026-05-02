@@ -10,6 +10,7 @@
 	} from '$data/lib/entities/pen-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
+	import SessionStats from '$lib/components/SessionStats.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
 
@@ -79,7 +80,8 @@
 <section class="pressure">
 	<h2>Pressure Response ({pressureSessions.length})</h2>
 	{#if pressureSessions.length > 0}
-		<PressureChart sessions={chartSessions} />
+		<PressureChart sessions={chartSessions} title={`${family.FamilyName} pressure response`} />
+		<SessionStats sessions={pressureSessions} title="Aggregated across sessions in this family" />
 	{:else}
 		<p class="dim">No pressure response data available for any pen in this family.</p>
 	{/if}

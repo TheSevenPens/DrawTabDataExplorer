@@ -8,6 +8,7 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
+	import SessionStats from '$lib/components/SessionStats.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
@@ -142,7 +143,8 @@
 			<p class="pr-summary">
 				{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} for this pen.
 			</p>
-			<PressureChart sessions={chartSessions} />
+			<PressureChart sessions={chartSessions} title={`${pen.PenName} pressure response`} />
+			<SessionStats sessions={pressureSessions} title="Aggregated across sessions" />
 			<table class="session-table">
 				<thead>
 					<tr>

@@ -24,6 +24,7 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
+	import SessionStats from '$lib/components/SessionStats.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 
 	let penTabs = $derived([
@@ -88,16 +89,15 @@
 
 	let flaggedUnitEntries = $derived($flaggedPenUnits.map((id) => ({ id, info: unitInfo.get(id) })));
 
-	// Sessions to overlay on the chart: any session whose pen unit, model,
-	// or family is flagged.
-	let chartSessions = $derived(
+	// Sessions matching any current flag (pen unit / model / family).
+	let matchedSessions = $derived(
 		(() => {
 			const flaggedFamilyPenIds = new Set(
 				pens
 					.filter((p) => $flaggedPenFamilies.includes(p.PenFamily.toLowerCase()))
 					.map((p) => p.EntityId.toLowerCase()),
 			);
-			const matched = sessions.filter((s) => {
+			return sessions.filter((s) => {
 				const inv = s.InventoryId.toLowerCase();
 				const model = s.PenEntityId.toLowerCase();
 				if ($flaggedPenUnits.includes(inv)) return true;
@@ -105,19 +105,22 @@
 				if (flaggedFamilyPenIds.has(model)) return true;
 				return false;
 			});
-			return matched.map((s) => {
-				const pen = pensByEntityId.get(s.PenEntityId.toLowerCase());
-				const penLabel = pen
-					? pen.PenName === pen.PenId
-						? pen.PenId
-						: `${pen.PenName} (${pen.PenId})`
-					: s.PenEntityId;
-				return {
-					label: `${penLabel} · ${s.InventoryId} ${s.Date}`,
-					records: s.Records,
-				};
-			});
 		})(),
+	);
+
+	let chartSessions = $derived(
+		matchedSessions.map((s) => {
+			const pen = pensByEntityId.get(s.PenEntityId.toLowerCase());
+			const penLabel = pen
+				? pen.PenName === pen.PenId
+					? pen.PenId
+					: `${pen.PenName} (${pen.PenId})`
+				: s.PenEntityId;
+			return {
+				label: `${penLabel} · ${s.InventoryId} ${s.Date}`,
+				records: s.Records,
+			};
+		}),
 	);
 </script>
 
@@ -143,7 +146,8 @@
 	{#if chartSessions.length > 0}
 		<section class="chart-section">
 			<h2>Pressure Response Overlay ({chartSessions.length} sessions)</h2>
-			<PressureChart sessions={chartSessions} />
+			<PressureChart sessions={chartSessions} title="Flagged sessions" />
+			<SessionStats sessions={matchedSessions} title="Aggregated across flagged sessions" />
 		</section>
 	{:else}
 		<p class="empty">No pressure-response sessions match the current flags.</p>
