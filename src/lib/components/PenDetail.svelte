@@ -8,6 +8,8 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
+	import FlagButton from '$lib/components/FlagButton.svelte';
+	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
 	let { data } = $props();
 	let pen: Pen = $derived(data.pen);
@@ -31,6 +33,11 @@
 
 <div class="title-row">
 	<h1>{brandName(pen.Brand)} {pen.PenName}</h1>
+	<FlagButton
+		flagged={$flaggedPenModels.includes(pen.EntityId.toLowerCase())}
+		onclick={() => toggleFlaggedPenModel(pen.EntityId)}
+		label="Flag this pen model"
+	/>
 	<button class="json-btn" onclick={() => (showJson = true)}>JSON</button>
 </div>
 

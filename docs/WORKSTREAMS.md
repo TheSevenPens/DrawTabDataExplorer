@@ -264,19 +264,24 @@ PressureResponse[]` for the `pen` and `penfamily` cases.
    for Re-measurement (57 = union). Each section has an Export
    button and links rows back to the canonical pen / session detail
    pages.
-4. **Extend flagging to pens/models/families.** (~1 day)
-   - Generalize
-     [`src/lib/flagged-store.ts`](../src/lib/flagged-store.ts)
-     from tablet-only to handle three new sets (pens by inventory
-     ID, pen models by entity ID, pen families by entity ID).
-     Reference impl:
-     `../PenPressureData/app/src/lib/flagged.svelte.js` (uses
-     V2-suffixed localStorage keys; preserve that scheme to avoid
-     colliding with existing tablet flags).
-   - Add a "Flagged" sub-tab under **Pens** showing all flagged
-     items overlaid on a single `<PressureChart>`.
-   - Extend `SubNav` badge support if needed (already supports
-     optional `badge`).
+4. ✅ **Three-tier pen flagging + Flagged sub-tab.** (2026-05-01)
+   Extended [`flagged-store.ts`](../src/lib/flagged-store.ts) with
+   three new uncapped writable stores —
+   `flaggedPenUnits` (lowercase inventory IDs),
+   `flaggedPenModels` (lowercase pen EntityIds),
+   `flaggedPenFamilies` (lowercase family EntityIds) — each with its
+   own localStorage key and toggle function, plus a derived
+   `flaggedPenTotalCount` for the sub-nav badge. The existing
+   tablet flagging is unchanged (separate key, still capped at 6).
+   New `<FlagButton>` component sits in the title rows of
+   `PenDetail.svelte` and `PenFamilyDetail.svelte`. The pen
+   inventory page gains a flag column via `EntityExplorer`
+   (`ResultsTable` now falls through to `InventoryId` for the
+   flag-id when no `EntityId` exists). New `/pen-flagged` route
+   under **Pens** lists each flagged item with an Unflag button and
+   overlays every matching pressure-response session on a single
+   `<PressureChart>` for cross-pen comparison. Sub-nav badge in
+   every pen-context page reflects the live total count.
 
 After Phase 4 the standalone tool can be deprecated, mirroring the
 DrawTabInventory and Wacom-Driver-List workstreams.

@@ -16,13 +16,17 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import { flaggedPenUnits, toggleFlaggedPenUnit } from '$lib/flagged-store.js';
 
-	const penTabs = [
+	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
+
+	let penTabs = $derived([
 		{ href: '/pens', label: 'Pen models' },
 		{ href: '/pen-families', label: 'Pen families' },
 		{ href: '/pen-inventory', label: 'Inventory' },
+		{ href: '/pen-flagged', label: 'Flagged', badge: $flaggedPenTotalCount },
 		{ href: '/pressure-response', label: 'Pressure Response' },
-	];
+	]);
 
 	let pens: InventoryPen[] = $state([]);
 	let penNameMap: Record<string, string> = $state({});
@@ -43,6 +47,11 @@
 		penNameMap = map;
 		pens = p as unknown as InventoryPen[];
 	});
+
+	// Inventory IDs are stored uppercase in the data; the flag store uses
+	// lowercase. Normalize at the boundary so the flag column toggles
+	// correctly and stays in sync with the Flagged sub-tab.
+	let flaggedSet = $derived(new Set($flaggedPenUnits.map((id) => id.toUpperCase())));
 </script>
 
 <Nav />
@@ -59,6 +68,8 @@
 	defaultFilterField="Brand"
 	defaultSortField="InventoryId"
 	quickFilterFields={['Brand']}
+	flaggedIds={flaggedSet}
+	onToggleFlag={toggleFlaggedPenUnit}
 	cellLinks={{
 		PenEntityId: (item: InventoryPen) => {
 			const name = penNameMap[item.PenEntityId];

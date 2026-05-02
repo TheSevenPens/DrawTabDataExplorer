@@ -21,7 +21,7 @@
 		{
 			href: '/pens',
 			label: 'Pens',
-			altActive: ['/pen-families', '/pen-inventory', '/pressure-response'],
+			altActive: ['/pen-families', '/pen-inventory', '/pen-flagged', '/pressure-response'],
 		},
 		{ href: '/drivers', label: 'Drivers' },
 		{ href: '/timeline', label: 'Timeline' },

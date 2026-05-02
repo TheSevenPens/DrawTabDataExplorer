@@ -1,0 +1,283 @@
+<script lang="ts">
+	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
+	import {
+		loadPensFromURL,
+		loadPenFamiliesFromURL,
+		loadPressureResponseFromURL,
+		brandName,
+		type Pen,
+		type PenFamily,
+		type PressureResponse,
+	} from '$data/lib/drawtab-loader.js';
+	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
+	import {
+		flaggedPenUnits,
+		flaggedPenModels,
+		flaggedPenFamilies,
+		flaggedPenTotalCount,
+		toggleFlaggedPenUnit,
+		toggleFlaggedPenModel,
+		toggleFlaggedPenFamily,
+		clearAllPenFlags,
+	} from '$lib/flagged-store.js';
+	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
+	import PressureChart from '$lib/components/PressureChart.svelte';
+	import FlagButton from '$lib/components/FlagButton.svelte';
+
+	let penTabs = $derived([
+		{ href: '/pens', label: 'Pen models' },
+		{ href: '/pen-families', label: 'Pen families' },
+		{ href: '/pen-inventory', label: 'Inventory' },
+		{ href: '/pen-flagged', label: 'Flagged', badge: $flaggedPenTotalCount },
+		{ href: '/pressure-response', label: 'Pressure Response' },
+	]);
+
+	let pens: Pen[] = $state([]);
+	let families: PenFamily[] = $state([]);
+	let sessions: PressureResponse[] = $state([]);
+
+	onMount(async () => {
+		const [p, f, s] = await Promise.all([
+			loadPensFromURL(base),
+			loadPenFamiliesFromURL(base),
+			loadPressureResponseFromURL(base),
+		]);
+		pens = p;
+		families = f as PenFamily[];
+		sessions = s;
+	});
+
+	let pensByEntityId = $derived(new Map(pens.map((p) => [p.EntityId.toLowerCase(), p])));
+	let familiesByEntityId = $derived(new Map(families.map((f) => [f.EntityId.toLowerCase(), f])));
+
+	let flaggedModelEntries = $derived(
+		$flaggedPenModels
+			.map((id) => ({ id, pen: pensByEntityId.get(id) }))
+			.filter((e): e is { id: string; pen: Pen } => !!e.pen),
+	);
+
+	let flaggedFamilyEntries = $derived(
+		$flaggedPenFamilies
+			.map((id) => ({ id, family: familiesByEntityId.get(id) }))
+			.filter((e): e is { id: string; family: PenFamily } => !!e.family),
+	);
+
+	// Resolve flagged pen units (inventory IDs) by looking at sessions —
+	// each unit's pen entity ID + a sample inventory display from sessions.
+	let unitInfo = $derived(
+		(() => {
+			const out = new Map<
+				string,
+				{ penEntityId: string; brand: string; inventoryDisplay: string }
+			>();
+			for (const s of sessions) {
+				const id = s.InventoryId.toLowerCase();
+				if (!out.has(id)) {
+					out.set(id, {
+						penEntityId: s.PenEntityId,
+						brand: s.Brand,
+						inventoryDisplay: s.InventoryId,
+					});
+				}
+			}
+			return out;
+		})(),
+	);
+
+	let flaggedUnitEntries = $derived($flaggedPenUnits.map((id) => ({ id, info: unitInfo.get(id) })));
+
+	// Sessions to overlay on the chart: any session whose pen unit, model,
+	// or family is flagged.
+	let chartSessions = $derived(
+		(() => {
+			const flaggedFamilyPenIds = new Set(
+				pens
+					.filter((p) => $flaggedPenFamilies.includes(p.PenFamily.toLowerCase()))
+					.map((p) => p.EntityId.toLowerCase()),
+			);
+			const matched = sessions.filter((s) => {
+				const inv = s.InventoryId.toLowerCase();
+				const model = s.PenEntityId.toLowerCase();
+				if ($flaggedPenUnits.includes(inv)) return true;
+				if ($flaggedPenModels.includes(model)) return true;
+				if (flaggedFamilyPenIds.has(model)) return true;
+				return false;
+			});
+			return matched.map((s) => {
+				const pen = pensByEntityId.get(s.PenEntityId.toLowerCase());
+				const penLabel = pen
+					? pen.PenName === pen.PenId
+						? pen.PenId
+						: `${pen.PenName} (${pen.PenId})`
+					: s.PenEntityId;
+				return {
+					label: `${penLabel} · ${s.InventoryId} ${s.Date}`,
+					records: s.Records,
+				};
+			});
+		})(),
+	);
+</script>
+
+<Nav />
+<SubNav tabs={penTabs} />
+
+<div class="header">
+	<h1>Flagged Pens</h1>
+	<p class="meta">
+		{$flaggedPenTotalCount} item{$flaggedPenTotalCount === 1 ? '' : 's'} flagged across pen units, models,
+		and families. Flagged sessions overlay together on the chart below for cross-pen comparison.
+	</p>
+	{#if $flaggedPenTotalCount > 0}
+		<button class="clear-btn" onclick={clearAllPenFlags}>Clear all flags</button>
+	{/if}
+</div>
+
+{#if $flaggedPenTotalCount === 0}
+	<p class="empty">
+		Nothing flagged yet. Open a pen, pen family, or inventory pen and click the ⚐ button to flag it.
+	</p>
+{:else}
+	{#if chartSessions.length > 0}
+		<section class="chart-section">
+			<h2>Pressure Response Overlay ({chartSessions.length} sessions)</h2>
+			<PressureChart sessions={chartSessions} />
+		</section>
+	{:else}
+		<p class="empty">No pressure-response sessions match the current flags.</p>
+	{/if}
+
+	{#if flaggedModelEntries.length > 0}
+		<section>
+			<h2>Pen Models ({flaggedModelEntries.length})</h2>
+			<ul class="entries">
+				{#each flaggedModelEntries as e (e.id)}
+					<li>
+						<FlagButton flagged={true} onclick={() => toggleFlaggedPenModel(e.id)} label="Unflag" />
+						<a href="{base}/entity/{encodeURIComponent(e.id)}">
+							{brandName(e.pen.Brand)}
+							{e.pen.PenName}
+							{#if e.pen.PenName !== e.pen.PenId}<span class="dim">({e.pen.PenId})</span>{/if}
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	{#if flaggedFamilyEntries.length > 0}
+		<section>
+			<h2>Pen Families ({flaggedFamilyEntries.length})</h2>
+			<ul class="entries">
+				{#each flaggedFamilyEntries as e (e.id)}
+					<li>
+						<FlagButton
+							flagged={true}
+							onclick={() => toggleFlaggedPenFamily(e.id)}
+							label="Unflag"
+						/>
+						<a href="{base}/entity/{encodeURIComponent(e.id)}">
+							{e.family.FamilyName}
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	{#if flaggedUnitEntries.length > 0}
+		<section>
+			<h2>Pen Units ({flaggedUnitEntries.length})</h2>
+			<ul class="entries">
+				{#each flaggedUnitEntries as e (e.id)}
+					<li>
+						<FlagButton flagged={true} onclick={() => toggleFlaggedPenUnit(e.id)} label="Unflag" />
+						<span class="mono">{e.info?.inventoryDisplay ?? e.id}</span>
+						{#if e.info}
+							<span class="dim">·</span>
+							<a href="{base}/entity/{encodeURIComponent(e.info.penEntityId)}">
+								{e.info.penEntityId}
+							</a>
+							<span class="dim">·</span>
+							<span class="dim">{brandName(e.info.brand)}</span>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	<p class="meta">
+		See the per-session detail at
+		<a href="{base}/pressure-response">Pens ▸ Pressure Response</a>.
+	</p>
+{/if}
+
+<style>
+	.header {
+		margin-bottom: 16px;
+	}
+	h1 {
+		margin: 0 0 8px;
+	}
+	.meta {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: 13px;
+	}
+	.clear-btn {
+		margin-top: 8px;
+		padding: 4px 12px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		background: var(--bg-card);
+		color: var(--text-muted);
+		border-radius: 4px;
+		cursor: pointer;
+	}
+	.clear-btn:hover {
+		border-color: #b91c1c;
+		color: #b91c1c;
+	}
+	.empty {
+		margin: 24px 0;
+		font-size: 14px;
+		color: var(--text-muted);
+		font-style: italic;
+	}
+	.chart-section {
+		margin-bottom: 24px;
+	}
+	section h2 {
+		font-size: 16px;
+		margin: 24px 0 8px;
+	}
+	.entries {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.entries li {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 4px 0;
+		font-size: 14px;
+	}
+	.entries a {
+		color: var(--link);
+		text-decoration: none;
+	}
+	.entries a:hover {
+		text-decoration: underline;
+	}
+	.dim {
+		color: var(--text-muted);
+		font-size: 12px;
+	}
+	.mono {
+		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+	}
+</style>

@@ -10,6 +10,8 @@
 	} from '$data/lib/entities/pen-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
+	import FlagButton from '$lib/components/FlagButton.svelte';
+	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
 
 	let { data } = $props();
 	let family: PenFamily = $derived(data.family);
@@ -37,7 +39,14 @@
 
 <Nav />
 
-<h1>{family.FamilyName}</h1>
+<div class="title-row">
+	<h1>{family.FamilyName}</h1>
+	<FlagButton
+		flagged={$flaggedPenFamilies.includes(family.EntityId.toLowerCase())}
+		onclick={() => toggleFlaggedPenFamily(family.EntityId)}
+		label="Flag this pen family"
+	/>
+</div>
 <DetailView item={family} fields={PEN_FAMILY_FIELDS} fieldGroups={PEN_FAMILY_FIELD_GROUPS} />
 
 <section class="members">
@@ -77,6 +86,15 @@
 </section>
 
 <style>
+	.title-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 8px;
+	}
+	.title-row h1 {
+		margin: 0;
+	}
 	.members,
 	.pressure {
 		margin-top: 24px;

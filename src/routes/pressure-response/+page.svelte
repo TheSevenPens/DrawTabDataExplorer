@@ -14,12 +14,15 @@
 
 	const PEN_PRESSURE_DATA_URL = 'https://thesevenpens.github.io/PenPressureData/';
 
-	const penTabs = [
+	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
+
+	let penTabs = $derived([
 		{ href: '/pens', label: 'Pen models' },
 		{ href: '/pen-families', label: 'Pen families' },
 		{ href: '/pen-inventory', label: 'Inventory' },
+		{ href: '/pen-flagged', label: 'Flagged', badge: $flaggedPenTotalCount },
 		{ href: '/pressure-response', label: 'Pressure Response' },
-	];
+	]);
 
 	let sessions: PressureResponse[] = $state([]);
 	let pens: Pen[] = $state([]);
