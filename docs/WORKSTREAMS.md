@@ -287,57 +287,46 @@ After Phase 4 the standalone tool can be deprecated, mirroring the
 DrawTabInventory and Wacom-Driver-List workstreams. (Holding off
 on the deprecation banner per direction on 2026-05-01.)
 
-**Phase 5+ — feature-parity punch list (Compare-with-named-groups
-intentionally excluded):**
+**Phase 5+ — feature-parity punch list:**
 
-5. **Chart toolbar additions on `PressureChart.svelte`.**
-   - Zoom modes: normal range / IAF detail (0–20 gf) / max-pressure
-     detail (95–100%) — swap axis min/max.
-   - View modes: raw / raw + estimates / standardized (resampled at
-     17 percentile levels) / envelope (median line + min/max area
-     with range options Min/Max, P05/P95, P25/P75).
-   - Export buttons (4): copy PNG to clipboard, download PNG,
-     copy HTML data table, download HTML doc. Reference impl in
-     `../PenPressureData/app/src/lib/components/PressureChart.svelte`
-     `copyChart` / `exportPng` / `copyData` / `exportData`.
-6. **`ChartLegendTable.svelte` port.** Per-session checkbox in the
-   legend to toggle visibility live + P-value stats per row + links
-   into the canonical pen / session detail pages. Replaces the
-   simple session-summary table currently on `PenDetail`. Source:
-   `../PenPressureData/app/src/lib/components/ChartLegendTable.svelte`.
-7. **`ModelStats.svelte` port.** Min / median / max aggregates
-   across the sessions for a pen or family (e.g. "median IAF
-   across 13 sessions = 12.4 gf"). Sits between the chart and the
-   session list on detail pages. Source:
-   `../PenPressureData/app/src/lib/components/ModelStats.svelte`.
-8. **Defects-aware chart behaviour.** Defects field is already on
-   `InventoryPen` records (`Defects[]`, vocabulary in
-   `data-repo/data/reference/defect-kinds.json`); the Explorer
-   doesn't surface them yet on charts. Per PenPressureData:
-   - ⚠ indicator next to defective pens in legends and detail
-     headers, with hover for the defect kind + notes
-   - Auto-hide defective sessions on charts by default
-     (toggleable, dimmed in legend)
-   - Exclude defective sessions from `ModelStats` aggregates and
-     envelope curves with an explicit "Excluding N defective"
-     note
-9. **Multi-session overlay on the Sessions list.** Currently the
-   Sessions list at `/pressure-response` only links one session
-   at a time. Add a row checkbox + an "Overlay selected" mode
-   that drops a `<PressureChart>` below the table with the
-   selected sessions overlaid. (Workaround today: use the Flagged
-   sub-tab.)
-10. **Curve label collision when 6+ sessions overlay.** The
-    Chart.js legend handles this OK at the chart level, but
-    inline session labels next to lines get crowded. Could port
-    the tier-placement algorithm from
-    [`ValueHistogram.svelte`](../src/lib/components/ValueHistogram.svelte)
-    across; PenPressureData hasn't solved this cleanly either.
-11. ~~Compare with named groups~~ — deferred indefinitely (was
-    "Phase 5 dropped" in the original plan). Most complex feature
-    in PenPressureData; the Flagged sub-tab covers most of the
-    cross-pen comparison need. Revive only if a real workflow gap
-    emerges.
+5. ✅ **Chart toolbar.** (2026-05-01) `PressureChart.svelte` gained
+   View (raw / raw+estimates / standardized / envelope), Zoom
+   (normal / IAF detail / max-pressure detail), Range (envelope
+   Min/Max / P05-P95 / P25-P75), and 4 export buttons (copy PNG,
+   download PNG, copy data HTML, download HTML doc).
+6. ✅ **Per-session interactivity covered by combination.** No
+   ChartLegendTable port needed — Chart.js's native legend
+   already toggles series visibility on click, and PenDetail's
+   per-session table already shows P-values (IAF, Max) per row
+   with links into the session detail page. The richer
+   PenPressureData component would duplicate UI without adding
+   value at this scope.
+7. ✅ **`SessionStats.svelte`.** (2026-05-01) Min / median / max
+   across sessions at P00 / P25 / P50 / P75 / P100. Defect-aware:
+   excludes defective sessions and shows an "Excluding N
+   defective" note. Used on PenDetail, PenFamilyDetail, the
+   Flagged sub-tab, and the Sessions-list overlay.
+8. ✅ **Defects-aware chart behaviour.** (2026-05-01) Inventory
+   defects loaded into a `Map<InventoryId, DefectInfo>` via
+   `data-repo/lib/pressure/defects.ts` and threaded through every
+   pressure-response surface: ⚠ badges in tables and chart
+   legends, defective sessions hidden on charts by default
+   (toggleable via toolbar), excluded from `SessionStats`
+   aggregates with the "Excluding N" note, and a banner on
+   `SessionDetail` when the unit itself is defective.
+9. ✅ **Multi-session overlay on the Sessions list.** (2026-05-01)
+   `/pressure-response` Sessions list gained per-row checkboxes
+   - "Select all visible" / "Clear" buttons. Selecting 1+ rows
+     reveals an Overlay section above the table with a
+     `<PressureChart>` and `<SessionStats>` for the selection.
+10. ⏭ **Curve label collisions.** Not applicable — our chart uses
+    Chart.js's bottom legend (auto-wraps cleanly). The
+    PenPressureData polish item only matters for inline-on-curve
+    labels, which we don't draw.
+11. ⏸ ~~Compare with named groups~~ — deferred indefinitely.
+    Most complex feature in PenPressureData; the Flagged sub-tab
+    plus the Sessions-list multi-select cover the cross-pen
+    comparison need. Revive only if a real workflow gap emerges.
 
 **Pickup notes (resuming this work):**
 
