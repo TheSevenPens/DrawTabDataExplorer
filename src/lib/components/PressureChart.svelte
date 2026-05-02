@@ -33,6 +33,8 @@
 		label: string;
 		records: readonly PressureRecord[];
 		color?: string;
+		defective?: boolean;
+		defectInfo?: string;
 	}
 
 	type ViewMode = 'raw' | 'estimates' | 'standardized' | 'envelope';
@@ -52,6 +54,11 @@
 	let viewMode = $state<ViewMode>('estimates');
 	let zoomMode = $state<ZoomMode>('normal');
 	let envelopeRange = $state<EnvelopeRange>('minmax');
+	// Defective sessions are hidden by default; the toggle appears in the
+	// toolbar only when at least one session is flagged.
+	let showDefective = $state(false);
+	let defectiveCount = $derived(sessions.filter((s) => s.defective).length);
+	let visibleSessions = $derived(showDefective ? sessions : sessions.filter((s) => !s.defective));
 
 	const PALETTE = [
 		'#2563eb',
@@ -130,10 +137,11 @@
 	}
 
 	function buildDatasets(): any[] {
-		if (sessions.length === 0) return [];
+		const sessionsToPlot = visibleSessions;
+		if (sessionsToPlot.length === 0) return [];
 
 		if (viewMode === 'envelope') {
-			const { low, mid, high } = buildEnvelope(sessions);
+			const { low, mid, high } = buildEnvelope(sessionsToPlot);
 			const color = '#2563eb';
 			return [
 				{
@@ -170,11 +178,11 @@
 		}
 
 		if (viewMode === 'standardized') {
-			return sessions.map((s, i) => {
+			return sessionsToPlot.map((s, i) => {
 				const color = colorFor(i, s.color);
 				return {
 					type: 'line',
-					label: s.label,
+					label: s.defective ? `⚠ ${s.label}` : s.label,
 					data: standardizeSession(s),
 					borderColor: color,
 					backgroundColor: color,
@@ -187,14 +195,15 @@
 
 		// raw or raw + estimates
 		const out: any[] = [];
-		sessions.forEach((s, i) => {
+		sessionsToPlot.forEach((s, i) => {
 			const color = colorFor(i, s.color);
 			out.push({
 				type: 'line',
-				label: s.label,
+				label: s.defective ? `⚠ ${s.label}` : s.label,
 				data: s.records.map(([x, y]) => ({ x, y })),
 				borderColor: color,
 				backgroundColor: color,
+				borderDash: s.defective ? [3, 3] : undefined,
 				pointRadius: 2.5,
 				pointHoverRadius: 4,
 				borderWidth: 2,
@@ -252,6 +261,7 @@
 		void viewMode;
 		void zoomMode;
 		void envelopeRange;
+		void showDefective;
 		if (!canvas) return;
 		const datasets = buildDatasets();
 		const { x: xRange, y: yRange } = axisRange();
@@ -426,6 +436,12 @@ ${buildTableHtml()}
 			</select>
 		</label>
 	{/if}
+	{#if defectiveCount > 0}
+		<label class="defective-toggle" title="Defective sessions are hidden by default">
+			<input type="checkbox" bind:checked={showDefective} />
+			Show {defectiveCount} defective
+		</label>
+	{/if}
 	<span class="spacer"></span>
 	<button class="export" type="button" onclick={copyPng} title="Copy chart as PNG to clipboard">
 		Copy PNG
@@ -465,6 +481,10 @@ ${buildTableHtml()}
 	}
 	.spacer {
 		flex: 1;
+	}
+	.defective-toggle {
+		color: #b45309;
+		font-weight: 600;
 	}
 	.export {
 		padding: 3px 10px;

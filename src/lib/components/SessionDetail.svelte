@@ -2,11 +2,16 @@
 	import { base } from '$app/paths';
 	import { brandName, type PressureResponse, type Pen } from '$data/lib/drawtab-loader.js';
 	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 
-	let { data }: { data: { session: PressureResponse; pen: Pen | undefined } } = $props();
+	let {
+		data,
+	}: {
+		data: { session: PressureResponse; pen: Pen | undefined; defectInfo?: DefectInfo | null };
+	} = $props();
 
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
 
@@ -20,6 +25,7 @@
 
 	let session = $derived(data.session);
 	let pen = $derived(data.pen);
+	let defectInfo = $derived(data.defectInfo ?? null);
 	let penLabel = $derived(
 		pen
 			? pen.PenName === pen.PenId
@@ -35,6 +41,8 @@
 		{
 			label: `${session.InventoryId} ${session.Date}`,
 			records: session.Records,
+			defective: !!defectInfo,
+			defectInfo: defectInfo?.detailsLabel,
 		},
 	]);
 </script>
@@ -44,6 +52,12 @@
 
 <div class="header">
 	<h1>Pressure Response Session</h1>
+	{#if defectInfo}
+		<div class="defect-banner" title={defectInfo.detailsLabel}>
+			⚠ This pen unit is flagged as defective ({defectInfo.kindsLabel}). Curve and stats may not be
+			representative of a healthy unit.
+		</div>
+	{/if}
 	<dl class="meta">
 		<dt>Pen</dt>
 		<dd>
@@ -109,6 +123,16 @@
 <style>
 	.header {
 		margin-bottom: 16px;
+	}
+	.defect-banner {
+		margin: 8px 0 12px;
+		padding: 10px 14px;
+		background: #fff3cd;
+		border: 1px solid #d97706;
+		border-left: 4px solid #d97706;
+		color: #533f03;
+		border-radius: 4px;
+		font-size: 13px;
 	}
 	h1 {
 		margin: 0 0 12px;

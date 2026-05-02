@@ -16,13 +16,16 @@ import {
 	loadPenFamiliesFromURL,
 	loadTabletFamiliesFromURL,
 	loadPressureResponseFromURL,
+	loadInventoryPensFromURL,
 } from '$data/lib/drawtab-loader.js';
 import type { Tablet, Brand, Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
+import type { InventoryPen } from '$data/lib/schemas.js';
 import { type PenFamily } from '$data/lib/entities/pen-family-fields.js';
 import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
 import { type Driver } from '$data/lib/entities/driver-fields.js';
 import { type PenCompat } from '$data/lib/entities/pen-compat-fields.js';
 import { sessionEntityId } from '$data/lib/pressure/session-id.js';
+import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 
 export async function load({ params }) {
 	const entityId = decodeURIComponent(params.entityId);
@@ -47,11 +50,12 @@ export async function load({ params }) {
 		}
 
 		case 'pen': {
-			const [allPens, allCompat, allTablets, allPressure] = await Promise.all([
+			const [allPens, allCompat, allTablets, allPressure, allInventory] = await Promise.all([
 				loadPensFromURL(base) as Promise<Pen[]>,
 				loadPenCompatFromURL(base) as Promise<PenCompat[]>,
 				loadTabletsFromURL(base) as Promise<Tablet[]>,
 				loadPressureResponseFromURL(base) as Promise<PressureResponse[]>,
+				loadInventoryPensFromURL(base, 'sevenpens') as Promise<InventoryPen[]>,
 			]);
 			const pen = allPens.find((p) => p.EntityId === entityId);
 			if (!pen) error(404, 'Pen not found');
@@ -63,7 +67,15 @@ export async function load({ params }) {
 				(t.Model.IncludedPen ?? []).some((p) => p === entityId),
 			);
 			const pressureSessions = allPressure.filter((s) => s.PenEntityId === entityId);
-			return { entityType, pen, compatibleTablets, includedWithTablets, pressureSessions };
+			const defectsByInventoryId = buildInventoryDefects(allInventory);
+			return {
+				entityType,
+				pen,
+				compatibleTablets,
+				includedWithTablets,
+				pressureSessions,
+				defectsByInventoryId,
+			};
 		}
 
 		case 'driver': {
@@ -74,10 +86,11 @@ export async function load({ params }) {
 		}
 
 		case 'penfamily': {
-			const [families, pens, allPressure] = await Promise.all([
+			const [families, pens, allPressure, allInventory] = await Promise.all([
 				loadPenFamiliesFromURL(base) as Promise<PenFamily[]>,
 				loadPensFromURL(base) as Promise<Pen[]>,
 				loadPressureResponseFromURL(base) as Promise<PressureResponse[]>,
+				loadInventoryPensFromURL(base, 'sevenpens') as Promise<InventoryPen[]>,
 			]);
 			const family = families.find((f) => f.EntityId === entityId);
 			if (!family) error(404, 'Pen family not found');
@@ -86,7 +99,8 @@ export async function load({ params }) {
 				.sort((a, b) => a.PenId.localeCompare(b.PenId));
 			const memberPenIds = new Set(memberPens.map((p) => p.EntityId));
 			const pressureSessions = allPressure.filter((s) => memberPenIds.has(s.PenEntityId));
-			return { entityType, family, memberPens, pressureSessions };
+			const defectsByInventoryId = buildInventoryDefects(allInventory);
+			return { entityType, family, memberPens, pressureSessions, defectsByInventoryId };
 		}
 
 		case 'tabletfamily': {
@@ -102,14 +116,17 @@ export async function load({ params }) {
 		}
 
 		case 'session': {
-			const [allPressure, allPens] = await Promise.all([
+			const [allPressure, allPens, allInventory] = await Promise.all([
 				loadPressureResponseFromURL(base) as Promise<PressureResponse[]>,
 				loadPensFromURL(base) as Promise<Pen[]>,
+				loadInventoryPensFromURL(base, 'sevenpens') as Promise<InventoryPen[]>,
 			]);
 			const session = allPressure.find((s) => sessionEntityId(s) === entityId);
 			if (!session) error(404, 'Pressure-response session not found');
 			const pen = allPens.find((p) => p.EntityId === session.PenEntityId);
-			return { entityType, session, pen };
+			const defectsByInventoryId = buildInventoryDefects(allInventory);
+			const defectInfo = defectsByInventoryId.get(session.InventoryId) ?? null;
+			return { entityType, session, pen, defectInfo };
 		}
 
 		case 'brand': {

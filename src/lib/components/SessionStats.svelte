@@ -6,12 +6,21 @@
 		interpolatePhysical,
 		fmtP,
 	} from '$data/lib/pressure/interpolate.js';
+	import { excludedPensSummary, type DefectInfo } from '$data/lib/pressure/defects.js';
 
 	let {
 		sessions,
 		title = 'Aggregated Stats',
-		excludedNote = '',
-	}: { sessions: PressureResponse[]; title?: string; excludedNote?: string } = $props();
+		defectsByInventoryId = new Map<string, DefectInfo>(),
+	}: {
+		sessions: PressureResponse[];
+		title?: string;
+		defectsByInventoryId?: ReadonlyMap<string, DefectInfo>;
+	} = $props();
+
+	let included = $derived(sessions.filter((s) => !defectsByInventoryId.has(s.InventoryId)));
+	let excluded = $derived(sessions.filter((s) => defectsByInventoryId.has(s.InventoryId)));
+	let excludedSummary = $derived(excludedPensSummary(excluded, defectsByInventoryId));
 
 	const MARKS = [
 		{ label: 'P00 (IAF)', kind: 'p00' as const },
@@ -40,7 +49,7 @@
 	let rows = $derived(
 		MARKS.map((m) => ({
 			label: m.label,
-			...aggregate(sessions.map((s) => valueFor(s, m))),
+			...aggregate(included.map((s) => valueFor(s, m))),
 		})),
 	);
 </script>
@@ -67,11 +76,15 @@
 			{/each}
 		</tbody>
 	</table>
-	{#if excludedNote}
-		<p class="excluded">⚠ {excludedNote}</p>
+	{#if excludedSummary.length > 0}
+		<p class="excluded">
+			⚠ Excluding {excludedSummary.length} defective pen{excludedSummary.length === 1 ? '' : 's'}: {excludedSummary.join(
+				', ',
+			)}
+		</p>
 	{/if}
 	<p class="meta">
-		Aggregates across {sessions.length} session{sessions.length === 1 ? '' : 's'}.
+		Aggregates across {included.length} session{included.length === 1 ? '' : 's'}.
 	</p>
 </div>
 

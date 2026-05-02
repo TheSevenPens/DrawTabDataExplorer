@@ -3,6 +3,7 @@
 	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
@@ -18,12 +19,20 @@
 	let includedWithTablets: Tablet[] = $derived(data.includedWithTablets);
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
 	let pressureSessionCount = $derived(pressureSessions.length);
+	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
+		data.defectsByInventoryId ?? new Map(),
+	);
 
 	let chartSessions = $derived(
-		pressureSessions.map((s) => ({
-			label: `${s.InventoryId} ${s.Date}`,
-			records: s.Records,
-		})),
+		pressureSessions.map((s) => {
+			const info = defectsByInventoryId.get(s.InventoryId);
+			return {
+				label: `${s.InventoryId} ${s.Date}`,
+				records: s.Records,
+				defective: !!info,
+				defectInfo: info?.detailsLabel,
+			};
+		}),
 	);
 
 	let showJson = $state(false);
@@ -144,7 +153,11 @@
 				{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} for this pen.
 			</p>
 			<PressureChart sessions={chartSessions} title={`${pen.PenName} pressure response`} />
-			<SessionStats sessions={pressureSessions} title="Aggregated across sessions" />
+			<SessionStats
+				sessions={pressureSessions}
+				title="Aggregated across sessions"
+				{defectsByInventoryId}
+			/>
 			<table class="session-table">
 				<thead>
 					<tr>
@@ -160,11 +173,15 @@
 				</thead>
 				<tbody>
 					{#each pressureSessions as s (s._id)}
-						<tr>
+						{@const defect = defectsByInventoryId.get(s.InventoryId)}
+						<tr class:defective={!!defect}>
 							<td class="mono">
 								<a href="{base}/entity/{encodeURIComponent(sessionEntityId(s))}">
 									{s.InventoryId}
 								</a>
+								{#if defect}
+									<span class="defect-badge" title={defect.detailsLabel}>⚠</span>
+								{/if}
 							</td>
 							<td class="mono">{s.Date}</td>
 							<td class="mono">{s.TabletEntityId}</td>
@@ -325,6 +342,16 @@
 	.session-table a {
 		color: var(--link);
 		text-decoration: none;
+	}
+	.session-table tr.defective {
+		color: var(--text-muted);
+	}
+	.defect-badge {
+		display: inline-block;
+		margin-left: 4px;
+		color: #d97706;
+		font-weight: 700;
+		cursor: help;
 	}
 	.session-table a:hover {
 		text-decoration: underline;

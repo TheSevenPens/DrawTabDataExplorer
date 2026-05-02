@@ -5,12 +5,15 @@
 		loadPensFromURL,
 		loadPenFamiliesFromURL,
 		loadPressureResponseFromURL,
+		loadInventoryPensFromURL,
 		brandName,
 		type Pen,
 		type PenFamily,
 		type PressureResponse,
 	} from '$data/lib/drawtab-loader.js';
+	import type { InventoryPen } from '$data/lib/schemas.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
+	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import {
 		flaggedPenUnits,
 		flaggedPenModels,
@@ -38,17 +41,22 @@
 	let pens: Pen[] = $state([]);
 	let families: PenFamily[] = $state([]);
 	let sessions: PressureResponse[] = $state([]);
+	let inventoryPens: InventoryPen[] = $state([]);
 
 	onMount(async () => {
-		const [p, f, s] = await Promise.all([
+		const [p, f, s, inv] = await Promise.all([
 			loadPensFromURL(base),
 			loadPenFamiliesFromURL(base),
 			loadPressureResponseFromURL(base),
+			loadInventoryPensFromURL(base, 'sevenpens') as Promise<InventoryPen[]>,
 		]);
 		pens = p;
 		families = f as PenFamily[];
 		sessions = s;
+		inventoryPens = inv;
 	});
+
+	let defectsByInventoryId = $derived(buildInventoryDefects(inventoryPens));
 
 	let pensByEntityId = $derived(new Map(pens.map((p) => [p.EntityId.toLowerCase(), p])));
 	let familiesByEntityId = $derived(new Map(families.map((f) => [f.EntityId.toLowerCase(), f])));
@@ -116,9 +124,12 @@
 					? pen.PenId
 					: `${pen.PenName} (${pen.PenId})`
 				: s.PenEntityId;
+			const info = defectsByInventoryId.get(s.InventoryId);
 			return {
 				label: `${penLabel} · ${s.InventoryId} ${s.Date}`,
 				records: s.Records,
+				defective: !!info,
+				defectInfo: info?.detailsLabel,
 			};
 		}),
 	);
@@ -147,7 +158,11 @@
 		<section class="chart-section">
 			<h2>Pressure Response Overlay ({chartSessions.length} sessions)</h2>
 			<PressureChart sessions={chartSessions} title="Flagged sessions" />
-			<SessionStats sessions={matchedSessions} title="Aggregated across flagged sessions" />
+			<SessionStats
+				sessions={matchedSessions}
+				title="Aggregated across flagged sessions"
+				{defectsByInventoryId}
+			/>
 		</section>
 	{:else}
 		<p class="empty">No pressure-response sessions match the current flags.</p>

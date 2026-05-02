@@ -13,11 +13,15 @@
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
+	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 
 	let { data } = $props();
 	let family: PenFamily = $derived(data.family);
 	let memberPens: Pen[] = $derived(data.memberPens);
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
+	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
+		data.defectsByInventoryId ?? new Map(),
+	);
 
 	// Build a per-pen label so the chart legend distinguishes models
 	// within the same family.
@@ -31,10 +35,15 @@
 	);
 
 	let chartSessions = $derived(
-		pressureSessions.map((s) => ({
-			label: `${penLabelById.get(s.PenEntityId) ?? s.PenEntityId} · ${s.InventoryId} ${s.Date}`,
-			records: s.Records,
-		})),
+		pressureSessions.map((s) => {
+			const info = defectsByInventoryId.get(s.InventoryId);
+			return {
+				label: `${penLabelById.get(s.PenEntityId) ?? s.PenEntityId} · ${s.InventoryId} ${s.Date}`,
+				records: s.Records,
+				defective: !!info,
+				defectInfo: info?.detailsLabel,
+			};
+		}),
 	);
 </script>
 
@@ -81,7 +90,11 @@
 	<h2>Pressure Response ({pressureSessions.length})</h2>
 	{#if pressureSessions.length > 0}
 		<PressureChart sessions={chartSessions} title={`${family.FamilyName} pressure response`} />
-		<SessionStats sessions={pressureSessions} title="Aggregated across sessions in this family" />
+		<SessionStats
+			sessions={pressureSessions}
+			title="Aggregated across sessions in this family"
+			{defectsByInventoryId}
+		/>
 	{:else}
 		<p class="dim">No pressure response data available for any pen in this family.</p>
 	{/if}
