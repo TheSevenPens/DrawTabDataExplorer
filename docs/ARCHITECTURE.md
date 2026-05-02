@@ -22,7 +22,8 @@ DrawTabDataExplorer/
 │   │   ├── pen-compat/           # Pen compatibility list
 │   │   ├── drivers/              # Drivers list + detail (+page.ts)
 │   │   ├── brands/               # Brands list + detail (+page.ts)
-│   │   ├── pressure-response/    # Pressure response (sub-tab of Pens)
+│   │   ├── pressure-response/    # Sessions list (sub-tab of Pens);
+│   │   │                         # detail at /entity/<brand>.session.<id>
 │   │   ├── pen-inventory/        # Personal pen inventory (sub-tab of Pens)
 │   │   ├── tablet-inventory/     # Personal tablet inventory (sub-tab of Tablets)
 │   │   ├── timeline/             # Timeline of releases by year
@@ -45,6 +46,8 @@ DrawTabDataExplorer/
 │       │   ├── ValueHistogram.svelte       # Histogram with KDE, ranges, markers
 │       │   ├── TabletSizeComparison.svelte # Histogram + ISO note for tablet detail
 │       │   ├── ForceProportionsView.svelte # Force-Proportions loss diagram (16:9, 16:10)
+│       │   ├── PressureChart.svelte         # Chart.js scatter for force vs. pressure
+│       │   ├── SessionDetail.svelte         # Per-session detail rendered at /entity/<id>
 │       │   ├── SavedViews.svelte
 │       │   ├── SubNav.svelte                # Sub-tab row under main nav
 │       │   └── Nav.svelte

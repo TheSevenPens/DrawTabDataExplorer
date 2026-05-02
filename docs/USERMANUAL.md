@@ -116,12 +116,22 @@ copy of the table.
 
 ## Pressure Response
 
-Pen pressure-response data has moved to a dedicated tool with a better
-viewing experience:
-<https://thesevenpens.github.io/PenPressureData/>. The **Pressure
-Response** sub-tab under **Pens** in this app currently links there.
-The local viewer will be rebuilt and reintroduced once the new UX is
-finalized.
+The **Pressure Response** sub-tab under **Pens** lists every
+recorded measurement session — the relationship between physical
+force on a pen tip (gram-force) and the logical pressure the
+digitizer reports (0–100%). Filter by brand or pen, then click into
+any row for a detail page with:
+
+- A scatter chart of the raw force-vs-pressure measurements
+- Dashed extrapolation lines showing the estimated **IAF** (Initial
+  Activation Force, P00) and **Max Force** (P100) endpoints when
+  the raw data doesn't reach 0% / 100% exactly
+- A raw-records table
+
+A more featureful viewer with envelope mode, zoom presets, and
+named-group comparison still lives at
+<https://thesevenpens.github.io/PenPressureData/>; those features
+are being incrementally folded back into the Explorer.
 
 ## Inventory
 

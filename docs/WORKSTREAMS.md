@@ -235,18 +235,62 @@ What PenPressureData has that the Explorer doesn't:
    renders the chart, P00/P100 stats, and the raw record table.
    **Deferred to later phases:** zoom modes, envelope view, PNG/HTML
    export menus, multi-session overlay UI.
-2. **Light up existing pen detail pages.** Add a "Pressure Response"
-   section to `PenDetail.svelte` and `PenFamilyDetail.svelte`
-   showing all sessions for that pen/family. Port
-   `ChartLegendTable` and `ModelStats`. (~1 day)
-3. **Data Quality integration.** Port the pressure-specific checks
-   into the existing `/data-quality` page. (~half day)
-4. **Extend flagging to pens/models/families.** Generalize
-   `flagged-store.ts` from tablet-only to handle three new sets.
-   Add a Flagged sub-tab under Pens. (~1 day)
+2. **Light up existing pen detail pages.** (~1 day)
+   - Add a "Pressure Response" section to
+     [`src/lib/components/PenDetail.svelte`](../src/lib/components/PenDetail.svelte)
+     and `PenFamilyDetail.svelte` rendering `<PressureChart>` with
+     all sessions whose `PenEntityId` matches (or whose pen's
+     `PenFamily` matches, for the family page). The
+     `pressureSessionCount` is already on `PenDetail`'s data load
+     ([entity loader](../src/routes/entity/[entityId]/+page.ts));
+     extend the loader to return the session array itself.
+   - Port `ChartLegendTable.svelte` (per-session checkbox + P-value
+     stats + links) from
+     `../PenPressureData/app/src/lib/components/ChartLegendTable.svelte`
+     and `ModelStats.svelte` (min/median/max aggregates) from the
+     same dir. Both are ~200 lines each.
+   - On `PressureChart`, hook up multi-session colour assignment
+     (already done — uses `PALETTE`) and verify a 6+ session pen
+     looks legible.
+3. **Data Quality integration.** (~half day)
+   - Port the pressure-specific checks from
+     `../PenPressureData/app/src/lib/dataQuality.js` (non-monotonic
+     sessions, missing low-end data, single-session pens, stale
+     measurements, recommended-for-re-measurement) into the existing
+     [`/data-quality`](../src/routes/data-quality/+page.svelte)
+     page as a new section.
+4. **Extend flagging to pens/models/families.** (~1 day)
+   - Generalize
+     [`src/lib/flagged-store.ts`](../src/lib/flagged-store.ts)
+     from tablet-only to handle three new sets (pens by inventory
+     ID, pen models by entity ID, pen families by entity ID).
+     Reference impl:
+     `../PenPressureData/app/src/lib/flagged.svelte.js` (uses
+     V2-suffixed localStorage keys; preserve that scheme to avoid
+     colliding with existing tablet flags).
+   - Add a "Flagged" sub-tab under **Pens** showing all flagged
+     items overlaid on a single `<PressureChart>`.
+   - Extend `SubNav` badge support if needed (already supports
+     optional `badge`).
 
 After Phase 4 the standalone tool can be deprecated, mirroring the
 DrawTabInventory and Wacom-Driver-List workstreams.
+
+**Pickup notes (resuming this work):**
+
+- Source repo is cloned as a sibling at `../PenPressureData/`. Pull
+  it before referencing files (`cd ../PenPressureData && git pull`).
+- Already in place after Phase 1: `chart.js` dep, `PressureChart.svelte`,
+  `SessionDetail.svelte`, `data-repo/lib/pressure/{interpolate,session-id}.ts`,
+  `session` case in the `/entity/[entityId]` loader.
+- Deferred from Phase 1 (could land in any later phase or stay
+  punted): zoom modes (normal / IAF / max-pressure detail), envelope
+  view (median + min/max area), multi-session overlay UI on the
+  Sessions list, PNG and HTML export from the chart.
+- Drawing curve labels above 6 sessions gets visually busy in
+  PenPressureData's chart too — the marker-label tier algorithm in
+  Explorer's `ValueHistogram.svelte` could be ported across if/when
+  this becomes a problem.
 
 **Open:**
 
