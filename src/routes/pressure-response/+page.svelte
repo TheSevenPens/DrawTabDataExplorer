@@ -4,13 +4,18 @@
 	import {
 		loadPressureResponseFromURL,
 		loadPensFromURL,
+		loadInventoryPensFromURL,
 		brandName,
 		type PressureResponse,
 		type Pen,
 	} from '$data/lib/drawtab-loader.js';
+	import type { InventoryPen } from '$data/lib/schemas.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
+	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import PressureChart from '$lib/components/PressureChart.svelte';
+	import SessionStats from '$lib/components/SessionStats.svelte';
 
 	const PEN_PRESSURE_DATA_URL = 'https://thesevenpens.github.io/PenPressureData/';
 
@@ -26,14 +31,23 @@
 
 	let sessions: PressureResponse[] = $state([]);
 	let pens: Pen[] = $state([]);
+	let inventoryPens: InventoryPen[] = $state([]);
 	let brandFilter = $state('');
 	let penFilter = $state('');
+	let selectedIds = $state(new Set<string>());
 
 	onMount(async () => {
-		const [s, p] = await Promise.all([loadPressureResponseFromURL(base), loadPensFromURL(base)]);
+		const [s, p, inv] = await Promise.all([
+			loadPressureResponseFromURL(base),
+			loadPensFromURL(base),
+			loadInventoryPensFromURL(base, 'sevenpens') as Promise<InventoryPen[]>,
+		]);
 		sessions = s;
 		pens = p;
+		inventoryPens = inv;
 	});
+
+	let defectsByInventoryId = $derived(buildInventoryDefects(inventoryPens));
 
 	let penNameById = $derived(
 		new Map(
@@ -55,6 +69,38 @@
 			return true;
 		}),
 	);
+
+	let selectedSessions = $derived(filtered.filter((s) => selectedIds.has(s._id)));
+
+	let chartSessions = $derived(
+		selectedSessions.map((s) => {
+			const info = defectsByInventoryId.get(s.InventoryId);
+			const penLabel = penNameById.get(s.PenEntityId) ?? s.PenEntityId;
+			return {
+				label: `${penLabel} · ${s.InventoryId} ${s.Date}`,
+				records: s.Records,
+				defective: !!info,
+				defectInfo: info?.detailsLabel,
+			};
+		}),
+	);
+
+	function toggleSelected(id: string, on: boolean) {
+		const next = new Set(selectedIds);
+		if (on) next.add(id);
+		else next.delete(id);
+		selectedIds = next;
+	}
+
+	function selectAllVisible() {
+		const next = new Set(selectedIds);
+		for (const s of filtered) next.add(s._id);
+		selectedIds = next;
+	}
+
+	function clearSelection() {
+		selectedIds = new Set();
+	}
 </script>
 
 <Nav />
@@ -90,11 +136,32 @@
 		</select>
 	</label>
 	<span class="count">{filtered.length} of {sessions.length}</span>
+	<span class="sel-controls">
+		<button type="button" onclick={selectAllVisible} disabled={filtered.length === 0}>
+			Select all visible
+		</button>
+		<button type="button" onclick={clearSelection} disabled={selectedIds.size === 0}>
+			Clear ({selectedIds.size})
+		</button>
+	</span>
 </div>
+
+{#if selectedSessions.length > 0}
+	<section class="overlay">
+		<h2>Overlay ({selectedSessions.length} sessions)</h2>
+		<PressureChart sessions={chartSessions} title="Selected sessions" />
+		<SessionStats
+			sessions={selectedSessions}
+			title="Aggregated across selected sessions"
+			{defectsByInventoryId}
+		/>
+	</section>
+{/if}
 
 <table>
 	<thead>
 		<tr>
+			<th class="check-col"></th>
 			<th>Brand</th>
 			<th>Pen</th>
 			<th>Inventory ID</th>
@@ -108,14 +175,28 @@
 	<tbody>
 		{#each filtered as s (s._id)}
 			{@const id = sessionEntityId(s)}
-			<tr>
+			{@const defect = defectsByInventoryId.get(s.InventoryId)}
+			<tr class:defective={!!defect}>
+				<td class="check-col">
+					<input
+						type="checkbox"
+						checked={selectedIds.has(s._id)}
+						onchange={(e) => toggleSelected(s._id, (e.currentTarget as HTMLInputElement).checked)}
+						aria-label="Overlay this session on the chart"
+					/>
+				</td>
 				<td>{brandName(s.Brand)}</td>
 				<td>
 					<a href="{base}/entity/{encodeURIComponent(id)}">
 						{penNameById.get(s.PenEntityId) ?? s.PenEntityId}
 					</a>
 				</td>
-				<td class="mono">{s.InventoryId}</td>
+				<td class="mono">
+					{s.InventoryId}
+					{#if defect}
+						<span class="defect-badge" title={defect.detailsLabel}>⚠</span>
+					{/if}
+				</td>
 				<td class="mono">{s.Date}</td>
 				<td class="mono">{s.TabletEntityId}</td>
 				<td class="mono">{s.Driver}</td>
@@ -151,6 +232,47 @@
 	.count {
 		margin-left: auto;
 		color: var(--text-muted);
+	}
+	.sel-controls {
+		display: inline-flex;
+		gap: 6px;
+	}
+	.sel-controls button {
+		padding: 3px 10px;
+		font-size: 12px;
+		border: 1px solid var(--border);
+		background: var(--bg-card);
+		color: var(--text);
+		border-radius: 4px;
+		cursor: pointer;
+	}
+	.sel-controls button:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+	.sel-controls button:hover:not(:disabled) {
+		border-color: #2563eb;
+		color: #2563eb;
+	}
+	.overlay {
+		margin-bottom: 24px;
+	}
+	.overlay h2 {
+		font-size: 16px;
+		margin: 0 0 8px;
+	}
+	.check-col {
+		width: 28px;
+	}
+	tbody tr.defective {
+		color: var(--text-muted);
+	}
+	.defect-badge {
+		display: inline-block;
+		margin-left: 4px;
+		color: #d97706;
+		font-weight: 700;
+		cursor: help;
 	}
 	table {
 		width: 100%;
