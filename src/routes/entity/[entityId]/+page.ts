@@ -62,8 +62,8 @@ export async function load({ params }) {
 			const includedWithTablets = allTablets.filter((t) =>
 				(t.Model.IncludedPen ?? []).some((p) => p === entityId),
 			);
-			const pressureSessionCount = allPressure.filter((s) => s.PenEntityId === entityId).length;
-			return { entityType, pen, compatibleTablets, includedWithTablets, pressureSessionCount };
+			const pressureSessions = allPressure.filter((s) => s.PenEntityId === entityId);
+			return { entityType, pen, compatibleTablets, includedWithTablets, pressureSessions };
 		}
 
 		case 'driver': {
@@ -74,16 +74,19 @@ export async function load({ params }) {
 		}
 
 		case 'penfamily': {
-			const [families, pens] = await Promise.all([
+			const [families, pens, allPressure] = await Promise.all([
 				loadPenFamiliesFromURL(base) as Promise<PenFamily[]>,
 				loadPensFromURL(base) as Promise<Pen[]>,
+				loadPressureResponseFromURL(base) as Promise<PressureResponse[]>,
 			]);
 			const family = families.find((f) => f.EntityId === entityId);
 			if (!family) error(404, 'Pen family not found');
 			const memberPens = pens
 				.filter((p) => p.PenFamily === family.EntityId)
 				.sort((a, b) => a.PenId.localeCompare(b.PenId));
-			return { entityType, family, memberPens };
+			const memberPenIds = new Set(memberPens.map((p) => p.EntityId));
+			const pressureSessions = allPressure.filter((s) => memberPenIds.has(s.PenEntityId));
+			return { entityType, family, memberPens, pressureSessions };
 		}
 
 		case 'tabletfamily': {

@@ -1,16 +1,27 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { brandName, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
+	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
+	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
+	import PressureChart from '$lib/components/PressureChart.svelte';
 
 	let { data } = $props();
 	let pen: Pen = $derived(data.pen);
 	let compatibleTablets: Tablet[] = $derived(data.compatibleTablets);
 	let includedWithTablets: Tablet[] = $derived(data.includedWithTablets);
-	let pressureSessionCount: number = $derived(data.pressureSessionCount);
+	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
+	let pressureSessionCount = $derived(pressureSessions.length);
+
+	let chartSessions = $derived(
+		pressureSessions.map((s) => ({
+			label: `${s.InventoryId} ${s.Date}`,
+			records: s.Records,
+		})),
+	);
 
 	let showJson = $state(false);
 	let activeTab = $state<'specs' | 'tablets' | 'included' | 'pressure'>('specs');
@@ -121,11 +132,42 @@
 {#if activeTab === 'pressure'}
 	<div class="tab-content">
 		{#if pressureSessionCount > 0}
-			<p class="pr-link">
-				<a href="{base}/pressure-response/{encodeURIComponent(pen.EntityId)}"
-					>{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} available</a
-				>
+			<p class="pr-summary">
+				{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} for this pen.
 			</p>
+			<PressureChart sessions={chartSessions} />
+			<table class="session-table">
+				<thead>
+					<tr>
+						<th>Inventory ID</th>
+						<th>Date</th>
+						<th>Tablet</th>
+						<th>Driver</th>
+						<th>OS</th>
+						<th>Records</th>
+						<th>IAF (gf)</th>
+						<th>Max (gf)</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each pressureSessions as s (s._id)}
+						<tr>
+							<td class="mono">
+								<a href="{base}/entity/{encodeURIComponent(sessionEntityId(s))}">
+									{s.InventoryId}
+								</a>
+							</td>
+							<td class="mono">{s.Date}</td>
+							<td class="mono">{s.TabletEntityId}</td>
+							<td class="mono">{s.Driver}</td>
+							<td>{s.OS}</td>
+							<td class="num">{s.Records.length}</td>
+							<td class="num mono">{fmtP(estimateP00(s.Records))}</td>
+							<td class="num mono">{fmtP(estimateP100(s.Records))}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		{:else}
 			<p class="no-data">No pressure response data available for this pen model.</p>
 		{/if}
@@ -248,15 +290,41 @@
 		text-decoration: underline;
 	}
 
-	.pr-link {
+	.pr-summary {
 		font-size: 13px;
+		color: var(--text-muted);
+		margin: 0 0 12px;
 	}
-	.pr-link a {
+
+	.session-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 13px;
+		margin-top: 16px;
+	}
+	.session-table th {
+		text-align: left;
+		padding: 6px 10px;
+		font-weight: 600;
+		color: var(--text-muted);
+		border-bottom: 2px solid var(--border);
+	}
+	.session-table td {
+		padding: 5px 10px;
+		border-bottom: 1px solid var(--border);
+	}
+	.session-table a {
 		color: var(--link);
 		text-decoration: none;
 	}
-	.pr-link a:hover {
+	.session-table a:hover {
 		text-decoration: underline;
+	}
+	.mono {
+		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+	}
+	.num {
+		text-align: right;
 	}
 
 	.no-data {

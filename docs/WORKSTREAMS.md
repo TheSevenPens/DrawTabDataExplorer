@@ -235,23 +235,23 @@ What PenPressureData has that the Explorer doesn't:
    renders the chart, P00/P100 stats, and the raw record table.
    **Deferred to later phases:** zoom modes, envelope view, PNG/HTML
    export menus, multi-session overlay UI.
-2. **Light up existing pen detail pages.** (~1 day)
-   - Add a "Pressure Response" section to
-     [`src/lib/components/PenDetail.svelte`](../src/lib/components/PenDetail.svelte)
-     and `PenFamilyDetail.svelte` rendering `<PressureChart>` with
-     all sessions whose `PenEntityId` matches (or whose pen's
-     `PenFamily` matches, for the family page). The
-     `pressureSessionCount` is already on `PenDetail`'s data load
-     ([entity loader](../src/routes/entity/[entityId]/+page.ts));
-     extend the loader to return the session array itself.
-   - Port `ChartLegendTable.svelte` (per-session checkbox + P-value
-     stats + links) from
-     `../PenPressureData/app/src/lib/components/ChartLegendTable.svelte`
-     and `ModelStats.svelte` (min/median/max aggregates) from the
-     same dir. Both are ~200 lines each.
-   - On `PressureChart`, hook up multi-session colour assignment
-     (already done — uses `PALETTE`) and verify a 6+ session pen
-     looks legible.
+2. ✅ **Pen detail pages light up with pressure data.** (2026-05-01)
+   The Pressure Response tab on
+   [`PenDetail.svelte`](../src/lib/components/PenDetail.svelte)
+   now renders an overlaid `<PressureChart>` of every session for
+   the pen, plus a session table with per-row IAF / Max Force
+   estimates and links to the canonical session detail page.
+   [`PenFamilyDetail.svelte`](../src/lib/components/PenFamilyDetail.svelte)
+   gained a new "Pressure Response (N)" section showing every
+   session for any pen in the family, with the chart legend label
+   prefixed by the pen name to disambiguate models.
+   The entity loader was extended to return `pressureSessions:
+PressureResponse[]` for the `pen` and `penfamily` cases.
+   **Deferred from this phase:** ChartLegendTable (per-session
+   checkbox toggling + P-value table) and ModelStats (min/median/max
+   aggregates) — the simpler session-table I added covers the
+   immediate need; revive the more complex components if/when the
+   richer interactivity becomes useful.
 3. **Data Quality integration.** (~half day)
    - Port the pressure-specific checks from
      `../PenPressureData/app/src/lib/dataQuality.js` (non-monotonic

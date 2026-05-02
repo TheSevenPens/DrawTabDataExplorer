@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { brandName } from '$data/lib/drawtab-loader.js';
-	import type { Pen } from '$data/lib/drawtab-loader.js';
+	import type { Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import {
 		type PenFamily,
@@ -9,10 +9,30 @@
 		PEN_FAMILY_FIELD_GROUPS,
 	} from '$data/lib/entities/pen-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
+	import PressureChart from '$lib/components/PressureChart.svelte';
 
 	let { data } = $props();
 	let family: PenFamily = $derived(data.family);
 	let memberPens: Pen[] = $derived(data.memberPens);
+	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
+
+	// Build a per-pen label so the chart legend distinguishes models
+	// within the same family.
+	let penLabelById = $derived(
+		new Map(
+			memberPens.map((p) => [
+				p.EntityId,
+				p.PenName === p.PenId ? p.PenId : `${p.PenName} (${p.PenId})`,
+			]),
+		),
+	);
+
+	let chartSessions = $derived(
+		pressureSessions.map((s) => ({
+			label: `${penLabelById.get(s.PenEntityId) ?? s.PenEntityId} · ${s.InventoryId} ${s.Date}`,
+			records: s.Records,
+		})),
+	);
 </script>
 
 <Nav />
@@ -47,11 +67,22 @@
 	{/if}
 </section>
 
+<section class="pressure">
+	<h2>Pressure Response ({pressureSessions.length})</h2>
+	{#if pressureSessions.length > 0}
+		<PressureChart sessions={chartSessions} />
+	{:else}
+		<p class="dim">No pressure response data available for any pen in this family.</p>
+	{/if}
+</section>
+
 <style>
-	.members {
+	.members,
+	.pressure {
 		margin-top: 24px;
 	}
-	.members h2 {
+	.members h2,
+	.pressure h2 {
 		font-size: 16px;
 		margin-bottom: 8px;
 	}
