@@ -7,6 +7,19 @@
 		loadInventoryTabletsFromURL,
 	} from '$data/lib/drawtab-loader.js';
 	import { buildFilterUrl } from '$lib/filter-url.js';
+	import {
+		findNonMonotonicSessions,
+		findMissingLowEnd,
+		findSingleSessionPens,
+		findStaleMeasurements,
+		findRecommendedForRemeasurement,
+		type NonMonotonicSession,
+		type MissingLowEndPen,
+		type SingleSessionPen,
+		type StaleMeasurement,
+		type RemeasureRecommendation,
+	} from '$data/lib/pressure/data-quality.js';
+	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
@@ -91,6 +104,36 @@
 			category: 'Compatibility',
 			label: 'Orphaned Family References',
 			count: () => orphanedFamilies.length,
+		},
+		{
+			id: 'pressure-non-monotonic',
+			category: 'Pressure Response',
+			label: 'Non-Monotonic Sessions',
+			count: () => nonMonotonicSessions.length,
+		},
+		{
+			id: 'pressure-missing-low-end',
+			category: 'Pressure Response',
+			label: 'Missing Low-End',
+			count: () => missingLowEndPens.length,
+		},
+		{
+			id: 'pressure-single-session',
+			category: 'Pressure Response',
+			label: 'Single-Session Pens',
+			count: () => singleSessionPens.length,
+		},
+		{
+			id: 'pressure-stale',
+			category: 'Pressure Response',
+			label: 'Stale Measurements',
+			count: () => staleMeasurements.length,
+		},
+		{
+			id: 'pressure-remeasure',
+			category: 'Pressure Response',
+			label: 'Recommended for Re-measurement',
+			count: () => remeasureRecommendations.length,
 		},
 		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
 		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
@@ -250,6 +293,13 @@
 		penName: string;
 	}[] = $state([]);
 
+	// Pressure-response data-quality results
+	let nonMonotonicSessions: NonMonotonicSession[] = $state([]);
+	let missingLowEndPens: MissingLowEndPen[] = $state([]);
+	let singleSessionPens: SingleSessionPen[] = $state([]);
+	let staleMeasurements: StaleMeasurement[] = $state([]);
+	let remeasureRecommendations: RemeasureRecommendation[] = $state([]);
+
 	onMount(async () => {
 		const [dsResult, invPens, invTablets] = await Promise.all([
 			loadAllFromURL(base),
@@ -308,6 +358,13 @@
 		allIssues.push(...checkWhitespace(ds.pressureResponse, 'PressureResponse'));
 
 		issues = allIssues;
+
+		// Pressure-response data quality
+		nonMonotonicSessions = findNonMonotonicSessions(ds.pressureResponse);
+		missingLowEndPens = findMissingLowEnd(ds.pressureResponse);
+		singleSessionPens = findSingleSessionPens(ds.pressureResponse);
+		staleMeasurements = findStaleMeasurements(ds.pressureResponse);
+		remeasureRecommendations = findRecommendedForRemeasurement(ds.pressureResponse);
 
 		// Completion stats
 		tabletCompletion = computeCompletion(ds.tablets, [
@@ -725,6 +782,303 @@
 											>{o.referencedBy}</td
 										></tr
 									>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
+
+			{#if activeSection === 'pressure-non-monotonic'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Non-Monotonic Sessions ({nonMonotonicSessions.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={nonMonotonicSessions.length === 0}
+							onclick={() =>
+								openExport(
+									'Non-Monotonic Pressure Sessions',
+									'data-quality-pressure-non-monotonic',
+									['Brand', 'Pen', 'Inventory ID', 'Date', 'Drop Index', 'From %', 'To %'],
+									nonMonotonicSessions.map((n) => [
+										n.session.Brand,
+										n.session.PenEntityId,
+										n.session.InventoryId,
+										n.session.Date,
+										n.firstDrop.index,
+										n.firstDrop.from.toFixed(2),
+										n.firstDrop.to.toFixed(2),
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						Sessions where logical pressure drops at some point as physical force increases. A valid
+						session should be monotonically non-decreasing on the logical axis.
+					</p>
+					{#if nonMonotonicSessions.length === 0}
+						<p class="good">All sessions are monotonically non-decreasing.</p>
+					{:else}
+						<table class="compact">
+							<thead>
+								<tr>
+									<th>Brand</th>
+									<th>Pen</th>
+									<th>Inventory ID</th>
+									<th>Date</th>
+									<th>Drop @</th>
+									<th>From → To</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each nonMonotonicSessions as n (n.session._id)}
+									<tr>
+										<td>{n.session.Brand}</td>
+										<td class="mono">
+											<a href="{base}/entity/{encodeURIComponent(n.session.PenEntityId)}">
+												{n.session.PenEntityId}
+											</a>
+										</td>
+										<td class="mono">
+											<a href="{base}/entity/{encodeURIComponent(sessionEntityId(n.session))}">
+												{n.session.InventoryId}
+											</a>
+										</td>
+										<td class="mono">{n.session.Date}</td>
+										<td class="num">{n.firstDrop.index}</td>
+										<td class="num mono">
+											{n.firstDrop.from.toFixed(2)} → {n.firstDrop.to.toFixed(2)}%
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
+
+			{#if activeSection === 'pressure-missing-low-end'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Missing Low-End ({missingLowEndPens.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={missingLowEndPens.length === 0}
+							onclick={() =>
+								openExport(
+									'Pens Missing Low-End Measurements',
+									'data-quality-pressure-missing-low-end',
+									['Brand', 'Pen', 'Inventory ID', 'Lowest %', 'Sessions'],
+									missingLowEndPens.map((p) => [
+										p.brand,
+										p.penEntityId,
+										p.inventoryId,
+										p.lowestLogical.toFixed(2),
+										p.sessionCount,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						Pens whose lowest measured logical pressure across all sessions is still above 0.5%. The
+						IAF (P00) estimate may be unreliable for these.
+					</p>
+					{#if missingLowEndPens.length === 0}
+						<p class="good">All pens have low-end measurements covering the activation point.</p>
+					{:else}
+						<table class="compact">
+							<thead>
+								<tr>
+									<th>Brand</th>
+									<th>Pen</th>
+									<th>Inventory ID</th>
+									<th>Lowest %</th>
+									<th>Sessions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each missingLowEndPens as p (p.inventoryId)}
+									<tr>
+										<td>{p.brand}</td>
+										<td class="mono">
+											<a href="{base}/entity/{encodeURIComponent(p.penEntityId)}">
+												{p.penEntityId}
+											</a>
+										</td>
+										<td class="mono">{p.inventoryId}</td>
+										<td class="num mono">{p.lowestLogical.toFixed(2)}</td>
+										<td class="num">{p.sessionCount}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
+
+			{#if activeSection === 'pressure-single-session'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Single-Session Pens ({singleSessionPens.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={singleSessionPens.length === 0}
+							onclick={() =>
+								openExport(
+									'Pens with Only One Pressure-Response Session',
+									'data-quality-pressure-single-session',
+									['Brand', 'Pen', 'Inventory ID', 'Date'],
+									singleSessionPens.map((p) => [p.brand, p.penEntityId, p.inventoryId, p.date]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						Pens with only one recorded session. A second session would confirm consistency.
+					</p>
+					{#if singleSessionPens.length === 0}
+						<p class="good">Every pen has at least two sessions on record.</p>
+					{:else}
+						<table class="compact">
+							<thead>
+								<tr>
+									<th>Brand</th>
+									<th>Pen</th>
+									<th>Inventory ID</th>
+									<th>Date</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each singleSessionPens as p (p.inventoryId)}
+									<tr>
+										<td>{p.brand}</td>
+										<td class="mono">
+											<a href="{base}/entity/{encodeURIComponent(p.penEntityId)}">
+												{p.penEntityId}
+											</a>
+										</td>
+										<td class="mono">
+											<a href="{base}/entity/{encodeURIComponent(p.sessionEntityId)}">
+												{p.inventoryId}
+											</a>
+										</td>
+										<td class="mono">{p.date}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
+
+			{#if activeSection === 'pressure-stale'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Stale Measurements ({staleMeasurements.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={staleMeasurements.length === 0}
+							onclick={() =>
+								openExport(
+									'Pens with Stale Measurements',
+									'data-quality-pressure-stale',
+									['Brand', 'Pen', 'Inventory ID', 'Last Measured', 'Days Ago'],
+									staleMeasurements.map((p) => [
+										p.brand,
+										p.penEntityId,
+										p.inventoryId,
+										p.lastDate,
+										p.daysAgo,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						Pens whose most recent session was more than a year ago. Drift over time may invalidate
+						older curves.
+					</p>
+					{#if staleMeasurements.length === 0}
+						<p class="good">Every pen has a session in the last year.</p>
+					{:else}
+						<table class="compact">
+							<thead>
+								<tr>
+									<th>Brand</th>
+									<th>Pen</th>
+									<th>Inventory ID</th>
+									<th>Last Measured</th>
+									<th>Days Ago</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each staleMeasurements as p (p.inventoryId)}
+									<tr>
+										<td>{p.brand}</td>
+										<td class="mono">
+											<a href="{base}/entity/{encodeURIComponent(p.penEntityId)}">
+												{p.penEntityId}
+											</a>
+										</td>
+										<td class="mono">{p.inventoryId}</td>
+										<td class="mono">{p.lastDate}</td>
+										<td class="num">{p.daysAgo}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
+
+			{#if activeSection === 'pressure-remeasure'}
+				<section class="section">
+					<div class="section-header">
+						<h2>Recommended for Re-measurement ({remeasureRecommendations.length})</h2>
+						<button
+							class="export-trigger"
+							disabled={remeasureRecommendations.length === 0}
+							onclick={() =>
+								openExport(
+									'Pens Recommended for Re-measurement',
+									'data-quality-pressure-remeasure',
+									['Brand', 'Pen', 'Inventory ID', 'Reasons'],
+									remeasureRecommendations.map((p) => [
+										p.brand,
+										p.penEntityId,
+										p.inventoryId,
+										p.reasons.join(', '),
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						Union of the missing-low-end, single-session, and stale checks. Pens with the most
+						reasons appear first.
+					</p>
+					{#if remeasureRecommendations.length === 0}
+						<p class="good">No pens need re-measurement.</p>
+					{:else}
+						<table class="compact">
+							<thead>
+								<tr>
+									<th>Brand</th>
+									<th>Pen</th>
+									<th>Inventory ID</th>
+									<th>Reasons</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each remeasureRecommendations as p (p.inventoryId)}
+									<tr>
+										<td>{p.brand}</td>
+										<td class="mono">
+											<a href="{base}/entity/{encodeURIComponent(p.penEntityId)}">
+												{p.penEntityId}
+											</a>
+										</td>
+										<td class="mono">{p.inventoryId}</td>
+										<td>{p.reasons.join(', ')}</td>
+									</tr>
 								{/each}
 							</tbody>
 						</table>

@@ -252,13 +252,18 @@ PressureResponse[]` for the `pen` and `penfamily` cases.
    aggregates) — the simpler session-table I added covers the
    immediate need; revive the more complex components if/when the
    richer interactivity becomes useful.
-3. **Data Quality integration.** (~half day)
-   - Port the pressure-specific checks from
-     `../PenPressureData/app/src/lib/dataQuality.js` (non-monotonic
-     sessions, missing low-end data, single-session pens, stale
-     measurements, recommended-for-re-measurement) into the existing
-     [`/data-quality`](../src/routes/data-quality/+page.svelte)
-     page as a new section.
+3. ✅ **Data Quality integration.** (2026-05-01) Ported the
+   five PenPressureData checks into the existing
+   [`/data-quality`](../src/routes/data-quality/+page.svelte) page
+   under a new **Pressure Response** category in the sidebar. Logic
+   lives at
+   [`data-repo/lib/pressure/data-quality.ts`](../data-repo/lib/pressure/data-quality.ts)
+   so any DrawTabData consumer can reuse it. Sections + counts on a
+   typical run: Non-Monotonic Sessions (8), Missing Low-End (28),
+   Single-Session Pens (52), Stale Measurements (36), Recommended
+   for Re-measurement (57 = union). Each section has an Export
+   button and links rows back to the canonical pen / session detail
+   pages.
 4. **Extend flagging to pens/models/families.** (~1 day)
    - Generalize
      [`src/lib/flagged-store.ts`](../src/lib/flagged-store.ts)
