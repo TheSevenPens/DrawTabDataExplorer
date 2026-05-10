@@ -10,8 +10,19 @@
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
+	import BandsChart, { type Band, type BandMarker } from '$lib/components/BandsChart.svelte';
+	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
+
+	// Keep in sync with src/routes/reference/+page.svelte (Max Physical Pressure section).
+	const maxPressureBands: Band[] = [
+		{ min: 100, max: 200, label: 'LIMITED' },
+		{ min: 200, max: 350, label: 'OK' },
+		{ min: 350, max: 500, label: 'GOOD' },
+		{ min: 500, max: 900, label: 'EXCELLENT' },
+		{ min: 900, max: null, label: 'EXCESSIVE' },
+	];
 
 	let { data } = $props();
 	let pen: Pen = $derived(data.pen);
@@ -49,7 +60,41 @@
 	}
 
 	let showJson = $state(false);
-	let activeTab = $state<'specs' | 'tablets' | 'included' | 'pressure'>('specs');
+	let activeTab = $state<'specs' | 'tablets' | 'included' | 'pressure' | 'maxpressure'>('specs');
+
+	// Per-session P100 estimates (max-force) for the Max Pressure tab.
+	// Defective sessions are excluded — they reflect a broken digitizer,
+	// not the pen's true saturation force.
+	let p100Values = $derived(
+		pressureSessions
+			.filter((s) => !defectsByInventoryId.has(s.InventoryId))
+			.map((s) => estimateP100(s.Records))
+			.filter((v): v is number => v !== null && isFinite(v)),
+	);
+
+	let p100Markers: BandMarker[] = $derived(
+		p100Values.map((v) => ({ value: v, dashed: false })),
+	);
+
+	let p100Stats = $derived.by(() => {
+		const xs = [...p100Values].sort((a, b) => a - b);
+		if (xs.length === 0) return null;
+		const min = xs[0];
+		const max = xs[xs.length - 1];
+		const mid = Math.floor(xs.length / 2);
+		const median = xs.length % 2 === 0 ? (xs[mid - 1] + xs[mid]) / 2 : xs[mid];
+		return { min, median, max };
+	});
+
+	let p100SummaryMarkers: BandMarker[] = $derived(
+		p100Stats
+			? [
+					{ value: p100Stats.min, label: 'Min', dashed: false },
+					{ value: p100Stats.max, label: 'Max', dashed: false },
+					{ value: p100Stats.median, label: 'Median', dashed: false, strokeWidth: 4 },
+				]
+			: [],
+	);
 </script>
 
 <Nav />
@@ -104,6 +149,9 @@
 	<button class:active={activeTab === 'pressure'} onclick={() => (activeTab = 'pressure')}
 		>Pressure Response</button
 	>
+	<button class:active={activeTab === 'maxpressure'} onclick={() => (activeTab = 'maxpressure')}
+		>Max Pressure</button
+	>
 </div>
 
 {#if activeTab === 'specs'}
@@ -155,6 +203,60 @@
 			</ul>
 		{:else}
 			<p class="no-data">No tablets list this pen as included.</p>
+		{/if}
+	</div>
+{/if}
+
+{#if activeTab === 'maxpressure'}
+	<div class="tab-content">
+		<p class="ref-blurb">
+			Maximum physical pressure is the force at which the digitizer saturates (reports its maximum
+			pressure value). The red lines show the estimated <strong>P100</strong> (max-force) for each
+			measurement session of this pen.
+		</p>
+		<BandsChart
+			bands={maxPressureBands}
+			axisMax={1000}
+			axisStep={100}
+			unit="gf"
+			title={`${pen.PenName} max pressure`}
+			heading={`${brandName(pen.Brand)} ${pen.PenName} — All max pressures`}
+			markers={p100Markers}
+		/>
+		{#if p100Stats}
+			<p class="ref-blurb summary-blurb">
+				Summary across sessions — outer lines mark <strong>min</strong> and
+				<strong>max</strong>, the thick line marks the <strong>median</strong>.
+			</p>
+			<BandsChart
+				bands={maxPressureBands}
+				axisMax={1000}
+				axisStep={100}
+				unit="gf"
+				title={`${pen.PenName} max pressure summary`}
+				heading={`${brandName(pen.Brand)} ${pen.PenName} — Max pressure range`}
+				markers={p100SummaryMarkers}
+				shadedRange={{ min: p100Stats.min, max: p100Stats.max }}
+			/>
+			<table class="p100-summary-table">
+				<thead>
+					<tr>
+						<th>Min<br /><span class="unit">(gf)</span></th>
+						<th>Median<br /><span class="unit">(gf)</span></th>
+						<th>Max<br /><span class="unit">(gf)</span></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td class="mono">{fmtP(p100Stats.min)}</td>
+						<td class="mono">{fmtP(p100Stats.median)}</td>
+						<td class="mono">{fmtP(p100Stats.max)}</td>
+					</tr>
+				</tbody>
+			</table>
+		{/if}
+		{#if p100Values.length === 0}
+			<p class="no-data">No pressure response measurements available for this pen model.</p>
 		{/if}
 	</div>
 {/if}
@@ -345,5 +447,38 @@
 	}
 	.compat-table a:hover {
 		text-decoration: underline;
+	}
+
+	.ref-blurb {
+		font-size: 13px;
+		color: var(--text-muted);
+		max-width: 800px;
+		margin: 0 0 12px;
+		line-height: 1.5;
+	}
+	.summary-blurb {
+		margin-top: 20px;
+	}
+
+	.p100-summary-table {
+		margin-top: 12px;
+		border-collapse: collapse;
+		font-size: 13px;
+	}
+	.p100-summary-table th,
+	.p100-summary-table td {
+		padding: 4px 18px;
+		text-align: right;
+		border-bottom: 1px solid var(--border);
+	}
+	.p100-summary-table th {
+		font-weight: 600;
+		color: var(--text-muted);
+		border-bottom: 2px solid var(--border);
+	}
+	.unit {
+		font-size: 11px;
+		font-weight: 400;
+		color: var(--text-muted);
 	}
 </style>
