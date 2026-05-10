@@ -12,6 +12,7 @@
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import BandsChart, { type Band, type BandMarker } from '$lib/components/BandsChart.svelte';
 	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
@@ -173,7 +174,7 @@
 						<tr>
 							<td
 								><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}"
-									>{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a
+									>{tabletFullName(tablet)}</a
 								></td
 							>
 							<td>{tablet.Model.LaunchYear ?? ''}</td>
@@ -194,7 +195,7 @@
 				{#each includedWithTablets as tablet}
 					<li>
 						<a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}"
-							>{brandName(tablet.Model.Brand)} {tablet.Model.Name} ({tablet.Model.Id})</a
+							>{tabletFullName(tablet)}</a
 						>
 					</li>
 				{/each}

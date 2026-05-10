@@ -14,6 +14,7 @@
 	import TabletPicker from '$lib/components/TabletPicker.svelte';
 	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import {
 		penTabletRangesCm,
 		penTabletRangesIn,
@@ -154,9 +155,7 @@
 
 	let copyFlaggedStatus = $state('');
 	function copyFlaggedList() {
-		const text = flaggedItems
-			.map((t) => `${brandName(t.Model.Brand)} ${t.Model.Name} (${t.Model.Id})`)
-			.join('\n');
+		const text = flaggedItems.map((t) => tabletFullName(t)).join('\n');
 		navigator.clipboard
 			.writeText(text)
 			.then(() => {
@@ -231,9 +230,7 @@
 					<button class="unflag-btn" onclick={() => toggleFlag(t.Meta.EntityId)} title="Unflag"
 						>&#x2691;</button
 					>
-					<a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
-						>{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a
-					>
+					<a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{tabletFullName(t)}</a>
 				</li>
 			{/each}
 		</ul>

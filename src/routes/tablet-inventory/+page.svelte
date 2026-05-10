@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import {
-		loadInventoryTabletsFromURL,
-		loadTabletsFromURL,
-		brandName,
-	} from '$data/lib/drawtab-loader.js';
+	import { loadInventoryTabletsFromURL, loadTabletsFromURL } from '$data/lib/drawtab-loader.js';
+	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import {
 		type InventoryTablet,
 		INVENTORY_TABLET_FIELDS,
@@ -36,7 +33,7 @@
 		]);
 		const map: Record<string, string> = {};
 		for (const t of allTablets) {
-			map[t.Meta.EntityId] = `${brandName(t.Model.Brand)} ${t.Model.Name} (${t.Model.Id})`;
+			map[t.Meta.EntityId] = tabletFullName(t);
 		}
 		tabletNameMap = map;
 		tablets = inv as unknown as InventoryTablet[];

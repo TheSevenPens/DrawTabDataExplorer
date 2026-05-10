@@ -23,6 +23,28 @@ describe('buildPenNameMap', () => {
 		expect(map.get('wacom.pen.kp701e')).toBe('Wacom Pro Pen 3 (KP-701E)');
 	});
 
+	it('drops the trailing "(PenId)" when PenName already contains it', () => {
+		const map = buildPenNameMap([
+			PEN({
+				EntityId: 'asus.pen.mpa01',
+				Brand: 'ASUS',
+				PenId: 'MPA01',
+				PenName: 'ProArt Pen MPA01',
+			}),
+			PEN({ EntityId: 'digidraw.pen.m3', Brand: 'DIGIDRAW', PenId: 'M3', PenName: 'M3 Pen' }),
+		]);
+		expect(map.get('asus.pen.mpa01')).toBe('Asus ProArt Pen MPA01');
+		expect(map.get('digidraw.pen.m3')).toBe('DigiDraw M3 Pen');
+	});
+
+	it('keeps "(PenId)" when PenId only appears as a substring of a larger token', () => {
+		// PenId "M3" must not match "MX300"
+		const map = buildPenNameMap([
+			PEN({ EntityId: 'foo.pen.m3', Brand: 'WACOM', PenId: 'M3', PenName: 'MX300 something' }),
+		]);
+		expect(map.get('foo.pen.m3')).toBe('Wacom MX300 something (M3)');
+	});
+
 	it('returns an empty map for an empty pen list', () => {
 		expect(buildPenNameMap([]).size).toBe(0);
 	});

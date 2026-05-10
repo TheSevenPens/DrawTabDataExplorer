@@ -14,6 +14,7 @@
 	import type { InventoryPen } from '$data/lib/schemas.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
+	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import {
 		flaggedPenUnits,
 		flaggedPenModels,
@@ -122,7 +123,10 @@
 
 	let penNameById = $derived(
 		new Map(
-			pens.map((p) => [p.EntityId, p.PenName === p.PenId ? p.PenId : `${p.PenName} (${p.PenId})`]),
+			pens.map((p) => [
+				p.EntityId,
+				penIdRedundantInName(p) ? p.PenName : `${p.PenName} (${p.PenId})`,
+			]),
 		),
 	);
 
@@ -208,7 +212,7 @@
 						<a href="{base}/entity/{encodeURIComponent(e.id)}">
 							{brandName(e.pen.Brand)}
 							{e.pen.PenName}
-							{#if e.pen.PenName !== e.pen.PenId}<span class="dim">({e.pen.PenId})</span>{/if}
+							{#if !penIdRedundantInName(e.pen)}<span class="dim">({e.pen.PenId})</span>{/if}
 						</a>
 					</li>
 				{/each}

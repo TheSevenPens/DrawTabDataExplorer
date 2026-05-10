@@ -15,6 +15,7 @@
 	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
 	import ForceProportionsView from '$lib/components/ForceProportionsView.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
+	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
@@ -495,7 +496,7 @@
 						<tr>
 							<td
 								><a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
-									>{brandName(t.Model.Brand)} {t.Model.Name} ({t.Model.Id})</a
+									>{tabletFullName(t)}</a
 								></td
 							>
 							<td>{t.Model.LaunchYear || ''}</td>

@@ -4,6 +4,7 @@
 	import { type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import { tabletNameAndId } from '$lib/tablet-helpers.js';
 
 	let { data } = $props();
 
@@ -89,7 +90,7 @@
 							<tr>
 								<td
 									><a class="entity-link" href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
-										>{t.Model.Name} ({t.Model.Id})</a
+										>{tabletNameAndId(t)}</a
 									></td
 								>
 								<td>{(t.Model.AlternateNames ?? []).join(', ')}</td>

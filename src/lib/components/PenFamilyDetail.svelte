@@ -15,6 +15,7 @@
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import BandsChart, { type Band, type BandMarker } from '$lib/components/BandsChart.svelte';
 	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
@@ -42,7 +43,7 @@
 		new Map(
 			memberPens.map((p) => [
 				p.EntityId,
-				p.PenName === p.PenId ? p.PenId : `${p.PenName} (${p.PenId})`,
+				penIdRedundantInName(p) ? p.PenName : `${p.PenName} (${p.PenId})`,
 			]),
 		),
 	);
@@ -151,7 +152,7 @@
 								<a href="{base}/entity/{encodeURIComponent(p.EntityId)}">
 									{brandName(p.Brand)}
 									{p.PenName}
-									{#if p.PenName !== p.PenId}<span class="dim">({p.PenId})</span>{/if}
+									{#if !penIdRedundantInName(p)}<span class="dim">({p.PenId})</span>{/if}
 								</a>
 							</td>
 							<td class="year">{p.PenYear || ''}</td>

@@ -18,6 +18,8 @@
 	} from '$data/lib/entities/pen-compat-fields.js';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import { tabletFullName as fmtTabletFullName } from '$lib/tablet-helpers.js';
+	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import SubNav from '$lib/components/SubNav.svelte';
 
 	const dataTabs = [
@@ -50,11 +52,11 @@
 			const tablet = tabletMap.get(c.TabletId);
 			const pen = penMap.get(c.PenId);
 			const tabletFullName = tablet
-				? `${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`
+				? fmtTabletFullName(tablet)
 				: `${brandName(c.Brand)} ${c.TabletId}`;
 			const penFullName = pen
-				? pen.PenName === pen.PenId
-					? `${brandName(pen.Brand)} ${pen.PenId}`
+				? penIdRedundantInName(pen)
+					? `${brandName(pen.Brand)} ${pen.PenName}`
 					: `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`
 				: `${brandName(c.Brand)} ${c.PenId}`;
 			return { ...c, TabletFullName: tabletFullName, PenFullName: penFullName };

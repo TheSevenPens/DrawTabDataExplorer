@@ -1,10 +1,6 @@
 <script lang="ts">
-	import {
-		getDiagonal,
-		brandName,
-		type Tablet,
-		type ISOPaperSize,
-	} from '$data/lib/drawtab-loader.js';
+	import { getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
+	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import {
 		penTabletRangesCm,
@@ -80,9 +76,7 @@
 		return `${qualifier}${best.Name}`;
 	});
 
-	let tabletLabel = $derived(
-		`${brandName(tablet.Model.Brand)} ${tablet.Model.Name} (${tablet.Model.Id})`,
-	);
+	let tabletLabel = $derived(tabletFullName(tablet));
 	let typeLabel = $derived(
 		tablet.Model.Type === 'PENTABLET'
 			? 'pen tablets'
