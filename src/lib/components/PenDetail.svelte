@@ -89,8 +89,8 @@
 	let p100SummaryMarkers: BandMarker[] = $derived(
 		p100Stats
 			? [
-					{ value: p100Stats.min, label: 'Min', dashed: false },
-					{ value: p100Stats.max, label: 'Max', dashed: false },
+					{ value: p100Stats.min, dashed: false },
+					{ value: p100Stats.max, dashed: false },
 					{ value: p100Stats.median, label: 'Median', dashed: false, strokeWidth: 4 },
 				]
 			: [],
