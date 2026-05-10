@@ -25,15 +25,30 @@
 	]);
 
 	let data: Pen[] = $state([]);
+	let familyNames: Record<string, string> = $state({});
+
+	let cellLinks = $derived({
+		PenFamily: (p: Pen) => {
+			const id = p.PenFamily;
+			if (!id) return [];
+			return [
+				{
+					label: familyNames[id] ?? id,
+					href: `${base}/entity/${encodeURIComponent(id)}`,
+				},
+			];
+		},
+	});
 
 	onMount(async () => {
 		const [pens, families] = await Promise.all([
 			loadPensFromURL(base),
 			loadPenFamiliesFromURL(base),
 		]);
-		const familyNames: Record<string, string> = {};
-		for (const f of families) familyNames[f.EntityId] = f.FamilyName;
-		setPenFamilyNames(familyNames);
+		const map: Record<string, string> = {};
+		for (const f of families) map[f.EntityId] = f.FamilyName;
+		setPenFamilyNames(map);
+		familyNames = map;
 		data = pens as Pen[];
 	});
 </script>
@@ -51,6 +66,7 @@
 	defaultView={PEN_DEFAULT_VIEW}
 	linkField="FullName"
 	detailBasePath="/entity"
+	{cellLinks}
 	defaultFilterField="PenFamily"
 	defaultSortField="PenId"
 	quickFilterFields={['Brand']}

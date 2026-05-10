@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadInventoryTabletsFromURL } from '$data/lib/drawtab-loader.js';
+	import {
+		loadInventoryTabletsFromURL,
+		loadTabletsFromURL,
+		brandName,
+	} from '$data/lib/drawtab-loader.js';
 	import {
 		type InventoryTablet,
 		INVENTORY_TABLET_FIELDS,
@@ -23,12 +27,19 @@
 	]);
 
 	let tablets: InventoryTablet[] = $state([]);
+	let tabletNameMap: Record<string, string> = $state({});
 
 	onMount(async () => {
-		tablets = (await loadInventoryTabletsFromURL(
-			base,
-			'sevenpens',
-		)) as unknown as InventoryTablet[];
+		const [inv, allTablets] = await Promise.all([
+			loadInventoryTabletsFromURL(base, 'sevenpens'),
+			loadTabletsFromURL(base),
+		]);
+		const map: Record<string, string> = {};
+		for (const t of allTablets) {
+			map[t.Meta.EntityId] = `${brandName(t.Model.Brand)} ${t.Model.Name} (${t.Model.Id})`;
+		}
+		tabletNameMap = map;
+		tablets = inv as unknown as InventoryTablet[];
 	});
 </script>
 
@@ -46,4 +57,10 @@
 	defaultFilterField="Brand"
 	defaultSortField="InventoryId"
 	quickFilterFields={['Brand']}
+	cellLinks={{
+		TabletEntityId: (item: InventoryTablet) => {
+			const name = tabletNameMap[item.TabletEntityId] ?? item.TabletEntityId;
+			return [{ label: name, href: `${base}/entity/${encodeURIComponent(item.TabletEntityId)}` }];
+		},
+	}}
 />

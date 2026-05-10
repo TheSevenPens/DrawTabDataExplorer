@@ -240,6 +240,16 @@
 					</tr>
 				</tbody>
 			</table>
+			<p class="ref-blurb summary-blurb">
+				Pressure response near saturation — the same chart from the Pressure Response tab, zoomed to
+				the 95–100% region so you can compare each session's approach to P100.
+			</p>
+			<PressureChart
+				sessions={chartSessions}
+				title={`${family.FamilyName} pressure response (max)`}
+				hiddenIds={hiddenSessionIds}
+				lockedZoom="max"
+			/>
 		{:else}
 			<p class="dim">No pressure response measurements available for this family.</p>
 		{/if}

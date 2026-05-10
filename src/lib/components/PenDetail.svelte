@@ -252,6 +252,16 @@
 					</tr>
 				</tbody>
 			</table>
+			<p class="ref-blurb summary-blurb">
+				Pressure response near saturation — the same chart from the Pressure Response tab, zoomed to
+				the 95–100% region so you can compare each session's approach to P100.
+			</p>
+			<PressureChart
+				sessions={chartSessions}
+				title={`${pen.PenName} pressure response (max)`}
+				hiddenIds={hiddenSessionIds}
+				lockedZoom="max"
+			/>
 		{/if}
 		{#if p100Values.length === 0}
 			<p class="no-data">No pressure response measurements available for this pen model.</p>

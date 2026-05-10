@@ -50,6 +50,7 @@
 		height = 360,
 		title = '',
 		hiddenIds,
+		lockedZoom,
 	}: {
 		sessions: ChartSession[];
 		height?: number;
@@ -58,10 +59,14 @@
 		 * Lets a parent component synchronise visibility with a legend
 		 * table or other UI. */
 		hiddenIds?: ReadonlySet<string>;
+		/** When set, the Zoom dropdown is hidden and zoom is forced to
+		 * this value. Use for context-specific embeds (e.g. the Max
+		 * Pressure tab) that should always show a particular zoom. */
+		lockedZoom?: ZoomMode;
 	} = $props();
 
 	let viewMode = $state<ViewMode>('estimates');
-	let zoomMode = $state<ZoomMode>('normal');
+	let zoomMode = $state<ZoomMode>(lockedZoom ?? 'normal');
 	let envelopeRange = $state<EnvelopeRange>('minmax');
 	// Defective sessions are hidden by default; the toggle appears in the
 	// toolbar only when at least one session is flagged.
@@ -145,26 +150,22 @@
 		if (viewMode === 'envelope') {
 			const { low, mid, high } = buildEnvelope(sessionsToPlot);
 			const color = '#2563eb';
+			// Chart.js between-datasets fills are x-axis-parametric, so when the
+			// high line extends past the low line's max x (common at p=99→100),
+			// the fill terminates at the low line's right edge and leaves a
+			// triangular gap. Trace the envelope as a single closed-polygon
+			// dataset and use fill:'shape' to fill the interior instead.
+			const polygon = [...low, ...[...high].reverse()];
 			return [
 				{
 					type: 'line',
-					label: 'Envelope (low)',
-					data: low,
-					borderColor: color,
-					backgroundColor: color + '33',
-					borderWidth: 0,
-					pointRadius: 0,
-					fill: false,
-				},
-				{
-					type: 'line',
 					label: `Envelope (${envelopeRange})`,
-					data: high,
-					borderColor: color,
+					data: polygon,
+					borderColor: 'transparent',
 					backgroundColor: color + '33',
 					borderWidth: 0,
 					pointRadius: 0,
-					fill: '-1',
+					fill: 'shape',
 				},
 				{
 					type: 'line',
@@ -173,7 +174,7 @@
 					borderColor: color,
 					backgroundColor: color,
 					borderWidth: 2,
-					pointRadius: 2.5,
+					pointRadius: 0,
 					fill: false,
 				},
 			];
@@ -189,7 +190,7 @@
 					borderColor: color,
 					backgroundColor: color,
 					borderWidth: 2,
-					pointRadius: 3,
+					pointRadius: 0,
 					fill: false,
 				};
 			});
@@ -206,7 +207,7 @@
 				borderColor: color,
 				backgroundColor: color,
 				borderDash: s.defective ? [3, 3] : undefined,
-				pointRadius: 2.5,
+				pointRadius: 0,
 				pointHoverRadius: 4,
 				borderWidth: 2,
 				tension: 0,
@@ -251,10 +252,28 @@
 		return out;
 	}
 
+	// Largest estimated P100 across the currently-visible sessions.
+	// Drives the x-axis right edge in 'max' zoom so the envelope's full
+	// extent at y=100 stays in view, regardless of how strong the pen is.
+	let maxP100 = $derived.by(() => {
+		let m = -Infinity;
+		for (const s of visibleSessions) {
+			const v = estimateP100(s.records);
+			if (v !== null && isFinite(v) && v > m) m = v;
+		}
+		return m === -Infinity ? null : m;
+	});
+
 	function axisRange(): { x: { min?: number; max?: number }; y: { min: number; max: number } } {
 		if (zoomMode === 'iaf') return { x: { min: 0, max: 20 }, y: { min: 0, max: 30 } };
-		if (zoomMode === 'max') return { x: {}, y: { min: 95, max: 100 } };
-		return { x: { min: 0 }, y: { min: 0, max: 100 } };
+		if (zoomMode === 'max') {
+			// At least 50 gf of headroom past the largest P100 so the
+			// upper-right corner of the envelope isn't clipped. Falls back
+			// to 1000 gf when no session has a finite P100.
+			const maxX = maxP100 !== null ? maxP100 + 50 : 1000;
+			return { x: { max: maxX }, y: { min: 95, max: 100 } };
+		}
+		return { x: { min: 0, max: 1000 }, y: { min: 0, max: 100 } };
 	}
 
 	$effect(() => {
@@ -265,6 +284,7 @@
 		void envelopeRange;
 		void showDefective;
 		void hiddenIds;
+		void maxP100;
 		if (!canvas) return;
 		const datasets = buildDatasets();
 		const { x: xRange, y: yRange } = axisRange();
@@ -359,14 +379,16 @@
 			<option value="envelope">Envelope</option>
 		</select>
 	</label>
-	<label>
-		Zoom
-		<select bind:value={zoomMode}>
-			<option value="normal">Normal</option>
-			<option value="iaf">IAF detail (0-20 gf)</option>
-			<option value="max">Max pressure (95-100%)</option>
-		</select>
-	</label>
+	{#if !lockedZoom}
+		<label>
+			Zoom
+			<select bind:value={zoomMode}>
+				<option value="normal">Normal</option>
+				<option value="iaf">IAF detail (0-20 gf)</option>
+				<option value="max">Max pressure (95-100%)</option>
+			</select>
+		</label>
+	{/if}
 	{#if viewMode === 'envelope'}
 		<label>
 			Range

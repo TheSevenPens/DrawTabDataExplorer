@@ -77,7 +77,6 @@
 		<tr>
 			<th>Name</th>
 			<th>Model</th>
-			<th>Sensor ID</th>
 			<th>Driver Min</th>
 			<th>Driver Max</th>
 			<th>Platforms</th>
@@ -95,7 +94,6 @@
 					{/if}
 				</td>
 				<td>{p.model ?? ''}</td>
-				<td class="mono">{p.sensorid ?? ''}</td>
 				<td class="mono">{p.drivermin ?? ''}</td>
 				<td class="mono">{p.drivermax ?? '(current)'}</td>
 				<td>{p.platforms.join(', ')}</td>
