@@ -21,7 +21,8 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
-	import BandsChart, { type Band } from '$lib/components/BandsChart.svelte';
+	import BandsChart from '$lib/components/BandsChart.svelte';
+	import { IAF_BANDS, MAX_PRESSURE_BANDS } from '$lib/pressure-bands.js';
 
 	const dataTabs = [
 		{ href: '/reference', label: 'Reference' },
@@ -67,26 +68,8 @@
 		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
 	}
 
-	// IAF Ranking — bands of pen Initial Activation Force in gram-force.
-	// Lower IAF = lighter touch needed to register pressure = better.
-	const iafBands: Band[] = [
-		{ min: 0, max: 1, label: 'EXCELLENT' },
-		{ min: 1, max: 2, label: 'GREAT' },
-		{ min: 2, max: 3.5, label: 'GOOD' },
-		{ min: 3.5, max: 5, label: 'OK' },
-		{ min: 5, max: null, label: 'AVOID' },
-	];
-
-	// Max Physical Pressure — maximum force a digitizer can register, in gram-force.
-	// Higher = more dynamic range before the pen saturates; too high = excessive
-	// arm fatigue to reach full pressure.
-	const maxPressureBands: Band[] = [
-		{ min: 100, max: 200, label: 'LIMITED' },
-		{ min: 200, max: 350, label: 'OK' },
-		{ min: 350, max: 500, label: 'GOOD' },
-		{ min: 500, max: 900, label: 'EXCELLENT' },
-		{ min: 900, max: null, label: 'EXCESSIVE' },
-	];
+	const iafBands = IAF_BANDS;
+	const maxPressureBands = MAX_PRESSURE_BANDS;
 	let paperSizes: ISOPaperSize[] = $state([]);
 	let usPaperSizes: USPaperSize[] = $state([]);
 	let allTablets: Tablet[] = $state([]);

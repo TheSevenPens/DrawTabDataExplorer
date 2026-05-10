@@ -1,15 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadViews, saveView, deleteView, renameView } from './views.js';
+import type { Step, SelectStep, SortStep } from '$data/lib/pipeline/types.js';
 
 const ENTITY = 'tablets';
 const KEY = `drawtabdata-views-${ENTITY}`;
 const LEGACY_KEY = 'drawtabdata-views';
 
-const STEP = (kind: string) =>
-	({
-		kind,
-		fields: [],
-	}) as unknown as Parameters<typeof saveView>[2][number];
+// Tiny factory so the test cases stay readable. The minimum-shape Step
+// for each kind is unique enough that a discriminated factory is the
+// most straightforward thing here — only `select` and `sort` are used
+// in this file.
+function STEP(kind: 'select'): SelectStep;
+function STEP(kind: 'sort'): SortStep;
+function STEP(kind: 'select' | 'sort'): Step {
+	if (kind === 'select') return { kind: 'select', fields: [] };
+	return { kind: 'sort', field: '', direction: 'asc' };
+}
 
 beforeEach(() => {
 	localStorage.clear();

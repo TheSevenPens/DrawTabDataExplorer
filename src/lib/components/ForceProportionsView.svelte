@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { POPULAR_RATIOS, VERYCLOSE_THRESHOLD } from '$data/lib/aspect-ratio.js';
 	import { unitPreference } from '$lib/unit-store.js';
+	import { MM_TO_IN } from '$lib/tablet-size-ranges.js';
 
 	let { width, height }: { width: number; height: number } = $props();
 
@@ -83,7 +84,7 @@
 
 	function fmtLen(mm: number): string {
 		if ($unitPreference === 'imperial') {
-			return (mm * 0.03937).toFixed(2);
+			return (mm * MM_TO_IN).toFixed(2);
 		}
 		return mm.toFixed(1);
 	}
@@ -101,8 +102,8 @@
 
 	function fmtArea(wMm: number, hMm: number): string {
 		if ($unitPreference === 'imperial') {
-			const wIn = wMm * 0.03937;
-			const hIn = hMm * 0.03937;
+			const wIn = wMm * MM_TO_IN;
+			const hIn = hMm * MM_TO_IN;
 			return (wIn * hIn).toFixed(2);
 		}
 		return ((wMm * hMm) / 100).toFixed(1);
@@ -110,8 +111,7 @@
 
 	function fmtAreaDelta(deltaMm2: number): string {
 		if ($unitPreference === 'imperial') {
-			// mm² → in² via (0.03937)² ≈ 0.00155
-			return (deltaMm2 * 0.03937 * 0.03937).toFixed(2);
+			return (deltaMm2 * MM_TO_IN * MM_TO_IN).toFixed(2);
 		}
 		return (deltaMm2 / 100).toFixed(1);
 	}

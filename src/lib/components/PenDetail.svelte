@@ -10,21 +10,15 @@
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
-	import BandsChart, { type Band, type BandMarker } from '$lib/components/BandsChart.svelte';
+	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
+	import { MAX_PRESSURE_BANDS } from '$lib/pressure-bands.js';
 	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
-	// Keep in sync with src/routes/reference/+page.svelte (Max Physical Pressure section).
-	const maxPressureBands: Band[] = [
-		{ min: 100, max: 200, label: 'LIMITED' },
-		{ min: 200, max: 350, label: 'OK' },
-		{ min: 350, max: 500, label: 'GOOD' },
-		{ min: 500, max: 900, label: 'EXCELLENT' },
-		{ min: 900, max: null, label: 'EXCESSIVE' },
-	];
+	const maxPressureBands = MAX_PRESSURE_BANDS;
 
 	let { data } = $props();
 	let pen: Pen = $derived(data.pen);
