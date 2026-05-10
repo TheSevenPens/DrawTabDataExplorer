@@ -45,11 +45,17 @@ the Pens page links to the pen-family detail, and the **Tablet** column
 on the Tablet Inventory page links to the tablet detail (showing the
 full marketing name rather than the raw EntityId).
 
-Formatted full names suppress the model id when it would just duplicate
-what's already in the marketing name — so you'll see "Asus ProArt Pen
-MPA01" rather than "Asus ProArt Pen MPA01 (MPA01)". Apple iPads always
-omit the model id since their internal ids ("iPad-Pro-12.9-Gen1") only
-restate the marketing name in a less readable form.
+Formatted full names suppress redundant pieces:
+
+- The model id is dropped when it would just duplicate what's already
+  in the marketing name — so you'll see "Asus ProArt Pen MPA01" rather
+  than "Asus ProArt Pen MPA01 (MPA01)". Apple iPads always omit the
+  model id since their internal ids ("iPad-Pro-12.9-Gen1") only restate
+  the marketing name.
+- The brand prefix is dropped when the marketing name already starts
+  with the brand — so you'll see "Wacom One Pen" rather than "Wacom
+  Wacom One Pen", and "Apple Pencil Pro" rather than "Apple Apple
+  Pencil Pro".
 
 ## Searching and filtering
 

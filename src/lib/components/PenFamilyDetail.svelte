@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { brandName } from '$data/lib/drawtab-loader.js';
 	import type { Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import {
@@ -16,6 +15,7 @@
 	import BandsChart, { type Band, type BandMarker } from '$lib/components/BandsChart.svelte';
 	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
+	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
@@ -150,8 +150,7 @@
 						<tr>
 							<td>
 								<a href="{base}/entity/{encodeURIComponent(p.EntityId)}">
-									{brandName(p.Brand)}
-									{p.PenName}
+									{penBrandAndName(p)}
 									{#if !penIdRedundantInName(p)}<span class="dim">({p.PenId})</span>{/if}
 								</a>
 							</td>

@@ -170,27 +170,40 @@ Thin component — search input + quick-filter `<select>` elements + a Clear but
 
 ## Label formatting (full names)
 
-Pen and tablet "full name" labels go through helpers that suppress a
-redundant `(Id)` suffix when the marketing Name already contains the
-Id, plus an unconditional Apple-iPad special case. Don't rebuild the
-`Brand Name (Id)` format string inline — use the helpers so the
-suppression rules apply everywhere.
+Pen and tablet "full name" labels go through canonical formatters in
+`data-repo/lib/entities/{pen,tablet}-fields.ts`. **Never reconstruct
+`${brandName(x)} ${x.Name} (${x.Id})` inline** — call one of:
 
-- Pens: `penIdRedundantInName(pen)` lives in
-  `data-repo/lib/entities/pen-fields.ts`. The `FullName` field def uses
-  it; consumers go through `src/lib/pen-helpers.ts`
-  (`buildPenNameMap`, `formatPenIds`).
-- Tablets: `tabletIdRedundantInName(tablet)` lives in
-  `data-repo/lib/entities/tablet-fields.ts` and **always returns true
-  for `Brand === 'APPLE'`** — Apple iPad ids
+- `penFullName(pen)` → "Brand Name (Id)" with redundant pieces dropped
+- `penBrandAndName(pen)` → "Brand Name" only
+- `tabletFullName(tablet)` → "Brand Name (Id)" with redundant pieces dropped
+- `tabletBrandAndName(tablet)` → "Brand Name" only
+- `tabletNameAndId(tablet)` → "Name (Id)" only (no brand prefix)
+
+`src/lib/pen-helpers.ts` and `src/lib/tablet-helpers.ts` re-export these
+for `$lib` consumers. Inline-formatting bypasses the suppression rules
+and was the root cause of the "Wacom Wacom One Pen" bug — when the brand
+prefix rule was added, only the field-def getters benefited. Keep the
+list of consumers funnelling through the helpers small and explicit.
+
+Two redundancy rules are in play (predicates exported from the same
+files for ad-hoc use, e.g. when you want to keep the `(Id)` styled in a
+`<span class="dim">`):
+
+- `penIdRedundantInName` / `tabletIdRedundantInName` — id appears in
+  name as a whole token. **`tabletIdRedundantInName` always returns
+  `true` for `Brand === 'APPLE'`** — Apple iPad ids
   (e.g. `iPad-Pro-12.9-Gen1`) only restate the marketing name in a
-  less-readable form, so they're suppressed across the board. Consumers
-  go through `src/lib/tablet-helpers.ts` (`tabletFullName`,
-  `tabletNameAndId`). Don't remove the APPLE branch when refactoring
-  the predicate.
+  less-readable form. Don't remove the APPLE branch when refactoring.
+- `penBrandRedundantInName` / `tabletBrandRedundantInName` — name starts
+  with the brand display name (case-insensitive).
 
-To audit the dataset for new entities affected by the redundant-id
-rule: `node scripts/find-name-contains-id.mjs`.
+To audit the dataset for new entities matching either rule:
+
+```bash
+node scripts/find-name-contains-id.mjs   # id in name
+node scripts/find-brand-in-name.mjs      # name starts with brand
+```
 
 ## Pressure response chart gotchas
 

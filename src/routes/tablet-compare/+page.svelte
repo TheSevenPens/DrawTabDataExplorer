@@ -14,7 +14,7 @@
 	import TabletPicker from '$lib/components/TabletPicker.svelte';
 	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
-	import { tabletFullName } from '$lib/tablet-helpers.js';
+	import { tabletFullName, tabletBrandAndName } from '$lib/tablet-helpers.js';
 	import {
 		penTabletRangesCm,
 		penTabletRangesIn,
@@ -104,7 +104,7 @@
 			)
 			.map((t) => ({
 				dims: t.Digitizer!.Dimensions!,
-				label: `${brandName(t.Model.Brand)} ${t.Model.Name}`,
+				label: tabletBrandAndName(t),
 			})),
 	);
 	let stackedDims = $state(true);
@@ -177,7 +177,7 @@
 	// "differs" themselves from the data.
 	let showExport = $state(false);
 	let compareExportHeaders: string[] = $derived.by(() => {
-		const tabletCols = flaggedItems.map((t) => `${brandName(t.Model.Brand)} ${t.Model.Name}`);
+		const tabletCols = flaggedItems.map((t) => tabletBrandAndName(t));
 		return ['Field', ...tabletCols];
 	});
 	let compareExportRows: (string | number)[][] = $derived.by(() => {
@@ -262,7 +262,7 @@
 						{#each flaggedItems as t}
 							<th
 								><a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
-									>{brandName(t.Model.Brand)} {t.Model.Name}</a
+									>{tabletBrandAndName(t)}</a
 								></th
 							>
 						{/each}

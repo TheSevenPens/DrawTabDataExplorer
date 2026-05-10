@@ -15,7 +15,8 @@
 	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
 	import ForceProportionsView from '$lib/components/ForceProportionsView.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
-	import { tabletFullName } from '$lib/tablet-helpers.js';
+	import { tabletFullName, tabletBrandAndName } from '$lib/tablet-helpers.js';
+	import { penFullName } from '$lib/pen-helpers.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
@@ -162,7 +163,7 @@
 <Nav />
 
 <div class="title-row">
-	<h1>{brandName(tablet.Model.Brand)} {tablet.Model.Name}</h1>
+	<h1>{tabletBrandAndName(tablet)}</h1>
 	<button
 		class="flag-toggle"
 		class:flagged={$flaggedTablets.includes(tablet.Meta.EntityId)}
@@ -413,10 +414,7 @@
 			<ul class="entity-list">
 				{#each compatiblePens as pen}
 					<li>
-						<a href="{base}/entity/{encodeURIComponent(pen.EntityId)}"
-							>{brandName(pen.Brand)}
-							{pen.PenName === pen.PenId ? pen.PenId : `${pen.PenName} (${pen.PenId})`}</a
-						>
+						<a href="{base}/entity/{encodeURIComponent(pen.EntityId)}">{penFullName(pen)}</a>
 					</li>
 				{/each}
 			</ul>

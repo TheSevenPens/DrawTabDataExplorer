@@ -220,34 +220,49 @@ via `defectsByInventoryId` (same rule used by `<SessionStats>`).
 
 ## Label formatting (model id suppression)
 
-Computed full names like "Brand Name (Id)" omit the `(Id)` suffix when
-it would just duplicate what's already in the marketing name. Two
-predicates in `data-repo/lib/entities/` drive this:
+Computed names like "Brand Name (Id)" trim two pieces of redundancy:
+the `(Id)` suffix when the id is already in the marketing name, and
+the leading brand when the marketing name itself starts with the brand.
+Both are driven by predicates in `data-repo/lib/entities/`:
 
-- `penIdRedundantInName(pen)` — true when `PenName` contains `PenId`
-  as a whole token (case-insensitive, word-boundary matching). Catches
-  "Asus ProArt Pen MPA01" / "MPA01" but _not_ "MX300" / "M3".
-- `tabletIdRedundantInName(tablet)` — same rule, **plus** an unconditional
-  return-true for `Brand === 'APPLE'`. Apple iPad ids
-  (e.g. `iPad-Pro-12.9-Gen1`) only restate the marketing name, so they're
-  always suppressed regardless of token matching.
+- `penIdRedundantInName(pen)` / `tabletIdRedundantInName(tablet)` — true
+  when the id appears in the name as a whole token (case-insensitive,
+  word-boundary matching). Catches "Asus ProArt Pen MPA01" / "MPA01"
+  but _not_ "MX300" / "M3". `tabletIdRedundantInName` additionally
+  returns `true` unconditionally for `Brand === 'APPLE'` — Apple iPad
+  ids (e.g. `iPad-Pro-12.9-Gen1`) only restate the marketing name in a
+  less-readable form.
+- `penBrandRedundantInName(pen)` / `tabletBrandRedundantInName(tablet)`
+  — true when the marketing name starts with the brand display name
+  (case-insensitive). Catches "Wacom One Pen" (Wacom), "Apple Pencil
+  Pro" (Apple), "Wacom One 2023 S" (Wacom).
 
-Every label-formatting call site funnels through these predicates:
+The canonical formatters that combine these rules also live in
+`data-repo/lib/entities/` so both server-side field defs and project-side
+UI code share one implementation:
 
-- The `FullName` and `NameAndModelId` field-def getters in
-  `pen-fields.ts` / `tablet-fields.ts`.
-- `src/lib/pen-helpers.ts` (`buildPenNameMap`) and the new
-  `src/lib/tablet-helpers.ts` (`tabletFullName`, `tabletNameAndId`).
-- Inline label rendering in `PenFamilyDetail`, `BrandDetail`,
-  `PenDetail`, `TabletDetail`, `TabletSizeComparison`, `pen-compat`,
-  `tablet-compare`, `tablet-inventory`, `pen-flagged`.
+- `penFullName(pen)` → "Brand Name (Id)" with brand and/or id dropped.
+- `penBrandAndName(pen)` → "Brand Name" only (no id).
+- `tabletFullName(tablet)` → "Brand Name (Id)" with brand and/or id dropped.
+- `tabletBrandAndName(tablet)` → "Brand Name" only.
+- `tabletNameAndId(tablet)` → "Name (Id)" with id dropped if redundant
+  (no brand prefix, used for the `NameAndModelId` field).
 
-When adding a new label-formatting site, route it through these helpers
-rather than reconstructing the format string inline. To audit the
-dataset for new affected entities, run:
+The `FullName` and `NameAndModelId` field-def getters call these
+helpers directly. `src/lib/pen-helpers.ts` and `src/lib/tablet-helpers.ts`
+re-export them so consumers can import via `$lib`.
+
+**When adding a new label-formatting site, call one of the helpers
+above; never reconstruct `${brandName(...)} ${name} (${id})` inline.**
+That's how the brand-prefix bug originally crept in — eight files
+re-implemented the format string and only the field-def getters got
+the fix when the `(Id)` suppression rule was first added.
+
+To audit the dataset for new affected entities:
 
 ```bash
-node scripts/find-name-contains-id.mjs
+node scripts/find-name-contains-id.mjs    # entities where id is in name
+node scripts/find-brand-in-name.mjs       # entities where name starts with brand
 ```
 
 ## Compare feature
@@ -298,15 +313,15 @@ several files:
   the tablet detail and compare pages.
 
 - **`src/lib/pen-helpers.ts`** — `buildPenNameMap()` and
-  `formatPenIds()` for resolving pen IDs to display names. Honours
-  `penIdRedundantInName` so the rendered label drops a trailing
-  "(PenId)" when it would just duplicate the PenName.
+  `formatPenIds()` for resolving pen IDs to display names. Re-exports
+  `penFullName` and `penBrandAndName` from `data-repo/lib/entities/`
+  so consumers can import via `$lib`. The canonical implementation
+  (with brand- and id-redundancy rules) lives in data-repo.
 
-- **`src/lib/tablet-helpers.ts`** — `tabletFullName()` ("Brand Name
-  (Id)") and `tabletNameAndId()` ("Name (Id)"). Both honour
-  `tabletIdRedundantInName`, so Apple iPads and any tablet whose Name
-  already contains the Id render without the "(Id)" suffix. Use these
-  rather than reconstructing the format string inline.
+- **`src/lib/tablet-helpers.ts`** — Thin re-export of `tabletFullName`,
+  `tabletBrandAndName`, and `tabletNameAndId` from data-repo. Use
+  these instead of reconstructing the format string inline; see
+  "Label formatting" above.
 
 ## Svelte 5 notes
 

@@ -19,7 +19,7 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import { tabletFullName as fmtTabletFullName } from '$lib/tablet-helpers.js';
-	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
+	import { penFullName } from '$lib/pen-helpers.js';
 	import SubNav from '$lib/components/SubNav.svelte';
 
 	const dataTabs = [
@@ -54,12 +54,8 @@
 			const tabletFullName = tablet
 				? fmtTabletFullName(tablet)
 				: `${brandName(c.Brand)} ${c.TabletId}`;
-			const penFullName = pen
-				? penIdRedundantInName(pen)
-					? `${brandName(pen.Brand)} ${pen.PenName}`
-					: `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`
-				: `${brandName(c.Brand)} ${c.PenId}`;
-			return { ...c, TabletFullName: tabletFullName, PenFullName: penFullName };
+			const penFmt = pen ? penFullName(pen) : `${brandName(c.Brand)} ${c.PenId}`;
+			return { ...c, TabletFullName: tabletFullName, PenFullName: penFmt };
 		});
 	});
 </script>

@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import {
-		loadInventoryPensFromURL,
-		loadPensFromURL,
-		brandName,
-	} from '$data/lib/drawtab-loader.js';
+	import { loadInventoryPensFromURL, loadPensFromURL } from '$data/lib/drawtab-loader.js';
+	import { penFullName } from '$lib/pen-helpers.js';
 	import {
 		type InventoryPen,
 		INVENTORY_PEN_FIELDS,
@@ -38,11 +35,7 @@
 		]);
 		const map: Record<string, string> = {};
 		for (const pen of allPens) {
-			const name =
-				pen.PenName === pen.PenId
-					? `${brandName(pen.Brand)} ${pen.PenId}`
-					: `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`;
-			map[pen.EntityId] = name;
+			map[pen.EntityId] = penFullName(pen);
 		}
 		penNameMap = map;
 		pens = p as unknown as InventoryPen[];

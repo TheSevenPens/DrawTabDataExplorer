@@ -15,6 +15,7 @@
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
+	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import {
 		flaggedPenUnits,
 		flaggedPenModels,
@@ -210,8 +211,7 @@
 					<li>
 						<FlagButton flagged={true} onclick={() => toggleFlaggedPenModel(e.id)} label="Unflag" />
 						<a href="{base}/entity/{encodeURIComponent(e.id)}">
-							{brandName(e.pen.Brand)}
-							{e.pen.PenName}
+							{penBrandAndName(e.pen)}
 							{#if !penIdRedundantInName(e.pen)}<span class="dim">({e.pen.PenId})</span>{/if}
 						</a>
 					</li>

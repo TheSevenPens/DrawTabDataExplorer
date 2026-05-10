@@ -13,6 +13,7 @@
 	import BandsChart, { type Band, type BandMarker } from '$lib/components/BandsChart.svelte';
 	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import { tabletFullName } from '$lib/tablet-helpers.js';
+	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
@@ -99,7 +100,7 @@
 <Nav />
 
 <div class="title-row">
-	<h1>{brandName(pen.Brand)} {pen.PenName}</h1>
+	<h1>{penBrandAndName(pen)}</h1>
 	<FlagButton
 		flagged={$flaggedPenModels.includes(pen.EntityId.toLowerCase())}
 		onclick={() => toggleFlaggedPenModel(pen.EntityId)}
@@ -219,7 +220,7 @@
 			axisStep={100}
 			unit="gf"
 			title={`${pen.PenName} max pressure`}
-			heading={`${brandName(pen.Brand)} ${pen.PenName} — All max pressures`}
+			heading={`${penBrandAndName(pen)} — All max pressures`}
 			markers={p100Markers}
 		/>
 		{#if p100Stats}
@@ -233,7 +234,7 @@
 				axisStep={100}
 				unit="gf"
 				title={`${pen.PenName} max pressure summary`}
-				heading={`${brandName(pen.Brand)} ${pen.PenName} — Max pressure range`}
+				heading={`${penBrandAndName(pen)} — Max pressure range`}
 				markers={p100SummaryMarkers}
 				shadedRange={{ min: p100Stats.min, max: p100Stats.max }}
 			/>

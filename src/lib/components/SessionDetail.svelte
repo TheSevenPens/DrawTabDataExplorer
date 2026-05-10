@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { brandName, type PressureResponse, type Pen } from '$data/lib/drawtab-loader.js';
+	import { penFullName } from '$lib/pen-helpers.js';
 	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
@@ -26,13 +27,7 @@
 	let session = $derived(data.session);
 	let pen = $derived(data.pen);
 	let defectInfo = $derived(data.defectInfo ?? null);
-	let penLabel = $derived(
-		pen
-			? pen.PenName === pen.PenId
-				? `${brandName(pen.Brand)} ${pen.PenId}`
-				: `${brandName(pen.Brand)} ${pen.PenName} (${pen.PenId})`
-			: session.PenEntityId,
-	);
+	let penLabel = $derived(pen ? penFullName(pen) : session.PenEntityId);
 
 	let p00 = $derived(estimateP00(session.Records));
 	let p100 = $derived(estimateP100(session.Records));
