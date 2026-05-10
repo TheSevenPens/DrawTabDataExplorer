@@ -82,9 +82,7 @@
 			.filter((v): v is number => v !== null && isFinite(v)),
 	);
 
-	let p100Markers: BandMarker[] = $derived(
-		p100Values.map((v) => ({ value: v, dashed: false })),
-	);
+	let p100Markers: BandMarker[] = $derived(p100Values.map((v) => ({ value: v, dashed: false })));
 
 	let p100Stats = $derived.by(() => {
 		const xs = [...p100Values].sort((a, b) => a - b);
@@ -135,11 +133,7 @@
 
 {#if activeTab === 'specs'}
 	<div class="tab-content">
-		<DetailView
-			item={family}
-			fields={PEN_FAMILY_FIELDS}
-			fieldGroups={PEN_FAMILY_FIELD_GROUPS}
-		/>
+		<DetailView item={family} fields={PEN_FAMILY_FIELDS} fieldGroups={PEN_FAMILY_FIELD_GROUPS} />
 	</div>
 {/if}
 
@@ -203,8 +197,8 @@
 	<div class="tab-content">
 		<p class="ref-blurb">
 			Maximum physical pressure is the force at which the digitizer saturates (reports its maximum
-			pressure value). The red lines show the estimated <strong>P100</strong> (max-force) for each
-			measurement session of pens in this family.
+			pressure value). The red lines show the estimated <strong>P100</strong> (max-force) for each measurement
+			session of pens in this family.
 		</p>
 		<BandsChart
 			bands={maxPressureBands}

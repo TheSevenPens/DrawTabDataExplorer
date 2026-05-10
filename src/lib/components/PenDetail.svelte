@@ -72,9 +72,7 @@
 			.filter((v): v is number => v !== null && isFinite(v)),
 	);
 
-	let p100Markers: BandMarker[] = $derived(
-		p100Values.map((v) => ({ value: v, dashed: false })),
-	);
+	let p100Markers: BandMarker[] = $derived(p100Values.map((v) => ({ value: v, dashed: false })));
 
 	let p100Stats = $derived.by(() => {
 		const xs = [...p100Values].sort((a, b) => a - b);
@@ -211,8 +209,8 @@
 	<div class="tab-content">
 		<p class="ref-blurb">
 			Maximum physical pressure is the force at which the digitizer saturates (reports its maximum
-			pressure value). The red lines show the estimated <strong>P100</strong> (max-force) for each
-			measurement session of this pen.
+			pressure value). The red lines show the estimated <strong>P100</strong> (max-force) for each measurement
+			session of this pen.
 		</p>
 		<BandsChart
 			bands={maxPressureBands}
