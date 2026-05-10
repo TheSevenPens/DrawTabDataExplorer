@@ -40,6 +40,17 @@ The canonical URL for any entity is `/entity/<entity-id>` (e.g.
 `/entity/wacom.tablet.ctl4100`). The typed routes
 (`/tablets/<id>`, `/pens/<id>`, …) redirect to the canonical form.
 
+Cross-references on list pages are clickable: the **Family** column on
+the Pens page links to the pen-family detail, and the **Tablet** column
+on the Tablet Inventory page links to the tablet detail (showing the
+full marketing name rather than the raw EntityId).
+
+Formatted full names suppress the model id when it would just duplicate
+what's already in the marketing name — so you'll see "Asus ProArt Pen
+MPA01" rather than "Asus ProArt Pen MPA01 (MPA01)". Apple iPads always
+omit the model id since their internal ids ("iPad-Pro-12.9-Gen1") only
+restate the marketing name in a less readable form.
+
 ## Searching and filtering
 
 Every list page has the same toolbar:
@@ -132,6 +143,28 @@ A more featureful viewer with envelope mode, zoom presets, and
 named-group comparison still lives at
 <https://thesevenpens.github.io/PenPressureData/>; those features
 are being incrementally folded back into the Explorer.
+
+## Max Pressure
+
+Every pen and pen-family detail page has a **Max Pressure** tab that
+contextualises the pen's saturation force against the same band ranges
+used on the Reference page (LIMITED / OK / GOOD / EXCELLENT / EXCESSIVE,
+in gram-force):
+
+- _All max pressures_ — one solid red marker per non-defective
+  measurement session, plotted against the bands so you can see at a
+  glance where the pen typically lands.
+- _Max pressure range_ — a summary chart that shades the min↔max
+  span and marks the median with a thicker line, plus a Min / Median /
+  Max table beneath.
+- _Pressure response (max-zoom)_ — the same chart from the Pressure
+  Response tab, locked to the 95–100% region and with the x-axis
+  auto-sized to the largest P100 estimate (+50 gf headroom) so you can
+  compare each session's approach to saturation.
+
+Defective sessions are excluded from these aggregates by the same
+inventory-defects rule the Pressure Response tab uses; toggle "Show N
+defective" on the embedded chart to include them.
 
 ## Inventory
 

@@ -46,6 +46,7 @@ DrawTabDataExplorer/
 │       │   ├── ValueHistogram.svelte       # Histogram with KDE, ranges, markers
 │       │   ├── TabletSizeComparison.svelte # Histogram + ISO note for tablet detail
 │       │   ├── ForceProportionsView.svelte # Force-Proportions loss diagram (16:9, 16:10)
+│       │   ├── BandsChart.svelte           # Range-bands chart with markers + shadedRange
 │       │   ├── PressureChart.svelte         # Chart.js scatter for force vs. pressure
 │       │   ├── SessionDetail.svelte         # Per-session detail rendered at /entity/<id>
 │       │   ├── SavedViews.svelte
@@ -54,6 +55,8 @@ DrawTabDataExplorer/
 │       ├── load-all-data.ts      # loadAllData() — fetches all 9 datasets in parallel
 │       ├── storage.ts            # localStorage helpers (getItem/setItem with JSON)
 │       ├── unit-store.ts         # Svelte store for unit preference
+│       ├── pen-helpers.ts        # buildPenNameMap(), formatPenIds()
+│       ├── tablet-helpers.ts     # tabletFullName(), tabletNameAndId()
 │       └── views.ts              # Saved views (localStorage)
 ├── static/                       # Junctions -> data-repo/data/*
 ├── svelte.config.js
@@ -124,6 +127,23 @@ paper sizes), and an optional `compareYears` dropdown to filter the
 dataset by release year. Used on the tablet detail page, the Reference
 page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 
+**BandsChart** — Pure-SVG horizontal range-bands chart used on the
+Reference page (IAF Ranking, Max Physical Pressure) and the Max Pressure
+tabs on pen / pen-family detail pages. Optional props:
+
+- `markers: BandMarker[]` — red vertical lines at given x values; each
+  marker can be `dashed`, customise its `strokeWidth`, and carry a
+  `label` rendered above the line.
+- `shadedRange: { min, max }` — semi-transparent red rectangle drawn
+  behind markers (used to highlight the min↔max P100 span).
+- `heading: string` — visible title rendered _inside_ the SVG (so it's
+  captured by PNG/SVG exports). Distinct from `title`, which only sets
+  the export filename slug.
+
+The root SVG carries an explicit `font-family` attribute matching the
+page body so standalone-rendered exports use the sans-serif stack
+instead of the browser's default serif fallback.
+
 **Nav** — Top-level navigation bar. Related routes are collapsed
 under a single parent link via the `LinkSpec.altActive` array, which
 lists additional pathnames that should also mark the link as active:
@@ -149,6 +169,86 @@ The sub-tab sets per parent:
 - **Tablets** (5 tabs): _Tablet models_ / _Tablet families_ / _Analysis_ / _Inventory_ / _Compare_
 - **Pens** (4 tabs): _Pen models_ / _Pen families_ / _Inventory_ / _Pressure Response_
 - **Data** (3 tabs): _Reference_ / _Data Quality_ / _Pen Compat_
+
+## Pressure response charts
+
+`PressureChart.svelte` is the Chart.js scatter used on the Pressure
+Response and Max Pressure tabs. A few non-obvious behaviors:
+
+- **Envelope mode fill workaround.** Chart.js's between-datasets fill
+  (`fill: '-1'`) is x-axis-parametric — it fills vertically between two
+  lines at each x. When the high envelope's max x exceeds the low
+  envelope's max x (common at p=99→100, since min(P100) is well below
+  max(P100)), the fill terminates at the low line's right edge and
+  leaves a triangular gap. The chart sidesteps this by tracing the
+  envelope as a single closed-polygon dataset (`[...low,
+...high.reverse()]`) and using `fill: 'shape'` to fill the polygon
+  interior instead.
+- **Zoom presets and dynamic x-axis.**
+  - _Normal_: x ∈ [0, 1000] gf — pinned so all pens render on the same
+    visual scale.
+  - _IAF detail_: x ∈ [0, 20] gf, y ∈ [0, 30]%.
+  - _Max pressure_: y ∈ [95, 100]%; x.max is computed dynamically as
+    `max(estimateP100 across visible sessions) + 50` so the upper-right
+    corner of the envelope always stays on-canvas regardless of pen
+    strength. This is shared across all view modes (raw, estimates,
+    standardized, envelope).
+- **`lockedZoom` prop** hides the Zoom dropdown and forces a given
+  preset. Used by the Max Pressure tab to embed a max-zoomed pressure
+  response chart alongside the bands charts.
+- All series use `pointRadius: 0` so dense charts read as smooth lines
+  rather than dot clouds.
+
+## Max Pressure tab
+
+Both `PenDetail.svelte` and `PenFamilyDetail.svelte` expose a Max
+Pressure tab with the same structure:
+
+1. _All max pressures_ — `<BandsChart>` with one solid red marker per
+   non-defective session's `estimateP100(records)`.
+2. _Max pressure range_ — a second `<BandsChart>` with `shadedRange`
+   spanning min↔max and three markers (Min, Median labelled and bold,
+   Max), plus a small Min/Median/Max table beneath.
+3. _Pressure response (max-zoom)_ — a `<PressureChart>` with
+   `lockedZoom="max"` so the user can switch view modes but stays
+   focused on the saturation region.
+
+Both pages duplicate the `maxPressureBands` constant inline with a
+"keep in sync" comment pointing back to
+`src/routes/reference/+page.svelte`. Defective sessions are excluded
+via `defectsByInventoryId` (same rule used by `<SessionStats>`).
+
+## Label formatting (model id suppression)
+
+Computed full names like "Brand Name (Id)" omit the `(Id)` suffix when
+it would just duplicate what's already in the marketing name. Two
+predicates in `data-repo/lib/entities/` drive this:
+
+- `penIdRedundantInName(pen)` — true when `PenName` contains `PenId`
+  as a whole token (case-insensitive, word-boundary matching). Catches
+  "Asus ProArt Pen MPA01" / "MPA01" but _not_ "MX300" / "M3".
+- `tabletIdRedundantInName(tablet)` — same rule, **plus** an unconditional
+  return-true for `Brand === 'APPLE'`. Apple iPad ids
+  (e.g. `iPad-Pro-12.9-Gen1`) only restate the marketing name, so they're
+  always suppressed regardless of token matching.
+
+Every label-formatting call site funnels through these predicates:
+
+- The `FullName` and `NameAndModelId` field-def getters in
+  `pen-fields.ts` / `tablet-fields.ts`.
+- `src/lib/pen-helpers.ts` (`buildPenNameMap`) and the new
+  `src/lib/tablet-helpers.ts` (`tabletFullName`, `tabletNameAndId`).
+- Inline label rendering in `PenFamilyDetail`, `BrandDetail`,
+  `PenDetail`, `TabletDetail`, `TabletSizeComparison`, `pen-compat`,
+  `tablet-compare`, `tablet-inventory`, `pen-flagged`.
+
+When adding a new label-formatting site, route it through these helpers
+rather than reconstructing the format string inline. To audit the
+dataset for new affected entities, run:
+
+```bash
+node scripts/find-name-contains-id.mjs
+```
 
 ## Compare feature
 
@@ -198,8 +298,15 @@ several files:
   the tablet detail and compare pages.
 
 - **`src/lib/pen-helpers.ts`** — `buildPenNameMap()` and
-  `formatPenIds()` for resolving pen IDs to display names. Used by
-  the tablet detail and compare pages.
+  `formatPenIds()` for resolving pen IDs to display names. Honours
+  `penIdRedundantInName` so the rendered label drops a trailing
+  "(PenId)" when it would just duplicate the PenName.
+
+- **`src/lib/tablet-helpers.ts`** — `tabletFullName()` ("Brand Name
+  (Id)") and `tabletNameAndId()` ("Name (Id)"). Both honour
+  `tabletIdRedundantInName`, so Apple iPads and any tablet whose Name
+  already contains the Id render without the "(Id)" suffix. Use these
+  rather than reconstructing the format string inline.
 
 ## Svelte 5 notes
 

@@ -168,6 +168,53 @@ Active state indicators:
 
 Thin component — search input + quick-filter `<select>` elements + a Clear button (shown only when dirty). The `quickFilterOptions` array is computed by `EntityExplorer` from `quickFilterFields` and passed down.
 
+## Label formatting (full names)
+
+Pen and tablet "full name" labels go through helpers that suppress a
+redundant `(Id)` suffix when the marketing Name already contains the
+Id, plus an unconditional Apple-iPad special case. Don't rebuild the
+`Brand Name (Id)` format string inline — use the helpers so the
+suppression rules apply everywhere.
+
+- Pens: `penIdRedundantInName(pen)` lives in
+  `data-repo/lib/entities/pen-fields.ts`. The `FullName` field def uses
+  it; consumers go through `src/lib/pen-helpers.ts`
+  (`buildPenNameMap`, `formatPenIds`).
+- Tablets: `tabletIdRedundantInName(tablet)` lives in
+  `data-repo/lib/entities/tablet-fields.ts` and **always returns true
+  for `Brand === 'APPLE'`** — Apple iPad ids
+  (e.g. `iPad-Pro-12.9-Gen1`) only restate the marketing name in a
+  less-readable form, so they're suppressed across the board. Consumers
+  go through `src/lib/tablet-helpers.ts` (`tabletFullName`,
+  `tabletNameAndId`). Don't remove the APPLE branch when refactoring
+  the predicate.
+
+To audit the dataset for new entities affected by the redundant-id
+rule: `node scripts/find-name-contains-id.mjs`.
+
+## Pressure response chart gotchas
+
+`PressureChart.svelte` (Chart.js) has two non-obvious behaviors that
+will surprise contributors:
+
+- **Envelope fill** is rendered as a single closed-polygon dataset
+  (`[...low, ...high.reverse()]`) with `fill: 'shape'`, _not_ as two
+  separate low/high lines with `fill: '-1'`. The between-datasets fill
+  in Chart.js is x-axis-parametric, so it terminates at the smaller
+  line's max x and leaves a triangular gap at the upper-right (around
+  p=99→100, where `min(P100) ≪ max(P100)`). Don't "simplify" this back
+  to two datasets without re-introducing the bug.
+- **Max-pressure zoom** computes `x.max` dynamically as
+  `max(estimateP100 across visible sessions) + 50` so the upper-right
+  corner of the envelope always stays on-canvas. This depends on
+  `visibleSessions` (which honours `hiddenIds` and the defective
+  filter), so the `$effect` block explicitly reads `maxP100` to track
+  it.
+
+The `lockedZoom` prop on `PressureChart` hides the Zoom dropdown and
+forces a preset — used by the Max Pressure tab to embed a max-zoomed
+chart alongside the bands charts.
+
 ## Type aliases
 
 `AnyFieldDef` is a convenience alias for `FieldDef<any>` used throughout UI
