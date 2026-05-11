@@ -31,7 +31,7 @@
 		},
 		{
 			label: 'Find a tablet by Model.Id',
-			body: `return await ds.Tablets.find(t => t.Model.Id === 'PL-550');`,
+			body: `return await ds.Tablets.find(t => t.Model.Id === 'PTH-660');`,
 		},
 		{
 			label: 'Compatible pens for a tablet (record-method API)',
