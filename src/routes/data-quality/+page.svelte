@@ -1,11 +1,36 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadAllFromURL, type DrawTabDataAll } from '$data/lib/drawtab-all.js';
-	import {
-		loadInventoryPensFromURL,
-		loadInventoryTabletsFromURL,
+	import type {
+		Brand,
+		Tablet,
+		Pen,
+		PenCompat,
+		PenFamily,
+		TabletFamily,
+		Driver,
+		PressureResponse,
 	} from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
+	import {
+		buildTabletToPenCompatMap,
+		buildPenToTabletCompatMap,
+	} from '$data/lib/compat-helpers.js';
+
+	// Bundle of entity collections this page joins/cross-checks. Used to be
+	// fetched via loadAllFromURL; now built from DrawTabDataSet calls.
+	interface DataBundle {
+		brands: Brand[];
+		tablets: Tablet[];
+		pens: Pen[];
+		penCompat: PenCompat[];
+		penFamilies: PenFamily[];
+		tabletFamilies: TabletFamily[];
+		drivers: Driver[];
+		pressureResponse: PressureResponse[];
+		tabletToPens: Map<string, Pen[]>;
+		penToTablets: Map<string, Tablet[]>;
+	}
 	import { buildFilterUrl } from '$lib/filter-url.js';
 	import {
 		findNonMonotonicSessions,
@@ -48,7 +73,7 @@
 		percent: string;
 	}
 
-	let ds: DrawTabDataAll | null = $state(null);
+	let ds: DataBundle | null = $state(null);
 	let issues: Issue[] = $state([]);
 	let tabletCompletion: CompletionStat[] = $state([]);
 	let displayCompletion: CompletionStat[] = $state([]);
@@ -263,7 +288,7 @@
 			.sort((a, b) => parseFloat(a.percent) - parseFloat(b.percent));
 	}
 
-	function findOrphanedCompat(ds: DrawTabDataAll): { type: string; id: string }[] {
+	function findOrphanedCompat(ds: DataBundle): { type: string; id: string }[] {
 		const tabletIds = new Set(ds.tablets.map((t) => t.Model.Id));
 		const penIds = new Set(ds.pens.map((p) => p.PenId));
 		const orphans: { type: string; id: string }[] = [];
@@ -303,12 +328,42 @@
 	let remeasureRecommendations: RemeasureRecommendation[] = $state([]);
 
 	onMount(async () => {
-		const [dsResult, invPens, invTablets] = await Promise.all([
-			loadAllFromURL(base),
-			loadInventoryPensFromURL(base, 'sevenpens'),
-			loadInventoryTabletsFromURL(base, 'sevenpens'),
+		const dts = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
+		const [
+			brands,
+			tablets,
+			pens,
+			penCompat,
+			penFamilies,
+			tabletFamilies,
+			drivers,
+			pressureResponse,
+			invPens,
+			invTablets,
+		] = await Promise.all([
+			dts.Brands.toArray(),
+			dts.Tablets.toArray(),
+			dts.Pens.toArray(),
+			dts.PenCompat.toArray(),
+			dts.PenFamilies.toArray(),
+			dts.TabletFamilies.toArray(),
+			dts.Drivers.toArray(),
+			dts.PressureResponse.toArray(),
+			dts.InventoryPens.toArray(),
+			dts.InventoryTablets.toArray(),
 		]);
-		ds = dsResult;
+		ds = {
+			brands,
+			tablets,
+			pens,
+			penCompat,
+			penFamilies,
+			tabletFamilies,
+			drivers,
+			pressureResponse,
+			tabletToPens: buildTabletToPenCompatMap(penCompat, pens),
+			penToTablets: buildPenToTabletCompatMap(penCompat, tablets),
+		};
 		inventoryPenCount = invPens.length;
 		inventoryTabletCount = invTablets.length;
 		const allIssues: Issue[] = [];
