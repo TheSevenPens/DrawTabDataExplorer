@@ -16,13 +16,13 @@
 
 	interface Preset {
 		label: string;
-		code: string;
+		body: string;
 	}
 
 	const presets: Preset[] = [
 		{
 			label: 'Top 5 newest Wacom pen displays',
-			code: `return await ds.Tablets
+			body: `return await ds.Tablets
   .filter('Brand', '==', 'WACOM')
   .filter('ModelType', '==', 'PENDISPLAY')
   .sort('ModelLaunchYear', 'desc')
@@ -31,56 +31,60 @@
 		},
 		{
 			label: 'Find a tablet by Model.Id',
-			code: `return await ds.Tablets.find(t => t.Model.Id === 'PL-550');`,
+			body: `return await ds.Tablets.find(t => t.Model.Id === 'PL-550');`,
 		},
 		{
 			label: 'Compatible pens for a tablet (record-method API)',
-			code: `const t = await ds.Tablets.find(t => t.Model.Id === 'PL-550');
+			body: `const t = await ds.Tablets.find(t => t.Model.Id === 'PL-550');
 return await t.getCompatiblePens();`,
 		},
 		{
 			label: 'Tablet family + its members',
-			code: `const t = await ds.Tablets.find(t => t.Model.Id === 'PL-550');
+			body: `const t = await ds.Tablets.find(t => t.Model.Id === 'PL-550');
 const family = await t.getFamily();
 const members = await family.getTablets();
 return { family: family.FamilyName, count: members.length, members: members.map(m => m.Model.Id) };`,
 		},
 		{
 			label: 'Reverse compatibility (pen → tablets)',
-			code: `const pen = await ds.Pens.find(p => p.PenId === 'UP-911E');
+			body: `const pen = await ds.Pens.find(p => p.PenId === 'UP-911E');
 const tablets = await pen.getCompatibleTablets();
 return tablets.map(t => t.Meta.EntityId);`,
 		},
 		{
 			label: 'Count tablets per brand',
-			code: `const tablets = await ds.Tablets.toArray();
+			body: `const tablets = await ds.Tablets.toArray();
 const counts = {};
 for (const t of tablets) counts[t.Model.Brand] = (counts[t.Model.Brand] ?? 0) + 1;
 return counts;`,
 		},
 		{
 			label: 'Pressure-response session lookup',
-			code: `const session = await ds.PressureResponse.find(s => s.InventoryId === 'WAP.0001');
+			body: `const session = await ds.PressureResponse.find(s => s.InventoryId === 'WAP.0001');
 const pen = await session.getPen();
 const tablet = await session.getTablet();
 return { session: session.InventoryId, pen: pen?.PenId, tablet: tablet?.Model.Id };`,
 		},
 		{
 			label: 'Brand → its tablets and pens',
-			code: `const brand = await ds.Brands.find(b => b.BrandId === 'WACOM');
+			body: `const brand = await ds.Brands.find(b => b.BrandId === 'WACOM');
 const tablets = await brand.getTablets();
 const pens = await brand.getPens();
 return { tablets: tablets.length, pens: pens.length };`,
 		},
 		{
 			label: 'Inventory: getPen() on first inventory record',
-			code: `const inv = await ds.InventoryPens.find(() => true);
+			body: `const inv = await ds.InventoryPens.find(() => true);
 const pen = await inv.getPen();
 return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		},
 	];
 
-	let code = $state(presets[0].code);
+	function renderPreset(p: Preset): string {
+		return `// ${p.label}\n${p.body}`;
+	}
+
+	let code = $state(renderPreset(presets[0]));
 	let result = $state<unknown>(undefined);
 	let resultJson = $state<string>('');
 	let error = $state<string | null>(null);
@@ -126,7 +130,7 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 	}
 
 	function loadPreset(p: Preset) {
-		code = p.code;
+		code = renderPreset(p);
 		result = undefined;
 		resultJson = '';
 		error = null;
