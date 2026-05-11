@@ -42,10 +42,7 @@
 
 	onMount(async () => {
 		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
-		const [pens, families] = await Promise.all([
-			ds.Pens.toArray(),
-			ds.PenFamilies.toArray(),
-		]);
+		const [pens, families] = await Promise.all([ds.Pens.toArray(), ds.PenFamilies.toArray()]);
 		const map: Record<string, string> = {};
 		for (const f of families) map[f.EntityId] = f.FamilyName;
 		setPenFamilyNames(map);

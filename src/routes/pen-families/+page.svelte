@@ -28,10 +28,7 @@
 
 	onMount(async () => {
 		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
-		const [families, pens] = await Promise.all([
-			ds.PenFamilies.toArray(),
-			ds.Pens.toArray(),
-		]);
+		const [families, pens] = await Promise.all([ds.PenFamilies.toArray(), ds.Pens.toArray()]);
 		const counts: Record<string, number> = {};
 		for (const p of pens) {
 			if (p.PenFamily) counts[p.PenFamily] = (counts[p.PenFamily] ?? 0) + 1;
