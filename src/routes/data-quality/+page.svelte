@@ -27,6 +27,7 @@
 	const dataTabs = [
 		{ href: '/reference', label: 'Reference' },
 		{ href: '/data-dictionary', label: 'Data Dictionary' },
+		{ href: '/api-explorer', label: 'API Explorer' },
 		{ href: '/data-quality', label: 'Data Quality' },
 		{ href: '/pen-compat', label: 'Pen Compat' },
 		{ href: '/wacom-driver-compat', label: 'Driver Compat' },
