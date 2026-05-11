@@ -11,6 +11,7 @@
 	import { findSimilarTablets } from '$data/lib/compat-helpers.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
+	import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
 	import { formatValue } from '$data/lib/units.js';
 	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
 	import ForceProportionsView from '$lib/components/ForceProportionsView.svelte';
@@ -27,6 +28,7 @@
 	let allPens: Pen[] = $derived(data.allPens);
 	let compatiblePens: Pen[] = $derived(data.compatiblePens);
 	let isoSizes: ISOPaperSize[] = $derived(data.isoSizes);
+	let family: TabletFamily | null = $derived(data.family);
 
 	let showJson = $state(false);
 	let activeTab = $state<'model' | 'specs' | 'size' | 'force' | 'pens' | 'similar'>('model');
@@ -188,6 +190,14 @@
 				>
 			</dd>
 		</div>
+		{#if family}
+			<div class="basics-item">
+				<dt>Family</dt>
+				<dd>
+					<a href="{base}/entity/{family.EntityId}">{family.FamilyName}</a>
+				</dd>
+			</div>
+		{/if}
 		<div class="basics-item">
 			<dt>Model ID</dt>
 			<dd>{tablet.Model.Id}</dd>
@@ -275,6 +285,8 @@
 														<a href="{base}/entity/{encodeURIComponent(pen.entityId)}">{pen.name}</a
 														>
 													{/each}
+												{:else if f.key === 'ModelFamily' && family}
+													<a href="{base}/entity/{family.EntityId}">{family.FamilyName}</a>
 												{:else if isUrl(val)}
 													<a href={val} target="_blank" rel="noopener">
 														{f.key === 'ModelUserManual'

@@ -34,11 +34,12 @@ export async function load({ params }) {
 
 	switch (entityType) {
 		case 'tablet': {
-			const [allTablets, allCompat, allPens, isoSizes] = await Promise.all([
+			const [allTablets, allCompat, allPens, isoSizes, tabletFamilies] = await Promise.all([
 				loadTabletsFromURL(base) as Promise<Tablet[]>,
 				loadPenCompatFromURL(base) as Promise<PenCompat[]>,
 				loadPensFromURL(base) as Promise<Pen[]>,
 				loadISOPaperSizesFromURL(base),
+				loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
 			]);
 			const tablet = allTablets.find((t) => t.Meta.EntityId === entityId);
 			if (!tablet) error(404, 'Tablet not found');
@@ -46,7 +47,10 @@ export async function load({ params }) {
 				allCompat.filter((c) => c.TabletId === tablet.Model.Id).map((c) => c.PenId),
 			);
 			const compatiblePens = allPens.filter((p) => compatPenIds.has(p.PenId));
-			return { entityType, tablet, allTablets, allPens, compatiblePens, isoSizes };
+			const family = tablet.Model.Family
+				? (tabletFamilies.find((f) => f.EntityId === tablet.Model.Family) ?? null)
+				: null;
+			return { entityType, tablet, allTablets, allPens, compatiblePens, isoSizes, family };
 		}
 
 		case 'pen': {
