@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadBrandsFromURL } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		type Brand,
 		BRAND_FIELDS,
@@ -15,7 +15,8 @@
 	let data: Brand[] = $state([]);
 
 	onMount(async () => {
-		data = (await loadBrandsFromURL(base)) as Brand[];
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
+		data = await ds.Brands.toArray();
 	});
 </script>
 

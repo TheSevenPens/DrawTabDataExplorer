@@ -3,10 +3,10 @@
 	import { onMount } from 'svelte';
 	import {
 		loadWacomUpdateProductsFromURL,
-		loadTabletsFromURL,
 		type WacomUpdateProduct,
 		type Tablet,
 	} from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 
@@ -23,9 +23,10 @@
 	let sensorIdToTablet = $state<Map<string, Tablet>>(new Map());
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
 		const [p, tablets] = await Promise.all([
 			loadWacomUpdateProductsFromURL(base),
-			loadTabletsFromURL(base),
+			ds.Tablets.toArray(),
 		]);
 		// Manifest model strings are dashless and uppercase (e.g. "DTH1152");
 		// our Model.Id values use dashes (e.g. "DTH-1152"). Normalize to a

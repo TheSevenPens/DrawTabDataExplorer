@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadInventoryTabletsFromURL, loadTabletsFromURL } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import {
 		type InventoryTablet,
@@ -27,16 +27,17 @@
 	let tabletNameMap: Record<string, string> = $state({});
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
 		const [inv, allTablets] = await Promise.all([
-			loadInventoryTabletsFromURL(base, 'sevenpens'),
-			loadTabletsFromURL(base),
+			ds.InventoryTablets.toArray(),
+			ds.Tablets.toArray(),
 		]);
 		const map: Record<string, string> = {};
 		for (const t of allTablets) {
 			map[t.Meta.EntityId] = tabletFullName(t);
 		}
 		tabletNameMap = map;
-		tablets = inv as unknown as InventoryTablet[];
+		tablets = inv;
 	});
 </script>
 

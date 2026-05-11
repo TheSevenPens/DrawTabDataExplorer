@@ -1,14 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import {
-		loadPenCompatFromURL,
-		loadTabletsFromURL,
-		loadPensFromURL,
-		brandName,
-		type Tablet,
-		type Pen,
-	} from '$data/lib/drawtab-loader.js';
+	import { brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		type EnrichedPenCompat,
 		PEN_COMPAT_FIELDS,
@@ -33,10 +27,11 @@
 	let data: EnrichedPenCompat[] = $state([]);
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
 		const [compat, tablets, pens] = await Promise.all([
-			loadPenCompatFromURL(base),
-			loadTabletsFromURL(base),
-			loadPensFromURL(base),
+			ds.PenCompat.toArray(),
+			ds.Tablets.toArray(),
+			ds.Pens.toArray(),
 		]);
 
 		const tabletMap = new Map<string, Tablet>();

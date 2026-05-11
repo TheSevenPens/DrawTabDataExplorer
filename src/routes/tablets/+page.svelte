@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import {
-		loadTabletsFromURL,
-		loadPensFromURL,
-		type Tablet,
-		type Pen,
-	} from '$data/lib/drawtab-loader.js';
+	import { type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		TABLET_FIELDS,
 		TABLET_FIELD_GROUPS,
@@ -42,7 +38,8 @@
 	});
 
 	onMount(async () => {
-		[data, pens] = await Promise.all([loadTabletsFromURL(base), loadPensFromURL(base)]);
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
+		[data, pens] = await Promise.all([ds.Tablets.toArray(), ds.Pens.toArray()]);
 	});
 </script>
 

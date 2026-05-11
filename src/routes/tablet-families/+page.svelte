@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadTabletFamiliesFromURL, loadTabletsFromURL } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		type TabletFamily,
 		TABLET_FAMILY_FIELDS,
@@ -25,9 +25,10 @@
 	let data: any[] = $state([]);
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
 		const [families, tablets] = await Promise.all([
-			loadTabletFamiliesFromURL(base) as Promise<TabletFamily[]>,
-			loadTabletsFromURL(base),
+			ds.TabletFamilies.toArray() as Promise<TabletFamily[]>,
+			ds.Tablets.toArray(),
 		]);
 
 		// Build lookup: EntityId → { count, earliestYear }

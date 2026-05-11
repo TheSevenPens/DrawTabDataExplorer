@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadPensFromURL, loadPenFamiliesFromURL } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		type Pen,
 		PEN_FIELDS,
@@ -41,9 +41,10 @@
 	});
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
 		const [pens, families] = await Promise.all([
-			loadPensFromURL(base),
-			loadPenFamiliesFromURL(base),
+			ds.Pens.toArray(),
+			ds.PenFamilies.toArray(),
 		]);
 		const map: Record<string, string> = {};
 		for (const f of families) map[f.EntityId] = f.FamilyName;

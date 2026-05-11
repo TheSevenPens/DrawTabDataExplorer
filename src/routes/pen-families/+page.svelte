@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadPenFamiliesFromURL, loadPensFromURL } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		type PenFamily,
 		PEN_FAMILY_FIELDS,
@@ -27,9 +27,10 @@
 	let data: PenFamily[] = $state([]);
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
 		const [families, pens] = await Promise.all([
-			loadPenFamiliesFromURL(base),
-			loadPensFromURL(base),
+			ds.PenFamilies.toArray(),
+			ds.Pens.toArray(),
 		]);
 		const counts: Record<string, number> = {};
 		for (const p of pens) {

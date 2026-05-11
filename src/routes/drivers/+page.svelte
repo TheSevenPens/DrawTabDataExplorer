@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadDriversFromURL } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		type Driver,
 		DRIVER_FIELDS,
@@ -15,7 +15,8 @@
 	let data: Driver[] = $state([]);
 
 	onMount(async () => {
-		data = (await loadDriversFromURL(base)) as Driver[];
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
+		data = await ds.Drivers.toArray();
 	});
 </script>
 

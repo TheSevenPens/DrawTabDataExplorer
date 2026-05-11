@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { loadInventoryPensFromURL, loadPensFromURL } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import { penFullName } from '$lib/pen-helpers.js';
 	import {
 		type InventoryPen,
@@ -29,16 +29,17 @@
 	let penNameMap: Record<string, string> = $state({});
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
 		const [p, allPens] = await Promise.all([
-			loadInventoryPensFromURL(base, 'sevenpens'),
-			loadPensFromURL(base),
+			ds.InventoryPens.toArray(),
+			ds.Pens.toArray(),
 		]);
 		const map: Record<string, string> = {};
 		for (const pen of allPens) {
 			map[pen.EntityId] = penFullName(pen);
 		}
 		penNameMap = map;
-		pens = p as unknown as InventoryPen[];
+		pens = p;
 	});
 
 	// Inventory IDs are stored uppercase in the data; the flag store uses
