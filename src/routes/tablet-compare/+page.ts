@@ -1,13 +1,10 @@
 import { base } from '$app/paths';
-import { loadTabletsFromURL, loadPensFromURL } from '$data/lib/drawtab-loader.js';
-import type { Tablet, Pen } from '$data/lib/drawtab-loader.js';
+import { DrawTabDataSet } from '$data/lib/dataset.js';
 
 export const prerender = false;
 
 export async function load() {
-	const [allTablets, allPens] = await Promise.all([
-		loadTabletsFromURL(base) as Promise<Tablet[]>,
-		loadPensFromURL(base) as Promise<Pen[]>,
-	]);
+	const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
+	const [allTablets, allPens] = await Promise.all([ds.Tablets.toArray(), ds.Pens.toArray()]);
 	return { allTablets, allPens };
 }

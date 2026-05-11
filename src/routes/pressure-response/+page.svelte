@@ -1,15 +1,9 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import {
-		loadPressureResponseFromURL,
-		loadPensFromURL,
-		loadInventoryPensFromURL,
-		brandName,
-		type PressureResponse,
-		type Pen,
-	} from '$data/lib/drawtab-loader.js';
-	import type { InventoryPen } from '$data/lib/schemas.js';
+	import { brandName, type PressureResponse, type Pen } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
+	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
@@ -37,10 +31,11 @@
 	let selectedIds = $state(new Set<string>());
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
 		const [s, p, inv] = await Promise.all([
-			loadPressureResponseFromURL(base),
-			loadPensFromURL(base),
-			loadInventoryPensFromURL(base, 'sevenpens') as Promise<InventoryPen[]>,
+			ds.PressureResponse.toArray(),
+			ds.Pens.toArray(),
+			ds.InventoryPens.toArray(),
 		]);
 		sessions = s;
 		pens = p;

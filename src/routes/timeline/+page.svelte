@@ -1,13 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import {
-		loadTabletsFromURL,
-		loadPensFromURL,
-		brandName,
-		type Tablet,
-		type Pen,
-	} from '$data/lib/drawtab-loader.js';
+	import { brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import Nav from '$lib/components/Nav.svelte';
 
 	interface YearEntry {
@@ -26,7 +21,8 @@
 	let yearTo = $state('');
 
 	onMount(async () => {
-		const [tablets, pens] = await Promise.all([loadTabletsFromURL(base), loadPensFromURL(base)]);
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
+		const [tablets, pens] = await Promise.all([ds.Tablets.toArray(), ds.Pens.toArray()]);
 
 		brands = [
 			...new Set([...tablets.map((t) => t.Model.Brand), ...pens.map((p) => p.Brand)]),

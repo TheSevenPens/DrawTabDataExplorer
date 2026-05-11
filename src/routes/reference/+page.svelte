@@ -6,11 +6,11 @@
 	import {
 		loadISOPaperSizesFromURL,
 		loadUSPaperSizesFromURL,
-		loadTabletsFromURL,
 		type ISOPaperSize,
 		type USPaperSize,
 		type Tablet,
 	} from '$data/lib/drawtab-loader.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		penTabletRangesCm,
 		penTabletRangesIn,
@@ -159,10 +159,11 @@
 	}
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
 		const [p, us, t] = await Promise.all([
 			loadISOPaperSizesFromURL(base),
 			loadUSPaperSizesFromURL(base),
-			loadTabletsFromURL(base),
+			ds.Tablets.toArray(),
 		]);
 		paperSizes = p;
 		usPaperSizes = us;

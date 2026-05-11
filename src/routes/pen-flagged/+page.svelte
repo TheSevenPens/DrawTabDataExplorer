@@ -2,16 +2,13 @@
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import {
-		loadPensFromURL,
-		loadPenFamiliesFromURL,
-		loadPressureResponseFromURL,
-		loadInventoryPensFromURL,
 		brandName,
 		type Pen,
 		type PenFamily,
 		type PressureResponse,
 	} from '$data/lib/drawtab-loader.js';
-	import type { InventoryPen } from '$data/lib/schemas.js';
+	import { DrawTabDataSet } from '$data/lib/dataset.js';
+	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
@@ -48,14 +45,15 @@
 	let inventoryPens: InventoryPen[] = $state([]);
 
 	onMount(async () => {
+		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
 		const [p, f, s, inv] = await Promise.all([
-			loadPensFromURL(base),
-			loadPenFamiliesFromURL(base),
-			loadPressureResponseFromURL(base),
-			loadInventoryPensFromURL(base, 'sevenpens') as Promise<InventoryPen[]>,
+			ds.Pens.toArray(),
+			ds.PenFamilies.toArray(),
+			ds.PressureResponse.toArray(),
+			ds.InventoryPens.toArray(),
 		]);
 		pens = p;
-		families = f as PenFamily[];
+		families = f;
 		sessions = s;
 		inventoryPens = inv;
 	});
