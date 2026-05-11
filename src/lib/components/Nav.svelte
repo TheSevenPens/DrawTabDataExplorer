@@ -28,7 +28,7 @@
 		{
 			href: '/reference',
 			label: 'Data',
-			altActive: ['/data-quality', '/pen-compat', '/wacom-driver-compat'],
+			altActive: ['/data-dictionary', '/data-quality', '/pen-compat', '/wacom-driver-compat'],
 		},
 		{ href: '/about', label: 'About' },
 	];
