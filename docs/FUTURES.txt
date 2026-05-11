@@ -1,52 +1,17 @@
 # FUTURES
 
-## FEATURES
+Tracked work lives in GitHub issues. This file is just a thin index;
+open the issue for current scope, design notes, and status.
 
-### Aggregation in the pipeline (summarize step)
-KQL-style summarize: count, min, max, avg grouped by a field.
-e.g. count tablets by brand, average pressure levels by type.
+## Open
 
-### Export results
-Export the current pipeline results as CSV or JSON.
+- Aggregation in the pipeline (summarize step) — #112
+- URL-encoded pipeline state for shareable views — #113
+- In-app data editing (dev mode) — #114
+- User-contributed data edits and suggestions — #115
+- Text-based KQL input — #54
 
-### URL-encoded pipeline state
-Encode the current pipeline steps into the URL so views can be shared
-via links without needing localStorage.
+## Shipped
 
-### Text-based KQL input
-Complement the visual pipeline builder with a text input that accepts
-KQL-like syntax, parsed into pipeline steps.
-
-### Data editing
-Allow editing field values directly in the table, with validation and
-write-back to the JSON files (dev mode only).
-
-### User-contributed data edits and suggestions
-Let visitors propose corrections or additions without needing a GitHub
-account or local clone. Possible approaches:
-
-- **In-app edit form** that captures changes to a single record and
-  produces a structured diff (JSON patch). Submitting opens a
-  pre-filled GitHub issue or pull request via the GitHub API, with the
-  diff embedded in the body. Reviewers triage in the data-repo.
-- **"Suggest a change" button** on every entity detail page (tablet,
-  pen, brand) that opens a lightweight modal: pick a field, enter the
-  proposed value, optionally add a source URL and notes. Submission
-  posts to a GitHub issue with a fixed template/label
-  (e.g. `data-suggestion`).
-- **Bulk import path** for trusted contributors: drag-and-drop a JSON
-  fragment that the app validates against the schema, shows a diff
-  preview, and lets the user copy a ready-to-paste PR body.
-- **Auth-gated direct commits** (longer term) using GitHub OAuth so
-  approved editors can write directly to a `suggestions/` branch in
-  the data-repo, where a maintainer reviews and merges.
-
-In all cases, provenance matters: every suggestion should carry a
-source (URL, PDF page, photo) so reviewers can verify before merging.
-
-### Static site deployment
-Build and deploy to GitHub Pages.
-
-## KNOWN ISSUES
-
-None currently.
+- Export results as CSV / JSON — #3
+- Static site deployment to GitHub Pages
