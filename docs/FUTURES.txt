@@ -15,6 +15,9 @@ open the issue for current scope, design notes, and status.
 - Publish queriton to npm (Option C of #139 Phase 4) — #143
 - Add Palmer Penguins fixture to queriton test suite — #144
 - User-facing tutorial doc for queriton — #146
+- Mechanical lint cleanup: require-each-key + no-navigation-without-resolve — #150
+- Audit Map/Set usage in $state contexts — #151
+- SvelteKit major upgrade (clears 3 low-severity advisories) — #152
 
 ## Shipped
 
