@@ -369,12 +369,14 @@ export class Query<T> {
 
 	/**
 	 * Materialise the query and bucket rows by a single field value. Last
-	 * row wins on collision. Pre-summarize uses entity field-defs;
-	 * post-summarize / post-project falls back to direct property access.
+	 * row wins on collision. The key is read directly from the row when
+	 * `field` is a top-level own property (so derive / join / summarize /
+	 * project mutations are visible), else via the entity's FieldDef
+	 * (so nested paths like `Tablet.Model.Brand` still work).
 	 */
 	async keyBy(field: string): Promise<Record<string, T>> {
 		const items = await this.toArray();
-		const getKey = this.keyReader(field);
+		const getKey = this.keyReaderFor(field, items[0]);
 		const out: Record<string, T> = {};
 		for (const item of items) {
 			const k = getKey(item);
@@ -386,7 +388,7 @@ export class Query<T> {
 	/** Like `keyBy` but collects every row per key into an array. */
 	async collectBy(field: string): Promise<Record<string, T[]>> {
 		const items = await this.toArray();
-		const getKey = this.keyReader(field);
+		const getKey = this.keyReaderFor(field, items[0]);
 		const out: Record<string, T[]> = {};
 		for (const item of items) {
 			const k = getKey(item);
@@ -397,17 +399,20 @@ export class Query<T> {
 	}
 
 	/**
-	 * Returns a function that reads `field` off a row. Uses the entity's
-	 * FieldDef.getValue when present (handles nesting). After a summarize /
-	 * project step the row shape is flat — fall back to direct property
-	 * access so post-transform keyBy still works.
+	 * Returns a function that reads `field` off a row. Probes the sample
+	 * row instead of guessing from step kinds — if the materialised row
+	 * already exposes `field` as a top-level own property, direct access
+	 * is the honest answer (it captures derive / join / summarize /
+	 * project output values that may shadow FieldDef.getValue paths).
+	 * Otherwise we fall back to FieldDef which handles nested entity
+	 * structure like `Tablet.Model.Brand`.
 	 */
-	private keyReader(field: string): (item: T) => string {
-		const isPostTransform = this.steps.some((s) => s.kind === 'summarize' || s.kind === 'project');
-		if (!isPostTransform) {
-			const def = this.fields.find((f) => f.key === field);
-			if (def) return (item) => def.getValue(item);
+	private keyReaderFor(field: string, sample: T | undefined): (item: T) => string {
+		if (sample !== undefined && Object.prototype.hasOwnProperty.call(sample, field)) {
+			return (item) => String((item as Record<string, unknown>)[field] ?? '');
 		}
+		const def = this.fields.find((f) => f.key === field);
+		if (def) return (item) => def.getValue(item);
 		return (item) => String((item as Record<string, unknown>)[field] ?? '');
 	}
 

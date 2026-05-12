@@ -595,6 +595,54 @@ describe('Query — keyBy / collectBy', () => {
 		const byCyl = await carsQ().keyBy('cyl');
 		expect(byCyl['4'].model).toBe('Volvo 142E');
 	});
+
+	// --- Field-resolution edge cases (regression coverage for #138) ---
+
+	it('keyBy: a .derive() that shadows an existing FieldDef key uses the derived value', async () => {
+		// Before #138 was fixed: this would key by the original 'model' field
+		// (the FieldDef path) instead of the derived value, because the
+		// step-kind heuristic missed `derive` as a shape-changing step.
+		const byModel = await carsQ()
+			.derive({ model: (c) => `x-${c.model}` })
+			.keyBy('model');
+		expect(byModel['x-Mazda RX4']).toBeDefined();
+		expect(byModel['Mazda RX4']).toBeUndefined(); // original FieldDef value not used
+	});
+
+	it('collectBy: a derived column name that collides with a FieldDef uses the derived value', async () => {
+		const grouped = await carsQ()
+			.derive({ cyl: () => 'tagged' as unknown as number })
+			.collectBy('cyl');
+		expect(Object.keys(grouped)).toEqual(['tagged']);
+		expect(grouped['tagged']).toHaveLength(32);
+	});
+
+	it('keyBy: post-join row carries right-side fields and reads them via direct access', async () => {
+		// The engine merges right-side columns into the row (right wins on
+		// collision). keyBy should read those merged values, not the
+		// original-entity-shape FieldDef.
+		const meta = new Query<{ orderId: string; tag: string }>(
+			async () => [
+				{ orderId: '101', tag: 'tier-A' },
+				{ orderId: '102', tag: 'tier-B' },
+				{ orderId: '103', tag: 'tier-A' },
+				{ orderId: '104', tag: 'tier-C' },
+			],
+			[
+				{
+					key: 'orderId',
+					label: 'Order',
+					type: 'string',
+					group: 'data',
+					getValue: (r) => r.orderId,
+				},
+				{ key: 'tag', label: 'Tag', type: 'string', group: 'data', getValue: (r) => r.tag },
+			],
+		);
+		const joined = await ordersQ().join(meta, 'orderId', 'orderId').keyBy('tag');
+		expect(joined['tier-A']).toBeDefined();
+		expect(joined['tier-C']).toBeDefined();
+	});
 });
 
 describe('Query — filter after summarize (SQL HAVING)', () => {
