@@ -13,6 +13,11 @@ open the issue for current scope, design notes, and status.
 - Investigate replacing custom Query API with Arquero — #119
 - keyBy/collectBy field resolution misses derive/join shape changes — #138
 - Plan-rewrite pass for obvious local wins — #140
+- Write README for the queriton package — #141
+- Split FieldDef into core + UI display extension — #142
+- Publish queriton to npm (Option C of #139 Phase 4) — #143
+- Add Palmer Penguins fixture to queriton test suite — #144
+- Standalone vitest config for queriton package — #145
 
 ## Shipped
 
