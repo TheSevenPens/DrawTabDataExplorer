@@ -18,6 +18,8 @@ open the issue for current scope, design notes, and status.
 - Add Palmer Penguins fixture to queriton test suite — #144
 - Standalone vitest config for queriton package — #145
 - User-facing tutorial doc for queriton — #146
+- Polish queriton package.json + README example smoke test — #147
+- Accessibility cleanup pass on list-page components — #148
 
 ## Shipped
 
