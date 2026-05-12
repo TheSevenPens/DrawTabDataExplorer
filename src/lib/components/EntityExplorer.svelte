@@ -31,6 +31,7 @@
 		quickFilterFields = [],
 		defaultFilterField,
 		defaultSortField,
+		alwaysSearchFields = [],
 		flaggedIds,
 		onToggleFlag,
 		titleTag,
@@ -49,6 +50,9 @@
 		quickFilterFields?: string[];
 		defaultFilterField?: string;
 		defaultSortField?: string;
+		/** Field keys to always include in text search even when not in
+		 * the user's visible columns (e.g. AlternateNames on tablets). */
+		alwaysSearchFields?: string[];
 		flaggedIds?: Set<string>;
 		onToggleFlag?: (entityId: string) => void;
 		titleTag?: 'h1' | 'h2';
@@ -175,13 +179,16 @@
 			);
 		}
 
-		// Apply search — check visible fields plus any fields marked alwaysSearch
+		// Apply search — check visible fields plus any fields the parent
+		// flagged via alwaysSearchFields (force-include even when hidden).
 		if (searchText.trim()) {
 			const q = searchText.trim().toLowerCase();
 			const visibleDefs = r.visibleFields
 				.map((key) => fields.find((f) => f.key === key))
 				.filter(Boolean);
-			const alwaysDefs = fields.filter((f) => f.alwaysSearch && !r.visibleFields.includes(f.key));
+			const alwaysDefs = fields.filter(
+				(f) => alwaysSearchFields.includes(f.key) && !r.visibleFields.includes(f.key),
+			);
 			const searchDefs = [...visibleDefs, ...alwaysDefs];
 			filtered = filtered.filter((row) =>
 				searchDefs.some((f) => {

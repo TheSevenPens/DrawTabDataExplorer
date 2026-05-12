@@ -60,6 +60,7 @@
 	defaultFilterField="Brand"
 	defaultSortField="Brand"
 	quickFilterFields={['Brand', 'ModelType', 'DigitizerSizeCategory']}
+	alwaysSearchFields={['AlternateNames']}
 	flaggedIds={flaggedSet}
 	onToggleFlag={toggleFlag}
 />

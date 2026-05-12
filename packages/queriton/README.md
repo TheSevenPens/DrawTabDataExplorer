@@ -124,9 +124,9 @@ Every documented null behaviour is pinned in
 `FieldDef<T>` is the contract queriton uses to read values out of your
 records (`getValue`) and present them in filter UIs (`type`,
 `enumValues`, `label`). It also carries a few hooks that are really
-display affordances — `getDisplayValue`, `getHref`, `alwaysSearch`,
-`group`. Non-UI consumers can ignore them; a future split into a thinner
-core type plus a `FieldDisplayDef` extension is tracked in
+display affordances — `getDisplayValue`, `getHref`, `group`. Non-UI
+consumers can ignore them; a future split into a thinner core type plus
+a `FieldDisplayDef` extension is tracked in
 [#142](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/142).
 
 ## Running the tests
