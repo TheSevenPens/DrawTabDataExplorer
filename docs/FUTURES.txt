@@ -13,6 +13,7 @@ open the issue for current scope, design notes, and status.
 - Investigate replacing custom Query API with Arquero — #119
 - keyBy/collectBy field resolution misses derive/join shape changes — #138
 - Extract generic Query/Pipeline API into reusable library — #139
+- Plan-rewrite pass for obvious local wins — #140
 
 ## Shipped
 
