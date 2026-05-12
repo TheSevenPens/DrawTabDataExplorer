@@ -80,6 +80,43 @@ return await ds.Tablets
   .toArray();`,
 		},
 		{
+			label: 'Brands with > 30 tablets (filter after summarize = SQL HAVING)',
+			body: `// Chaining .filter() after .summarize() filters on the aggregated column —
+// equivalent to SQL HAVING. Works because summarize swaps in synthetic
+// field-defs over the summary rows.
+return await ds.Tablets
+  .summarize({ by: 'Brand', count: 'tablets' })
+  .filter('tablets', '>', 30)
+  .sort('tablets', 'desc')
+  .toArray();`,
+		},
+		{
+			label: 'Project to specific columns with .select()',
+			body: `return await ds.Tablets
+  .filter('Brand', '==', 'WACOM')
+  .select(['Brand', 'ModelId', 'ModelName', 'ModelLaunchYear'])
+  .sort('ModelLaunchYear', 'desc')
+  .take(5)
+  .toArray();`,
+		},
+		{
+			label: 'Distinct values of a field',
+			body: `// .distinct() returns a sorted array of distinct non-empty values.
+return await ds.Tablets.filter('Brand', '==', 'WACOM').distinct('ModelType');`,
+		},
+		{
+			label: 'Median launch year per brand (with collect)',
+			body: `return await ds.Tablets
+  .summarize({
+    by: 'Brand',
+    count: 'tablets',
+    median: { medianYear: 'ModelLaunchYear' },
+    distinctCount: { distinctTypes: 'ModelType' },
+  })
+  .sort('tablets', 'desc')
+  .toArray();`,
+		},
+		{
 			label: 'Pressure-response session lookup',
 			body: `const session = await ds.PressureResponse.find(s => s.InventoryId === 'WAP.0001');
 const pen = await session.getPen();
@@ -266,7 +303,10 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		<li><code>.filter(field, op, value)</code></li>
 		<li><code>.sort(field, 'asc' | 'desc')</code></li>
 		<li><code>.take(n)</code></li>
+		<li><code>.select(fields)</code></li>
 		<li><code>.summarize(spec)</code></li>
+		<li><code>.distinct(field)</code></li>
+		<li><code>.values(field)</code></li>
 		<li><code>.toArray()</code></li>
 		<li><code>.find(predicate)</code></li>
 		<li><code>.count()</code></li>
@@ -274,7 +314,9 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 	<p>
 		<code>.summarize(spec)</code> groups rows and returns one row per group. After it, subsequent
 		<code>.sort()</code>
-		/ <code>.filter()</code> / <code>.take()</code> target the groupBy keys and aggregator output columns.
+		/ <code>.filter()</code> / <code>.take()</code> target the groupBy keys and aggregator output
+		columns — <code>.filter()</code> after <code>.summarize()</code> is effectively SQL
+		<code>HAVING</code>.
 	</p>
 	<ul class="ops">
 		<li>
@@ -285,11 +327,25 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 			name.
 		</li>
 		<li>
-			<code>sum</code> / <code>avg</code> / <code>min</code> / <code>max</code> — object map of
-			<em>output column name</em> → <em>numeric field key</em>. Blank/non-numeric values are
-			skipped.
+			<code>sum</code> / <code>avg</code> / <code>min</code> / <code>max</code> /
+			<code>median</code>
+			— object map of <em>output column name</em> → <em>numeric field key</em>. Blank/non-numeric
+			values are skipped.
 		</li>
+		<li><code>distinctCount</code> — distinct non-empty value count per group.</li>
+		<li>
+			<code>first</code> / <code>last</code> — raw value of the first / last item per group in input order
+			(includes empties).
+		</li>
+		<li><code>collect</code> — array of all raw values per group, in input order.</li>
 	</ul>
+	<p>
+		<code>.select(fields)</code> projects each row to the listed fields. Downstream
+		<code>.sort()</code> / <code>.filter()</code> / <code>.take()</code> work on the projected
+		columns.
+		<code>.distinct(field)</code> and its synonym <code>.values(field)</code> return a sorted array of
+		distinct non-empty values.
+	</p>
 	<p>
 		Filter operators (the <code>op</code> argument to <code>.filter()</code>):
 	</p>

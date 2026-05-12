@@ -11,9 +11,17 @@ open the issue for current scope, design notes, and status.
 - Text-based KQL input — #54
 - Type-narrow .filter()/.sort() field parameter — #118
 - Investigate replacing custom Query API with Arquero — #119
+- Predicate-function overload on Query.filter() — #124
+- OR / nested boolean filters in the pipeline — #125
+- Query.derive({col: fn}) for query-time computed columns — #126
+- Query.join() to collapse relationship helpers — #127
 
 ## Shipped
 
+- Query.distinct() / .values() shorthand — #120
+- More summarize aggregators (median/first/last/distinctCount/collect) — #121
+- Query.select() column projection — #122
+- Document HAVING pattern in API Explorer — #123
 - Aggregation in the pipeline (summarize step) — #112
 - Export results as CSV / JSON — #3
 - Static site deployment to GitHub Pages
