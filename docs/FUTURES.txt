@@ -17,6 +17,7 @@ open the issue for current scope, design notes, and status.
 - Publish queriton to npm (Option C of #139 Phase 4) — #143
 - Add Palmer Penguins fixture to queriton test suite — #144
 - Standalone vitest config for queriton package — #145
+- User-facing tutorial doc for queriton — #146
 
 ## Shipped
 
