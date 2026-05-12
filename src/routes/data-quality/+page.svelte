@@ -35,11 +35,6 @@
 		findSingleSessionPens,
 		findStaleMeasurements,
 		findRecommendedForRemeasurement,
-		type NonMonotonicSession,
-		type MissingLowEndPen,
-		type SingleSessionPen,
-		type StaleMeasurement,
-		type RemeasureRecommendation,
 	} from '$data/lib/pressure/data-quality.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import Nav from '$lib/components/Nav.svelte';

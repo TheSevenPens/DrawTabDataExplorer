@@ -103,7 +103,6 @@
 						<h3>Tablets ({entry.tablets.length})</h3>
 						<div class="items">
 							{#each entry.tablets as t}
-								<!-- svelte-ignore a11y_no_static_element_interactions -->
 								<div
 									class="item tablet"
 									role="link"
