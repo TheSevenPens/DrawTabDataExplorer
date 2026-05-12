@@ -108,6 +108,23 @@ export class Query<T> {
 	) {}
 
 	/**
+	 * Returns a defensive copy of the pipeline's step list. Pipelines-as-data
+	 * is a stated property of queriton: the `Step[]` is JSON-shaped (except
+	 * for the function-bodied `predicate`, `derive`, and unresolved join
+	 * variants), so this getter is the canonical hook for saved-view
+	 * persistence, URL-state round-trips, and API-explorer-style
+	 * introspection.
+	 *
+	 * Note: predicate / derive / join / concat steps carry function or
+	 * `Query<U>` references that don't survive `JSON.stringify`. Callers
+	 * that serialise pipelines need to either filter those out or
+	 * substitute placeholders.
+	 */
+	toSteps(): Step[] {
+		return [...this.steps];
+	}
+
+	/**
 	 * Three accepted forms:
 	 *
 	 * - `.filter(field, op, value)` — flat AND-chain, serialisable to URL state.

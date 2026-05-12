@@ -52,6 +52,28 @@ describe('Query — materialisation', () => {
 	});
 });
 
+describe('Query — toSteps (pipeline introspection)', () => {
+	it('returns an empty list for an unmodified Query', () => {
+		expect(carsQ().toSteps()).toEqual([]);
+	});
+
+	it('returns each step in pipeline order', () => {
+		const q = carsQ().filter('cyl', '==', 4).sort('mpg', 'desc').take(5);
+		expect(q.toSteps()).toEqual([
+			{ kind: 'filter', field: 'cyl', operator: '==', value: '4' },
+			{ kind: 'sort', field: 'mpg', direction: 'desc' },
+			{ kind: 'take', count: 5 },
+		]);
+	});
+
+	it('returns a defensive copy (mutating the result does not affect the Query)', () => {
+		const q = carsQ().filter('cyl', '==', 4);
+		const steps = q.toSteps();
+		steps.push({ kind: 'reverse' });
+		expect(q.toSteps()).toHaveLength(1);
+	});
+});
+
 describe('Query — filter operators', () => {
 	it("'==' matches exact string values", async () => {
 		const rows = await carsQ().filter('model', '==', 'Mazda RX4').toArray();

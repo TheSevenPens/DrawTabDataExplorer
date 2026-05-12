@@ -70,6 +70,7 @@ Promise.
 - **Combine** — `.concat(other)` / `.union(other)` (synonym)
 - **Unroll arrays** — `.unroll(field)`
 - **Materialise** — `.toArray()`, `.find(predicateFn)`, `.count()`, `.keyBy(field)`, `.collectBy(field)`
+- **Introspect** — `.toSteps()` returns the `Step[]` that the pipeline will execute (canonical hook for saved views / URL state)
 
 ### Filter operators
 
