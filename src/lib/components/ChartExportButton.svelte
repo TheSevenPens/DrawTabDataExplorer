@@ -25,7 +25,7 @@
 		getDataHtml?: () => string;
 	}
 	let { getSvg, getCanvas, getDataHtml, title, filename }: Props = $props();
-	const mode: 'svg' | 'canvas' = getCanvas ? 'canvas' : 'svg';
+	let mode: 'svg' | 'canvas' = $derived(getCanvas ? 'canvas' : 'svg');
 
 	let open = $state(false);
 	let toast = $state<string | null>(null);

@@ -66,7 +66,11 @@
 	} = $props();
 
 	let viewMode = $state<ViewMode>('estimates');
-	let zoomMode = $state<ZoomMode>(lockedZoom ?? 'normal');
+	// When lockedZoom is set the parent controls zoom and the dropdown is hidden.
+	// Otherwise the user toggles via userZoom; the effective zoomMode is the
+	// override (when present) or the user choice.
+	let userZoom = $state<ZoomMode>('normal');
+	let zoomMode = $derived<ZoomMode>(lockedZoom ?? userZoom);
 	let envelopeRange = $state<EnvelopeRange>('minmax');
 	// Defective sessions are hidden by default; the toggle appears in the
 	// toolbar only when at least one session is flagged.
@@ -382,7 +386,7 @@
 	{#if !lockedZoom}
 		<label>
 			Zoom
-			<select bind:value={zoomMode}>
+			<select bind:value={userZoom}>
 				<option value="normal">Normal</option>
 				<option value="iaf">IAF detail (0-20 gf)</option>
 				<option value="max">Max pressure (95-100%)</option>

@@ -16,7 +16,7 @@
 		onload: (steps: Step[]) => void;
 	} = $props();
 
-	const BUILTIN_VIEWS: SavedView[] = [{ name: 'Default', steps: defaultView }];
+	let BUILTIN_VIEWS: SavedView[] = $derived([{ name: 'Default', steps: defaultView }]);
 
 	let userViews = $state<SavedView[]>([]);
 	let selectedName = $state('Default');

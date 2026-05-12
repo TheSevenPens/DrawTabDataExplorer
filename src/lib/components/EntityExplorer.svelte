@@ -262,8 +262,6 @@
 	/>
 {/if}
 
-<slot name="nav" />
-
 <div class="top-bar">
 	<SearchBar bind:searchText bind:quickFilters {quickFilterOptions} />
 	<QueryPipelineBar

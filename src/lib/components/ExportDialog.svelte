@@ -34,7 +34,7 @@
 	// (no FieldDef metadata, no view/all distinction). Used by surfaces
 	// where the data is already a static, pre-rendered table — e.g. each
 	// Data Quality section. The scope toggles are hidden in this mode.
-	const simpleMode = headers !== undefined && rows !== undefined;
+	let simpleMode = $derived(headers !== undefined && rows !== undefined);
 
 	let rowMode = $state<'all' | 'view'>('view');
 	let colMode = $state<'all' | 'view'>('view');
