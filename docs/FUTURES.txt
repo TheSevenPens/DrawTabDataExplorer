@@ -11,6 +11,7 @@ open the issue for current scope, design notes, and status.
 - Text-based KQL input — #54
 - Type-narrow .filter()/.sort() field parameter — #118
 - Investigate replacing custom Query API with Arquero — #119
+- keyBy/collectBy field resolution misses derive/join shape changes — #138
 
 ## Shipped
 
