@@ -14,6 +14,16 @@ open the issue for current scope, design notes, and status.
 
 ## Shipped
 
+- Case-sensitive filter operators — #137
+- Query.concat() / .union() — #136
+- Query.last() / .reverse() — #135
+- 'between' filter operator — #134
+- Query.unroll() — #133
+- Query.keyBy() / .collectBy() — #132
+- Query.antijoin() / .leftjoin() — #131
+- .filterIn() / .filterNotIn() + 'in' / 'notin' operators — #130
+- Multi-key sort overload — #129
+- Query.skip() — #128
 - Query.join() / .semijoin() — #127
 - Query.derive({col: fn}) for query-time computed columns — #126
 - OR / nested boolean filters in the pipeline — #125

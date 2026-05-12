@@ -158,6 +158,91 @@ return await ds.Pens
   .toArray();`,
 		},
 		{
+			label: 'Pagination: skip + take',
+			body: `// Page 3 (rows 11-15) of Wacom tablets by launch year.
+return await ds.Tablets
+  .filter('Brand', '==', 'WACOM')
+  .sort('ModelLaunchYear', 'desc')
+  .skip(10)
+  .take(5)
+  .toArray();`,
+		},
+		{
+			label: 'Multi-key sort (primary-by-first)',
+			body: `// Array form: primary by Brand asc, secondary by year desc.
+return await ds.Tablets
+  .filterIn('Brand', ['WACOM', 'HUION', 'XPPEN'])
+  .sort([
+    { field: 'Brand', direction: 'asc' },
+    { field: 'ModelLaunchYear', direction: 'desc' },
+  ])
+  .take(15)
+  .toArray();`,
+		},
+		{
+			label: 'filterIn: brand is one of a set',
+			body: `return await ds.Tablets
+  .filterIn('Brand', ['WACOM', 'XENCELABS'])
+  .summarize({ by: 'Brand', count: 'tablets' })
+  .toArray();`,
+		},
+		{
+			label: 'between operator: launch year range',
+			body: `return await ds.Tablets
+  .filter('ModelLaunchYear', 'between', '2018|2022')
+  .summarize({ by: 'Brand', count: 'tablets' })
+  .sort('tablets', 'desc')
+  .toArray();`,
+		},
+		{
+			label: 'antijoin: pens with no compatible tablet (data-quality)',
+			body: `// Pens that don't appear in any PenCompat row.
+return await ds.Pens
+  .antijoin(ds.PenCompat, 'PenId', 'PenId')
+  .select(['Brand', 'PenId', 'PenName'])
+  .toArray();`,
+		},
+		{
+			label: 'leftjoin: every pen + its compat tablets (if any)',
+			body: `return await ds.Pens
+  .filter('Brand', '==', 'WACOM')
+  .leftjoin(ds.PenCompat, 'PenId', 'PenId')
+  .select(['PenId', 'TabletId'])
+  .take(15)
+  .toArray();`,
+		},
+		{
+			label: 'unroll: explode alternate names',
+			body: `// Lift the nested array via derive, then unroll to one row per name.
+return await ds.Tablets
+  .filter('Brand', '==', 'WACOM')
+  .derive({ name: t => t.Model.AlternateNames ?? [] })
+  .unroll('name')
+  .select(['ModelId', 'name'])
+  .take(15)
+  .toArray();`,
+		},
+		{
+			label: 'concat: combine two filtered queries',
+			body: `// All Wacom + all Apple tablets, side by side.
+return await ds.Tablets.filter('Brand', '==', 'WACOM')
+  .concat(ds.Tablets.filter('Brand', '==', 'APPLE'))
+  .count();`,
+		},
+		{
+			label: 'keyBy: lookup tablets by ModelId',
+			body: `const byId = await ds.Tablets.keyBy('ModelId');
+return byId['PL-550'];`,
+		},
+		{
+			label: 'Strict (case-sensitive) contains',
+			body: `// Default contains is case-insensitive. The *Strict variants are exact.
+return {
+  caseInsensitive: await ds.Tablets.filter('ModelName', 'contains', 'CINTIQ').count(),
+  caseSensitive: await ds.Tablets.filter('ModelName', 'containsStrict', 'CINTIQ').count(),
+};`,
+		},
+		{
 			label: 'Median launch year per brand (with collect)',
 			body: `return await ds.Tablets
   .summarize({
@@ -356,15 +441,27 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		<li><code>.filter(field, op, value)</code></li>
 		<li><code>.filter(expr)</code> — boolean tree</li>
 		<li><code>.filter(item =&gt; ...)</code> — predicate fn</li>
+		<li><code>.filterIn(field, values)</code></li>
+		<li><code>.filterNotIn(field, values)</code></li>
 		<li><code>.sort(field, 'asc' | 'desc')</code></li>
+		<li><code>.sort([{'{ field, direction }'}, ...])</code></li>
 		<li><code>.take(n)</code></li>
+		<li><code>.skip(n)</code></li>
+		<li><code>.last(n)</code></li>
+		<li><code>.reverse()</code></li>
 		<li><code>.select(fields)</code></li>
 		<li><code>.derive(cols)</code></li>
+		<li><code>.unroll(field)</code></li>
 		<li><code>.summarize(spec)</code></li>
 		<li><code>.join(other, lKey, rKey)</code></li>
 		<li><code>.semijoin(other, lKey, rKey)</code></li>
+		<li><code>.antijoin(other, lKey, rKey)</code></li>
+		<li><code>.leftjoin(other, lKey, rKey)</code></li>
+		<li><code>.concat(other)</code> / <code>.union(other)</code></li>
 		<li><code>.distinct(field)</code></li>
 		<li><code>.values(field)</code></li>
+		<li><code>.keyBy(field)</code></li>
+		<li><code>.collectBy(field)</code></li>
 		<li><code>.toArray()</code></li>
 		<li><code>.find(predicate)</code></li>
 		<li><code>.count()</code></li>
@@ -419,8 +516,29 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 	<p>
 		<code>.join(other, leftKey, rightKey)</code> is an inner join that merges right-side columns
 		into matched rows. <code>.semijoin(other, leftKey, rightKey)</code> keeps left rows that have a
-		match without merging — row shape stays as the left side. Both are evaluated lazily; the
-		right-side Query is materialised at <code>.toArray()</code> time.
+		match without merging — row shape stays as the left side. <code>.antijoin()</code> is the
+		inverse of semijoin (keeps left rows with no match — useful for data-quality patterns).
+		<code>.leftjoin()</code> keeps all left rows; unmatched rows pass through without right-side
+		fields. All four resolve the right-side Query lazily at
+		<code>.toArray()</code> time.
+	</p>
+	<p>
+		<code>.skip(n)</code> drops the first n rows; <code>.last(n)</code> keeps the trailing n;
+		<code>.reverse()</code> flips order without re-sorting.
+		<code>.sort([...])</code> takes an array form for multi-key sorts (primary-by-first, matching
+		SQL <code>ORDER BY</code>); chained <code>.sort()</code> calls compose via stable sort but with
+		the <em>last</em> call as primary — prefer the array form for multi-key sorts.
+	</p>
+	<p>
+		<code>.filterIn(field, values)</code> / <code>.filterNotIn()</code> are sugar over an OR tree of
+		<code>==</code>
+		clauses. <code>.unroll(field)</code> explodes a top-level array-valued column into one row per
+		element (use <code>.derive()</code> first to lift nested arrays). <code>.concat(other)</code> /
+		<code>.union(other)</code>
+		append rows (UNION ALL — chain <code>.distinct()</code> for dedup). <code>.keyBy(field)</code>
+		and
+		<code>.collectBy(field)</code> are async terminals returning a <code>Record</code> keyed by the field
+		value (single row vs array of rows per key).
 	</p>
 	<p>
 		Filter operators (the <code>op</code> argument to <code>.filter()</code>):
@@ -429,6 +547,17 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		<li><code>'=='</code>, <code>'!='</code> — exact match</li>
 		<li><code>'contains'</code>, <code>'notcontains'</code> — substring (case-insensitive)</li>
 		<li><code>'startswith'</code>, <code>'notstartswith'</code> — prefix (case-insensitive)</li>
+		<li>
+			<code>'containsStrict'</code>, <code>'notcontainsStrict'</code>,
+			<code>'startswithStrict'</code>, <code>'notstartswithStrict'</code> — case-sensitive variants
+		</li>
+		<li>
+			<code>'in'</code>, <code>'notin'</code> — set membership; value is pipe-separated (e.g.
+			<code>'WACOM|HUION'</code>)
+		</li>
+		<li>
+			<code>'between'</code> — inclusive numeric range; value is pipe-separated <code>'lo|hi'</code>
+		</li>
 		<li><code>'empty'</code>, <code>'notempty'</code> — field is missing/blank</li>
 		<li>
 			<code>'&gt;'</code>, <code>'&gt;='</code>, <code>'&lt;'</code>, <code>'&lt;='</code> — numeric compare
