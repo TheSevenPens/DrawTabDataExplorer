@@ -31,39 +31,57 @@ similar in its terminal output. Re-run `npm run setup-static` to fix.
 
 ## Data loading patterns
 
-### Detail pages — use `+page.ts` load functions
+**Every page that reads data uses a `+page.ts` load function.** No
+`onMount(async ...)` data loading anywhere in the routes. The component
+reads its data from `$props()`:
 
-All routes with `[entityId]` segments load their data in a `+page.ts` file using
-SvelteKit's `load` function. The page component reads the result from `$props()`:
+```ts
+// +page.ts
+export async function load({ parent }) {
+	const { ds } = await parent();
+	const tablets = await ds.Tablets.toArray();
+	return { tablets };
+}
 
+// +page.svelte
+let { data } = $props();
+<EntityExplorer data={data.tablets} ... />
 ```
-src/routes/brands/[entityId]/+page.ts           ← load function
-src/routes/brands/[entityId]/+page.svelte       ← reads let { data } = $props()
 
-src/routes/tablets/[entityId]/+page.ts
-src/routes/pens/[entityId]/+page.ts
-src/routes/pen-families/[entityId]/+page.ts
-src/routes/tablet-families/[entityId]/+page.ts
-src/routes/drivers/[entityId]/+page.ts
+### Why a load function instead of onMount
+
+With `ssr = false`, `$state` assignments after `await` inside `onMount`
+are unreliable in Svelte 5 — the template may not re-render when the
+state changes. `load` functions sidestep this entirely because data is
+available before the component mounts.
+
+### One DataSet per session
+
+`src/routes/+layout.ts` constructs **one** `DrawTabDataSet` at session
+start and exposes it as `data.ds`. Every child `+page.ts` reads it via
+`await parent()`:
+
+```ts
+export async function load({ parent }) {
+	const { ds } = await parent();
+	// ds.Tablets, ds.Pens, ds.getVersion(), etc.
+}
 ```
 
-**Do NOT load route data in `onMount`.** With `ssr = false`, `$state`
-assignments after `await` inside `onMount` are unreliable in Svelte 5 — the
-template may not re-render when the state changes. `load` functions avoid this
-entirely because data is available before the component mounts.
+This means the per-collection load cache (inherited from queriton's
+`DataSet`) is session-scoped: navigating from `/tablets` to
+`/tablet-compare` reuses the already-fetched tablet data. The layout
+also loads `version.json` eagerly so the schema-mismatch banner is
+visible on every page.
 
-### Layout-level data — `+layout.ts`
+### Where post-load analysis goes
 
-`src/routes/+layout.ts` exports a `load()` function that fetches the
-DrawTabData version info once per session. `+layout.svelte` reads it via
-`let { children, data } = $props()`. This avoids an `onMount` in the layout.
-
-### List pages — `onMount` is fine
-
-Pages that load a full dataset and pass it to `EntityExplorer` (e.g.
-`/brands`, `/tablets`) use `onMount` with `Promise.all`. This works because
-these pages use `{:else}` (not `{:else if data}`) so the component is always
-mounted and Svelte can update it in place.
+Pages that do post-load shaping (building lookup maps, computing
+completeness stats, joining cross-entity tables) put that logic either
+in `+page.ts` (preferred when the result is a fixed structure the
+template consumes) or in a top-level `$derived` / `$derived.by` block
+in `+page.svelte` (when the result depends on user-editable state in
+addition to the loaded data). Avoid `$effect` for pure derivations.
 
 ## Svelte 5 reactive state gotchas
 

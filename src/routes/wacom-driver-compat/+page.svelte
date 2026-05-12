@@ -1,14 +1,10 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
-	import {
-		loadWacomUpdateProductsFromURL,
-		type WacomUpdateProduct,
-		type Tablet,
-	} from '$data/lib/drawtab-loader.js';
-	import { DrawTabDataSet } from '$data/lib/dataset.js';
+	import type { WacomUpdateProduct, Tablet } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+
+	let { data } = $props();
 
 	const dataTabs = [
 		{ href: '/reference', label: 'Reference' },
@@ -19,42 +15,17 @@
 		{ href: '/wacom-driver-compat', label: 'Driver Compat' },
 	];
 
-	let products: WacomUpdateProduct[] = $state([]);
-	let modelToTablet = $state<Map<string, Tablet>>(new Map());
-	let sensorIdToTablet = $state<Map<string, Tablet>>(new Map());
-
-	onMount(async () => {
-		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
-		const [p, tablets] = await Promise.all([
-			loadWacomUpdateProductsFromURL(base),
-			ds.Tablets.toArray(),
-		]);
-		// Manifest model strings are dashless and uppercase (e.g. "DTH1152");
-		// our Model.Id values use dashes (e.g. "DTH-1152"). Normalize to a
-		// dashless uppercase key so the join lights up.
-		const norm = (s: string) => s.replace(/-/g, '').toUpperCase();
-		const byModel = new Map<string, Tablet>();
-		const bySensor = new Map<string, Tablet>();
-		for (const t of tablets) {
-			if (t.Model.Brand !== 'WACOM') continue;
-			if (t.Model.Id) byModel.set(norm(t.Model.Id), t);
-			if (t.Model.SensorId) bySensor.set(t.Model.SensorId, t);
-		}
-		modelToTablet = byModel;
-		sensorIdToTablet = bySensor;
-		products = p;
-	});
-
 	function tabletFor(p: WacomUpdateProduct): Tablet | undefined {
-		if (p.sensorid && sensorIdToTablet.has(p.sensorid)) return sensorIdToTablet.get(p.sensorid);
+		if (p.sensorid && data.sensorIdToTablet.has(p.sensorid))
+			return data.sensorIdToTablet.get(p.sensorid);
 		if (p.model) {
 			const key = p.model.replace(/-/g, '').toUpperCase();
-			if (modelToTablet.has(key)) return modelToTablet.get(key);
+			if (data.modelToTablet.has(key)) return data.modelToTablet.get(key);
 		}
 		return undefined;
 	}
 
-	let matchCount = $derived(products.filter((p) => tabletFor(p)).length);
+	let matchCount = $derived(data.products.filter((p) => tabletFor(p)).length);
 </script>
 
 <Nav />
@@ -71,7 +42,7 @@
 		<code>node scripts/extract-wacom-products.mjs</code>.
 	</p>
 	<p class="meta">
-		{products.length} entries · {matchCount} matched to a known tablet record
+		{data.products.length} entries · {matchCount} matched to a known tablet record
 	</p>
 </div>
 
@@ -86,7 +57,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		{#each products as p (p.name)}
+		{#each data.products as p (p.name)}
 			{@const t = tabletFor(p)}
 			<tr>
 				<td>

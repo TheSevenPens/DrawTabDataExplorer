@@ -1,9 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
-	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
-		type Driver,
 		DRIVER_FIELDS,
 		DRIVER_FIELD_GROUPS,
 		DRIVER_DEFAULT_COLUMNS,
@@ -12,12 +8,7 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 
-	let data: Driver[] = $state([]);
-
-	onMount(async () => {
-		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
-		data = await ds.Drivers.toArray();
-	});
+	let { data } = $props();
 </script>
 
 <Nav />
@@ -25,7 +16,7 @@
 	title="Drivers"
 	entityType="drivers"
 	entityLabel="drivers"
-	{data}
+	data={data.drivers}
 	fields={DRIVER_FIELDS}
 	fieldGroups={DRIVER_FIELD_GROUPS}
 	defaultColumns={DRIVER_DEFAULT_COLUMNS}

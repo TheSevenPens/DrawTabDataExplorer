@@ -1,16 +1,6 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import {
-		loadISOPaperSizesFromURL,
-		loadUSPaperSizesFromURL,
-		type ISOPaperSize,
-		type USPaperSize,
-		type Tablet,
-	} from '$data/lib/drawtab-loader.js';
-	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		penTabletRangesCm,
 		penTabletRangesIn,
@@ -70,11 +60,13 @@
 		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
 	}
 
+	let { data } = $props();
+
 	const iafBands = IAF_BANDS;
 	const maxPressureBands = MAX_PRESSURE_BANDS;
-	let paperSizes: ISOPaperSize[] = $state([]);
-	let usPaperSizes: USPaperSize[] = $state([]);
-	let allTablets: Tablet[] = $state([]);
+	let paperSizes = $derived(data.paperSizes);
+	let usPaperSizes = $derived(data.usPaperSizes);
+	let allTablets = $derived(data.allTablets);
 
 	let aSeries = $derived(paperSizes.filter((p) => p.Series === 'A'));
 	let bSeries = $derived(paperSizes.filter((p) => p.Series === 'B'));
@@ -157,18 +149,6 @@
 	): void {
 		exportDialog = { title, filename, headers, rows };
 	}
-
-	onMount(async () => {
-		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
-		const [p, us, t] = await Promise.all([
-			loadISOPaperSizesFromURL(base),
-			loadUSPaperSizesFromURL(base),
-			ds.Tablets.toArray(),
-		]);
-		paperSizes = p;
-		usPaperSizes = us;
-		allTablets = t;
-	});
 </script>
 
 <Nav />

@@ -1,67 +1,23 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
-	import { brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
-	import { DrawTabDataSet } from '$data/lib/dataset.js';
+	import { untrack } from 'svelte';
+	import { brandName } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 
-	interface YearEntry {
-		year: string;
-		tablets: Tablet[];
-		pens: Pen[];
-	}
+	let { data } = $props();
 
-	let timeline: YearEntry[] = $state([]);
+	let timeline = $derived(data.timeline);
+	let brands = $derived(data.brands);
+	let allYears = $derived(data.allYears);
+
 	let filterBrand = $state('');
 	let filterType = $state('');
-	let brands: string[] = $state([]);
 	let sortOrder: 'newest' | 'oldest' = $state('newest');
-	let allYears: number[] = $state([]);
-	let yearFrom = $state('');
-	let yearTo = $state('');
-
-	onMount(async () => {
-		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base });
-		const [tablets, pens] = await Promise.all([ds.Tablets.toArray(), ds.Pens.toArray()]);
-
-		brands = [
-			...new Set([...tablets.map((t) => t.Model.Brand), ...pens.map((p) => p.Brand)]),
-		].sort();
-
-		const yearMap = new Map<string, { tablets: Tablet[]; pens: Pen[] }>();
-
-		for (const t of tablets) {
-			if (!t.Model.LaunchYear) continue;
-			if (!yearMap.has(t.Model.LaunchYear))
-				yearMap.set(t.Model.LaunchYear, { tablets: [], pens: [] });
-			yearMap.get(t.Model.LaunchYear)!.tablets.push(t);
-		}
-
-		for (const p of pens) {
-			if (!p.PenYear) continue;
-			if (!yearMap.has(p.PenYear)) yearMap.set(p.PenYear, { tablets: [], pens: [] });
-			yearMap.get(p.PenYear)!.pens.push(p);
-		}
-
-		const years = [...yearMap.keys()].map(Number).filter((y) => !isNaN(y));
-		allYears = years.sort((a, b) => a - b);
-		yearFrom = String(Math.min(...years));
-		yearTo = String(Math.max(...years));
-
-		// Fill in gap years that have no releases
-		if (years.length >= 2) {
-			const minYear = Math.min(...years);
-			const maxYear = Math.max(...years);
-			for (let y = minYear; y <= maxYear; y++) {
-				const key = String(y);
-				if (!yearMap.has(key)) yearMap.set(key, { tablets: [], pens: [] });
-			}
-		}
-
-		timeline = [...yearMap.entries()]
-			.map(([year, data]) => ({ year, ...data }))
-			.sort((a, b) => b.year.localeCompare(a.year));
-	});
+	// yearFrom/yearTo are user-editable range inputs seeded from the
+	// loaded data once. `untrack` tells the compiler the initial-value
+	// read is deliberate.
+	let yearFrom = $state(untrack(() => data.yearFrom));
+	let yearTo = $state(untrack(() => data.yearTo));
 
 	let filteredTimeline = $derived.by(() => {
 		let result = timeline;

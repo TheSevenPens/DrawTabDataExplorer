@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
 	import type {
 		Brand,
 		Tablet,
@@ -11,7 +10,6 @@
 		Driver,
 		PressureResponse,
 	} from '$data/lib/drawtab-loader.js';
-	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import {
 		buildTabletToPenCompatMap,
 		buildPenToTabletCompatMap,
@@ -72,19 +70,7 @@
 		percent: string;
 	}
 
-	let ds: DataBundle | null = $state(null);
-	let issues: Issue[] = $state([]);
-	let tabletCompletion: CompletionStat[] = $state([]);
-	let displayCompletion: CompletionStat[] = $state([]);
-	let displayTabletCount = $state(0);
-	let penCompletion: CompletionStat[] = $state([]);
-	let driverCompletion: CompletionStat[] = $state([]);
-	let pressureResponseCompletion: CompletionStat[] = $state([]);
-	let inventoryPenCompletion: CompletionStat[] = $state([]);
-	let inventoryTabletCompletion: CompletionStat[] = $state([]);
-	let orphanedCompat: { type: string; id: string }[] = $state([]);
-	let orphanedFamilies: { type: string; id: string; referencedBy: string }[] = $state([]);
-	let entityCounts: { entity: string; count: number }[] = $state([]);
+	let { data } = $props();
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 
@@ -210,9 +196,6 @@
 		exportDialog = { title, filename, headers, rows };
 	}
 
-	let inventoryPenCount = $state(0);
-	let inventoryTabletCount = $state(0);
-
 	function getByPath(obj: Record<string, any>, path: string): unknown {
 		const parts = path.split('.');
 		let cur: unknown = obj;
@@ -307,28 +290,16 @@
 		return orphans;
 	}
 
-	// Tablets with no compatible pens and pens with no compatible tablets
-	let tabletsNoCompat: { id: string; name: string }[] = $state([]);
-	let pensNoCompat: { id: string; name: string }[] = $state([]);
-
 	// Tablets whose IncludedPen has no matching pen-compat row.
-	let includedPenMissingCompat: {
+	interface IncludedPenMissing {
 		tabletId: string;
 		tabletName: string;
 		penEntityId: string;
 		penName: string;
-	}[] = $state([]);
+	}
 
-	// Pressure-response data-quality results
-	let nonMonotonicSessions: NonMonotonicSession[] = $state([]);
-	let missingLowEndPens: MissingLowEndPen[] = $state([]);
-	let singleSessionPens: SingleSessionPen[] = $state([]);
-	let staleMeasurements: StaleMeasurement[] = $state([]);
-	let remeasureRecommendations: RemeasureRecommendation[] = $state([]);
-
-	onMount(async () => {
-		const dts = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
-		const [
+	const analysis = $derived.by(() => {
+		const {
 			brands,
 			tablets,
 			pens,
@@ -339,32 +310,20 @@
 			pressureResponse,
 			invPens,
 			invTablets,
-		] = await Promise.all([
-			dts.Brands.toArray(),
-			dts.Tablets.toArray(),
-			dts.Pens.toArray(),
-			dts.PenCompat.toArray(),
-			dts.PenFamilies.toArray(),
-			dts.TabletFamilies.toArray(),
-			dts.Drivers.toArray(),
-			dts.PressureResponse.toArray(),
-			dts.InventoryPens.toArray(),
-			dts.InventoryTablets.toArray(),
-		]);
-		ds = {
-			brands,
-			tablets,
-			pens,
-			penCompat,
-			penFamilies,
-			tabletFamilies,
-			drivers,
-			pressureResponse,
+		} = data;
+		const ds: DataBundle = {
+			brands: brands as Brand[],
+			tablets: tablets as Tablet[],
+			pens: pens as Pen[],
+			penCompat: penCompat as PenCompat[],
+			penFamilies: penFamilies as PenFamily[],
+			tabletFamilies: tabletFamilies as TabletFamily[],
+			drivers: drivers as Driver[],
+			pressureResponse: pressureResponse as PressureResponse[],
 			tabletToPens: buildTabletToPenCompatMap(penCompat, pens),
 			penToTablets: buildPenToTabletCompatMap(penCompat, tablets),
 		};
-		inventoryPenCount = invPens.length;
-		inventoryTabletCount = invTablets.length;
+
 		const allIssues: Issue[] = [];
 
 		// Required field checks
@@ -395,8 +354,6 @@
 			...checkRequired(ds.tabletFamilies, 'TabletFamily', ['EntityId', 'Brand', 'FamilyName']),
 		);
 		allIssues.push(...checkRequired(ds.penCompat, 'PenCompat', ['Brand', 'TabletId', 'PenId']));
-
-		// Pressure response checks
 		allIssues.push(
 			...checkRequired(ds.pressureResponse, 'PressureResponse', [
 				'Brand',
@@ -413,80 +370,14 @@
 		allIssues.push(...checkWhitespace(ds.drivers, 'Driver'));
 		allIssues.push(...checkWhitespace(ds.pressureResponse, 'PressureResponse'));
 
-		issues = allIssues;
-
-		// Pressure-response data quality
-		nonMonotonicSessions = findNonMonotonicSessions(ds.pressureResponse);
-		missingLowEndPens = findMissingLowEnd(ds.pressureResponse);
-		singleSessionPens = findSingleSessionPens(ds.pressureResponse);
-		staleMeasurements = findStaleMeasurements(ds.pressureResponse);
-		remeasureRecommendations = findRecommendedForRemeasurement(ds.pressureResponse);
-
-		// Completion stats
-		tabletCompletion = computeCompletion(ds.tablets, [
-			'Model.LaunchYear',
-			'Model.Audience',
-			'Model.Family',
-			'Model.Status',
-			'Model.IncludedPen',
-			'Digitizer.Type',
-			'Digitizer.PressureLevels',
-			'Digitizer.Dimensions',
-			'Digitizer.Density',
-			'Digitizer.ReportRate',
-			'Digitizer.Tilt',
-			'Digitizer.AccuracyCenter',
-			'Digitizer.AccuracyCorner',
-			'Digitizer.MaxHover',
-			'Digitizer.SupportsTouch',
-			'Physical.Dimensions',
-			'Physical.Weight',
-			'Model.ProductLink',
-		]);
-
 		const displayTablets = ds.tablets.filter(
 			(t) => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE',
 		);
-		displayTabletCount = displayTablets.length;
-		displayCompletion = computeCompletion(displayTablets, [
-			'Display.PixelDimensions',
-			'Display.PanelTech',
-			'Display.Brightness',
-			'Display.Contrast',
-			'Display.ColorBitDepth',
-			'Display.ColorGamuts',
-			'Display.Lamination',
-		]);
-
-		penCompletion = computeCompletion(ds.pens, ['PenName', 'PenFamily', 'PenYear']);
-
-		driverCompletion = computeCompletion(ds.drivers, [
-			'DriverURLWacom',
-			'DriverURLArchiveDotOrg',
-			'ReleaseNotesURL',
-		]);
-
-		pressureResponseCompletion = computeCompletion(ds.pressureResponse, ['PenFamily', 'Notes']);
-
-		inventoryPenCompletion = computeCompletion(invPens, [
-			'PenEntityId',
-			'PenTech',
-			'WithTabletInventoryId',
-		]);
-
-		inventoryTabletCompletion = computeCompletion(invTablets, [
-			'TabletEntityId',
-			'Vendor',
-			'OrderDate',
-		]);
-
-		// Orphaned compat references
-		orphanedCompat = findOrphanedCompat(ds);
 
 		// Orphaned family references
 		const penFamilyIds = new Set(ds.penFamilies.map((f) => f.EntityId));
 		const tabletFamilyIds = new Set(ds.tabletFamilies.map((f) => f.EntityId));
-		const orphFamilies: typeof orphanedFamilies = [];
+		const orphFamilies: { type: string; id: string; referencedBy: string }[] = [];
 		for (const pen of ds.pens) {
 			if (pen.PenFamily && !penFamilyIds.has(pen.PenFamily)) {
 				orphFamilies.push({ type: 'PenFamily', id: pen.PenFamily, referencedBy: pen.PenId });
@@ -501,30 +392,9 @@
 				});
 			}
 		}
-		orphanedFamilies = orphFamilies;
-
-		// Entity counts
-		entityCounts = [
-			{ entity: 'Tablets', count: ds.tablets.length },
-			{ entity: 'Pens', count: ds.pens.length },
-			{ entity: 'Pen Compat Rows', count: ds.penCompat.length },
-			{ entity: 'Pen Families', count: ds.penFamilies.length },
-			{ entity: 'Tablet Families', count: ds.tabletFamilies.length },
-			{ entity: 'Drivers', count: ds.drivers.length },
-			{ entity: 'Pressure Response Sessions', count: ds.pressureResponse.length },
-			{ entity: 'Inventory Pens', count: inventoryPenCount },
-			{ entity: 'Inventory Tablets', count: inventoryTabletCount },
-		];
 
 		// Compat coverage
 		const wacomTablets = ds.tablets.filter((t) => t.Model.Brand === 'WACOM');
-		tabletsNoCompat = wacomTablets
-			.filter((t) => !ds!.tabletToPens.has(t.Model.Id))
-			.map((t) => ({ id: t.Model.Id, name: t.Model.Name }));
-
-		pensNoCompat = ds.pens
-			.filter((p) => !ds!.penToTablets.has(p.PenId))
-			.map((p) => ({ id: p.PenId, name: p.PenName }));
 
 		// Included pens missing compatibility info.
 		// IncludedPen holds pen EntityIds (e.g. "wacom.pen.kp503e"); pen-compat
@@ -536,7 +406,7 @@
 		for (const row of ds.penCompat) {
 			compatPairs.add(`${row.TabletId}::${row.PenId}`);
 		}
-		const missing: typeof includedPenMissingCompat = [];
+		const missing: IncludedPenMissing[] = [];
 		for (const tablet of ds.tablets) {
 			const included = tablet.Model.IncludedPen ?? [];
 			for (const penEntityId of included) {
@@ -556,8 +426,110 @@
 				}
 			}
 		}
-		includedPenMissingCompat = missing;
+
+		return {
+			ds,
+			inventoryPenCount: invPens.length,
+			inventoryTabletCount: invTablets.length,
+			issues: allIssues,
+			nonMonotonicSessions: findNonMonotonicSessions(ds.pressureResponse),
+			missingLowEndPens: findMissingLowEnd(ds.pressureResponse),
+			singleSessionPens: findSingleSessionPens(ds.pressureResponse),
+			staleMeasurements: findStaleMeasurements(ds.pressureResponse),
+			remeasureRecommendations: findRecommendedForRemeasurement(ds.pressureResponse),
+			tabletCompletion: computeCompletion(ds.tablets, [
+				'Model.LaunchYear',
+				'Model.Audience',
+				'Model.Family',
+				'Model.Status',
+				'Model.IncludedPen',
+				'Digitizer.Type',
+				'Digitizer.PressureLevels',
+				'Digitizer.Dimensions',
+				'Digitizer.Density',
+				'Digitizer.ReportRate',
+				'Digitizer.Tilt',
+				'Digitizer.AccuracyCenter',
+				'Digitizer.AccuracyCorner',
+				'Digitizer.MaxHover',
+				'Digitizer.SupportsTouch',
+				'Physical.Dimensions',
+				'Physical.Weight',
+				'Model.ProductLink',
+			]),
+			displayCompletion: computeCompletion(displayTablets, [
+				'Display.PixelDimensions',
+				'Display.PanelTech',
+				'Display.Brightness',
+				'Display.Contrast',
+				'Display.ColorBitDepth',
+				'Display.ColorGamuts',
+				'Display.Lamination',
+			]),
+			displayTabletCount: displayTablets.length,
+			penCompletion: computeCompletion(ds.pens, ['PenName', 'PenFamily', 'PenYear']),
+			driverCompletion: computeCompletion(ds.drivers, [
+				'DriverURLWacom',
+				'DriverURLArchiveDotOrg',
+				'ReleaseNotesURL',
+			]),
+			pressureResponseCompletion: computeCompletion(ds.pressureResponse, ['PenFamily', 'Notes']),
+			inventoryPenCompletion: computeCompletion(invPens, [
+				'PenEntityId',
+				'PenTech',
+				'WithTabletInventoryId',
+			]),
+			inventoryTabletCompletion: computeCompletion(invTablets, [
+				'TabletEntityId',
+				'Vendor',
+				'OrderDate',
+			]),
+			orphanedCompat: findOrphanedCompat(ds),
+			orphanedFamilies: orphFamilies,
+			entityCounts: [
+				{ entity: 'Tablets', count: ds.tablets.length },
+				{ entity: 'Pens', count: ds.pens.length },
+				{ entity: 'Pen Compat Rows', count: ds.penCompat.length },
+				{ entity: 'Pen Families', count: ds.penFamilies.length },
+				{ entity: 'Tablet Families', count: ds.tabletFamilies.length },
+				{ entity: 'Drivers', count: ds.drivers.length },
+				{ entity: 'Pressure Response Sessions', count: ds.pressureResponse.length },
+				{ entity: 'Inventory Pens', count: invPens.length },
+				{ entity: 'Inventory Tablets', count: invTablets.length },
+			],
+			tabletsNoCompat: wacomTablets
+				.filter((t) => !ds.tabletToPens.has(t.Model.Id))
+				.map((t) => ({ id: t.Model.Id, name: t.Model.Name })),
+			pensNoCompat: ds.pens
+				.filter((p) => !ds.penToTablets.has(p.PenId))
+				.map((p) => ({ id: p.PenId, name: p.PenName })),
+			includedPenMissingCompat: missing,
+		};
 	});
+
+	let ds = $derived(analysis.ds);
+	let issues = $derived(analysis.issues);
+	let tabletCompletion = $derived(analysis.tabletCompletion);
+	let displayCompletion = $derived(analysis.displayCompletion);
+	let displayTabletCount = $derived(analysis.displayTabletCount);
+	let penCompletion = $derived(analysis.penCompletion);
+	let driverCompletion = $derived(analysis.driverCompletion);
+	let pressureResponseCompletion = $derived(analysis.pressureResponseCompletion);
+	let inventoryPenCompletion = $derived(analysis.inventoryPenCompletion);
+	let inventoryTabletCompletion = $derived(analysis.inventoryTabletCompletion);
+	let orphanedCompat = $derived(analysis.orphanedCompat);
+	let orphanedFamilies = $derived(analysis.orphanedFamilies);
+	let entityCounts = $derived(analysis.entityCounts);
+	let inventoryPenCount = $derived(analysis.inventoryPenCount);
+	let inventoryTabletCount = $derived(analysis.inventoryTabletCount);
+	let tabletsNoCompat = $derived(analysis.tabletsNoCompat);
+	let pensNoCompat = $derived(analysis.pensNoCompat);
+	let includedPenMissingCompat = $derived(analysis.includedPenMissingCompat);
+	let nonMonotonicSessions = $derived(analysis.nonMonotonicSessions);
+	let missingLowEndPens = $derived(analysis.missingLowEndPens);
+	let singleSessionPens = $derived(analysis.singleSessionPens);
+	let staleMeasurements = $derived(analysis.staleMeasurements);
+	let remeasureRecommendations = $derived(analysis.remeasureRecommendations);
 </script>
 
 <Nav />

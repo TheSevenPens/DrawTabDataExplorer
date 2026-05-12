@@ -1,19 +1,17 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
-	import { brandName, type PressureResponse, type Pen } from '$data/lib/drawtab-loader.js';
-	import { DrawTabDataSet } from '$data/lib/dataset.js';
-	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
+	import { brandName } from '$data/lib/drawtab-loader.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
+	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
 
 	const PEN_PRESSURE_DATA_URL = 'https://thesevenpens.github.io/PenPressureData/';
 
-	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
+	let { data } = $props();
 
 	let penTabs = $derived([
 		{ href: '/pens', label: 'Pen models' },
@@ -23,24 +21,12 @@
 		{ href: '/pressure-response', label: 'Pressure Response' },
 	]);
 
-	let sessions: PressureResponse[] = $state([]);
-	let pens: Pen[] = $state([]);
-	let inventoryPens: InventoryPen[] = $state([]);
+	let sessions = $derived(data.sessions);
+	let pens = $derived(data.pens);
+	let inventoryPens = $derived(data.inventoryPens);
 	let brandFilter = $state('');
 	let penFilter = $state('');
 	let selectedIds = $state(new Set<string>());
-
-	onMount(async () => {
-		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
-		const [s, p, inv] = await Promise.all([
-			ds.PressureResponse.toArray(),
-			ds.Pens.toArray(),
-			ds.InventoryPens.toArray(),
-		]);
-		sessions = s;
-		pens = p;
-		inventoryPens = inv;
-	});
 
 	let defectsByInventoryId = $derived(buildInventoryDefects(inventoryPens));
 

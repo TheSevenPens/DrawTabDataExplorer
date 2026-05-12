@@ -1,14 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { onMount } from 'svelte';
-	import {
-		brandName,
-		type Pen,
-		type PenFamily,
-		type PressureResponse,
-	} from '$data/lib/drawtab-loader.js';
-	import { DrawTabDataSet } from '$data/lib/dataset.js';
-	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
+	import { brandName, type Pen, type PenFamily } from '$data/lib/drawtab-loader.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
@@ -30,6 +22,8 @@
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { paletteColor } from '$lib/chart-palette.js';
 
+	let { data } = $props();
+
 	let penTabs = $derived([
 		{ href: '/pens', label: 'Pen models' },
 		{ href: '/pen-families', label: 'Pen families' },
@@ -38,24 +32,13 @@
 		{ href: '/pressure-response', label: 'Pressure Response' },
 	]);
 
-	let pens: Pen[] = $state([]);
-	let families: PenFamily[] = $state([]);
-	let sessions: PressureResponse[] = $state([]);
-	let inventoryPens: InventoryPen[] = $state([]);
-
-	onMount(async () => {
-		const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
-		const [p, f, s, inv] = await Promise.all([
-			ds.Pens.toArray(),
-			ds.PenFamilies.toArray(),
-			ds.PressureResponse.toArray(),
-			ds.InventoryPens.toArray(),
-		]);
-		pens = p;
-		families = f;
-		sessions = s;
-		inventoryPens = inv;
-	});
+	// Cast to the bare entity types: the DataSet returns *WithRels-augmented
+	// records, but this page doesn't use any relationship methods, and
+	// downstream predicates are typed against the bare shapes.
+	let pens: Pen[] = $derived(data.pens as Pen[]);
+	let families: PenFamily[] = $derived(data.families as PenFamily[]);
+	let sessions = $derived(data.sessions);
+	let inventoryPens = $derived(data.inventoryPens);
 
 	let defectsByInventoryId = $derived(buildInventoryDefects(inventoryPens));
 

@@ -5,19 +5,16 @@
 // stays at /entity/[entityId].
 export const prerender = false;
 
-import { base } from '$app/paths';
 import { error } from '@sveltejs/kit';
-import { DrawTabDataSet } from '$data/lib/dataset.js';
-import { loadISOPaperSizesFromURL } from '$data/lib/drawtab-loader.js';
 import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 
-export async function load({ params }) {
+export async function load({ params, parent }) {
 	const entityId = decodeURIComponent(params.entityId);
 	const parts = entityId.split('.');
 	const entityType = parts.length === 1 ? 'brand' : parts[1];
 
-	const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
+	const { ds } = await parent();
 
 	switch (entityType) {
 		case 'tablet': {
@@ -28,7 +25,7 @@ export async function load({ params }) {
 				ds.Pens.toArray(),
 				tablet.getCompatiblePens(),
 				tablet.getFamily(),
-				loadISOPaperSizesFromURL(base),
+				ds.getISOPaperSizes(),
 			]);
 			return { entityType, tablet, allTablets, allPens, compatiblePens, isoSizes, family };
 		}
@@ -84,7 +81,7 @@ export async function load({ params }) {
 			const [familyTablets, allTablets, isoSizes] = await Promise.all([
 				family.getTablets(),
 				ds.Tablets.toArray(),
-				loadISOPaperSizesFromURL(base),
+				ds.getISOPaperSizes(),
 			]);
 			return { entityType, family, familyTablets, allTablets, isoSizes };
 		}
