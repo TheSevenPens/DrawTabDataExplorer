@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FieldDef, AnyFieldDef } from 'queriton';
+	import type { AnyFieldDef } from 'queriton';
 
 	let {
 		fields,
@@ -54,7 +54,6 @@
 	<div class="groups">
 		{#each fieldGroups as group}
 			{@const allGroupFields = fields.filter((f) => f.group === group)}
-			{@const availableGroupFields = allGroupFields.filter((f) => !excludeSet.has(f.key))}
 			{@const allChosen = allGroupFields.every((f) => excludeSet.has(f.key))}
 			{#if allGroupFields.length > 0}
 				<div class="group">

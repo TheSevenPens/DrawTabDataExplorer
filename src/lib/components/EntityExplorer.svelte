@@ -4,7 +4,6 @@
 		type FilterStep as FilterStepType,
 		type SortStep as SortStepType,
 		type SelectStep as SelectStepType,
-		type FieldDef,
 		type AnyFieldDef,
 		executePipeline,
 	} from 'queriton';
@@ -283,8 +282,6 @@
 	data={result.data}
 	visibleFields={result.visibleFields}
 	{fields}
-	total={data.length}
-	{entityLabel}
 	{detailBasePath}
 	{linkField}
 	{cellLinks}

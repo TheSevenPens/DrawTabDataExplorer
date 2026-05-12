@@ -17,8 +17,7 @@
 		buildPenToTabletCompatMap,
 	} from '$data/lib/compat-helpers.js';
 
-	// Bundle of entity collections this page joins/cross-checks. Used to be
-	// fetched via loadAllFromURL; now built from DrawTabDataSet calls.
+	// Bundle of entity collections this page joins/cross-checks across.
 	interface DataBundle {
 		brands: Brand[];
 		tablets: Tablet[];

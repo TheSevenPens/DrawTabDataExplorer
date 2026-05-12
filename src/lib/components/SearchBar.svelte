@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FieldDef, AnyFieldDef } from 'queriton';
+	import type { AnyFieldDef } from 'queriton';
 
 	interface QuickFilterOption {
 		fieldDef: AnyFieldDef;

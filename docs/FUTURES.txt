@@ -15,6 +15,7 @@ open the issue for current scope, design notes, and status.
 - Publish queriton to npm (Option C of #139 Phase 4) — #143
 - Add Palmer Penguins fixture to queriton test suite — #144
 - User-facing tutorial doc for queriton — #146
+- Wire defaultSortField prop on EntityExplorer (or remove it) — #149
 
 ## Shipped
 

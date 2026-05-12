@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FieldDef, SelectStep, AnyFieldDef } from 'queriton';
+	import type { SelectStep, AnyFieldDef } from 'queriton';
 
 	let {
 		step = $bindable(),

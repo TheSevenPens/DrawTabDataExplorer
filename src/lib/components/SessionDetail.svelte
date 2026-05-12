@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { brandName, type PressureResponse, type Pen } from '$data/lib/drawtab-loader.js';
+	import { type PressureResponse, type Pen } from '$data/lib/drawtab-loader.js';
 	import { penFullName } from '$lib/pen-helpers.js';
 	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';

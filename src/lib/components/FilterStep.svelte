@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {
-		type FieldDef,
 		type AnyFieldDef,
 		type FilterStep,
 		getFieldDef,

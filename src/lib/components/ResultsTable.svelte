@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type FieldDef, type AnyFieldDef, getFieldDef } from 'queriton';
+	import { type AnyFieldDef, getFieldDef } from 'queriton';
 	import { base } from '$app/paths';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
@@ -8,8 +8,6 @@
 		data,
 		visibleFields,
 		fields,
-		total,
-		entityLabel = 'records',
 		detailBasePath = '',
 		linkField = 'EntityId',
 		cellLinks = {},
@@ -21,8 +19,6 @@
 		data: any[];
 		visibleFields: string[];
 		fields: AnyFieldDef[];
-		total: number;
-		entityLabel?: string;
 		detailBasePath?: string;
 		linkField?: string;
 		cellLinks?: Record<string, (item: any) => { label: string; href: string }[]>;

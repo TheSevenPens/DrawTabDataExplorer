@@ -9,7 +9,6 @@
 	} from '$data/lib/drawtab-loader.js';
 	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
-	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';

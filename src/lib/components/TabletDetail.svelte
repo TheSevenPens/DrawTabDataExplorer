@@ -12,14 +12,13 @@
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
-	import { formatValue } from '$data/lib/units.js';
 	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
 	import ForceProportionsView from '$lib/components/ForceProportionsView.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
 	import { tabletFullName, tabletBrandAndName } from '$lib/tablet-helpers.js';
 	import { penFullName } from '$lib/pen-helpers.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
-	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
+	import { buildPenNameMap } from '$lib/pen-helpers.js';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 
 	let { data } = $props();
@@ -39,10 +38,6 @@
 	let canShowForce = $derived(isPenTablet && activeAreaW > 0 && activeAreaH > 0);
 
 	let penNameMap = $derived(buildPenNameMap(allPens));
-
-	function includedPenNames(t: Tablet): string {
-		return formatPenIds(t.Model.IncludedPen ?? [], penNameMap);
-	}
 
 	let includedPenItems = $derived(
 		(tablet.Model.IncludedPen ?? []).map((id) => ({
