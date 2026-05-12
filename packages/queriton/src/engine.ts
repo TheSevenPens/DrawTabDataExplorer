@@ -10,6 +10,7 @@ import type {
 	FilterExpr,
 	DeriveStep,
 	UnrollStep,
+	TopKStep,
 	JoinResolvedStep,
 	SemijoinResolvedStep,
 	AntijoinResolvedStep,
@@ -150,6 +151,9 @@ export function executePipeline<T>(
 			case 'unroll':
 				data = applyUnroll(data, step);
 				break;
+			case 'topK':
+				data = applyTopK(data, step, activeFields);
+				break;
 			case 'join':
 			case 'semijoin':
 			case 'antijoin':
@@ -248,6 +252,50 @@ function applySort<T>(items: T[], step: SortStep, fields: FieldDef<T>[]): T[] {
 		const cmp = va.localeCompare(vb, undefined, { numeric: true });
 		return step.direction === 'asc' ? cmp : -cmp;
 	});
+}
+
+/**
+ * Stable bounded top-K: returns the first `count` rows of the would-be-sorted
+ * result without materialising the full sort. Equivalent to `applySort`
+ * followed by `slice(0, count)`; the rewrite pass produces these steps to
+ * shave an O(n log n) sort down to O(n log count).
+ *
+ * Stability: ties on `field` are broken by input-position, matching JS
+ * `Array.sort` + `slice(0, n)`.
+ */
+function applyTopK<T>(items: T[], step: TopKStep, fields: FieldDef<T>[]): T[] {
+	const fieldDef = getFieldDef(step.field, fields);
+	if (!fieldDef || step.count <= 0) return [];
+	const n = step.count;
+	const dir = step.direction === 'asc' ? 1 : -1;
+
+	// Entry shape: the item plus its key string and input index. Index is
+	// the tie-breaker that makes this stable.
+	type Entry = { item: T; key: string; idx: number };
+	const cmp = (a: Entry, b: Entry): number => {
+		const c = a.key.localeCompare(b.key, undefined, { numeric: true });
+		return c !== 0 ? dir * c : a.idx - b.idx;
+	};
+
+	// Sorted insertion: at most `n` entries kept, so insertion is O(n) per
+	// admitted row. With `n` typically small (e.g. top 5) this beats a full
+	// sort comfortably.
+	const buf: Entry[] = [];
+	let idx = 0;
+	for (const item of items) {
+		const entry: Entry = { item, key: fieldDef.getValue(item), idx: idx++ };
+		if (buf.length < n) {
+			let j = buf.length;
+			while (j > 0 && cmp(buf[j - 1], entry) > 0) j--;
+			buf.splice(j, 0, entry);
+		} else if (cmp(entry, buf[n - 1]) < 0) {
+			let j = n - 1;
+			while (j > 0 && cmp(buf[j - 1], entry) > 0) j--;
+			buf.splice(j, 0, entry);
+			buf.pop();
+		}
+	}
+	return buf.map((e) => e.item);
 }
 
 function applySummarize(

@@ -130,17 +130,42 @@ consumers can ignore them; a future split into a thinner core type plus
 a `FieldDisplayDef` extension is tracked in
 [#142](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/142).
 
-## Running the tests
+## Plan rewrites
 
-The 126-test suite is filesystem- and network-free:
+Before execution, `Query.toArray()` runs the `Step[]` through a small
+plan-rewrite pass that does four safe local optimizations:
 
-```bash
-# From the outer repo:
-npm run test:unit
+- `sort(f, dir).take(n)` → a single `topK` step (stable bounded top-K
+  reads each row once instead of fully sorting)
+- adjacent `filter(...)` steps → one `boolFilter` with an `and` tree
+  (one row-visit instead of N)
+- `take(a).take(b)` → `take(min(a, b))`; `skip(a).skip(b)` → `skip(a+b)`
+- `reverse().reverse()` and `skip(0)` → dropped; redundant adjacent
+  sort on the same field/direction → first one dropped
+
+The rewritten plan is what the engine sees; `.toSteps()` still returns
+the user-authored pre-rewrite plan (which is what saved-view
+persistence and URL state want). Disable the pass for debugging via:
+
+```ts
+import { rewriteConfig } from 'queriton';
+rewriteConfig.enabled = false;
 ```
 
-Standalone `cd packages/queriton && npm test` doesn't work yet — that's
-[#145](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/145).
+The test suite runs each rewrite both ways (with and without) to pin
+result-equivalence.
+
+## Running the tests
+
+The 156-test suite is filesystem- and network-free:
+
+```bash
+# From the outer repo (also runs the queriton tests):
+npm run test:unit
+
+# Or standalone, just the queriton tests:
+cd packages/queriton && npm test
+```
 
 The fixtures live under [`test/fixtures/`](./test/fixtures/):
 

@@ -20,6 +20,7 @@ import type {
 	ConcatStep,
 } from './types.js';
 import { executePipeline } from './engine.js';
+import { rewrite } from './rewrite.js';
 
 export type FilterOp =
 	| '=='
@@ -455,7 +456,7 @@ export class Query<T> {
 				resolved.push(step);
 			}
 		}
-		return executePipeline(items, resolved, this.fields, []).data;
+		return executePipeline(items, rewrite(resolved), this.fields, []).data;
 	}
 
 	async find(predicate: (item: T) => boolean): Promise<T | undefined> {

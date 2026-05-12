@@ -23,7 +23,8 @@ export type StepKind =
 	| 'leftjoin'
 	| 'leftjoinResolved'
 	| 'concat'
-	| 'concatResolved';
+	| 'concatResolved'
+	| 'topK';
 
 export interface FilterStep {
 	kind: 'filter';
@@ -254,6 +255,20 @@ export interface UnrollStep {
 	field: string;
 }
 
+/**
+ * Fused sort-then-take. Produced by the rewrite pass when a `sort` step is
+ * immediately followed by a `take` step — semantically identical to running
+ * the sort and then taking the first `count` rows, but the engine can do it
+ * in a single pass via a stable bounded priority queue (O(n log count)
+ * instead of O(n log n)).
+ */
+export interface TopKStep {
+	kind: 'topK';
+	field: string;
+	direction: 'asc' | 'desc';
+	count: number;
+}
+
 export type Step =
 	| FilterStep
 	| SortStep
@@ -268,6 +283,7 @@ export type Step =
 	| BoolFilterStep
 	| DeriveStep
 	| UnrollStep
+	| TopKStep
 	| JoinStep
 	| JoinResolvedStep
 	| SemijoinStep
