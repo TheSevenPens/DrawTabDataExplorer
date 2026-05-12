@@ -11,18 +11,18 @@ open the issue for current scope, design notes, and status.
 - Text-based KQL input — #54
 - Type-narrow .filter()/.sort() field parameter — #118
 - Investigate replacing custom Query API with Arquero — #119
-- keyBy/collectBy field resolution misses derive/join shape changes — #138
 - Plan-rewrite pass for obvious local wins — #140
 - Split FieldDef into core + UI display extension — #142
 - Publish queriton to npm (Option C of #139 Phase 4) — #143
 - Add Palmer Penguins fixture to queriton test suite — #144
-- Standalone vitest config for queriton package — #145
 - User-facing tutorial doc for queriton — #146
-- Polish queriton package.json + README example smoke test — #147
 - Accessibility cleanup pass on list-page components — #148
 
 ## Shipped
 
+- queriton keyBy/collectBy field-resolution fix — #138
+- Standalone vitest config for queriton package — #145
+- Polish queriton package.json + README example smoke test — #147
 - README for the queriton package — #141
 - Generic Query/Pipeline API extracted to queriton workspace package — #139
 - Case-sensitive filter operators — #137
