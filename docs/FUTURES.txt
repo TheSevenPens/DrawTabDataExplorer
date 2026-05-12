@@ -11,13 +11,13 @@ open the issue for current scope, design notes, and status.
 - Text-based KQL input — #54
 - Type-narrow .filter()/.sort() field parameter — #118
 - Investigate replacing custom Query API with Arquero — #119
-- Predicate-function overload on Query.filter() — #124
-- OR / nested boolean filters in the pipeline — #125
-- Query.derive({col: fn}) for query-time computed columns — #126
-- Query.join() to collapse relationship helpers — #127
 
 ## Shipped
 
+- Query.join() / .semijoin() — #127
+- Query.derive({col: fn}) for query-time computed columns — #126
+- OR / nested boolean filters in the pipeline — #125
+- Predicate-function overload on Query.filter() — #124
 - Query.distinct() / .values() shorthand — #120
 - More summarize aggregators (median/first/last/distinctCount/collect) — #121
 - Query.select() column projection — #122

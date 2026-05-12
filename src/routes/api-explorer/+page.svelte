@@ -105,6 +105,59 @@ return await ds.Tablets
 return await ds.Tablets.filter('Brand', '==', 'WACOM').distinct('ModelType');`,
 		},
 		{
+			label: 'Predicate-function filter',
+			body: `// .filter() also accepts an arbitrary predicate function.
+// Not serialisable — use string-tuple form for saved/URL state.
+return await ds.Tablets
+  .filter(t => (t.Model.LaunchYear ?? 0) >= 2020 && t.Display)
+  .take(5)
+  .toArray();`,
+		},
+		{
+			label: 'Boolean expression filter (OR / AND / NOT)',
+			body: `// Tree-shaped filter expression — also serialisable.
+return await ds.Tablets
+  .filter({
+    or: [
+      { and: [
+        { field: 'Brand', op: '==', value: 'WACOM' },
+        { field: 'ModelType', op: '==', value: 'PENDISPLAY' },
+      ]},
+      { field: 'Brand', op: '==', value: 'XENCELABS' },
+    ],
+  })
+  .sort('ModelLaunchYear', 'desc')
+  .take(10)
+  .toArray();`,
+		},
+		{
+			label: 'Derive + summarize: tablet age buckets',
+			body: `// .derive() adds computed columns usable by downstream verbs.
+return await ds.Tablets
+  .derive({
+    decade: t => Math.floor((t.Model.LaunchYear ?? 2000) / 10) * 10,
+  })
+  .summarize({ by: 'decade', count: 'tablets' })
+  .sort('decade', 'asc')
+  .toArray();`,
+		},
+		{
+			label: 'Join: PenCompat × Pens (inner) for a tablet',
+			body: `// Inner join merges right-side columns into matched rows.
+return await ds.PenCompat
+  .filter('TabletId', '==', 'PL-550')
+  .join(ds.Pens, 'PenId', 'PenId')
+  .toArray();`,
+		},
+		{
+			label: 'Semijoin: pens compatible with a tablet (no col merge)',
+			body: `// .semijoin() keeps left rows that have a match — same shape as left.
+// Equivalent to tablet.getCompatiblePens() but expressed as a verb.
+return await ds.Pens
+  .semijoin(ds.PenCompat.filter('TabletId', '==', 'PL-550'), 'PenId', 'PenId')
+  .toArray();`,
+		},
+		{
 			label: 'Median launch year per brand (with collect)',
 			body: `return await ds.Tablets
   .summarize({
@@ -301,10 +354,15 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 	<p>Query methods:</p>
 	<ul class="cols">
 		<li><code>.filter(field, op, value)</code></li>
+		<li><code>.filter(expr)</code> — boolean tree</li>
+		<li><code>.filter(item =&gt; ...)</code> — predicate fn</li>
 		<li><code>.sort(field, 'asc' | 'desc')</code></li>
 		<li><code>.take(n)</code></li>
 		<li><code>.select(fields)</code></li>
+		<li><code>.derive(cols)</code></li>
 		<li><code>.summarize(spec)</code></li>
+		<li><code>.join(other, lKey, rKey)</code></li>
+		<li><code>.semijoin(other, lKey, rKey)</code></li>
 		<li><code>.distinct(field)</code></li>
 		<li><code>.values(field)</code></li>
 		<li><code>.toArray()</code></li>
@@ -345,6 +403,24 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		columns.
 		<code>.distinct(field)</code> and its synonym <code>.values(field)</code> return a sorted array of
 		distinct non-empty values.
+	</p>
+	<p>
+		<code>.filter()</code> accepts three forms: a flat <code>(field, op, value)</code> tuple, a
+		boolean expression tree (with <code>or</code> / <code>and</code> / <code>not</code> keys) for nested
+		conditions, and an arbitrary predicate function. The predicate-fn form is not serialisable and is
+		dropped by URL state / saved views.
+	</p>
+	<p>
+		<code>.derive(cols)</code> takes an object whose keys are new column names and whose values are
+		functions of the row. Computed columns are usable by downstream
+		<code>.summarize()</code> / <code>.sort()</code> / <code>.filter()</code>. Also not
+		serialisable.
+	</p>
+	<p>
+		<code>.join(other, leftKey, rightKey)</code> is an inner join that merges right-side columns
+		into matched rows. <code>.semijoin(other, leftKey, rightKey)</code> keeps left rows that have a
+		match without merging — row shape stays as the left side. Both are evaluated lazily; the
+		right-side Query is materialised at <code>.toArray()</code> time.
 	</p>
 	<p>
 		Filter operators (the <code>op</code> argument to <code>.filter()</code>):
