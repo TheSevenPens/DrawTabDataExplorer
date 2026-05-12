@@ -4,7 +4,11 @@ import path from 'node:path';
 export default defineConfig({
 	test: {
 		environment: 'jsdom',
-		include: ['src/**/*.{test,spec}.ts'],
+		include: [
+			'src/**/*.{test,spec}.ts',
+			'packages/*/test/**/*.{test,spec}.ts',
+			'data-repo/lib/**/*.{test,spec}.ts',
+		],
 	},
 	resolve: {
 		alias: {
