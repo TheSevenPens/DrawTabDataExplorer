@@ -53,10 +53,31 @@ return tablets.map(t => t.Meta.EntityId);`,
 		},
 		{
 			label: 'Count tablets per brand',
-			body: `const tablets = await ds.Tablets.toArray();
-const counts = {};
-for (const t of tablets) counts[t.Model.Brand] = (counts[t.Model.Brand] ?? 0) + 1;
-return counts;`,
+			body: `return await ds.Tablets
+  .summarize({ by: 'Brand', count: 'tablets' })
+  .sort('tablets', 'desc')
+  .toArray();`,
+		},
+		{
+			label: 'Count tablets per brand and type',
+			body: `// Multi-field grouping — one row per (Brand, ModelType) pair.
+return await ds.Tablets
+  .summarize({ by: ['Brand', 'ModelType'], count: 'tablets' })
+  .sort('tablets', 'desc')
+  .toArray();`,
+		},
+		{
+			label: 'Wacom launch-year stats (avg/min/max)',
+			body: `return await ds.Tablets
+  .filter('Brand', '==', 'WACOM')
+  .summarize({
+    by: 'Brand',
+    count: 'tablets',
+    avg: { avgYear: 'ModelLaunchYear' },
+    min: { firstYear: 'ModelLaunchYear' },
+    max: { lastYear: 'ModelLaunchYear' },
+  })
+  .toArray();`,
 		},
 		{
 			label: 'Pressure-response session lookup',
@@ -245,9 +266,42 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		<li><code>.filter(field, op, value)</code></li>
 		<li><code>.sort(field, 'asc' | 'desc')</code></li>
 		<li><code>.take(n)</code></li>
+		<li><code>.summarize(spec)</code></li>
 		<li><code>.toArray()</code></li>
 		<li><code>.find(predicate)</code></li>
 		<li><code>.count()</code></li>
+	</ul>
+	<p>
+		<code>.summarize(spec)</code> groups rows and returns one row per group. After it, subsequent
+		<code>.sort()</code>
+		/ <code>.filter()</code> / <code>.take()</code> target the groupBy keys and aggregator output columns.
+	</p>
+	<ul class="ops">
+		<li>
+			<code>by</code> — field key or array of field keys to group by; omit for a single all-rows summary.
+		</li>
+		<li>
+			<code>count</code> — <code>true</code> adds a <code>count</code> column; a string sets the column
+			name.
+		</li>
+		<li>
+			<code>sum</code> / <code>avg</code> / <code>min</code> / <code>max</code> — object map of
+			<em>output column name</em> → <em>numeric field key</em>. Blank/non-numeric values are
+			skipped.
+		</li>
+	</ul>
+	<p>
+		Filter operators (the <code>op</code> argument to <code>.filter()</code>):
+	</p>
+	<ul class="ops">
+		<li><code>'=='</code>, <code>'!='</code> — exact match</li>
+		<li><code>'contains'</code>, <code>'notcontains'</code> — substring (case-insensitive)</li>
+		<li><code>'startswith'</code>, <code>'notstartswith'</code> — prefix (case-insensitive)</li>
+		<li><code>'empty'</code>, <code>'notempty'</code> — field is missing/blank</li>
+		<li>
+			<code>'&gt;'</code>, <code>'&gt;='</code>, <code>'&lt;'</code>, <code>'&lt;='</code> — numeric compare
+			(blanks excluded)
+		</li>
 	</ul>
 	<p>
 		Records returned from a query have relationship helpers (non-enumerable, so they don't show up
@@ -473,6 +527,16 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		list-style: none;
 		padding: 0;
 		margin: 4px 0 8px;
+	}
+
+	.ref ul.ops {
+		list-style: none;
+		padding: 0;
+		margin: 4px 0 8px;
+	}
+
+	.ref ul.ops li {
+		padding: 2px 0;
 	}
 
 	@media (max-width: 700px) {

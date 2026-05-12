@@ -5,7 +5,6 @@ open the issue for current scope, design notes, and status.
 
 ## Open
 
-- Aggregation in the pipeline (summarize step) — #112
 - URL-encoded pipeline state for shareable views — #113
 - In-app data editing (dev mode) — #114
 - User-contributed data edits and suggestions — #115
@@ -13,5 +12,6 @@ open the issue for current scope, design notes, and status.
 
 ## Shipped
 
+- Aggregation in the pipeline (summarize step) — #112
 - Export results as CSV / JSON — #3
 - Static site deployment to GitHub Pages
