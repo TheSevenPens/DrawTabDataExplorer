@@ -12,11 +12,11 @@ open the issue for current scope, design notes, and status.
 - Type-narrow .filter()/.sort() field parameter — #118
 - Investigate replacing custom Query API with Arquero — #119
 - keyBy/collectBy field resolution misses derive/join shape changes — #138
-- Extract generic Query/Pipeline API into reusable library (name: queriton) — #139
 - Plan-rewrite pass for obvious local wins — #140
 
 ## Shipped
 
+- Generic Query/Pipeline API extracted to queriton workspace package — #139
 - Case-sensitive filter operators — #137
 - Query.concat() / .union() — #136
 - Query.last() / .reverse() — #135
