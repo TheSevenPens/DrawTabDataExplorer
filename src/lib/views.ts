@@ -1,4 +1,4 @@
-import type { Step } from '$data/lib/pipeline/types.js';
+import type { Step } from 'queriton';
 import { getStorageJson, setStorageJson, removeStorageItem } from '$lib/storage.js';
 
 export interface SavedView {

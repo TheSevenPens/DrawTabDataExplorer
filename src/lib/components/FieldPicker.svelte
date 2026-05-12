@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FieldDef, AnyFieldDef } from '$data/lib/pipeline/index.js';
+	import type { FieldDef, AnyFieldDef } from 'queriton';
 
 	let {
 		fields,

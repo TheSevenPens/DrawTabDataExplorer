@@ -7,7 +7,7 @@
 		type FieldDef,
 		type AnyFieldDef,
 		executePipeline,
-	} from '$data/lib/pipeline/index.js';
+	} from 'queriton';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';

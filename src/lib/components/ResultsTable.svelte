@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type FieldDef, type AnyFieldDef, getFieldDef } from '$data/lib/pipeline/index.js';
+	import { type FieldDef, type AnyFieldDef, getFieldDef } from 'queriton';
 	import { base } from '$app/paths';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';

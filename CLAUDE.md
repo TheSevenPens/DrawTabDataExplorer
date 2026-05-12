@@ -239,10 +239,11 @@ FilterStep, SortStep, SelectStep, ResultsTable, etc.).
 export type AnyFieldDef = FieldDef<any>;
 ```
 
-Import it alongside other pipeline types:
+Import it alongside other pipeline types from the workspace package
+`queriton` (see [packages/queriton/](packages/queriton/)):
 
 ```ts
-import type { AnyFieldDef } from '$data/lib/pipeline/types.js';
+import type { AnyFieldDef } from 'queriton';
 ```
 
 ## EntityId formats

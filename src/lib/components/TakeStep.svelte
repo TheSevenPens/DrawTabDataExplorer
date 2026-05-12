@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TakeStep } from '$data/lib/pipeline/index.js';
+	import type { TakeStep } from 'queriton';
 
 	let {
 		step = $bindable(),

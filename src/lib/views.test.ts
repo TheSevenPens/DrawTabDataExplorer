@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadViews, saveView, deleteView, renameView } from './views.js';
-import type { Step, SelectStep, SortStep } from '$data/lib/pipeline/types.js';
+import type { Step, SelectStep, SortStep } from 'queriton';
 
 const ENTITY = 'tablets';
 const KEY = `drawtabdata-views-${ENTITY}`;

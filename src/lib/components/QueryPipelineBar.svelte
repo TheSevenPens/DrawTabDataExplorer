@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnyFieldDef, type Step } from '$data/lib/pipeline/index.js';
+	import { type AnyFieldDef, type Step } from 'queriton';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import SortBar from '$lib/components/SortBar.svelte';
 	import ColumnBar from '$lib/components/ColumnBar.svelte';

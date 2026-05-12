@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
-	import type { AnyFieldDef } from '$data/lib/pipeline/types.js';
+	import type { AnyFieldDef } from 'queriton';
 	import { BRAND_FIELDS } from '$data/lib/entities/brand-fields.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { TABLET_FAMILY_FIELDS } from '$data/lib/entities/tablet-family-fields.js';

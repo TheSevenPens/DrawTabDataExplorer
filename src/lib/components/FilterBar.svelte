@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnyFieldDef, getFieldDef, getOperatorsForField } from '$data/lib/pipeline/index.js';
+	import { type AnyFieldDef, getFieldDef, getOperatorsForField } from 'queriton';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 
 	interface FilterItem {

@@ -5,7 +5,7 @@
 		type FilterStep,
 		getFieldDef,
 		getOperatorsForField,
-	} from '$data/lib/pipeline/index.js';
+	} from 'queriton';
 
 	let {
 		step = $bindable(),

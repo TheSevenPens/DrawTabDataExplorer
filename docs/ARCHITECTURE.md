@@ -334,12 +334,12 @@ several files:
 
 ## Type aliases
 
-`AnyFieldDef` (`= FieldDef<any>`) is defined in `data-repo/lib/pipeline/types.ts`
-and re-exported for use in UI components that handle fields generically.
-Import it as:
+`AnyFieldDef` (`= FieldDef<any>`) is defined in
+[packages/queriton/src/types.ts](../packages/queriton/src/types.ts) and
+exported from the workspace package `queriton`. Import it as:
 
 ```ts
-import type { AnyFieldDef } from '$data/lib/pipeline/types.js';
+import type { AnyFieldDef } from 'queriton';
 ```
 
 ## Setup

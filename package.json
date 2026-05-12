@@ -21,6 +21,9 @@
 	"author": "",
 	"license": "ISC",
 	"type": "module",
+	"workspaces": [
+		"packages/*"
+	],
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.59.1",

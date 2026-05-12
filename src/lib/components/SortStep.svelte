@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FieldDef, SortStep, AnyFieldDef } from '$data/lib/pipeline/index.js';
+	import type { FieldDef, SortStep, AnyFieldDef } from 'queriton';
 
 	let {
 		step = $bindable(),
