@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
-	import ValueHistogram, {
-		type HistogramMarker,
-	} from '$lib/components/ValueHistogram.svelte';
+	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue } from '$data/lib/units.js';

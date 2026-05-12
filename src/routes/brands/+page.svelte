@@ -33,5 +33,4 @@
 	detailBasePath="/entity"
 	linkField="BrandName"
 	defaultFilterField="BrandName"
-	defaultSortField="BrandName"
 />

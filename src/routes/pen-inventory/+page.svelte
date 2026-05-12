@@ -57,7 +57,6 @@
 	defaultColumns={INVENTORY_PEN_DEFAULT_COLUMNS}
 	defaultView={INVENTORY_PEN_DEFAULT_VIEW}
 	defaultFilterField="Brand"
-	defaultSortField="InventoryId"
 	quickFilterFields={['Brand']}
 	flaggedIds={flaggedSet}
 	onToggleFlag={toggleFlaggedPenUnit}

@@ -69,6 +69,5 @@
 	defaultColumns={PEN_COMPAT_DEFAULT_COLUMNS}
 	defaultView={PEN_COMPAT_DEFAULT_VIEW}
 	defaultFilterField="TabletFullName"
-	defaultSortField="TabletFullName"
 	quickFilterFields={['Brand']}
 />

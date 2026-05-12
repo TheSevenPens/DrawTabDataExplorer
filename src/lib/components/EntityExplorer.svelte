@@ -29,7 +29,6 @@
 		cellLinks = {} as Record<string, (item: any) => { label: string; href: string }[]>,
 		quickFilterFields = [],
 		defaultFilterField,
-		defaultSortField,
 		alwaysSearchFields = [],
 		flaggedIds,
 		onToggleFlag,
@@ -48,7 +47,6 @@
 		cellLinks?: Record<string, (item: any) => { label: string; href: string }[]>;
 		quickFilterFields?: string[];
 		defaultFilterField?: string;
-		defaultSortField?: string;
 		/** Field keys to always include in text search even when not in
 		 * the user's visible columns (e.g. AlternateNames on tablets). */
 		alwaysSearchFields?: string[];

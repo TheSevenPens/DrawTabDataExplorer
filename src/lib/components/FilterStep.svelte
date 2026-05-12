@@ -1,10 +1,5 @@
 <script lang="ts">
-	import {
-		type AnyFieldDef,
-		type FilterStep,
-		getFieldDef,
-		getOperatorsForField,
-	} from 'queriton';
+	import { type AnyFieldDef, type FilterStep, getFieldDef, getOperatorsForField } from 'queriton';
 
 	let {
 		step = $bindable(),

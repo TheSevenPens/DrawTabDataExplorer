@@ -53,7 +53,6 @@
 	defaultColumns={INVENTORY_TABLET_DEFAULT_COLUMNS}
 	defaultView={INVENTORY_TABLET_DEFAULT_VIEW}
 	defaultFilterField="Brand"
-	defaultSortField="InventoryId"
 	quickFilterFields={['Brand']}
 	cellLinks={{
 		TabletEntityId: (item: InventoryTablet) => {

@@ -33,6 +33,5 @@
 	detailBasePath="/entity"
 	linkField="DriverName"
 	defaultFilterField="OSFamily"
-	defaultSortField="ReleaseDate"
 	quickFilterFields={['Brand']}
 />

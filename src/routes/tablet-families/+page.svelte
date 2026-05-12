@@ -71,6 +71,5 @@
 	linkField="FamilyName"
 	detailBasePath="/entity"
 	defaultFilterField="FamilyName"
-	defaultSortField="FamilyName"
 	quickFilterFields={['Brand']}
 />

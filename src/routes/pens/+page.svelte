@@ -66,6 +66,5 @@
 	detailBasePath="/entity"
 	{cellLinks}
 	defaultFilterField="PenFamily"
-	defaultSortField="PenId"
 	quickFilterFields={['Brand']}
 />
