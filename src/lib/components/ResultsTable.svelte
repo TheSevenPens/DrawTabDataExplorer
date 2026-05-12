@@ -75,6 +75,9 @@
 					<th style={columnWidths[f.key] ? `width: ${columnWidths[f.key]}px` : ''}>
 						<div class="th-content">
 							<span>{getFieldLabel(f.label, f.unit, $unitPreference)}</span>
+							<!-- Mouse-drag-only column resize. Keyboard-driven resize would need
+								 a separate focus + arrow-key model; out of scope here. -->
+							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div
 								class="resize-handle"
 								onmousedown={(e) => {

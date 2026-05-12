@@ -249,7 +249,7 @@ ${html}
 		{toast ?? 'Export ▾'}
 	</button>
 	{#if open}
-		<div class="dropdown" role="menu" onclick={(e) => e.stopPropagation()}>
+		<div class="dropdown">
 			{#if mode === 'svg'}
 				<button type="button" class="item" onclick={copyPng}>Copy as PNG</button>
 				<button type="button" class="item" onclick={copySvg}>Copy as SVG</button>

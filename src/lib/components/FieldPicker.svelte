@@ -37,8 +37,18 @@
 			onselectgroup(available);
 		}
 	}
+
+	function onKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') onclose();
+	}
 </script>
 
+<svelte:window onkeydown={onKeydown} />
+
+<!-- The backdrop is a "click outside to close" affordance. The keyboard
+	 equivalent is Escape, handled on the window above. -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="backdrop" onclick={onclose}></div>
 <div class="field-picker">
 	<div class="groups">

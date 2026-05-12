@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { brandName, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { toggleFlag } from '$lib/flagged-store.js';
+	import { onMount } from 'svelte';
 
 	interface Props {
 		allTablets: Tablet[];
@@ -15,6 +16,15 @@
 	let searchText = $state('');
 	let filterBrand = $state('');
 	let filterType = $state('');
+	let searchInput: HTMLInputElement | undefined = $state();
+
+	onMount(() => {
+		// Focus the search input when the picker opens. Programmatic focus
+		// avoids the autofocus attribute, which is flagged by a11y rules
+		// because it can disorient screen-reader users when an element
+		// grabs focus unexpectedly.
+		searchInput?.focus();
+	});
 
 	let brands = $derived([...new Set(allTablets.map((t) => t.Model.Brand))].sort());
 
@@ -53,15 +63,12 @@
 
 <svelte:window onkeydown={onKeydown} />
 
+<!-- Backdrop = "click outside to close" affordance. Keyboard equivalent is
+	 Escape, handled on the window above. -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-	class="backdrop"
-	onclick={onBackdropClick}
-	role="dialog"
-	aria-modal="true"
-	aria-label="Add tablet"
->
-	<div class="modal">
+<div class="backdrop" onclick={onBackdropClick}>
+	<div class="modal" role="dialog" aria-modal="true" aria-label="Add tablet" tabindex="-1">
 		<div class="modal-header">
 			<h2>Add Tablet</h2>
 			<span class="slot-count" class:full={isFull}
@@ -72,11 +79,11 @@
 
 		<div class="filters">
 			<input
+				bind:this={searchInput}
 				type="search"
 				class="search-input"
 				placeholder="Search brand, name, or ID…"
 				bind:value={searchText}
-				autofocus
 			/>
 			<select bind:value={filterBrand}>
 				<option value="">All Brands</option>

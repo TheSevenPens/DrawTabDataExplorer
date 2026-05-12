@@ -419,9 +419,6 @@
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 	}
-	.num {
-		text-align: right;
-	}
 
 	.no-data {
 		font-size: 13px;
