@@ -91,7 +91,12 @@
 	);
 
 	function setEntity(id: string) {
-		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
+		// page.url.pathname is already resolved (includes base path).
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${page.url.pathname}#${id}`, {
+			replaceState: false,
+			noScroll: true,
+		});
 	}
 
 	function fieldsByGroup(fields: AnyFieldDef[]): [string, AnyFieldDef[]][] {
@@ -123,11 +128,11 @@
 
 <div class="dict-layout">
 	<nav class="dict-tree" aria-label="Entity types">
-		{#each groupedEntities as [category, items]}
+		{#each groupedEntities as [category, items] (category)}
 			<div class="tree-cat">
 				<div class="tree-cat-label">{category}</div>
 				<ul>
-					{#each items as item}
+					{#each items as item (item.id)}
 						<li>
 							<button
 								type="button"
@@ -151,7 +156,7 @@
 				<span class="section-meta">{activeDef.fields.length} fields</span>
 			</div>
 
-			{#each fieldsByGroup(activeDef.fields) as [groupName, groupFields]}
+			{#each fieldsByGroup(activeDef.fields) as [groupName, groupFields] (groupName)}
 				<div class="group-header">
 					<h3>{groupName}</h3>
 					<span class="group-meta">{groupFields.length} fields</span>
@@ -168,7 +173,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each groupFields as f}
+						{#each groupFields as f (f.key)}
 							<tr>
 								<td class="mono">{f.key}</td>
 								<td>{f.label}</td>

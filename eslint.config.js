@@ -45,10 +45,16 @@ export default [
 
 	...svelte.configs['flat/recommended'],
 	{
-		files: ['**/*.svelte'],
+		files: ['**/*.svelte', 'src/**/*.ts'],
 		languageOptions: {
 			parserOptions: {
 				parser: tseslint.parser,
+				// Project-aware parsing lets `svelte/no-navigation-without-resolve`
+				// see the `ResolvedPathname` branded type from `$app/types` and
+				// trust it without inline `eslint-disable` comments.
+				projectService: true,
+				extraFileExtensions: ['.svelte'],
+				tsconfigRootDir: import.meta.dirname,
 			},
 		},
 		rules: {

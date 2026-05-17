@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type AnyFieldDef, getFieldDef } from 'queriton';
 	import { base } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
@@ -67,7 +68,7 @@
 				{#if showFlags}
 					<th class="flag-col"></th>
 				{/if}
-				{#each fieldDefs as f}
+				{#each fieldDefs as f (f.key)}
 					<th style={columnWidths[f.key] ? `width: ${columnWidths[f.key]}px` : ''}>
 						<div class="th-content">
 							<span>{getFieldLabel(f.label, f.unit, $unitPreference)}</span>
@@ -87,7 +88,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data as item}
+			{#each data as item, i (item.Meta?.EntityId ?? item.EntityId ?? item._id ?? item.InventoryId ?? i)}
 				<tr>
 					{#if showFlags}
 						{@const eid = item.Meta?.EntityId ?? item.EntityId ?? item.InventoryId ?? ''}
@@ -101,25 +102,27 @@
 							>
 						</td>
 					{/if}
-					{#each fieldDefs as f}
+					{#each fieldDefs as f (f.key)}
 						{@const val = f.getValue(item)}
 						{@const displayVal = formatValue(val, f.unit, $unitPreference)}
 						{#if cellLinks[f.key]}
 							{@const links = cellLinks[f.key](item)}
 							<td class:dim={links.length === 0}>
-								{#each links as link, i}
+								{#each links as link, i (i)}
 									{#if i > 0},
 									{/if}
+									<!-- link.href is constructed by the caller (with base or resolve) -->
+									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 									<a class="entity-link" href={link.href}>{link.label}</a>
 								{/each}
 							</td>
 						{:else if f.key === linkField && detailBasePath}
 							{@const entityId = item.Meta?.EntityId ?? item.EntityId ?? val}
-							<td
-								><a class="entity-link" href="{base}{detailBasePath}/{encodeURIComponent(entityId)}"
-									>{displayVal}</a
-								></td
-							>
+							{@const linkHref =
+								`${base}${detailBasePath}/${encodeURIComponent(entityId)}` as ResolvedPathname}
+							<td>
+								<a class="entity-link" href={linkHref}>{displayVal}</a>
+							</td>
 						{:else}
 							<td class:dim={!val || val === '-'}>{displayVal}</td>
 						{/if}

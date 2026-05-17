@@ -43,13 +43,13 @@
 	<div class="step-type">where</div>
 	<div class="step-controls">
 		<select value={step.field} onchange={onFieldChange}>
-			{#each fields as f}
+			{#each fields as f (f.key)}
 				<option value={f.key} selected={f.key === step.field}>{f.label}</option>
 			{/each}
 		</select>
 
 		<select value={step.operator} onchange={onOpChange}>
-			{#each operators as op}
+			{#each operators as op (op.value)}
 				<option value={op.value} selected={op.value === step.operator}>{op.label}</option>
 			{/each}
 		</select>
@@ -57,7 +57,7 @@
 		{#if needsValue && fieldDef?.type === 'enum' && fieldDef.enumValues}
 			<select value={step.value} onchange={onValueChange}>
 				<option value="">-- select --</option>
-				{#each fieldDef.enumValues as v}
+				{#each fieldDef.enumValues as v (v)}
 					<option value={v} selected={v === step.value}>{v}</option>
 				{/each}
 			</select>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference, toggleUnits, showAltUnits, toggleAltUnits } from '$lib/unit-store.js';
 	import { theme, toggleTheme } from '$lib/theme-store.js';
 
@@ -52,8 +53,9 @@
 
 <nav>
 	<div class="nav-links">
-		{#each links as link}
-			<a href="{base}{link.href}" class:active={isActive(link, page.url.pathname)}>{link.label}</a>
+		{#each links as link (link.href)}
+			{@const linkHref = `${base}${link.href}` as ResolvedPathname}
+			<a href={linkHref} class:active={isActive(link, page.url.pathname)}>{link.label}</a>
 		{/each}
 	</div>
 	<div class="nav-toggles">

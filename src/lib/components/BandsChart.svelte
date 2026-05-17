@@ -110,7 +110,7 @@
 		{/if}
 
 		<!-- Vertical band-divider dashed lines (between adjacent bands) -->
-		{#each bands as b, i}
+		{#each bands as b, i (i)}
 			{#if i > 0}
 				<line
 					x1={x(b.min)}
@@ -125,7 +125,7 @@
 		{/each}
 
 		<!-- Band labels (title + range) -->
-		{#each bands as b}
+		{#each bands as b, i (i)}
 			{@const cx = (x(b.min) + x(bandRight(b))) / 2}
 			{@const rangeText = b.max === null ? `${b.min} ↔ ∞` : `${b.min} ↔ ${b.max}`}
 			<text
@@ -152,7 +152,7 @@
 		/>
 
 		<!-- Tick marks + tick labels -->
-		{#each ticks as t}
+		{#each ticks as t (t)}
 			<line
 				x1={x(t)}
 				y1={axisY - 8}
@@ -183,7 +183,7 @@
 		{/if}
 
 		<!-- Red marker lines (e.g. measured P100 values) -->
-		{#each markers as m}
+		{#each markers as m, i (i)}
 			{#if m.value >= 0 && m.value <= axisMax}
 				<line
 					x1={x(m.value)}

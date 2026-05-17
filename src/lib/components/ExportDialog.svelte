@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { AnyFieldDef } from 'queriton';
+	import { exportTableAsPptx } from '$lib/pptx-export';
 
 	interface Props {
 		entityType: string;
@@ -38,9 +39,16 @@
 
 	let rowMode = $state<'all' | 'view'>('view');
 	let colMode = $state<'all' | 'view'>('view');
-	let format = $state<'csv' | 'json' | 'html' | 'markdown'>('csv');
+	let format = $state<'csv' | 'json' | 'html' | 'markdown' | 'pptx'>('csv');
 	let output = $state<'clipboard' | 'file'>('clipboard');
+	let rowsPerSlide = $state(20);
 	let statusMsg = $state('');
+
+	$effect(() => {
+		// PowerPoint can only be written as a file — clipboard makes no sense
+		// for a binary OOXML payload.
+		if (format === 'pptx' && output !== 'file') output = 'file';
+	});
 
 	interface ExportField {
 		key: string;
@@ -155,6 +163,19 @@
 	}
 
 	async function doExport() {
+		if (format === 'pptx') {
+			const headers = exportFields.map((f) => f.label);
+			const rows = exportRows.map((row) => exportFields.map((f) => cell(row, f)));
+			await exportTableAsPptx({
+				headers,
+				rows,
+				title,
+				filename: filename ?? entityType,
+				rowsPerSlide,
+			});
+			onclose();
+			return;
+		}
 		const content = getContent();
 		if (output === 'clipboard') {
 			await navigator.clipboard.writeText(content);
@@ -255,14 +276,42 @@
 						<input type="radio" bind:group={format} value="markdown" />
 						Markdown
 					</label>
+					<label class="format-opt" class:selected={format === 'pptx'}>
+						<input type="radio" bind:group={format} value="pptx" />
+						PowerPoint
+					</label>
 				</div>
 			</fieldset>
+
+			{#if format === 'pptx'}
+				<fieldset>
+					<legend>Rows per slide</legend>
+					<label class="rps-row">
+						<input
+							type="number"
+							min="1"
+							max="200"
+							step="1"
+							bind:value={rowsPerSlide}
+							class="rps-input"
+						/>
+						<span class="count">
+							{exportRows.length} rows → {Math.max(
+								1,
+								Math.ceil(exportRows.length / Math.max(1, rowsPerSlide)),
+							)} slide{Math.max(1, Math.ceil(exportRows.length / Math.max(1, rowsPerSlide))) === 1
+								? ''
+								: 's'}
+						</span>
+					</label>
+				</fieldset>
+			{/if}
 
 			<!-- Output -->
 			<fieldset>
 				<legend>Output</legend>
-				<label>
-					<input type="radio" bind:group={output} value="clipboard" />
+				<label class:disabled={format === 'pptx'}>
+					<input type="radio" bind:group={output} value="clipboard" disabled={format === 'pptx'} />
 					Copy to clipboard
 				</label>
 				<label>
@@ -282,7 +331,7 @@
 				onclick={doExport}
 				disabled={exportRows.length === 0 || exportFields.length === 0}
 			>
-				{output === 'clipboard' ? 'Copy' : 'Download'}
+				{format === 'pptx' ? 'Download .pptx' : output === 'clipboard' ? 'Copy' : 'Download'}
 			</button>
 		</div>
 	</div>
@@ -376,6 +425,24 @@
 	.count {
 		color: var(--text-muted);
 		font-size: 12px;
+	}
+
+	.rps-row {
+		gap: 10px;
+	}
+	.rps-input {
+		width: 64px;
+		padding: 4px 6px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+	}
+
+	label.disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.summary {

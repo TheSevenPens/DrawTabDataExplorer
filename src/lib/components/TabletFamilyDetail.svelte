@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import {
@@ -97,12 +97,12 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each familyTablets as tablet}
+				{#each familyTablets as tablet (tablet.Meta.EntityId)}
 					{@const d = tablet.Digitizer?.Dimensions}
 					{@const isPenTablet = tablet.Model.Type === 'PENTABLET'}
 					<tr>
 						<td
-							><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}"
+							><a href={resolve('/entity/[entityId]', { entityId: tablet.Meta.EntityId })}
 								>{tablet.Model.Id}</a
 							></td
 						>

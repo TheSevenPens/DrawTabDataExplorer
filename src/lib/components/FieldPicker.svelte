@@ -52,7 +52,7 @@
 <div class="backdrop" onclick={onclose}></div>
 <div class="field-picker">
 	<div class="groups">
-		{#each fieldGroups as group}
+		{#each fieldGroups as group (group)}
 			{@const allGroupFields = fields.filter((f) => f.group === group)}
 			{@const allChosen = allGroupFields.every((f) => excludeSet.has(f.key))}
 			{#if allGroupFields.length > 0}
@@ -70,7 +70,7 @@
 							</button>
 						{/if}
 					</div>
-					{#each allGroupFields as f}
+					{#each allGroupFields as f (f.key)}
 						{@const chosen = excludeSet.has(f.key)}
 						<button
 							class="field-item"

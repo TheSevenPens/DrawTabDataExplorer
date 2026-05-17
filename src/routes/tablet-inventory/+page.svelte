@@ -37,6 +37,9 @@
 	defaultFilterField="Brand"
 	quickFilterFields={['Brand']}
 	cellLinks={{
+		InventoryId: (item: InventoryTablet) => [
+			{ label: item.InventoryId, href: `${base}/tablet-inventory/${encodeURIComponent(item._id)}` },
+		],
 		TabletEntityId: (item: InventoryTablet) => {
 			const name = data.tabletNameMap[item.TabletEntityId] ?? item.TabletEntityId;
 			return [{ label: name, href: `${base}/entity/${encodeURIComponent(item.TabletEntityId)}` }];

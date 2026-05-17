@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { brandName } from '$data/lib/drawtab-loader.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
@@ -102,7 +102,7 @@
 		Brand:
 		<select bind:value={brandFilter}>
 			<option value="">All</option>
-			{#each allBrands as b}
+			{#each allBrands as b (b)}
 				<option value={b}>{brandName(b)}</option>
 			{/each}
 		</select>
@@ -168,7 +168,7 @@
 				</td>
 				<td>{brandName(s.Brand)}</td>
 				<td>
-					<a href="{base}/entity/{encodeURIComponent(id)}">
+					<a href={resolve('/entity/[entityId]', { entityId: id })}>
 						{penNameById.get(s.PenEntityId) ?? s.PenEntityId}
 					</a>
 				</td>

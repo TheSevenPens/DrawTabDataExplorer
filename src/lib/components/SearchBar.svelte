@@ -33,10 +33,10 @@
 			>
 		{/if}
 	</div>
-	{#each quickFilterOptions as qf}
+	{#each quickFilterOptions as qf (qf.fieldDef.key)}
 		<select bind:value={quickFilters[qf.fieldDef.key]}>
 			<option value="">All {qf.fieldDef.label}</option>
-			{#each qf.values as v}
+			{#each qf.values as v (v)}
 				<option value={v}>{v}</option>
 			{/each}
 		</select>

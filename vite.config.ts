@@ -49,4 +49,17 @@ export default defineConfig({
 			allow: [path.resolve(__dirname), ...(hasLocalData ? [localDataPath] : [])],
 		},
 	},
+	build: {
+		rollupOptions: {
+			output: {
+				// Keep the ~200 KB pptxgenjs payload in its own chunk so the
+				// entry bundle stays unaffected, even if a future static import
+				// of `pptxgenjs` slips past the lazy `await import(...)` in
+				// `src/lib/pptx-export.ts`.
+				manualChunks(id) {
+					if (id.includes('pptxgenjs')) return 'pptx';
+				},
+			},
+		},
+	},
 });

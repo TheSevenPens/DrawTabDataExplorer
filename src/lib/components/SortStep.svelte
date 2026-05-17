@@ -24,7 +24,7 @@
 				onchange();
 			}}
 		>
-			{#each fields as f}
+			{#each fields as f (f.key)}
 				<option value={f.key} selected={f.key === step.field}>{f.label}</option>
 			{/each}
 		</select>

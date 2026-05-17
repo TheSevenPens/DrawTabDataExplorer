@@ -130,7 +130,7 @@
 	{#if isOpen}
 		<div class="panel">
 			<div class="panel-pills">
-				{#each sorts as sort, i}
+				{#each sorts as sort, i (sort.field)}
 					<button
 						class="pill sort-pill"
 						class:dragging={dragIndex === i}

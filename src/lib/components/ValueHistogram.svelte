@@ -231,7 +231,7 @@
 				<label class="compare-label">
 					Compare to tablets released in last:
 					<select class="compare-select" bind:value={compareYears}>
-						{#each compareYearOptions as opt}
+						{#each compareYearOptions as opt, i (i)}
 							<option value={opt}>{opt !== null ? `${opt} years` : 'all time'}</option>
 						{/each}
 					</select>
@@ -247,7 +247,7 @@
 			style="font-family: 'Google Sans', sans-serif;"
 		>
 			<!-- Hidden texts for measuring actual label widths -->
-			{#each uniqueLabels as label, i}
+			{#each uniqueLabels as label, i (i)}
 				<text
 					bind:this={labelMeasureEls[i]}
 					x="0"
@@ -269,7 +269,7 @@
 				>
 			{/if}
 			<!-- Range backgrounds -->
-			{#each ranges as range, i}
+			{#each ranges as range, i (i)}
 				<rect
 					x={xScale(range.min)}
 					y={padTop}
@@ -303,7 +303,7 @@
 				stroke="var(--text-dim)"
 				stroke-width="1"
 			/>
-			{#each Array(tickCount) as _, i}
+			{#each Array(tickCount) as _, i (i)}
 				{@const val = tickStart + i * tickStep}
 				{#if val >= scaleMin && val <= scaleMax}
 					<line
@@ -325,7 +325,7 @@
 			{/each}
 
 			<!-- Histogram bars -->
-			{#each bins as count, i}
+			{#each bins as count, i (i)}
 				{#if count > 0}
 					{@const barX = xScale(scaleMin + i * binSize)}
 					{@const barW = xScale(scaleMin + (i + 1) * binSize) - barX - 1}
@@ -349,7 +349,7 @@
 			{/if}
 
 			<!-- Markers -->
-			{#each positionedMarkers as marker}
+			{#each positionedMarkers as marker, i (i)}
 				{@const labelY = padTop + chartH + 42 + marker.tier * 14}
 				<line
 					x1={marker.x}

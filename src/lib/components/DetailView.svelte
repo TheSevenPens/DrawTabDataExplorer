@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { AnyFieldDef } from 'queriton';
 	import { base } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 
@@ -22,14 +23,14 @@
 {#if item === null}
 	<p>Loading...</p>
 {:else}
-	{#each fieldGroups as group}
+	{#each fieldGroups as group (group)}
 		{@const groupFields = fields.filter((f) => f.group === group)}
 		{@const hasValues = groupFields.some((f) => f.getValue(item) !== '')}
 		{#if hasValues}
 			<section class="field-group">
 				<h2>{group}</h2>
 				<dl>
-					{#each groupFields as f}
+					{#each groupFields as f (f.key)}
 						{@const val = f.getValue(item)}
 						{@const displayVal = f.getDisplayValue
 							? f.getDisplayValue(item)
@@ -40,8 +41,10 @@
 								<dt>{getFieldLabel(f.label, f.unit, $unitPreference)}</dt>
 								<dd>
 									{#if href}
-										<a href="{base}{href}">{displayVal}</a>
+										{@const linkHref = `${base}${href}` as ResolvedPathname}
+										<a href={linkHref}>{displayVal}</a>
 									{:else if isUrl(val)}
+										<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 										<a href={val} target="_blank" rel="noopener">{val}</a>
 									{:else}
 										{displayVal}

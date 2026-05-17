@@ -140,7 +140,7 @@
 	{#if isOpen}
 		<div class="panel filter-panel">
 			<div class="panel-pills">
-				{#each filters as filter, i}
+				{#each filters as filter, i (i)}
 					<button
 						class="pill filter-pill"
 						class:active={editingIndex === i}
@@ -187,7 +187,7 @@
 						value={filter.operator}
 						onchange={(e) => onOpChange(editingIndex!, (e.target as HTMLSelectElement).value)}
 					>
-						{#each operators as op}
+						{#each operators as op (op.value)}
 							<option value={op.value} selected={op.value === filter.operator}>{op.label}</option>
 						{/each}
 					</select>
@@ -199,7 +199,7 @@
 							}}
 						>
 							<option value="">-- select --</option>
-							{#each fieldDef.enumValues as v}
+							{#each fieldDef.enumValues as v (v)}
 								<option value={v} selected={v === filter.value}>{v}</option>
 							{/each}
 						</select>

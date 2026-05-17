@@ -87,7 +87,7 @@
 			/>
 			<select bind:value={filterBrand}>
 				<option value="">All Brands</option>
-				{#each brands as b}
+				{#each brands as b (b)}
 					<option value={b}>{brandName(b)}</option>
 				{/each}
 			</select>

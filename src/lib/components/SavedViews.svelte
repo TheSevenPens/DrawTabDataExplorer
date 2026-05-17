@@ -86,12 +86,12 @@
 				}
 			}}
 		>
-			{#each BUILTIN_VIEWS as view}
+			{#each BUILTIN_VIEWS as view (view.name)}
 				<option value={view.name}>{view.name}</option>
 			{/each}
 			{#if userViews.length > 0}
 				<option disabled>──────────</option>
-				{#each userViews as view}
+				{#each userViews as view (view.name)}
 					<option value={view.name}>{view.name}</option>
 				{/each}
 			{/if}

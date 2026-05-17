@@ -107,7 +107,7 @@
 	{#if isOpen}
 		<div class="panel">
 			<div class="panel-pills">
-				{#each columns as col, i}
+				{#each columns as col, i (col)}
 					<button
 						class="pill col-pill"
 						class:dragging={dragIndex === i}

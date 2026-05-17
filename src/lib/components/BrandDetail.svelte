@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { type Brand, BRAND_FIELDS, BRAND_FIELD_GROUPS } from '$data/lib/entities/brand-fields.js';
 	import { type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import DetailView from '$lib/components/DetailView.svelte';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import { tabletNameAndId } from '$lib/tablet-helpers.js';
 
@@ -76,6 +77,21 @@
 	<div class="tab-panel">
 		{#if activeTab === 'tablets'}
 			{#if sortedTablets.length > 0}
+				<div class="table-header">
+					<ExportTableButton
+						entityType="brand"
+						title={`${brand.BrandName} — Tablets`}
+						filename={`${brand.EntityId}-tablets`}
+						headers={['Name', 'Entity ID', 'Alternate Names', 'Type', 'Year']}
+						rows={sortedTablets.map((t) => [
+							tabletNameAndId(t),
+							t.Meta.EntityId,
+							(t.Model.AlternateNames ?? []).join(', '),
+							t.Model.Type,
+							t.Model.LaunchYear ?? '',
+						])}
+					/>
+				</div>
 				<table>
 					<thead>
 						<tr>
@@ -86,10 +102,12 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each sortedTablets as t}
+						{#each sortedTablets as t (t.Meta.EntityId)}
 							<tr>
 								<td
-									><a class="entity-link" href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
+									><a
+										class="entity-link"
+										href={resolve('/entity/[entityId]', { entityId: t.Meta.EntityId })}
 										>{tabletNameAndId(t)}</a
 									></td
 								>
@@ -105,6 +123,15 @@
 			{/if}
 		{:else if activeTab === 'pens'}
 			{#if sortedPens.length > 0}
+				<div class="table-header">
+					<ExportTableButton
+						entityType="brand"
+						title={`${brand.BrandName} — Pens`}
+						filename={`${brand.EntityId}-pens`}
+						headers={['Name', 'Pen ID', 'Entity ID', 'Year']}
+						rows={sortedPens.map((p) => [p.PenName, p.PenId, p.EntityId, p.PenYear ?? ''])}
+					/>
+				</div>
 				<table>
 					<thead>
 						<tr>
@@ -114,11 +141,12 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each sortedPens as p}
+						{#each sortedPens as p (p.EntityId)}
 							<tr>
 								<td
-									><a class="entity-link" href="{base}/entity/{encodeURIComponent(p.EntityId)}"
-										>{p.PenName}</a
+									><a
+										class="entity-link"
+										href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>{p.PenName}</a
 									></td
 								>
 								<td>{p.PenId}</td>
@@ -135,7 +163,7 @@
 				<p class="no-data">No timeline data available.</p>
 			{:else}
 				<div class="brand-timeline">
-					{#each timeline as entry}
+					{#each timeline as entry (entry.year)}
 						<div class="tl-year-block">
 							<div class="tl-year-label">{entry.year}</div>
 							<div class="tl-year-content">
@@ -143,10 +171,10 @@
 									<div class="tl-category">
 										<h3>Tablets ({entry.tablets.length})</h3>
 										<div class="tl-items">
-											{#each entry.tablets as t}
+											{#each entry.tablets as t (t.Meta.EntityId)}
 												<a
 													class="tl-item tl-tablet"
-													href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
+													href={resolve('/entity/[entityId]', { entityId: t.Meta.EntityId })}
 												>
 													<span class="tl-name">{t.Model.Name}</span>
 													<span class="tl-id">{t.Model.Id}</span>
@@ -160,10 +188,10 @@
 									<div class="tl-category">
 										<h3>Pens ({entry.pens.length})</h3>
 										<div class="tl-items">
-											{#each entry.pens as p}
+											{#each entry.pens as p (p.EntityId)}
 												<a
 													class="tl-item tl-pen"
-													href="{base}/entity/{encodeURIComponent(p.EntityId)}"
+													href={resolve('/entity/[entityId]', { entityId: p.EntityId })}
 												>
 													<span class="tl-name">{p.PenName}</span>
 													<span class="tl-id">{p.PenId}</span>
@@ -225,6 +253,11 @@
 		padding-top: 12px;
 	}
 
+	.table-header {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 8px;
+	}
 	table {
 		width: 100%;
 		border-collapse: collapse;

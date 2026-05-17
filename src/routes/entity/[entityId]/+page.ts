@@ -20,14 +20,26 @@ export async function load({ params, parent }) {
 		case 'tablet': {
 			const tablet = await ds.Tablets.find((t) => t.Meta.EntityId === entityId);
 			if (!tablet) error(404, 'Tablet not found');
-			const [allTablets, allPens, compatiblePens, family, isoSizes] = await Promise.all([
-				ds.Tablets.toArray(),
-				ds.Pens.toArray(),
-				tablet.getCompatiblePens(),
-				tablet.getFamily(),
-				ds.getISOPaperSizes(),
-			]);
-			return { entityType, tablet, allTablets, allPens, compatiblePens, isoSizes, family };
+			const [allTablets, allPens, compatiblePens, family, isoSizes, allInventoryTablets] =
+				await Promise.all([
+					ds.Tablets.toArray(),
+					ds.Pens.toArray(),
+					tablet.getCompatiblePens(),
+					tablet.getFamily(),
+					ds.getISOPaperSizes(),
+					ds.InventoryTablets.toArray(),
+				]);
+			const inventoryUnits = allInventoryTablets.filter((u) => u.TabletEntityId === entityId);
+			return {
+				entityType,
+				tablet,
+				allTablets,
+				allPens,
+				compatiblePens,
+				isoSizes,
+				family,
+				inventoryUnits,
+			};
 		}
 
 		case 'pen': {
@@ -44,6 +56,7 @@ export async function load({ params, parent }) {
 			);
 			const pressureSessions = allPressure.filter((s) => s.PenEntityId === entityId);
 			const defectsByInventoryId = buildInventoryDefects(allInventory);
+			const inventoryUnits = allInventory.filter((u) => u.PenEntityId === entityId);
 			return {
 				entityType,
 				pen,
@@ -51,6 +64,7 @@ export async function load({ params, parent }) {
 				includedWithTablets,
 				pressureSessions,
 				defectsByInventoryId,
+				inventoryUnits,
 			};
 		}
 

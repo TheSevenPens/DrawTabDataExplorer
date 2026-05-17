@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import type { WacomUpdateProduct, Tablet } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
@@ -62,7 +62,7 @@
 			<tr>
 				<td>
 					{#if t}
-						<a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{p.name}</a>
+						<a href={resolve('/entity/[entityId]', { entityId: t.Meta.EntityId })}>{p.name}</a>
 					{:else}
 						{p.name}
 					{/if}

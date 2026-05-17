@@ -59,7 +59,7 @@
 			>
 		{:else}
 			<div class="columns-groups">
-				{#each fieldGroups as group}
+				{#each fieldGroups as group (group)}
 					{@const checked = isGroupChecked(group)}
 					{@const indeterminate = isGroupIndeterminate(group)}
 					<div class="column-group">
@@ -73,7 +73,7 @@
 							<strong>{group}</strong>
 						</label>
 						<div class="group-fields">
-							{#each fields.filter((f) => f.group === group) as f}
+							{#each fields.filter((f) => f.group === group) as f (f.key)}
 								<label>
 									<input
 										type="checkbox"

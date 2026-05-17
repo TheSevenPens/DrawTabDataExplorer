@@ -57,7 +57,12 @@
 	});
 
 	function setSection(id: string) {
-		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
+		// page.url.pathname is already resolved (includes base path).
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${page.url.pathname}#${id}`, {
+			replaceState: false,
+			noScroll: true,
+		});
 	}
 
 	let { data } = $props();
@@ -157,11 +162,11 @@
 
 <div class="ref-layout">
 	<nav class="ref-tree" aria-label="Reference sections">
-		{#each groupedSections as [category, items]}
+		{#each groupedSections as [category, items] (category)}
 			<div class="tree-cat">
 				<div class="tree-cat-label">{category}</div>
 				<ul>
-					{#each items as item}
+					{#each items as item (item.id)}
 						<li>
 							<button
 								type="button"
@@ -220,7 +225,7 @@
 						></thead
 					>
 					<tbody>
-						{#each penTabletRangesCm as range, i}
+						{#each penTabletRangesCm as range, i (range.label)}
 							{@const inRange = penTabletRangesIn[i]}
 							{@const midCm = (range.min + range.max) / 2}
 							{@const iso = closestISOA(midCm)}
@@ -278,7 +283,7 @@
 						></thead
 					>
 					<tbody>
-						{#each displayRangesCm as range, i}
+						{#each displayRangesCm as range, i (range.label)}
 							{@const inRange = displayRangesIn[i]}
 							{@const midCm = (range.min + range.max) / 2}
 							{@const iso = closestISOA(midCm)}
@@ -340,7 +345,7 @@
 							></thead
 						>
 						<tbody>
-							{#each aSeries as size}
+							{#each aSeries as size (size.Name)}
 								{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
 								{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
 								<tr>
@@ -405,7 +410,7 @@
 							></thead
 						>
 						<tbody>
-							{#each bSeries as size}
+							{#each bSeries as size (size.Name)}
 								{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
 								{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
 								<tr>
@@ -472,7 +477,7 @@
 							></thead
 						>
 						<tbody>
-							{#each usPaperSizes as size}
+							{#each usPaperSizes as size (size.Name)}
 								{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
 								{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
 								<tr>
@@ -532,8 +537,8 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each resolutionCategories as cat}
-							{#each cat.resolutions as res, i}
+						{#each resolutionCategories as cat (cat.name)}
+							{#each cat.resolutions as res, i (i)}
 								{@const mp = ((res.w * res.h) / 1_000_000).toFixed(2)}
 								{@const g = gcd(res.w, res.h)}
 								{@const ar = `${res.w / g}:${res.h / g}`}
@@ -592,7 +597,7 @@
 				<table class="ref-table">
 					<thead><tr><th>Rank</th><th>Range</th></tr></thead>
 					<tbody>
-						{#each iafBands as b}
+						{#each iafBands as b (b.label)}
 							<tr>
 								<td>{b.label}</td>
 								<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
@@ -637,7 +642,7 @@
 				<table class="ref-table">
 					<thead><tr><th>Rank</th><th>Range</th></tr></thead>
 					<tbody>
-						{#each maxPressureBands as b}
+						{#each maxPressureBands as b (b.label)}
 							<tr>
 								<td>{b.label}</td>
 								<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { base, resolve } from '$app/paths';
 	import { untrack } from 'svelte';
 	import { brandName } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
@@ -62,7 +62,7 @@
 <div class="filters">
 	<select bind:value={filterBrand}>
 		<option value="">All Brands</option>
-		{#each brands as b}
+		{#each brands as b (b)}
 			<option value={b}>{brandName(b)}</option>
 		{/each}
 	</select>
@@ -91,7 +91,7 @@
 </div>
 
 <div class="timeline">
-	{#each filteredTimeline as entry}
+	{#each filteredTimeline as entry (entry.year)}
 		<div class="year-block">
 			<div class="year-label">{entry.year}</div>
 			<div class="year-content">
@@ -102,7 +102,7 @@
 					<div class="category">
 						<h3>Tablets ({entry.tablets.length})</h3>
 						<div class="items">
-							{#each entry.tablets as t}
+							{#each entry.tablets as t (t.Meta.EntityId)}
 								<div
 									class="item tablet"
 									role="link"
@@ -128,8 +128,8 @@
 					<div class="category">
 						<h3>Pens ({entry.pens.length})</h3>
 						<div class="items">
-							{#each entry.pens as p}
-								<a class="item pen" href="{base}/entity/{encodeURIComponent(p.EntityId)}">
+							{#each entry.pens as p (p.EntityId)}
+								<a class="item pen" href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>
 									<span class="item-brand">{brandName(p.Brand)}</span>
 									<span class="item-name">{p.PenName}</span>
 									<span class="item-id">{p.PenId}</span>

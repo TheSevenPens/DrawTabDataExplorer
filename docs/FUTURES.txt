@@ -15,12 +15,22 @@ open the issue for current scope, design notes, and status.
 - Publish queriton to npm (Option C of #139 Phase 4) — #143
 - Add Palmer Penguins fixture to queriton test suite — #144
 - User-facing tutorial doc for queriton — #146
-- Mechanical lint cleanup: require-each-key + no-navigation-without-resolve — #150
 - Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
 
 ## Shipped
 
+- Mechanical lint cleanup: require-each-key + no-navigation-without-resolve — #150
+- Promote byYearDesc to shared helper in tablet-helpers.ts — #153
+- Apply Type+Year+Export upgrade to TabletDetail / PenFamilyDetail / BrandDetail — #154
+- Replace TabletDetail 'Copy as HTML' button with ExportDialog — #155
+- Pin pptxgenjs to its own Vite chunk via manualChunks — #156
+- Migrate TabletDetail Similar/Specs copy buttons to ExportDialog — #157
+- Extract <ExportTableButton> component to dedupe 6 call sites — #158
+- Dedupe yearNum helper into src/lib/year.ts — #159
+- Unit tests for compareTabletByYearDesc / comparePenByYearDesc — #160
+- Enable project-aware ESLint to drop ~8 inline disable comments — #161
+- Remove 4 unused-CSS warnings in PenDetail.svelte — #162
 - Remove vestigial defaultSortField prop — #149
 - Accessibility cleanup pass on list-page components — #148
 - Plan-rewrite pass (queriton: filter consolidation, top-K, take/skip arithmetic, trivial-step drops) — #140

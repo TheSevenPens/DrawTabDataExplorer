@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import type {
 		Brand,
 		Tablet,
@@ -169,7 +169,12 @@
 	});
 
 	function setSection(id: string) {
-		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
+		// page.url.pathname is already resolved (includes base path).
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${page.url.pathname}#${id}`, {
+			replaceState: false,
+			noScroll: true,
+		});
 	}
 
 	// Single shared ExportDialog instance, opened by per-section trigger
@@ -536,11 +541,11 @@
 {:else}
 	<div class="dq-layout">
 		<nav class="dq-tree" aria-label="Data quality sections">
-			{#each groupedSections as [category, items]}
+			{#each groupedSections as [category, items] (category)}
 				<div class="tree-cat">
 					<div class="tree-cat-label">{category}</div>
 					<ul>
-						{#each items as item}
+						{#each items as item (item.id)}
 							{@const c = item.count?.()}
 							<li>
 								<button
@@ -578,7 +583,7 @@
 					<table class="compact">
 						<thead><tr><th>Entity</th><th>Count</th></tr></thead>
 						<tbody>
-							{#each entityCounts as row}
+							{#each entityCounts as row (row.entity)}
 								<tr><td>{row.entity}</td><td>{row.count}</td></tr>
 							{/each}
 						</tbody>
@@ -611,7 +616,7 @@
 								></thead
 							>
 							<tbody>
-								{#each issues as issue}
+								{#each issues as issue, i (i)}
 									<tr>
 										<td>{issue.entity}</td>
 										<td class="mono">{issue.entityId}</td>
@@ -651,7 +656,7 @@
 						<table class="compact">
 							<thead><tr><th>Type</th><th>ID</th></tr></thead>
 							<tbody>
-								{#each orphanedCompat as orphan}
+								{#each orphanedCompat as orphan (orphan.type + '|' + orphan.id)}
 									<tr><td>{orphan.type}</td><td class="mono">{orphan.id}</td></tr>
 								{/each}
 							</tbody>
@@ -683,7 +688,7 @@
 						<table class="compact">
 							<thead><tr><th>Model ID</th><th>Name</th></tr></thead>
 							<tbody>
-								{#each tabletsNoCompat as t}
+								{#each tabletsNoCompat as t (t.id)}
 									<tr><td class="mono">{t.id}</td><td>{t.name}</td></tr>
 								{/each}
 							</tbody>
@@ -715,7 +720,7 @@
 						<table class="compact">
 							<thead><tr><th>Pen ID</th><th>Name</th></tr></thead>
 							<tbody>
-								{#each pensNoCompat as p}
+								{#each pensNoCompat as p (p.id)}
 									<tr><td class="mono">{p.id}</td><td>{p.name}</td></tr>
 								{/each}
 							</tbody>
@@ -760,7 +765,7 @@
 								></thead
 							>
 							<tbody>
-								{#each includedPenMissingCompat as r}
+								{#each includedPenMissingCompat as r (r.tabletId + '|' + r.penEntityId)}
 									<tr>
 										<td class="mono">{r.tabletId}</td>
 										<td>{r.tabletName}</td>
@@ -799,7 +804,7 @@
 						<table class="compact">
 							<thead><tr><th>Type</th><th>Family ID</th><th>Referenced By</th></tr></thead>
 							<tbody>
-								{#each orphanedFamilies as o}
+								{#each orphanedFamilies as o (o.type + '|' + o.id + '|' + o.referencedBy)}
 									<tr
 										><td>{o.type}</td><td class="mono">{o.id}</td><td class="mono"
 											>{o.referencedBy}</td
@@ -859,12 +864,16 @@
 									<tr>
 										<td>{n.session.Brand}</td>
 										<td class="mono">
-											<a href="{base}/entity/{encodeURIComponent(n.session.PenEntityId)}">
+											<a href={resolve('/entity/[entityId]', { entityId: n.session.PenEntityId })}>
 												{n.session.PenEntityId}
 											</a>
 										</td>
 										<td class="mono">
-											<a href="{base}/entity/{encodeURIComponent(sessionEntityId(n.session))}">
+											<a
+												href={resolve('/entity/[entityId]', {
+													entityId: sessionEntityId(n.session),
+												})}
+											>
 												{n.session.InventoryId}
 											</a>
 										</td>
@@ -925,7 +934,7 @@
 									<tr>
 										<td>{p.brand}</td>
 										<td class="mono">
-											<a href="{base}/entity/{encodeURIComponent(p.penEntityId)}">
+											<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
 												{p.penEntityId}
 											</a>
 										</td>
@@ -976,12 +985,12 @@
 									<tr>
 										<td>{p.brand}</td>
 										<td class="mono">
-											<a href="{base}/entity/{encodeURIComponent(p.penEntityId)}">
+											<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
 												{p.penEntityId}
 											</a>
 										</td>
 										<td class="mono">
-											<a href="{base}/entity/{encodeURIComponent(p.sessionEntityId)}">
+											<a href={resolve('/entity/[entityId]', { entityId: p.sessionEntityId })}>
 												{p.inventoryId}
 											</a>
 										</td>
@@ -1038,7 +1047,7 @@
 									<tr>
 										<td>{p.brand}</td>
 										<td class="mono">
-											<a href="{base}/entity/{encodeURIComponent(p.penEntityId)}">
+											<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
 												{p.penEntityId}
 											</a>
 										</td>
@@ -1095,7 +1104,7 @@
 									<tr>
 										<td>{p.brand}</td>
 										<td class="mono">
-											<a href="{base}/entity/{encodeURIComponent(p.penEntityId)}">
+											<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
 												{p.penEntityId}
 											</a>
 										</td>
@@ -1135,7 +1144,7 @@
 					<table class="compact">
 						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 						<tbody>
-							{#each tabletCompletion as stat}
+							{#each tabletCompletion as stat (stat.field)}
 								<tr>
 									<td>{stat.field}</td>
 									<td>{stat.populated} / {stat.total}</td>
@@ -1145,14 +1154,14 @@
 											<div class="bar-fill" style="width: {stat.percent}%"></div>
 										</div>
 									</td>
-									<td
-										>{#if stat.populated < stat.total}<a
-												class="view-link"
-												href={buildFilterUrl('/', [
-													{ field: stat.field, operator: 'empty', value: '' },
-												])}>show</a
-											>{/if}</td
-									>
+									<td>
+										{#if stat.populated < stat.total}
+											{@const u = buildFilterUrl('/', [
+												{ field: stat.field, operator: 'empty', value: '' },
+											])}
+											<a class="view-link" href={u}>show</a>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -1187,7 +1196,7 @@
 					<table class="compact">
 						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 						<tbody>
-							{#each displayCompletion as stat}
+							{#each displayCompletion as stat (stat.field)}
 								<tr>
 									<td>{stat.field}</td>
 									<td>{stat.populated} / {stat.total}</td>
@@ -1197,14 +1206,14 @@
 											<div class="bar-fill" style="width: {stat.percent}%"></div>
 										</div>
 									</td>
-									<td
-										>{#if stat.populated < stat.total}<a
-												class="view-link"
-												href={buildFilterUrl('/', [
-													{ field: stat.field, operator: 'empty', value: '' },
-												])}>show</a
-											>{/if}</td
-									>
+									<td>
+										{#if stat.populated < stat.total}
+											{@const u = buildFilterUrl('/', [
+												{ field: stat.field, operator: 'empty', value: '' },
+											])}
+											<a class="view-link" href={u}>show</a>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -1234,7 +1243,7 @@
 					<table class="compact">
 						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 						<tbody>
-							{#each penCompletion as stat}
+							{#each penCompletion as stat (stat.field)}
 								<tr>
 									<td>{stat.field}</td>
 									<td>{stat.populated} / {stat.total}</td>
@@ -1244,14 +1253,14 @@
 											<div class="bar-fill" style="width: {stat.percent}%"></div>
 										</div>
 									</td>
-									<td
-										>{#if stat.populated < stat.total}<a
-												class="view-link"
-												href={buildFilterUrl('/pens', [
-													{ field: stat.field, operator: 'empty', value: '' },
-												])}>show</a
-											>{/if}</td
-									>
+									<td>
+										{#if stat.populated < stat.total}
+											{@const u = buildFilterUrl('/pens', [
+												{ field: stat.field, operator: 'empty', value: '' },
+											])}
+											<a class="view-link" href={u}>show</a>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -1285,7 +1294,7 @@
 					<table class="compact">
 						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 						<tbody>
-							{#each driverCompletion as stat}
+							{#each driverCompletion as stat (stat.field)}
 								<tr>
 									<td>{stat.field}</td>
 									<td>{stat.populated} / {stat.total}</td>
@@ -1295,14 +1304,14 @@
 											<div class="bar-fill" style="width: {stat.percent}%"></div>
 										</div>
 									</td>
-									<td
-										>{#if stat.populated < stat.total}<a
-												class="view-link"
-												href={buildFilterUrl('/drivers', [
-													{ field: stat.field, operator: 'empty', value: '' },
-												])}>show</a
-											>{/if}</td
-									>
+									<td>
+										{#if stat.populated < stat.total}
+											{@const u = buildFilterUrl('/drivers', [
+												{ field: stat.field, operator: 'empty', value: '' },
+											])}
+											<a class="view-link" href={u}>show</a>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -1336,7 +1345,7 @@
 					<table class="compact">
 						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th><th></th></tr></thead>
 						<tbody>
-							{#each pressureResponseCompletion as stat}
+							{#each pressureResponseCompletion as stat (stat.field)}
 								<tr>
 									<td>{stat.field}</td>
 									<td>{stat.populated} / {stat.total}</td>
@@ -1346,14 +1355,14 @@
 											<div class="bar-fill" style="width: {stat.percent}%"></div>
 										</div>
 									</td>
-									<td
-										>{#if stat.populated < stat.total}<a
-												class="view-link"
-												href={buildFilterUrl('/pressure-response', [
-													{ field: stat.field, operator: 'empty', value: '' },
-												])}>show</a
-											>{/if}</td
-									>
+									<td>
+										{#if stat.populated < stat.total}
+											{@const u = buildFilterUrl('/pressure-response', [
+												{ field: stat.field, operator: 'empty', value: '' },
+											])}
+											<a class="view-link" href={u}>show</a>
+										{/if}
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -1387,7 +1396,7 @@
 					<table class="compact">
 						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
 						<tbody>
-							{#each inventoryPenCompletion as stat}
+							{#each inventoryPenCompletion as stat (stat.field)}
 								<tr>
 									<td>{stat.field}</td>
 									<td>{stat.populated} / {stat.total}</td>
@@ -1430,7 +1439,7 @@
 					<table class="compact">
 						<thead><tr><th>Field</th><th>Populated</th><th>%</th><th></th></tr></thead>
 						<tbody>
-							{#each inventoryTabletCompletion as stat}
+							{#each inventoryTabletCompletion as stat (stat.field)}
 								<tr>
 									<td>{stat.field}</td>
 									<td>{stat.populated} / {stat.total}</td>

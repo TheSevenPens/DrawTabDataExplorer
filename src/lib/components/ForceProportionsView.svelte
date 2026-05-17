@@ -140,7 +140,7 @@
 			two most common monitor ratios.
 		</p>
 	</div>
-	{#each calcs as c}
+	{#each calcs as c (c.label)}
 		<div class="row">
 			<h3>Force Proportions to {c.label}</h3>
 			<div class="diagram">

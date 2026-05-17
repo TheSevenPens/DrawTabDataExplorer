@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
 
 	let { tabs }: { tabs: { href: string; label: string; badge?: number }[] } = $props();
 </script>
 
 <div class="sub-nav">
-	{#each tabs as t}
-		<a href="{base}{t.href}" class:active={page.url.pathname === base + t.href}
+	{#each tabs as t (t.href)}
+		{@const tabHref = `${base}${t.href}` as ResolvedPathname}
+		<a href={tabHref} class:active={page.url.pathname === base + t.href}
 			>{t.label}{#if t.badge !== undefined && t.badge > 0}<span class="badge">{t.badge}</span
 				>{/if}</a
 		>

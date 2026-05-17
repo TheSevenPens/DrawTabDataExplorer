@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { brandName, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import {
 		estimateP00,
@@ -74,7 +74,7 @@
 				<th>Inv ID</th>
 				<th>Date</th>
 				<th class="num">P00</th>
-				{#each PCT_COLS as p}
+				{#each PCT_COLS as p (p)}
 					<th class="num">P{String(p).padStart(2, '0')}</th>
 				{/each}
 				<th class="num">P100</th>
@@ -106,19 +106,19 @@
 					{/if}
 					{#if showModel}
 						<td>
-							<a href="{base}/entity/{encodeURIComponent(r.session.PenEntityId)}">
+							<a href={resolve('/entity/[entityId]', { entityId: r.session.PenEntityId })}>
 								{penNameById.get(r.session.PenEntityId) ?? r.session.PenEntityId}
 							</a>
 						</td>
 					{/if}
 					<td class="mono">
-						<a href="{base}/entity/{encodeURIComponent(sessionEntityId(r.session))}">
+						<a href={resolve('/entity/[entityId]', { entityId: sessionEntityId(r.session) })}>
 							{r.session.InventoryId}
 						</a>
 					</td>
 					<td class="mono">{r.session.Date}</td>
 					<td class="num mono">{fmtP(r.p00)}</td>
-					{#each r.mid as v}
+					{#each r.mid as v, i (i)}
 						<td class="num mono">{fmtP(v)}</td>
 					{/each}
 					<td class="num mono">{fmtP(r.p100)}</td>

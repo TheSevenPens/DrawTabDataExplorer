@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
@@ -222,18 +222,20 @@
 	</div>
 	{#if flaggedItems.length > 0}
 		<ul class="flagged-list">
-			{#each flaggedItems as t}
+			{#each flaggedItems as t (t.Meta.EntityId)}
 				<li>
 					<button class="unflag-btn" onclick={() => toggleFlag(t.Meta.EntityId)} title="Unflag"
 						>&#x2691;</button
 					>
-					<a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}">{tabletFullName(t)}</a>
+					<a href={resolve('/entity/[entityId]', { entityId: t.Meta.EntityId })}
+						>{tabletFullName(t)}</a
+					>
 				</li>
 			{/each}
 		</ul>
 	{:else}
 		<p class="no-data">
-			No tablets added yet. Use the button above, or flag tablets from the <a href="{base}/"
+			No tablets added yet. Use the button above, or flag tablets from the <a href={resolve('/')}
 				>tablets list</a
 			> or individual tablet pages.
 		</p>
@@ -256,9 +258,9 @@
 				<thead>
 					<tr>
 						<th class="spec-col">Spec</th>
-						{#each flaggedItems as t}
+						{#each flaggedItems as t (t.Meta.EntityId)}
 							<th
-								><a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
+								><a href={resolve('/entity/[entityId]', { entityId: t.Meta.EntityId })}
 									>{tabletBrandAndName(t)}</a
 								></th
 							>
@@ -266,14 +268,14 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each comparisonGroups as group}
+					{#each comparisonGroups as group (group.group)}
 						<tr class="group-row">
 							<td class="group-header" colspan={flaggedItems.length + 1}>{group.group}</td>
 						</tr>
-						{#each group.fields as row}
+						{#each group.fields as row (row.label)}
 							<tr>
 								<td class="spec-label">{row.label}</td>
-								{#each row.values as val}
+								{#each row.values as val, i (i)}
 									<td class:differs={row.differs && val !== ''}>{val || '-'}</td>
 								{/each}
 							</tr>

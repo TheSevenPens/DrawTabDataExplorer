@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
+	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
@@ -13,7 +15,7 @@
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
 	import { MAX_PRESSURE_BANDS } from '$lib/pressure-bands.js';
 	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
-	import { tabletFullName } from '$lib/tablet-helpers.js';
+	import { tabletFullName, compareTabletByYearDesc } from '$lib/tablet-helpers.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
@@ -22,9 +24,14 @@
 
 	let { data } = $props();
 	let pen: Pen = $derived(data.pen);
-	let compatibleTablets: Tablet[] = $derived(data.compatibleTablets);
-	let includedWithTablets: Tablet[] = $derived(data.includedWithTablets);
+	let compatibleTablets: Tablet[] = $derived(
+		[...data.compatibleTablets].sort(compareTabletByYearDesc),
+	);
+	let includedWithTablets: Tablet[] = $derived(
+		[...data.includedWithTablets].sort(compareTabletByYearDesc),
+	);
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
+	let inventoryUnits: InventoryPen[] = $derived(data.inventoryUnits ?? []);
 	let pressureSessionCount = $derived(pressureSessions.length);
 	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
 		data.defectsByInventoryId ?? new Map(),
@@ -56,7 +63,18 @@
 	}
 
 	let showJson = $state(false);
-	let activeTab = $state<'specs' | 'tablets' | 'included' | 'pressure' | 'maxpressure'>('specs');
+	let activeTab = $state<
+		'specs' | 'tablets' | 'included' | 'inventory' | 'pressure' | 'maxpressure'
+	>('specs');
+
+	function tabletExportRows(tablets: Tablet[]): (string | number)[][] {
+		return tablets.map((t) => [
+			tabletFullName(t),
+			t.Meta.EntityId,
+			t.Model.Type,
+			t.Model.LaunchYear ?? '',
+		]);
+	}
 
 	// Per-session P100 estimates (max-force) for the Max Pressure tab.
 	// Defective sessions are excluded — they reflect a broken digitizer,
@@ -111,7 +129,11 @@
 	<dl class="basics-grid">
 		<div class="basics-item">
 			<dt>Brand</dt>
-			<dd><a href="{base}/entity/{pen.Brand.toLowerCase()}">{brandName(pen.Brand)}</a></dd>
+			<dd>
+				<a href={resolve('/entity/[entityId]', { entityId: pen.Brand.toLowerCase() })}
+					>{brandName(pen.Brand)}</a
+				>
+			</dd>
 		</div>
 		<div class="basics-item">
 			<dt>Pen ID</dt>
@@ -140,6 +162,9 @@
 	<button class:active={activeTab === 'included'} onclick={() => (activeTab = 'included')}
 		>Included With</button
 	>
+	<button class:active={activeTab === 'inventory'} onclick={() => (activeTab = 'inventory')}
+		>Inventory ({inventoryUnits.length})</button
+	>
 	<button class:active={activeTab === 'pressure'} onclick={() => (activeTab = 'pressure')}
 		>Pressure Response</button
 	>
@@ -157,21 +182,32 @@
 {#if activeTab === 'tablets'}
 	<div class="tab-content">
 		{#if compatibleTablets.length > 0}
+			<div class="table-header">
+				<ExportTableButton
+					entityType="pen-tablets"
+					title={`Compatible Tablets — ${penBrandAndName(pen)}`}
+					filename={`${pen.EntityId}-compatible-tablets`}
+					headers={['Tablet', 'Entity ID', 'Type', 'Year']}
+					rows={tabletExportRows(compatibleTablets)}
+				/>
+			</div>
 			<table class="compat-table">
 				<thead>
 					<tr>
 						<th>Tablet</th>
+						<th>Type</th>
 						<th>Year</th>
 					</tr>
 				</thead>
 				<tbody>
-					{#each compatibleTablets as tablet}
+					{#each compatibleTablets as tablet (tablet.Meta.EntityId)}
 						<tr>
 							<td
-								><a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}"
+								><a href={resolve('/entity/[entityId]', { entityId: tablet.Meta.EntityId })}
 									>{tabletFullName(tablet)}</a
 								></td
 							>
+							<td>{tablet.Model.Type}</td>
 							<td>{tablet.Model.LaunchYear ?? ''}</td>
 						</tr>
 					{/each}
@@ -186,17 +222,68 @@
 {#if activeTab === 'included'}
 	<div class="tab-content">
 		{#if includedWithTablets.length > 0}
-			<ul class="entity-list">
-				{#each includedWithTablets as tablet}
-					<li>
-						<a href="{base}/entity/{encodeURIComponent(tablet.Meta.EntityId)}"
-							>{tabletFullName(tablet)}</a
-						>
-					</li>
-				{/each}
-			</ul>
+			<div class="table-header">
+				<ExportTableButton
+					entityType="pen-tablets"
+					title={`Included With — ${penBrandAndName(pen)}`}
+					filename={`${pen.EntityId}-included-with-tablets`}
+					headers={['Tablet', 'Entity ID', 'Type', 'Year']}
+					rows={tabletExportRows(includedWithTablets)}
+				/>
+			</div>
+			<table class="compat-table">
+				<thead>
+					<tr>
+						<th>Tablet</th>
+						<th>Type</th>
+						<th>Year</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each includedWithTablets as tablet (tablet.Meta.EntityId)}
+						<tr>
+							<td
+								><a href={resolve('/entity/[entityId]', { entityId: tablet.Meta.EntityId })}
+									>{tabletFullName(tablet)}</a
+								></td
+							>
+							<td>{tablet.Model.Type}</td>
+							<td>{tablet.Model.LaunchYear ?? ''}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		{:else}
 			<p class="no-data">No tablets list this pen as included.</p>
+		{/if}
+	</div>
+{/if}
+
+{#if activeTab === 'inventory'}
+	<div class="tab-content">
+		{#if inventoryUnits.length > 0}
+			<table class="compat-table">
+				<thead>
+					<tr>
+						<th>Inventory ID</th>
+						<th>Tech</th>
+						<th>Came With Tablet</th>
+						<th>Defective</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each inventoryUnits as u (u._id)}
+						<tr>
+							<td><a href={resolve('/pen-inventory/[id]', { id: u._id })}>{u.InventoryId}</a></td>
+							<td>{u.PenTech}{u.PenTechSubtype ? ` (${u.PenTechSubtype})` : ''}</td>
+							<td>{u.WithTabletInventoryId || ''}</td>
+							<td>{(u.Defects?.length ?? 0) > 0 ? 'YES' : ''}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		{:else}
+			<p class="no-data">You don't own a unit of this pen model.</p>
 		{/if}
 	</div>
 {/if}
@@ -394,22 +481,6 @@
 		margin-bottom: 24px;
 	}
 
-	.entity-list {
-		list-style: none;
-		padding: 0;
-	}
-	.entity-list li {
-		padding: 4px 0;
-		font-size: 13px;
-	}
-	.entity-list a {
-		color: var(--link);
-		text-decoration: none;
-	}
-	.entity-list a:hover {
-		text-decoration: underline;
-	}
-
 	.pr-summary {
 		font-size: 13px;
 		color: var(--text-muted);
@@ -424,6 +495,12 @@
 		font-size: 13px;
 		color: var(--text-dim);
 		font-style: italic;
+	}
+
+	.table-header {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 8px;
 	}
 
 	.compat-table {

@@ -217,7 +217,7 @@
 		merging.
 	</p>
 
-	{#each testCases as tc, i}
+	{#each testCases as tc, i (i)}
 		<section class="test-case">
 			<div class="case-header">
 				<span class="case-num">#{i + 1}</span>
@@ -226,7 +226,7 @@
 			<p class="case-desc">{tc.description}</p>
 			<div class="marker-list">
 				Markers:
-				{#each tc.markers as m}
+				{#each tc.markers as m, i (i)}
 					<span class="marker-chip">{m.label} @ {m.value}"</span>
 				{/each}
 				{#if tc.currentValue !== undefined}

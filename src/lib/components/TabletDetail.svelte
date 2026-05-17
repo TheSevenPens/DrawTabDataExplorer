@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import {
 		brandName,
 		getDiagonal,
@@ -12,11 +12,13 @@
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
+	import type { InventoryTablet } from '$data/lib/entities/inventory-tablet-fields.js';
 	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
 	import ForceProportionsView from '$lib/components/ForceProportionsView.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
 	import { tabletFullName, tabletBrandAndName } from '$lib/tablet-helpers.js';
-	import { penFullName } from '$lib/pen-helpers.js';
+	import { penFullName, comparePenByYearDesc } from '$lib/pen-helpers.js';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { buildPenNameMap } from '$lib/pen-helpers.js';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
@@ -30,7 +32,15 @@
 	let family: TabletFamily | null = $derived(data.family);
 
 	let showJson = $state(false);
-	let activeTab = $state<'model' | 'specs' | 'size' | 'force' | 'pens' | 'similar'>('model');
+	let activeTab = $state<'model' | 'specs' | 'size' | 'force' | 'pens' | 'inventory' | 'similar'>(
+		'model',
+	);
+
+	let inventoryUnits: InventoryTablet[] = $derived(data.inventoryUnits ?? []);
+
+	let sortedCompatiblePens: Pen[] = $derived(
+		[...(data.compatiblePens ?? [])].sort(comparePenByYearDesc),
+	);
 
 	let isPenTablet = $derived(tablet.Model.Type === 'PENTABLET');
 	let activeAreaW = $derived(tablet.Digitizer?.Dimensions?.Width ?? 0);
@@ -90,41 +100,21 @@
 		return TABLET_FIELDS.filter((f) => groups.includes(f.group));
 	}
 
-	function copyAllSpecs(format: 'table' | 'list') {
-		const groups = document.querySelectorAll('.specs-section .field-group');
-		const sections: Array<{ title: string; pairs: Array<{ label: string; value: string }> }> = [];
+	function buildSpecsExport() {
+		const groups = ['Digitizer', 'Display', ...specsCol3Groups];
+		const rows: (string | number)[][] = [];
 		for (const group of groups) {
-			const title = group.querySelector('h2')?.textContent?.trim() ?? '';
-			const rows = group.querySelectorAll('.field-row');
-			const pairs = [...rows].map((r) => ({
-				label: r.querySelector('dt')?.textContent?.trim() ?? '',
-				value:
-					r
-						.querySelector('dd')
-						?.textContent?.trim()
-						.replace(/\s*computed$/, '') ?? '',
-			}));
-			if (pairs.length > 0) sections.push({ title, pairs });
+			for (const f of getGroupFields([group])) {
+				const v = f.getValue(tablet);
+				rows.push([group, f.label, v == null ? '' : String(v)]);
+			}
 		}
-		if (format === 'table') {
-			const rows = sections
-				.flatMap((s) => [
-					`<tr><th colspan="2">${s.title}</th></tr>`,
-					...s.pairs.map((p) => `<tr><td>${p.label}</td><td>${p.value}</td></tr>`),
-				])
-				.join('');
-			navigator.clipboard.writeText(
-				`<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>${rows}</tbody></table>`,
-			);
-		} else {
-			const items = sections
-				.map(
-					(s) =>
-						`<li><b>${s.title}</b><ul>${s.pairs.map((p) => `<li><b>${p.label}:</b> ${p.value}</li>`).join('')}</ul></li>`,
-				)
-				.join('');
-			navigator.clipboard.writeText(`<ul>${items}</ul>`);
-		}
+		return {
+			title: `Specs — ${tabletBrandAndName(tablet)}`,
+			filename: `${tablet.Meta.EntityId}-specs`,
+			headers: ['Group', 'Field', 'Value'],
+			rows,
+		};
 	}
 
 	function isUrl(val: string): boolean {
@@ -138,6 +128,46 @@
 			),
 		].sort(),
 	);
+
+	function buildSimilarExport() {
+		const headers = ['Tablet', 'Entity ID', 'Year', 'Dimensions (mm)', 'Diagonal (mm)'];
+		if (hasDisplay) headers.push('Pixels', 'Pixel Category', 'Density (px/mm)');
+		headers.push('Included Pen');
+		const rows = similarTablets.map((t) => {
+			const d = t.Digitizer?.Dimensions;
+			const diag = getDiagonal(d);
+			const px = t.Display?.PixelDimensions;
+			const pxDensity = px && d && px.Width && d.Width ? (px.Width / d.Width).toFixed(2) : '';
+			const pxCat = (() => {
+				if (!px || !px.Width || !px.Height) return '';
+				const w = px.Width,
+					h = px.Height;
+				if (w === 1920 && h === 1080) return 'Full HD';
+				if ((w === 2560 && h === 1440) || (w === 2560 && h === 1600)) return '2.5K';
+				if (w === 2880 && h === 1800) return '3K';
+				if (w === 3840 && h === 2160) return '4K';
+				return 'Other';
+			})();
+			const row: (string | number)[] = [
+				tabletFullName(t),
+				t.Meta.EntityId,
+				t.Model.LaunchYear ?? '',
+				d ? `${d.Width} x ${d.Height}` : '',
+				diag ? diag.toFixed(1) : '',
+			];
+			if (hasDisplay) {
+				row.push(px ? `${px.Width} x ${px.Height}` : '', pxCat, pxDensity ? `${pxDensity}` : '');
+			}
+			row.push((t.Model.IncludedPen ?? []).join(', '));
+			return row;
+		});
+		return {
+			title: `Similar Tablets — ${tabletBrandAndName(tablet)}`,
+			filename: `${tablet.Meta.EntityId}-similar-tablets`,
+			headers,
+			rows,
+		};
+	}
 
 	let similarTablets = $derived.by(() => {
 		let results = findSimilarTablets(tablet, allTablets, {
@@ -180,7 +210,7 @@
 		<div class="basics-item">
 			<dt>Brand</dt>
 			<dd>
-				<a href="{base}/entity/{tablet.Model.Brand.toLowerCase()}"
+				<a href={resolve('/entity/[entityId]', { entityId: tablet.Model.Brand.toLowerCase() })}
 					>{brandName(tablet.Model.Brand)}</a
 				>
 			</dd>
@@ -189,7 +219,9 @@
 			<div class="basics-item">
 				<dt>Family</dt>
 				<dd>
-					<a href="{base}/entity/{family.EntityId}">{family.FamilyName}</a>
+					<a href={resolve('/entity/[entityId]', { entityId: family.EntityId })}
+						>{family.FamilyName}</a
+					>
 				</dd>
 			</div>
 		{/if}
@@ -223,10 +255,10 @@
 			<div class="basics-item">
 				<dt>Included Pen</dt>
 				<dd>
-					{#each includedPenItems as pen, i}
+					{#each includedPenItems as pen, i (pen.entityId)}
 						{#if i > 0},
 						{/if}
-						<a href="{base}/entity/{encodeURIComponent(pen.entityId)}">{pen.name}</a>
+						<a href={resolve('/entity/[entityId]', { entityId: pen.entityId })}>{pen.name}</a>
 					{/each}
 				</dd>
 			</div>
@@ -248,6 +280,9 @@
 	<button class:active={activeTab === 'pens'} onclick={() => (activeTab = 'pens')}
 		>Compatible Pens</button
 	>
+	<button class:active={activeTab === 'inventory'} onclick={() => (activeTab = 'inventory')}
+		>Inventory ({inventoryUnits.length})</button
+	>
 	<button class:active={activeTab === 'similar'} onclick={() => (activeTab = 'similar')}
 		>Similar Tablets</button
 	>
@@ -256,7 +291,7 @@
 {#if activeTab === 'model'}
 	<section class="tab-content specs-section">
 		<div class="detail-columns">
-			{#each modelTabGroups as group}
+			{#each modelTabGroups as group (group)}
 				{@const groupFields = getGroupFields([group])}
 				{@const hasValues = groupFields.some((f) => {
 					const v = f.getValue(tablet!);
@@ -267,22 +302,26 @@
 						<section class="field-group" id="group-{group.toLowerCase()}">
 							<div class="group-header"><h2>{group}</h2></div>
 							<dl>
-								{#each groupFields as f}
+								{#each groupFields as f (f.key)}
 									{@const val = f.getValue(tablet!)}
 									{#if val && val !== '-'}
 										<div class="field-row">
 											<dt>{stripUnit(f.label, f.unit)}</dt>
 											<dd>
 												{#if f.key === 'ModelIncludedPen'}
-													{#each includedPenItems as pen, i}
+													{#each includedPenItems as pen, i (pen.entityId)}
 														{#if i > 0},
 														{/if}
-														<a href="{base}/entity/{encodeURIComponent(pen.entityId)}">{pen.name}</a
+														<a href={resolve('/entity/[entityId]', { entityId: pen.entityId })}
+															>{pen.name}</a
 														>
 													{/each}
 												{:else if f.key === 'ModelFamily' && family}
-													<a href="{base}/entity/{family.EntityId}">{family.FamilyName}</a>
+													<a href={resolve('/entity/[entityId]', { entityId: family.EntityId })}
+														>{family.FamilyName}</a
+													>
 												{:else if isUrl(val)}
+													<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 													<a href={val} target="_blank" rel="noopener">
 														{f.key === 'ModelUserManual'
 															? 'View Manual ↗'
@@ -318,27 +357,21 @@
 {/if}
 
 {#if activeTab === 'specs'}
+	{@const specsExport = buildSpecsExport()}
 	<section class="tab-content specs-section">
 		<div class="specs-header">
-			<select
-				class="copy-select"
-				onchange={(e) => {
-					const sel = e.currentTarget as HTMLSelectElement;
-					if (sel.value) {
-						copyAllSpecs(sel.value as 'table' | 'list');
-						sel.value = '';
-					}
-				}}
-			>
-				<option value="">Copy as…</option>
-				<option value="table">Table</option>
-				<option value="list">Bulleted list</option>
-			</select>
+			<ExportTableButton
+				entityType="tablet-specs"
+				title={specsExport.title}
+				filename={specsExport.filename}
+				headers={specsExport.headers}
+				rows={specsExport.rows}
+			/>
 		</div>
 		<div class="detail-columns">
-			{#each [specsCol1Groups, specsCol2Groups, ...specsCol3Groups.map((g) => [g])] as groups}
+			{#each [specsCol1Groups, specsCol2Groups, ...specsCol3Groups.map( (g) => [g], )] as groups, i (i)}
 				<div class="detail-col">
-					{#each groups as group}
+					{#each groups as group (group)}
 						{@const groupFields = getGroupFields([group])}
 						{@const hasValues = groupFields.some((f) => {
 							const v = f.getValue(tablet!);
@@ -348,13 +381,14 @@
 							<section class="field-group" id="group-{group.toLowerCase()}">
 								<div class="group-header"><h2>{group}</h2></div>
 								<dl>
-									{#each groupFields as f}
+									{#each groupFields as f (f.key)}
 										{@const val = f.getValue(tablet!)}
 										{#if val && val !== '-'}
 											<div class="field-row">
 												<dt>{stripUnit(f.label, f.unit)}</dt>
 												<dd>
 													{#if isUrl(val)}
+														<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 														<a href={val} target="_blank" rel="noopener">
 															{f.key === 'ModelUserManual'
 																? 'View Manual ↗'
@@ -408,30 +442,81 @@
 
 {#if activeTab === 'pens'}
 	<section class="tab-content">
-		<div class="section-header">
-			<button
-				class="copy-btn"
-				onclick={() => {
-					const list = document.querySelector('.entity-list');
-					if (list) navigator.clipboard.writeText(list.outerHTML);
-				}}>Copy as HTML</button
-			>
-		</div>
-		{#if compatiblePens.length > 0}
-			<ul class="entity-list">
-				{#each compatiblePens as pen}
-					<li>
-						<a href="{base}/entity/{encodeURIComponent(pen.EntityId)}">{penFullName(pen)}</a>
-					</li>
-				{/each}
-			</ul>
+		{#if sortedCompatiblePens.length > 0}
+			<div class="table-header">
+				<ExportTableButton
+					entityType="tablet-pens"
+					title={`Compatible Pens — ${tabletBrandAndName(tablet)}`}
+					filename={`${tablet.Meta.EntityId}-compatible-pens`}
+					headers={['Pen', 'Entity ID', 'Brand', 'Year']}
+					rows={sortedCompatiblePens.map((p) => [
+						penFullName(p),
+						p.EntityId,
+						brandName(p.Brand),
+						p.PenYear ?? '',
+					])}
+				/>
+			</div>
+			<table class="compat-table">
+				<thead>
+					<tr>
+						<th>Pen</th>
+						<th>Brand</th>
+						<th>Year</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each sortedCompatiblePens as pen (pen.EntityId)}
+						<tr>
+							<td
+								><a href={resolve('/entity/[entityId]', { entityId: pen.EntityId })}
+									>{penFullName(pen)}</a
+								></td
+							>
+							<td>{brandName(pen.Brand)}</td>
+							<td>{pen.PenYear ?? ''}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		{:else}
 			<p class="no-data">No pen compatibility data available for this tablet.</p>
 		{/if}
 	</section>
 {/if}
 
+{#if activeTab === 'inventory'}
+	<section class="tab-content">
+		{#if inventoryUnits.length > 0}
+			<table class="compat-table">
+				<thead>
+					<tr>
+						<th>Inventory ID</th>
+						<th>Vendor</th>
+						<th>Order Date</th>
+						<th>Defective</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each inventoryUnits as u (u._id)}
+						<tr>
+							<td><a href={resolve('/tablet-inventory/[id]', { id: u._id })}>{u.InventoryId}</a></td
+							>
+							<td>{u.Vendor || ''}</td>
+							<td>{u.OrderDate || ''}</td>
+							<td>{(u.Defects?.length ?? 0) > 0 ? 'YES' : ''}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		{:else}
+			<p class="no-data">You don't own a unit of this tablet model.</p>
+		{/if}
+	</section>
+{/if}
+
 {#if activeTab === 'similar'}
+	{@const similarExport = buildSimilarExport()}
 	<section class="tab-content">
 		<div class="section-header">
 			<div class="similar-filters">
@@ -444,7 +529,7 @@
 					Brand:
 					<select class="filter-select" bind:value={filterBrand}>
 						<option value="all">All</option>
-						{#each availableBrands as b}
+						{#each availableBrands as b (b)}
 							<option value={b}>{brandName(b)}</option>
 						{/each}
 					</select>
@@ -457,13 +542,14 @@
 					</select>
 				</label>
 			</div>
-			<button
-				class="copy-btn"
-				onclick={() => {
-					const table = document.querySelector('.similar-table');
-					if (table) navigator.clipboard.writeText(table.outerHTML);
-				}}>Copy as HTML</button
-			>
+			<ExportTableButton
+				entityType="tablet-similar"
+				disabled={similarTablets.length === 0}
+				title={similarExport.title}
+				filename={similarExport.filename}
+				headers={similarExport.headers}
+				rows={similarExport.rows}
+			/>
 		</div>
 		{#if similarTablets.length > 0}
 			<table class="similar-table">
@@ -482,7 +568,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each similarTablets as t}
+					{#each similarTablets as t (t.Meta.EntityId)}
 						{@const d = t.Digitizer?.Dimensions}
 						{@const diag = getDiagonal(t.Digitizer?.Dimensions)}
 						{@const px = t.Display?.PixelDimensions}
@@ -500,7 +586,7 @@
 						})()}
 						<tr>
 							<td
-								><a href="{base}/entity/{encodeURIComponent(t.Meta.EntityId)}"
+								><a href={resolve('/entity/[entityId]', { entityId: t.Meta.EntityId })}
 									>{tabletFullName(t)}</a
 								></td
 							>
@@ -747,48 +833,34 @@
 		vertical-align: middle;
 	}
 
-	.entity-list {
-		list-style: none;
-		padding: 0;
+	.table-header {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 8px;
 	}
 
-	.entity-list li {
-		padding: 3px 0;
+	.compat-table {
+		width: 100%;
+		border-collapse: collapse;
 		font-size: 13px;
 	}
-
-	.entity-list a {
+	.compat-table th {
+		text-align: left;
+		padding: 6px 10px;
+		font-weight: 600;
+		color: var(--text-muted);
+		border-bottom: 2px solid var(--border);
+	}
+	.compat-table td {
+		padding: 5px 10px;
+		border-bottom: 1px solid var(--border);
+	}
+	.compat-table a {
 		color: var(--link);
 		text-decoration: none;
 	}
-
-	.entity-list a:hover {
+	.compat-table a:hover {
 		text-decoration: underline;
-	}
-
-	.copy-btn {
-		padding: 2px 8px;
-		font-size: 12px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
-	}
-
-	.copy-btn:hover {
-		background: var(--hover-bg);
-		color: var(--text);
-	}
-
-	.copy-select {
-		padding: 2px 6px;
-		font-size: 12px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
 	}
 
 	.similar-filters {

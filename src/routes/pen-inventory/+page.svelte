@@ -45,6 +45,9 @@
 	flaggedIds={flaggedSet}
 	onToggleFlag={toggleFlaggedPenUnit}
 	cellLinks={{
+		InventoryId: (item: InventoryPen) => [
+			{ label: item.InventoryId, href: `${base}/pen-inventory/${encodeURIComponent(item._id)}` },
+		],
 		PenEntityId: (item: InventoryPen) => {
 			const name = data.penNameMap[item.PenEntityId];
 			if (!name)

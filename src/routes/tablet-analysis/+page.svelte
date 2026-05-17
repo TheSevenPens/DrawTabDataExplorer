@@ -84,7 +84,12 @@
 	});
 
 	function setSection(id: string) {
-		goto(`${page.url.pathname}#${id}`, { replaceState: false, noScroll: true });
+		// page.url.pathname is already resolved (includes base path).
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${page.url.pathname}#${id}`, {
+			replaceState: false,
+			noScroll: true,
+		});
 	}
 
 	// --- Helpers ---
@@ -327,11 +332,11 @@
 
 <div class="tree-layout">
 	<nav class="tree-pane" aria-label="Analysis sections">
-		{#each groupedSections as [category, items]}
+		{#each groupedSections as [category, items] (category)}
 			<div class="tree-cat">
 				<div class="tree-cat-label">{category}</div>
 				<ul>
-					{#each items as item}
+					{#each items as item (item.id)}
 						<li>
 							<button
 								type="button"
@@ -371,7 +376,7 @@
 						><tr><th>Ratio</th><th>Decimal</th><th>Category</th><th>Count</th><th></th></tr></thead
 					>
 					<tbody>
-						{#each ptAR as row}
+						{#each ptAR as row (row.ratio16 + row.category)}
 							{@const pct = ((row.count / ptAR.reduce((s, r) => s + r.count, 0)) * 100).toFixed(1)}
 							<tr>
 								<td class="decimal">{row.ratio16}</td>
@@ -415,7 +420,7 @@
 				<table class="stat-table">
 					<thead><tr><th>Category</th><th>Count</th><th></th></tr></thead>
 					<tbody>
-						{#each ptARCat as row}
+						{#each ptARCat as row (row.label)}
 							{@const total = ptARCat.reduce((s, r) => s + r.count, 0)}
 							{@const pctVal = ((row.count / total) * 100).toFixed(1)}
 							<tr>
@@ -455,7 +460,7 @@
 						><tr><th>Ratio</th><th>Decimal</th><th>Category</th><th>Count</th><th></th></tr></thead
 					>
 					<tbody>
-						{#each pdAR as row}
+						{#each pdAR as row (row.ratio16 + row.category)}
 							{@const pct = ((row.count / pdAR.reduce((s, r) => s + r.count, 0)) * 100).toFixed(1)}
 							<tr>
 								<td class="decimal">{row.ratio16}</td>
@@ -498,7 +503,7 @@
 				<table class="stat-table">
 					<thead><tr><th>Category</th><th>Count</th><th></th></tr></thead>
 					<tbody>
-						{#each pdARCat as row}
+						{#each pdARCat as row (row.label)}
 							{@const total = pdARCat.reduce((s, r) => s + r.count, 0)}
 							{@const pctVal = ((row.count / total) * 100).toFixed(1)}
 							<tr>
@@ -538,7 +543,7 @@
 				<table class="stat-table">
 					<thead><tr><th>Panel Tech</th><th>Count</th><th></th></tr></thead>
 					<tbody>
-						{#each panelTechRows as row}
+						{#each panelTechRows as row (row.label)}
 							{@const pct = ((row.count / panelTechTotal) * 100).toFixed(1)}
 							<tr>
 								<td class="label">{row.label}</td>
@@ -576,7 +581,7 @@
 				<table class="stat-table">
 					<thead><tr><th>Pressure Levels</th><th>Count</th><th></th></tr></thead>
 					<tbody>
-						{#each pressureRows as row}
+						{#each pressureRows as row (row.label)}
 							{@const pct = ((row.count / pressureTotal) * 100).toFixed(1)}
 							<tr>
 								<td class="label">{Number(row.label).toLocaleString()}</td>
@@ -614,7 +619,7 @@
 				<table class="stat-table">
 					<thead><tr><th>Touch</th><th>Count</th><th></th></tr></thead>
 					<tbody>
-						{#each touchSupportRows as row}
+						{#each touchSupportRows as row (row.label)}
 							{@const pctVal = ((row.count / touchTotal) * 100).toFixed(1)}
 							<tr>
 								<td class="label">{row.label}</td>
@@ -637,7 +642,7 @@
 					<label class="overlay-select">
 						Overlay:
 						<select bind:value={ptOverlay}>
-							{#each OVERLAY_OPTIONS as opt}
+							{#each OVERLAY_OPTIONS as opt (opt.value)}
 								<option value={opt.value}>{opt.label}</option>
 							{/each}
 						</select>
@@ -670,7 +675,7 @@
 					<label class="overlay-select">
 						Overlay:
 						<select bind:value={pdOverlay}>
-							{#each OVERLAY_OPTIONS as opt}
+							{#each OVERLAY_OPTIONS as opt (opt.value)}
 								<option value={opt.value}>{opt.label}</option>
 							{/each}
 						</select>

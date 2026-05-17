@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { type PressureResponse, type Pen } from '$data/lib/drawtab-loader.js';
 	import { penFullName } from '$lib/pen-helpers.js';
 	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
@@ -56,7 +56,7 @@
 	<dl class="meta">
 		<dt>Pen</dt>
 		<dd>
-			<a href="{base}/entity/{encodeURIComponent(session.PenEntityId)}">{penLabel}</a>
+			<a href={resolve('/entity/[entityId]', { entityId: session.PenEntityId })}>{penLabel}</a>
 		</dd>
 		<dt>Inventory ID</dt>
 		<dd class="mono">{session.InventoryId}</dd>
@@ -64,7 +64,7 @@
 		<dd class="mono">{session.Date}</dd>
 		<dt>Tablet</dt>
 		<dd>
-			<a href="{base}/entity/{encodeURIComponent(session.TabletEntityId)}" class="mono">
+			<a href={resolve('/entity/[entityId]', { entityId: session.TabletEntityId })} class="mono">
 				{session.TabletEntityId}
 			</a>
 		</dd>
@@ -104,7 +104,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each session.Records as [x, y], i}
+			{#each session.Records as [x, y], i (i)}
 				<tr>
 					<td class="num">{i + 1}</td>
 					<td class="num mono">{x.toFixed(2)}</td>

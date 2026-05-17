@@ -184,7 +184,7 @@
 			aria-label="Active area size comparison"
 		>
 			<g transform="translate(0,{PAD_TOP})">
-				{#each layout.rects as r}
+				{#each layout.rects as r, i (i)}
 					{#if stacked && r.colorIdx != null}
 						<rect
 							x={r.x}
@@ -230,7 +230,7 @@
 	</div>
 	{#if stacked && layout.rects.length > 0}
 		<div class="stack-legend">
-			{#each layout.rects as r}
+			{#each layout.rects as r, i (i)}
 				{#if r.colorIdx != null}
 					<div class="legend-item">
 						<span

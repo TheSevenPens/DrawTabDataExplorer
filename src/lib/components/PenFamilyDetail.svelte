@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import type { Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import {
@@ -8,6 +8,8 @@
 		PEN_FAMILY_FIELD_GROUPS,
 	} from '$data/lib/entities/pen-family-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
+	import { comparePenByYearDesc } from '$lib/pen-helpers.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
@@ -100,6 +102,8 @@
 	);
 
 	let activeTab = $state<'specs' | 'members' | 'pressure' | 'maxpressure'>('specs');
+
+	let sortedMemberPens: Pen[] = $derived([...memberPens].sort(comparePenByYearDesc));
 </script>
 
 <Nav />
@@ -134,16 +138,30 @@
 
 {#if activeTab === 'members'}
 	<div class="tab-content">
-		{#if memberPens.length > 0}
+		{#if sortedMemberPens.length > 0}
+			<div class="table-header">
+				<ExportTableButton
+					entityType="pen-family-members"
+					title={`${family.FamilyName} — Members`}
+					filename={`${family.EntityId}-members`}
+					headers={['Pen', 'Pen ID', 'Entity ID', 'Year']}
+					rows={sortedMemberPens.map((p) => [
+						penBrandAndName(p),
+						p.PenId,
+						p.EntityId,
+						p.PenYear ?? '',
+					])}
+				/>
+			</div>
 			<table class="pen-table">
 				<thead>
 					<tr><th>Name</th><th>Year</th></tr>
 				</thead>
 				<tbody>
-					{#each memberPens as p}
+					{#each sortedMemberPens as p (p.EntityId)}
 						<tr>
 							<td>
-								<a href="{base}/entity/{encodeURIComponent(p.EntityId)}">
+								<a href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>
 									{penBrandAndName(p)}
 									{#if !penIdRedundantInName(p)}<span class="dim">({p.PenId})</span>{/if}
 								</a>
@@ -328,6 +346,12 @@
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 	}
+	.table-header {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 8px;
+	}
+
 	.pen-table {
 		border-collapse: collapse;
 		font-size: 13px;

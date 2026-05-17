@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { brandName, type Pen, type PenFamily } from '$data/lib/drawtab-loader.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
@@ -190,7 +190,7 @@
 				{#each flaggedModelEntries as e (e.id)}
 					<li>
 						<FlagButton flagged={true} onclick={() => toggleFlaggedPenModel(e.id)} label="Unflag" />
-						<a href="{base}/entity/{encodeURIComponent(e.id)}">
+						<a href={resolve('/entity/[entityId]', { entityId: e.id })}>
 							{penBrandAndName(e.pen)}
 							{#if !penIdRedundantInName(e.pen)}<span class="dim">({e.pen.PenId})</span>{/if}
 						</a>
@@ -211,7 +211,7 @@
 							onclick={() => toggleFlaggedPenFamily(e.id)}
 							label="Unflag"
 						/>
-						<a href="{base}/entity/{encodeURIComponent(e.id)}">
+						<a href={resolve('/entity/[entityId]', { entityId: e.id })}>
 							{e.family.FamilyName}
 						</a>
 					</li>
@@ -230,7 +230,7 @@
 						<span class="mono">{e.info?.inventoryDisplay ?? e.id}</span>
 						{#if e.info}
 							<span class="dim">·</span>
-							<a href="{base}/entity/{encodeURIComponent(e.info.penEntityId)}">
+							<a href={resolve('/entity/[entityId]', { entityId: e.info.penEntityId })}>
 								{e.info.penEntityId}
 							</a>
 							<span class="dim">·</span>
@@ -244,7 +244,7 @@
 
 	<p class="meta">
 		See the per-session detail at
-		<a href="{base}/pressure-response">Pens ▸ Pressure Response</a>.
+		<a href={resolve('/pressure-response')}>Pens ▸ Pressure Response</a>.
 	</p>
 {/if}
 
