@@ -88,7 +88,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data as item, i (item.Meta?.EntityId ?? item.EntityId ?? item._id ?? item.InventoryId ?? i)}
+			{#each data as item, i (i)}
 				<tr>
 					{#if showFlags}
 						{@const eid = item.Meta?.EntityId ?? item.EntityId ?? item.InventoryId ?? ''}
