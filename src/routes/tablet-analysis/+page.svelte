@@ -38,7 +38,8 @@
 		ACCURACY_CENTER_BANDS as ACCURACY_CENTER_RANGES,
 		ACCURACY_CORNER_BANDS as ACCURACY_CORNER_RANGES,
 		REPORT_RATE_BANDS as REPORT_RATE_RANGES,
-	} from '$lib/spec-bands.js';
+		type SpecBand,
+	} from '$lib/bands.js';
 
 	let { data } = $props();
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
@@ -238,22 +239,6 @@
 		return { rows, count: tablets.length, tablets };
 	}
 
-	let brightnessData = $derived(
-		numericDisplayRows((t) => t.Display?.Brightness, yearFilters['display-brightness']),
-	);
-	let contrastData = $derived(
-		numericDisplayRows((t) => t.Display?.Contrast, yearFilters['display-contrast']),
-	);
-	let refreshData = $derived(
-		numericDisplayRows((t) => t.Display?.RefreshRate, yearFilters['display-refresh-rate']),
-	);
-	let responseData = $derived(
-		numericDisplayRows((t) => t.Display?.ResponseTime, yearFilters['display-response-time']),
-	);
-	let bitDepthData = $derived(
-		numericDisplayRows((t) => t.Display?.ColorBitDepth, yearFilters['display-bit-depth']),
-	);
-
 	// Raw numeric values for histogram rendering. The exact-count tables below
 	// keep all data points; the histogram clips outliers (e.g. 100,000:1 OLED
 	// contrast values) so the linear-scale distribution stays readable.
@@ -267,24 +252,6 @@
 			.map((t) => Number(getValue(t)))
 			.filter((v): v is number => Number.isFinite(v) && (max == null || v <= max));
 	}
-
-	let brightnessValues = $derived(
-		rawNumericDisplayValues(
-			(t) => t.Display?.Brightness,
-			undefined,
-			yearFilters['display-brightness'],
-		),
-	);
-	let contrastValues = $derived(
-		rawNumericDisplayValues((t) => t.Display?.Contrast, 3500, yearFilters['display-contrast']),
-	);
-	let responseValues = $derived(
-		rawNumericDisplayValues(
-			(t) => t.Display?.ResponseTime,
-			30,
-			yearFilters['display-response-time'],
-		),
-	);
 
 	// --- Digitizer.* numeric stats (apply to ALL tablets, not just displays) ---
 
@@ -314,213 +281,200 @@
 			.filter((v): v is number => Number.isFinite(v) && (max == null || v <= max));
 	}
 
-	let densityData = $derived(
-		numericTabletRows((t) => t.Digitizer?.Density, yearFilters['digitizer-density']),
-	);
-	let accuracyCenterData = $derived(
-		numericTabletRows((t) => t.Digitizer?.AccuracyCenter, yearFilters['digitizer-accuracy-center']),
-	);
-	let accuracyCornerData = $derived(
-		numericTabletRows((t) => t.Digitizer?.AccuracyCorner, yearFilters['digitizer-accuracy-corner']),
-	);
-	let reportRateData = $derived(
-		numericTabletRows((t) => t.Digitizer?.ReportRate, yearFilters['digitizer-report-rate']),
-	);
-
-	let densityValues = $derived(
-		rawNumericTabletValues((t) => t.Digitizer?.Density, 300, yearFilters['digitizer-density']),
-	);
-	let accuracyCenterValues = $derived(
-		rawNumericTabletValues(
-			(t) => t.Digitizer?.AccuracyCenter,
-			2,
-			yearFilters['digitizer-accuracy-center'],
-		),
-	);
-	let accuracyCornerValues = $derived(
-		rawNumericTabletValues(
-			(t) => t.Digitizer?.AccuracyCorner,
-			5,
-			yearFilters['digitizer-accuracy-corner'],
-		),
-	);
-	let reportRateValues = $derived(
-		rawNumericTabletValues(
-			(t) => t.Digitizer?.ReportRate,
-			undefined,
-			yearFilters['digitizer-report-rate'],
-		),
-	);
-
 	const DISPLAY_POOL_LABEL = 'pen displays and standalones';
 	const TABLET_POOL_LABEL = 'tablets';
 
-	let numericSections = $derived([
-		{
+	type HistogramConfig = {
+		values: number[];
+		ranges: SpecBand[];
+		unit: string;
+		binSize: number;
+		tickStep?: number;
+		showUnitInTitle?: boolean;
+		showUnitInBands?: boolean;
+		showUnitInAxis?: boolean;
+		note?: string;
+	};
+
+	type NumericSection = {
+		id: string;
+		title: string;
+		unit: string;
+		filename: string;
+		data: ReturnType<typeof numericDisplayRows>;
+		pool: number;
+		poolLabel: string;
+		histogram: HistogramConfig | null;
+	};
+
+	// Defaults shared by every histogram on the analysis page: unit shown
+	// in the title (parenthesised), not on the bands or axis ticks.
+	const HISTOGRAM_DEFAULTS = {
+		showUnitInTitle: true,
+		showUnitInBands: false,
+		showUnitInAxis: false,
+	} as const;
+
+	function displayMetric(opts: {
+		id: string;
+		title: string;
+		unit: string; // column-header unit, e.g. "cd/m²"
+		getValue: (t: Tablet) => string | null | undefined;
+		ranges?: SpecBand[];
+		valuesMax?: number; // optional histogram clip
+		binSize?: number;
+		tickStep?: number;
+		histogramUnit?: string; // " cd/m²" etc.; defaults to ` ${unit}`
+		note?: string;
+		histogram?: false; // pass `false` to skip the histogram (table-only sections)
+	}): NumericSection {
+		const id = opts.id;
+		const years = yearFilters[id];
+		return {
+			id,
+			title: opts.title,
+			unit: opts.unit,
+			filename: `analysis-${id.replace(/^display-/, '')}`,
+			data: numericDisplayRows(opts.getValue, years),
+			pool: penDisplays.length,
+			poolLabel: DISPLAY_POOL_LABEL,
+			histogram:
+				opts.histogram === false || !opts.ranges || opts.binSize === undefined
+					? null
+					: {
+							values: rawNumericDisplayValues(opts.getValue, opts.valuesMax, years),
+							ranges: opts.ranges,
+							unit: opts.histogramUnit ?? ` ${opts.unit}`,
+							binSize: opts.binSize,
+							tickStep: opts.tickStep,
+							note: opts.note,
+							...HISTOGRAM_DEFAULTS,
+						},
+		};
+	}
+
+	function digitizerMetric(opts: {
+		id: string;
+		title: string;
+		unit: string;
+		getValue: (t: Tablet) => string | null | undefined;
+		ranges?: SpecBand[];
+		valuesMax?: number;
+		binSize?: number;
+		tickStep?: number;
+		histogramUnit?: string;
+		note?: string;
+		histogram?: false;
+	}): NumericSection {
+		const id = opts.id;
+		const years = yearFilters[id];
+		return {
+			id,
+			title: opts.title,
+			unit: opts.unit,
+			filename: `analysis-${id}`,
+			data: numericTabletRows(opts.getValue, years),
+			pool: allTablets.length,
+			poolLabel: TABLET_POOL_LABEL,
+			histogram:
+				opts.histogram === false || !opts.ranges || opts.binSize === undefined
+					? null
+					: {
+							values: rawNumericTabletValues(opts.getValue, opts.valuesMax, years),
+							ranges: opts.ranges,
+							unit: opts.histogramUnit ?? ` ${opts.unit}`,
+							binSize: opts.binSize,
+							tickStep: opts.tickStep,
+							note: opts.note,
+							...HISTOGRAM_DEFAULTS,
+						},
+		};
+	}
+
+	let numericSections: NumericSection[] = $derived([
+		displayMetric({
 			id: 'display-brightness',
 			title: 'Brightness',
 			unit: 'cd/m²',
-			filename: 'analysis-brightness',
-			data: brightnessData,
-			pool: penDisplays.length,
-			poolLabel: DISPLAY_POOL_LABEL,
-			histogram: {
-				values: brightnessValues,
-				ranges: BRIGHTNESS_RANGES,
-				unit: ' cd/m²',
-				binSize: 25,
-				tickStep: 50,
-				showUnitInTitle: true,
-				showUnitInBands: false,
-				showUnitInAxis: false,
-				note: undefined as string | undefined,
-			},
-		},
-		{
+			getValue: (t) => t.Display?.Brightness,
+			ranges: BRIGHTNESS_RANGES,
+			binSize: 25,
+			tickStep: 50,
+		}),
+		displayMetric({
 			id: 'display-contrast',
 			title: 'Contrast',
 			unit: ':1',
-			filename: 'analysis-contrast',
-			data: contrastData,
-			pool: penDisplays.length,
-			poolLabel: DISPLAY_POOL_LABEL,
-			histogram: {
-				values: contrastValues,
-				ranges: CONTRAST_RANGES,
-				unit: ':1',
-				binSize: 100,
-				tickStep: 500,
-				note: 'OLED panels reporting 100,000:1 (~3% of records) are excluded from the histogram so the linear scale stays readable; they remain in the table below.',
-			},
-		},
-		{
+			getValue: (t) => t.Display?.Contrast,
+			ranges: CONTRAST_RANGES,
+			valuesMax: 3500,
+			binSize: 100,
+			tickStep: 500,
+			histogramUnit: ':1',
+			note: 'OLED panels reporting 100,000:1 (~3% of records) are excluded from the histogram so the linear scale stays readable; they remain in the table below.',
+		}),
+		displayMetric({
 			id: 'display-refresh-rate',
 			title: 'Refresh Rate',
 			unit: 'Hz',
-			filename: 'analysis-refresh-rate',
-			data: refreshData,
-			pool: penDisplays.length,
-			poolLabel: DISPLAY_POOL_LABEL,
-			histogram: null as null | {
-				values: number[];
-				ranges: typeof BRIGHTNESS_RANGES;
-				unit: string;
-				binSize: number;
-				tickStep?: number;
-				showUnitInTitle?: boolean;
-				showUnitInBands?: boolean;
-				showUnitInAxis?: boolean;
-				note?: string;
-			},
-		},
-		{
+			getValue: (t) => t.Display?.RefreshRate,
+			histogram: false,
+		}),
+		displayMetric({
 			id: 'display-response-time',
 			title: 'Response Time',
 			unit: 'ms',
-			filename: 'analysis-response-time',
-			data: responseData,
-			pool: penDisplays.length,
-			poolLabel: DISPLAY_POOL_LABEL,
-			histogram: {
-				values: responseValues,
-				ranges: RESPONSE_TIME_RANGES,
-				unit: ' ms',
-				binSize: 1,
-				showUnitInTitle: true,
-				showUnitInBands: false,
-				showUnitInAxis: false,
-				note: undefined as string | undefined,
-			},
-		},
-		{
+			getValue: (t) => t.Display?.ResponseTime,
+			ranges: RESPONSE_TIME_RANGES,
+			valuesMax: 30,
+			binSize: 1,
+		}),
+		displayMetric({
 			id: 'display-bit-depth',
 			title: 'Bit Depth',
 			unit: 'bit',
-			filename: 'analysis-bit-depth',
-			data: bitDepthData,
-			pool: penDisplays.length,
-			poolLabel: DISPLAY_POOL_LABEL,
-			histogram: null,
-		},
-		{
+			getValue: (t) => t.Display?.ColorBitDepth,
+			histogram: false,
+		}),
+		digitizerMetric({
 			id: 'digitizer-density',
 			title: 'Density',
 			unit: 'LPmm',
-			filename: 'analysis-digitizer-density',
-			data: densityData,
-			pool: allTablets.length,
-			poolLabel: TABLET_POOL_LABEL,
-			histogram: {
-				values: densityValues,
-				ranges: DENSITY_RANGES,
-				unit: ' LPmm',
-				binSize: 10,
-				tickStep: 50,
-				showUnitInTitle: true,
-				showUnitInBands: false,
-				showUnitInAxis: false,
-				note: 'Values above 300 LPmm are excluded from the histogram for scale; they remain in the table below.',
-			},
-		},
-		{
+			getValue: (t) => t.Digitizer?.Density,
+			ranges: DENSITY_RANGES,
+			valuesMax: 300,
+			binSize: 10,
+			tickStep: 50,
+			note: 'Values above 300 LPmm are excluded from the histogram for scale; they remain in the table below.',
+		}),
+		digitizerMetric({
 			id: 'digitizer-accuracy-center',
 			title: 'Accuracy (Center)',
 			unit: 'mm',
-			filename: 'analysis-digitizer-accuracy-center',
-			data: accuracyCenterData,
-			pool: allTablets.length,
-			poolLabel: TABLET_POOL_LABEL,
-			histogram: {
-				values: accuracyCenterValues,
-				ranges: ACCURACY_CENTER_RANGES,
-				unit: ' mm',
-				binSize: 0.1,
-				tickStep: 0.25,
-				showUnitInTitle: true,
-				showUnitInBands: false,
-				showUnitInAxis: false,
-				note: undefined as string | undefined,
-			},
-		},
-		{
+			getValue: (t) => t.Digitizer?.AccuracyCenter,
+			ranges: ACCURACY_CENTER_RANGES,
+			valuesMax: 2,
+			binSize: 0.1,
+			tickStep: 0.25,
+		}),
+		digitizerMetric({
 			id: 'digitizer-accuracy-corner',
 			title: 'Accuracy (Corner)',
 			unit: 'mm',
-			filename: 'analysis-digitizer-accuracy-corner',
-			data: accuracyCornerData,
-			pool: allTablets.length,
-			poolLabel: TABLET_POOL_LABEL,
-			histogram: {
-				values: accuracyCornerValues,
-				ranges: ACCURACY_CORNER_RANGES,
-				unit: ' mm',
-				binSize: 0.25,
-				showUnitInTitle: true,
-				showUnitInBands: false,
-				showUnitInAxis: false,
-				note: undefined as string | undefined,
-			},
-		},
-		{
+			getValue: (t) => t.Digitizer?.AccuracyCorner,
+			ranges: ACCURACY_CORNER_RANGES,
+			valuesMax: 5,
+			binSize: 0.25,
+		}),
+		digitizerMetric({
 			id: 'digitizer-report-rate',
 			title: 'Report Rate',
 			unit: 'Hz',
-			filename: 'analysis-digitizer-report-rate',
-			data: reportRateData,
-			pool: allTablets.length,
-			poolLabel: TABLET_POOL_LABEL,
-			histogram: {
-				values: reportRateValues,
-				ranges: REPORT_RATE_RANGES,
-				unit: ' Hz',
-				binSize: 20,
-				tickStep: 50,
-				showUnitInTitle: true,
-				showUnitInBands: false,
-				showUnitInAxis: false,
-				note: undefined as string | undefined,
-			},
-		},
+			getValue: (t) => t.Digitizer?.ReportRate,
+			ranges: REPORT_RATE_RANGES,
+			binSize: 20,
+			tickStep: 50,
+		}),
 	]);
 
 	// --- Pressure Levels tab ---
@@ -590,8 +544,6 @@
 	let ptSizesYears = $state<number | null>(15);
 	let pdSizesYears = $state<number | null>(15);
 
-	const currentYear = new Date().getFullYear();
-
 	function filterByYears(
 		tablets: Tablet[],
 		type: 'PENTABLET' | 'PENDISPLAY',
@@ -600,11 +552,7 @@
 		return tablets.filter((t) => {
 			if (type === 'PENTABLET' && t.Model.Type !== 'PENTABLET') return false;
 			if (type === 'PENDISPLAY' && t.Model.Type === 'PENTABLET') return false;
-			if (years !== null) {
-				const y = parseInt(t.Model.LaunchYear, 10);
-				if (!isNaN(y) && y < currentYear - years) return false;
-			}
-			return true;
+			return withinYears(t, years);
 		});
 	}
 

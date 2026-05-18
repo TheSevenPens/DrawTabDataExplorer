@@ -1,11 +1,6 @@
 <script lang="ts">
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
-
-	export interface Band {
-		min: number;
-		max: number | null; // null = "and above" (open-ended right edge)
-		label: string;
-	}
+	import type { Band } from '$lib/bands.js';
 
 	export interface BandMarker {
 		/** Position on the same axis as `bands` (e.g. gram-force). */

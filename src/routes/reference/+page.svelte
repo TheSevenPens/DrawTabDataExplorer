@@ -11,8 +11,9 @@
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import BandsChart from '$lib/components/BandsChart.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
-	import { IAF_BANDS, MAX_PRESSURE_BANDS } from '$lib/pressure-bands.js';
 	import {
+		IAF_BANDS,
+		MAX_PRESSURE_BANDS,
 		BRIGHTNESS_BANDS,
 		CONTRAST_BANDS,
 		RESPONSE_TIME_BANDS,
@@ -21,7 +22,7 @@
 		ACCURACY_CORNER_BANDS,
 		REPORT_RATE_BANDS,
 		type SpecBand,
-	} from '$lib/spec-bands.js';
+	} from '$lib/bands.js';
 
 	const dataTabs = [
 		{ href: '/reference', label: 'Reference' },
@@ -49,7 +50,7 @@
 		{ id: 'bands-report-rate', category: 'Digitizer Bands', label: 'Report Rate' },
 	];
 
-	interface SpecBandSection {
+	interface BandSection {
 		id: string;
 		title: string;
 		blurb: string;
@@ -58,7 +59,7 @@
 		bands: SpecBand[];
 	}
 
-	const specBandSections: SpecBandSection[] = [
+	const specBandSections: BandSection[] = [
 		{
 			id: 'bands-brightness',
 			title: 'Brightness Bands',
@@ -712,8 +713,8 @@
 						<p class="ref-blurb">{s.blurb}</p>
 						<p class="ref-blurb">
 							Used by the Tablets ▸ Analysis ▸ {s.title.replace(' Bands', '')} histogram. Edit
-							<code>src/lib/spec-bands.ts</code> to change thresholds — the histogram and this table both
-							read from the same source.
+							<code>src/lib/bands.ts</code> to change thresholds — the histogram and this table both read
+							from the same source.
 						</p>
 						<table class="ref-table">
 							<thead><tr><th>Rank</th><th>Range</th></tr></thead>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { base } from '$app/paths';
 	import {
 		type InventoryPen,
 		INVENTORY_PEN_FIELDS,
@@ -12,6 +11,7 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 	import { flaggedPenUnits, toggleFlaggedPenUnit } from '$lib/flagged-store.js';
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
+	import { inventoryPenCellLinks } from '$lib/inventory-cell-links.js';
 
 	let { data } = $props();
 
@@ -44,20 +44,5 @@
 	quickFilterFields={['Brand']}
 	flaggedIds={flaggedSet}
 	onToggleFlag={toggleFlaggedPenUnit}
-	cellLinks={{
-		InventoryId: (item: InventoryPen) => [
-			{ label: item.InventoryId, href: `${base}/pen-inventory/${encodeURIComponent(item._id)}` },
-		],
-		PenEntityId: (item: InventoryPen) => {
-			const name = data.penNameMap[item.PenEntityId];
-			if (!name)
-				return [
-					{
-						label: item.PenEntityId,
-						href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}`,
-					},
-				];
-			return [{ label: name, href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}` }];
-		},
-	}}
+	cellLinks={inventoryPenCellLinks(data.penNameMap)}
 />

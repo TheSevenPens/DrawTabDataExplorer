@@ -15,16 +15,12 @@
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
-	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
-	import { MAX_PRESSURE_BANDS } from '$lib/pressure-bands.js';
-	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
-
-	const maxPressureBands = MAX_PRESSURE_BANDS;
 
 	let { data } = $props();
 	let family: PenFamily = $derived(data.family);
@@ -69,38 +65,6 @@
 		else next.add(id);
 		hiddenSessionIds = next;
 	}
-
-	// Per-session P100 estimates (max-force) across the family.
-	// Defective sessions are excluded — they reflect a broken digitizer,
-	// not the pen's true saturation force.
-	let p100Values = $derived(
-		pressureSessions
-			.filter((s) => !defectsByInventoryId.has(s.InventoryId))
-			.map((s) => estimateP100(s.Records))
-			.filter((v): v is number => v !== null && isFinite(v)),
-	);
-
-	let p100Markers: BandMarker[] = $derived(p100Values.map((v) => ({ value: v, dashed: false })));
-
-	let p100Stats = $derived.by(() => {
-		const xs = [...p100Values].sort((a, b) => a - b);
-		if (xs.length === 0) return null;
-		const min = xs[0];
-		const max = xs[xs.length - 1];
-		const mid = Math.floor(xs.length / 2);
-		const median = xs.length % 2 === 0 ? (xs[mid - 1] + xs[mid]) / 2 : xs[mid];
-		return { min, median, max };
-	});
-
-	let p100SummaryMarkers: BandMarker[] = $derived(
-		p100Stats
-			? [
-					{ value: p100Stats.min, dashed: false },
-					{ value: p100Stats.max, dashed: false },
-					{ value: p100Stats.median, label: 'Median', dashed: false, strokeWidth: 4 },
-				]
-			: [],
-	);
 
 	let activeTab = $state<'specs' | 'members' | 'pressure' | 'maxpressure'>('specs');
 
@@ -205,64 +169,15 @@
 
 {#if activeTab === 'maxpressure'}
 	<div class="tab-content">
-		<p class="ref-blurb">
-			Maximum physical pressure is the force at which the digitizer saturates (reports its maximum
-			pressure value). The red lines show the estimated <strong>P100</strong> (max-force) for each measurement
-			session of pens in this family.
-		</p>
-		<BandsChart
-			bands={maxPressureBands}
-			axisMax={1000}
-			axisStep={100}
-			unit="gf"
-			title={`${family.FamilyName} max pressure`}
-			heading={`${family.FamilyName} — All max pressures`}
-			markers={p100Markers}
+		<MaxPressureTab
+			{pressureSessions}
+			{defectsByInventoryId}
+			{chartSessions}
+			hiddenIds={hiddenSessionIds}
+			displayName={family.FamilyName}
+			chartTitlePrefix={family.FamilyName}
+			entityLabel="this family"
 		/>
-		{#if p100Stats}
-			<p class="ref-blurb summary-blurb">
-				Summary across sessions — outer lines mark <strong>min</strong> and
-				<strong>max</strong>, the thick line marks the <strong>median</strong>.
-			</p>
-			<BandsChart
-				bands={maxPressureBands}
-				axisMax={1000}
-				axisStep={100}
-				unit="gf"
-				title={`${family.FamilyName} max pressure summary`}
-				heading={`${family.FamilyName} — Max pressure range`}
-				markers={p100SummaryMarkers}
-				shadedRange={{ min: p100Stats.min, max: p100Stats.max }}
-			/>
-			<table class="p100-summary-table">
-				<thead>
-					<tr>
-						<th>Min<br /><span class="unit">(gf)</span></th>
-						<th>Median<br /><span class="unit">(gf)</span></th>
-						<th>Max<br /><span class="unit">(gf)</span></th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td class="mono">{fmtP(p100Stats.min)}</td>
-						<td class="mono">{fmtP(p100Stats.median)}</td>
-						<td class="mono">{fmtP(p100Stats.max)}</td>
-					</tr>
-				</tbody>
-			</table>
-			<p class="ref-blurb summary-blurb">
-				Pressure response near saturation — the same chart from the Pressure Response tab, zoomed to
-				the 95–100% region so you can compare each session's approach to P100.
-			</p>
-			<PressureChart
-				sessions={chartSessions}
-				title={`${family.FamilyName} pressure response (max)`}
-				hiddenIds={hiddenSessionIds}
-				lockedZoom="max"
-			/>
-		{:else}
-			<p class="dim">No pressure response measurements available for this family.</p>
-		{/if}
 	</div>
 {/if}
 
@@ -279,40 +194,6 @@
 
 	.tab-content {
 		margin-bottom: 24px;
-	}
-	.ref-blurb {
-		font-size: 13px;
-		color: var(--text-muted);
-		max-width: 800px;
-		margin: 0 0 12px;
-		line-height: 1.5;
-	}
-	.summary-blurb {
-		margin-top: 20px;
-	}
-	.p100-summary-table {
-		margin-top: 12px;
-		border-collapse: collapse;
-		font-size: 13px;
-	}
-	.p100-summary-table th,
-	.p100-summary-table td {
-		padding: 4px 18px;
-		text-align: right;
-		border-bottom: 1px solid var(--border);
-	}
-	.p100-summary-table th {
-		font-weight: 600;
-		color: var(--text-muted);
-		border-bottom: 2px solid var(--border);
-	}
-	.unit {
-		font-size: 11px;
-		font-weight: 400;
-		color: var(--text-muted);
-	}
-	.mono {
-		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 	}
 	.table-header {
 		display: flex;

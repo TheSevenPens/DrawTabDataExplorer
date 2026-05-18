@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
 	import {
-		type InventoryTablet,
 		INVENTORY_TABLET_FIELDS,
 		INVENTORY_TABLET_FIELD_GROUPS,
 		INVENTORY_TABLET_DEFAULT_COLUMNS,
@@ -11,6 +9,7 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import { flaggedCount } from '$lib/flagged-store.js';
+	import { inventoryTabletCellLinks } from '$lib/inventory-cell-links.js';
 
 	let { data } = $props();
 
@@ -36,13 +35,5 @@
 	defaultView={INVENTORY_TABLET_DEFAULT_VIEW}
 	defaultFilterField="Brand"
 	quickFilterFields={['Brand']}
-	cellLinks={{
-		InventoryId: (item: InventoryTablet) => [
-			{ label: item.InventoryId, href: `${base}/tablet-inventory/${encodeURIComponent(item._id)}` },
-		],
-		TabletEntityId: (item: InventoryTablet) => {
-			const name = data.tabletNameMap[item.TabletEntityId] ?? item.TabletEntityId;
-			return [{ label: name, href: `${base}/entity/${encodeURIComponent(item.TabletEntityId)}` }];
-		},
-	}}
+	cellLinks={inventoryTabletCellLinks(data.tabletNameMap)}
 />
