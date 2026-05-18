@@ -20,6 +20,7 @@
 		unit,
 		title,
 		heading,
+		subtitle,
 		exportFilename,
 		markers = [],
 		shadedRange,
@@ -32,6 +33,9 @@
 		title?: string;
 		/** Visible chart title rendered inside the SVG (so it appears in exports). */
 		heading?: string;
+		/** Optional secondary title rendered under the heading (smaller).
+		 * Only shown when `heading` is also set. */
+		subtitle?: string;
 		/** Override the slug from `title` if you want a specific filename. */
 		exportFilename?: string;
 		/** Optional red dashed vertical lines drawn over the chart. */
@@ -43,10 +47,14 @@
 	let svgEl: SVGElement | undefined = $state();
 
 	// SVG geometry. When `heading` is set we add room at the top for the
-	// title text so it's captured by SVG/PNG exports.
+	// title text so it's captured by SVG/PNG exports. A subtitle under
+	// the heading widens the reserved band further.
 	const W = 1000;
 	const HEADING_BAND = 30;
-	const headingOffset = $derived(heading ? HEADING_BAND : 0);
+	const SUBTITLE_BAND = 18;
+	const headingOffset = $derived(
+		(heading ? HEADING_BAND : 0) + (heading && subtitle ? SUBTITLE_BAND : 0),
+	);
 	const H = $derived(220 + headingOffset);
 	const PAD_L = 40;
 	const PAD_R = 40;
@@ -102,6 +110,16 @@
 				font-size="18"
 				font-weight="700">{heading}</text
 			>
+			{#if subtitle}
+				<text
+					x={W / 2}
+					y={42}
+					text-anchor="middle"
+					class="chart-subtitle"
+					font-size="13"
+					font-weight="400">{subtitle}</text
+				>
+			{/if}
 		{/if}
 
 		<!-- Vertical band-divider dashed lines. Drawn between adjacent bands,
@@ -232,6 +250,9 @@
 	}
 	.chart-heading {
 		fill: var(--text, #111);
+	}
+	.chart-subtitle {
+		fill: var(--text-muted, #555);
 	}
 	.marker-label {
 		fill: #dc2626;

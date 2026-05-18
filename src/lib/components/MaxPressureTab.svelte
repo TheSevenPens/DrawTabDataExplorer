@@ -115,6 +115,18 @@
 			? `${chartTitlePrefix} max pressure`
 			: `${chartTitlePrefix} max pressure summary`,
 	);
+
+	// Subtitle counts the distinct pen models / pen units / sessions
+	// reflected in the chart. Mirrors the non-defective filter so the
+	// counts match the rendered markers.
+	let chartSubtitle = $derived.by(() => {
+		if (nonDefectiveSessions.length === 0) return undefined;
+		const models = new Set(nonDefectiveSessions.map((s) => s.PenEntityId)).size;
+		const units = new Set(nonDefectiveSessions.map((s) => s.InventoryId)).size;
+		const sessions = nonDefectiveSessions.length;
+		const fmt = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+		return `${fmt(models, 'pen model', 'pen models')} · ${fmt(units, 'pen unit', 'pen units')} · ${fmt(sessions, 'session', 'sessions')}`;
+	});
 </script>
 
 <p class="ref-blurb">
@@ -154,6 +166,7 @@
 	unit="gf"
 	title={currentTitle}
 	heading={currentHeading}
+	subtitle={chartSubtitle}
 	markers={currentMarkers}
 	shadedRange={currentShadedRange}
 />
