@@ -26,6 +26,9 @@
 		compareYearOptions = [10, 15, 20, null] as (number | null)[],
 		markers = [] as HistogramMarker[],
 		tickStep: tickStepProp = undefined,
+		showUnitInTitle = false,
+		showUnitInBands = true,
+		showUnitInAxis = true,
 	}: {
 		title?: string;
 		values: number[];
@@ -44,7 +47,16 @@
 		 * when label widths would collide on a dense scale (e.g. cd/m²
 		 * stepping by 25 produces tick labels every 5 cd/m² by default). */
 		tickStep?: number;
+		/** Append `(${unit})` to the rendered title. Default false. */
+		showUnitInTitle?: boolean;
+		/** Show units on the band range labels under each band header
+		 * (e.g. "100 cd/m²–250 cd/m²"). Default true. */
+		showUnitInBands?: boolean;
+		/** Show units on the x-axis tick labels (e.g. "100 cd/m²"). Default true. */
+		showUnitInAxis?: boolean;
 	} = $props();
+
+	let titleText = $derived(showUnitInTitle && unit ? `${title} (${unit.trim()})` : title);
 
 	const MARKER_TIERS = 6;
 	const width = 900;
@@ -277,7 +289,7 @@
 					text-anchor="middle"
 					font-size="14"
 					font-weight="600"
-					fill="var(--text)">{title}</text
+					fill="var(--text)">{titleText}</text
 				>
 			{/if}
 			<!-- Range backgrounds -->
@@ -302,7 +314,8 @@
 					y={padTop - 10}
 					text-anchor="middle"
 					font-size="10"
-					fill="var(--text-dim)">{range.min}{unit}–{range.max}{unit}</text
+					fill="var(--text-dim)"
+					>{range.min}{showUnitInBands ? unit : ''}–{range.max}{showUnitInBands ? unit : ''}</text
 				>
 			{/each}
 
@@ -331,7 +344,7 @@
 						y={padTop + chartH + 15}
 						text-anchor="middle"
 						font-size="11"
-						fill="var(--text-dim)">{val}{unit}</text
+						fill="var(--text-dim)">{val}{showUnitInAxis ? unit : ''}</text
 					>
 				{/if}
 			{/each}

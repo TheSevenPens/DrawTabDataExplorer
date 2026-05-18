@@ -309,6 +309,9 @@
 				unit: ' cd/m²',
 				binSize: 25,
 				tickStep: 50,
+				showUnitInTitle: true,
+				showUnitInBands: false,
+				showUnitInAxis: false,
 				note: undefined as string | undefined,
 			},
 		},
@@ -343,6 +346,9 @@
 				unit: string;
 				binSize: number;
 				tickStep?: number;
+				showUnitInTitle?: boolean;
+				showUnitInBands?: boolean;
+				showUnitInAxis?: boolean;
 				note?: string;
 			},
 		},
@@ -359,6 +365,9 @@
 				ranges: RESPONSE_TIME_RANGES,
 				unit: ' ms',
 				binSize: 1,
+				showUnitInTitle: true,
+				showUnitInBands: false,
+				showUnitInAxis: false,
 				note: undefined as string | undefined,
 			},
 		},
@@ -385,6 +394,10 @@
 				ranges: DENSITY_RANGES,
 				unit: ' LPmm',
 				binSize: 10,
+				tickStep: 50,
+				showUnitInTitle: true,
+				showUnitInBands: false,
+				showUnitInAxis: false,
 				note: 'Values above 300 LPmm are excluded from the histogram for scale; they remain in the table below.',
 			},
 		},
@@ -402,6 +415,9 @@
 				unit: ' mm',
 				binSize: 0.1,
 				tickStep: 0.25,
+				showUnitInTitle: true,
+				showUnitInBands: false,
+				showUnitInAxis: false,
 				note: undefined as string | undefined,
 			},
 		},
@@ -418,6 +434,9 @@
 				ranges: ACCURACY_CORNER_RANGES,
 				unit: ' mm',
 				binSize: 0.25,
+				showUnitInTitle: true,
+				showUnitInBands: false,
+				showUnitInAxis: false,
 				note: undefined as string | undefined,
 			},
 		},
@@ -435,6 +454,9 @@
 				unit: ' Hz',
 				binSize: 20,
 				tickStep: 50,
+				showUnitInTitle: true,
+				showUnitInBands: false,
+				showUnitInAxis: false,
 				note: undefined as string | undefined,
 			},
 		},
@@ -833,6 +855,9 @@
 							unit={section.histogram.unit}
 							binSize={section.histogram.binSize}
 							tickStep={section.histogram.tickStep}
+							showUnitInTitle={section.histogram.showUnitInTitle ?? false}
+							showUnitInBands={section.histogram.showUnitInBands ?? true}
+							showUnitInAxis={section.histogram.showUnitInAxis ?? true}
 						/>
 						{#if section.histogram.note}
 							<p class="description histogram-note">{section.histogram.note}</p>
@@ -968,6 +993,9 @@
 						bandwidthMultiplier={0.2}
 						bind:compareYears={ptSizesYears}
 						markers={ptMarkers}
+						showUnitInTitle
+						showUnitInBands={false}
+						showUnitInAxis={false}
 					/>
 				{/if}
 			</section>
@@ -1001,6 +1029,9 @@
 						bandwidthMultiplier={0.2}
 						bind:compareYears={pdSizesYears}
 						markers={pdMarkers}
+						showUnitInTitle
+						showUnitInBands={false}
+						showUnitInAxis={false}
 					/>
 				{/if}
 			</section>
