@@ -1,3 +1,4 @@
+<!-- Agent note: list pages use EntityExplorer + queriton executePipeline; data from +page.ts only. -->
 <script lang="ts">
 	import {
 		type Step,

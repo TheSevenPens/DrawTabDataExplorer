@@ -1,3 +1,4 @@
+<!-- Agent note: envelope uses fill shape polygon — see CLAUDE.md § Pressure response charts before editing. -->
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import {

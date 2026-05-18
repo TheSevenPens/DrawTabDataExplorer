@@ -1,3 +1,4 @@
+// Agent note: UI query/pipeline package — import from 'queriton', not data-repo/lib/pipeline.
 export * from './types.js';
 export * from './engine.js';
 export * from './query.js';

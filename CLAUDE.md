@@ -1,5 +1,7 @@
 # DrawTabDataExplorer – Claude Code Guide
 
+**Audience:** agents and developers · **Routing:** start with [AGENTS.md](AGENTS.md); reference detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Project overview
 
 SvelteKit static site (adapter-static, `ssr = false`, `prerender = true`) that
@@ -170,41 +172,9 @@ defer to the same one-liner helper in
 a new typed entity, copy one of the existing `+page.ts` files (it's
 just `prerender = false` plus `redirectToCanonicalEntity(params)`).
 
-### EntityExplorer
+### EntityExplorer / QueryPipelineBar / SearchBar
 
-The main list-page component. Renders a title row, a top-bar, and a results table.
-
-**Top-bar layout** (one flex row):
-
-```
-[ Search... ] [ QuickFilter ▾ ] ...   [ Filters ] [ Sort ] [ Columns N ] [ Views ]
-└─────────────── SearchBar ──────────┘ └──────────── QueryPipelineBar ────────────┘
-```
-
-- `SearchBar` — text search input + optional quick-filter dropdowns (configured via `quickFilterFields` prop). Stateless except for `$bindable` `searchText` and `quickFilters`.
-- `QueryPipelineBar` — four toolbar buttons that open dropdown panels: **Filters**, **Sort**, **Columns**, **Views**. Buttons show active-state indicators (filter count badge, sort field name). The Views panel embeds `SavedViews` directly.
-
-### QueryPipelineBar
-
-A thin coordinator component that renders **FilterBar**, **SortBar**, **ColumnBar**, and the Views dropdown side-by-side. It owns only the `openPanel` state (`'filter' | 'sort' | 'columns' | 'views' | null`) and passes `isOpen` + `ontoggle` to each sub-component.
-
-Each sub-component is self-contained:
-
-- **FilterBar** — filter pills, editor row, field picker, context menu, drag-to-remove
-- **SortBar** — sort pills, direction toggle, drag-to-reorder, context menu
-- **ColumnBar** — column pills, drag-to-reorder, context menu
-
-All panels are `position: absolute` dropdowns that open on button click and close on any outside click (`<svelte:window onclick>`). Clicks inside the panel use `stopPropagation` to stay open.
-
-Active state indicators:
-
-- Filters button turns amber + shows count badge when filters are active
-- Sort button turns blue + shows the primary sort field and direction inline
-- Columns button always shows a count badge
-
-### SearchBar
-
-Thin component — search input + quick-filter `<select>` elements + a Clear button (shown only when dirty). The `quickFilterOptions` array is computed by `EntityExplorer` from `quickFilterFields` and passed down.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) § Key components for **EntityExplorer**, **QueryPipelineBar**, **FilterBar**, **SortBar**, **ColumnBar**, and **SearchBar** (layout, operators, dropdown behavior).
 
 ## Label formatting (full names)
 
@@ -272,13 +242,7 @@ chart alongside the bands charts.
 components that operate on fields generically (FilterBar, SortBar, ColumnBar,
 FilterStep, SortStep, SelectStep, ResultsTable, etc.).
 
-```ts
-// data-repo/lib/pipeline/types.ts
-export type AnyFieldDef = FieldDef<any>;
-```
-
-Import it alongside other pipeline types from the workspace package
-`queriton` (see [packages/queriton/](packages/queriton/)):
+Import from the workspace package `queriton` (see [packages/queriton/](packages/queriton/)):
 
 ```ts
 import type { AnyFieldDef } from 'queriton';

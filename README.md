@@ -8,10 +8,11 @@ Live site: <https://thesevenpens.github.io/DrawTabDataExplorer/>
 
 ## Documentation
 
-- [User manual](docs/USERMANUAL.md) — what's in the app and how to use it.
+- [**AGENTS.md**](AGENTS.md) — start here for AI agents (read order, commands).
+- [CLAUDE.md](CLAUDE.md) — must-follow developer rules and gotchas.
 - [Architecture](docs/ARCHITECTURE.md) — project layout and components.
-- [CLAUDE.md](CLAUDE.md) — developer notes (setup, adding a brand, the
-  submodule workflow).
+- [WHERE](docs/WHERE.md) · [RECIPES](docs/RECIPES.md) · [TESTING](docs/TESTING.md) — agent workflows.
+- [User manual](docs/USERMANUAL.md) — what's in the app and how to use it (end users).
 
 ## Setup
 

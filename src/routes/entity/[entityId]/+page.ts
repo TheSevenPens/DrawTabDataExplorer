@@ -1,3 +1,4 @@
+// Agent note: canonical /entity/[entityId] loader — prerender false. No onMount data fetch.
 // Universal entity detail loader.
 // Parses the EntityId, determines the entity type from the second dot-segment,
 // and fetches the appropriate data via DrawTabDataSet. The page component
