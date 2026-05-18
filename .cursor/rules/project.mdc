@@ -1,0 +1,12 @@
+---
+description: DrawTabDataExplorer — start with AGENTS.md and follow CLAUDE.md rules
+alwaysApply: true
+---
+
+Read [AGENTS.md](AGENTS.md) for doc routing and commands.
+
+Must-follow constraints and Svelte 5 gotchas: [CLAUDE.md](CLAUDE.md).
+
+Goal → files: [docs/WHERE.md](docs/WHERE.md). Workflows: [docs/RECIPES.md](docs/RECIPES.md).
+
+Do not duplicate CLAUDE.md content in responses as new project rules.

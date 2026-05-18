@@ -1,3 +1,5 @@
+// Agent note: one DrawTabDataSet per session — child +page.ts use await parent() for ds.
+// See CLAUDE.md § Data loading and AGENTS.md.
 import { base } from '$app/paths';
 import { DrawTabDataSet } from '$data/lib/dataset.js';
 import type { VersionInfo } from '$data/lib/drawtab-loader.js';

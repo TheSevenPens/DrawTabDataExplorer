@@ -1,0 +1,11 @@
+---
+description: SvelteKit routes and data loading
+globs: src/routes/**
+alwaysApply: false
+---
+
+Route data must use `+page.ts` `load()` and `await parent()` for `ds` — see CLAUDE.md § Data loading.
+
+Do not use `onMount` to fetch entity data for pages.
+
+Canonical entity URLs: `/entity/[entityId]`. Typed `/tablets/[id]` routes only redirect.

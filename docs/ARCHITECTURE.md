@@ -1,5 +1,9 @@
 # Architecture
 
+**Audience:** contributors and agents · **Rules and gotchas:** [CLAUDE.md](../CLAUDE.md) · **Agent routing:** [AGENTS.md](../AGENTS.md) · **Where to edit:** [WHERE.md](WHERE.md).
+
+> File tree below is illustrative; run `git ls-files src` for the current set.
+
 ## Project structure
 
 ```
@@ -172,32 +176,11 @@ The sub-tab sets per parent:
 
 ## Pressure response charts
 
-`PressureChart.svelte` is the Chart.js scatter used on the Pressure
-Response and Max Pressure tabs. A few non-obvious behaviors:
+`PressureChart.svelte` — Chart.js scatter for force (gf) vs pressure (%).
+Used on Pressure Response, pen/pen-family detail tabs, and Max Pressure.
 
-- **Envelope mode fill workaround.** Chart.js's between-datasets fill
-  (`fill: '-1'`) is x-axis-parametric — it fills vertically between two
-  lines at each x. When the high envelope's max x exceeds the low
-  envelope's max x (common at p=99→100, since min(P100) is well below
-  max(P100)), the fill terminates at the low line's right edge and
-  leaves a triangular gap. The chart sidesteps this by tracing the
-  envelope as a single closed-polygon dataset (`[...low,
-...high.reverse()]`) and using `fill: 'shape'` to fill the polygon
-  interior instead.
-- **Zoom presets and dynamic x-axis.**
-  - _Normal_: x ∈ [0, 1000] gf — pinned so all pens render on the same
-    visual scale.
-  - _IAF detail_: x ∈ [0, 20] gf, y ∈ [0, 30]%.
-  - _Max pressure_: y ∈ [95, 100]%; x.max is computed dynamically as
-    `max(estimateP100 across visible sessions) + 50` so the upper-right
-    corner of the envelope always stays on-canvas regardless of pen
-    strength. This is shared across all view modes (raw, estimates,
-    standardized, envelope).
-- **`lockedZoom` prop** hides the Zoom dropdown and forces a given
-  preset. Used by the Max Pressure tab to embed a max-zoomed pressure
-  response chart alongside the bands charts.
-- All series use `pointRadius: 0` so dense charts read as smooth lines
-  rather than dot clouds.
+**Must-read before editing:** [CLAUDE.md](../CLAUDE.md) § Pressure response charts
+(envelope `fill: 'shape'` polygon, dynamic max-pressure x-axis, `lockedZoom`).
 
 ## Max Pressure tab
 
@@ -220,50 +203,12 @@ via `defectsByInventoryId` (same rule used by `<SessionStats>`).
 
 ## Label formatting (model id suppression)
 
-Computed names like "Brand Name (Id)" trim two pieces of redundancy:
-the `(Id)` suffix when the id is already in the marketing name, and
-the leading brand when the marketing name itself starts with the brand.
-Both are driven by predicates in `data-repo/lib/entities/`:
+Canonical formatters: `penFullName`, `tabletFullName`, etc. in
+`data-repo/lib/entities/{pen,tablet}-fields.ts`, re-exported from
+`$lib/pen-helpers` and `$lib/tablet-helpers`.
 
-- `penIdRedundantInName(pen)` / `tabletIdRedundantInName(tablet)` — true
-  when the id appears in the name as a whole token (case-insensitive,
-  word-boundary matching). Catches "Asus ProArt Pen MPA01" / "MPA01"
-  but _not_ "MX300" / "M3". `tabletIdRedundantInName` additionally
-  returns `true` unconditionally for `Brand === 'APPLE'` — Apple iPad
-  ids (e.g. `iPad-Pro-12.9-Gen1`) only restate the marketing name in a
-  less-readable form.
-- `penBrandRedundantInName(pen)` / `tabletBrandRedundantInName(tablet)`
-  — true when the marketing name starts with the brand display name
-  (case-insensitive). Catches "Wacom One Pen" (Wacom), "Apple Pencil
-  Pro" (Apple), "Wacom One 2023 S" (Wacom).
-
-The canonical formatters that combine these rules also live in
-`data-repo/lib/entities/` so both server-side field defs and project-side
-UI code share one implementation:
-
-- `penFullName(pen)` → "Brand Name (Id)" with brand and/or id dropped.
-- `penBrandAndName(pen)` → "Brand Name" only (no id).
-- `tabletFullName(tablet)` → "Brand Name (Id)" with brand and/or id dropped.
-- `tabletBrandAndName(tablet)` → "Brand Name" only.
-- `tabletNameAndId(tablet)` → "Name (Id)" with id dropped if redundant
-  (no brand prefix, used for the `NameAndModelId` field).
-
-The `FullName` and `NameAndModelId` field-def getters call these
-helpers directly. `src/lib/pen-helpers.ts` and `src/lib/tablet-helpers.ts`
-re-export them so consumers can import via `$lib`.
-
-**When adding a new label-formatting site, call one of the helpers
-above; never reconstruct `${brandName(...)} ${name} (${id})` inline.**
-That's how the brand-prefix bug originally crept in — eight files
-re-implemented the format string and only the field-def getters got
-the fix when the `(Id)` suppression rule was first added.
-
-To audit the dataset for new affected entities:
-
-```bash
-node scripts/find-name-contains-id.mjs    # entities where id is in name
-node scripts/find-brand-in-name.mjs       # entities where name starts with brand
-```
+**Rules (required):** [CLAUDE.md](../CLAUDE.md) § Label formatting ·
+**Reject list:** [ANTI-PATTERNS.md](ANTI-PATTERNS.md).
 
 ## Compare feature
 

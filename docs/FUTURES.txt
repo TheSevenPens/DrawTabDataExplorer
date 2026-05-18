@@ -17,16 +17,16 @@ open the issue for current scope, design notes, and status.
 - User-facing tutorial doc for queriton — #146
 - Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
-- Split TabletDetail into tab-scoped subcomponents — #171
 - Extract shared pressure chart session state — #172
 - Centralize SubNav tab definitions — #173
 - Add buildTabletNameMap and fix canonical naming bypasses — #174
 - Migrate BrandDetail to shared Tabs component — #175
-- Modularize data-quality page into section components — #176
-- Modularize tablet-analysis page into section modules — #177
 - Extract CompatEntityTable for pen/tablet cross-ref tables — #178
 - Extend Playwright smoke tests (analysis, data-quality, session detail) — #179
 - Entity redirect helper + EntityListLayout for route boilerplate — #180
+
+## Shipped
+
 - Add AGENTS.md entry point for AI agents — #181
 - Deduplicate CLAUDE.md vs ARCHITECTURE.md roles — #182
 - Add WHERE.md goal-to-files lookup — #183
@@ -39,9 +39,10 @@ open the issue for current scope, design notes, and status.
 - Add Cursor rules pointer-linking to CLAUDE.md — #190
 - Add DOC-STYLE.md for LLM-friendly docs — #191
 - Add TESTING.md for agent verification — #192
-
-## Shipped
-
+- Generic Query/Pipeline API extracted to queriton workspace package — #139
+- Split TabletDetail into tab-scoped subcomponents — #171
+- Modularize data-quality page into section components — #176
+- Modularize tablet-analysis page into section modules — #177
 - Extract <Tabs> component for detail pages — #163
 - Extract <SectionedPage> for sidebar-tree pages — #164
 - Extract <DistributionTable> for bar-fill count tables — #165
@@ -68,7 +69,6 @@ open the issue for current scope, design notes, and status.
 - Standalone vitest config for queriton package — #145
 - Polish queriton package.json + README example smoke test — #147
 - README for the queriton package — #141
-- Generic Query/Pipeline API extracted to queriton workspace package — #139
 - Case-sensitive filter operators — #137
 - Query.concat() / .union() — #136
 - Query.last() / .reverse() — #135

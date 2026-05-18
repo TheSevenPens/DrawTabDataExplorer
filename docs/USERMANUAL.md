@@ -1,5 +1,7 @@
 # DrawTabDataExplorer — User Manual
 
+**Audience:** end users · Agents editing code should start with [AGENTS.md](../AGENTS.md) instead.
+
 A tour of what's in the app and how to get around. Each section is short
 on purpose — the app is meant to be self-explanatory once you know what's
 there.

@@ -1,0 +1,11 @@
+---
+description: Editing DrawTabData JSON under the submodule
+globs: data-repo/data/**
+alwaysApply: false
+---
+
+Before editing dataset JSON, read `data-repo/docs/IMPORTING-TABLETS.md` (tablets) and relevant schema in `data-repo/lib/schemas.ts`.
+
+After changes, run `npm run data-quality` from the Explorer repo root.
+
+Do not edit files under `static/` — edit `data-repo/data/` and run `npm run setup-static` if needed.

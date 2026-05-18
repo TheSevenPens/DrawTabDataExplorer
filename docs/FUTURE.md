@@ -1,5 +1,7 @@
 # Future Improvements
 
+**Audience:** contributors · **Tracking:** prefer GitHub issues listed in [FUTURES.txt](FUTURES.txt) (e.g. shareable views #113, E2E extension #179). This file keeps longer design notes.
+
 ## E2E smoke tests with Playwright
 
 Playwright is a browser automation library (by Microsoft) that drives a real

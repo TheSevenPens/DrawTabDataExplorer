@@ -1,5 +1,13 @@
 # Workstreams
 
+**Audience:** humans · **Agents:** use [FUTURES.txt](FUTURES.txt) and GitHub issues instead of reading this whole file unless you need consumer-merge history.
+
+## Active focus (2026-05)
+
+Open cleanup and docs work is tracked in GitHub **#171–#192** (see [FUTURES.txt](FUTURES.txt)). Agent doc set: [AGENTS.md](../AGENTS.md), [WHERE.md](WHERE.md), [RECIPES.md](RECIPES.md) (issues **#181–#192**).
+
+---
+
 Ongoing, incremental work — areas that get chipped away at over time
 rather than landed in a single PR. Distinct from `FUTURE.md`, which
 captures one-shot ideas.
