@@ -5,6 +5,7 @@
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
+	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import {
 		type InventoryPen,
 		INVENTORY_PEN_FIELDS,
@@ -51,12 +52,13 @@
 	</span>
 </div>
 
-<div class="detail-tabs">
-	<button class:active={activeTab === 'specs'} onclick={() => (activeTab = 'specs')}>Specs</button>
-	<button class:active={activeTab === 'pressure'} onclick={() => (activeTab = 'pressure')}
-		>Pressure Response ({pressureSessions.length})</button
-	>
-</div>
+<Tabs
+	tabs={[
+		{ id: 'specs', label: 'Specs' },
+		{ id: 'pressure', label: 'Pressure Response', badge: pressureSessions.length },
+	] satisfies Tab[]}
+	bind:active={activeTab}
+/>
 
 {#if activeTab === 'specs'}
 	<div class="tab-content">
@@ -113,35 +115,6 @@
 	}
 	.model-link a:hover {
 		text-decoration: underline;
-	}
-	.detail-tabs {
-		display: flex;
-		gap: 0;
-		border-bottom: 2px solid var(--border);
-		margin-bottom: 16px;
-	}
-	.detail-tabs button {
-		padding: 6px 16px;
-		font-size: 13px;
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
-		background: transparent;
-		color: var(--text-muted);
-		cursor: pointer;
-		position: relative;
-		bottom: -2px;
-	}
-	.detail-tabs button:hover {
-		color: #2563eb;
-		background: var(--bg-card);
-		border-color: var(--border);
-	}
-	.detail-tabs button.active {
-		background: var(--bg);
-		color: #2563eb;
-		border-color: var(--border);
-		font-weight: 600;
 	}
 	.tab-content {
 		margin-bottom: 24px;

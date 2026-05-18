@@ -8,6 +8,7 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
+	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
@@ -154,24 +155,17 @@
 	</dl>
 </section>
 
-<div class="detail-tabs">
-	<button class:active={activeTab === 'specs'} onclick={() => (activeTab = 'specs')}>Specs</button>
-	<button class:active={activeTab === 'tablets'} onclick={() => (activeTab = 'tablets')}
-		>Compatible Tablets</button
-	>
-	<button class:active={activeTab === 'included'} onclick={() => (activeTab = 'included')}
-		>Included With</button
-	>
-	<button class:active={activeTab === 'inventory'} onclick={() => (activeTab = 'inventory')}
-		>Inventory ({inventoryUnits.length})</button
-	>
-	<button class:active={activeTab === 'pressure'} onclick={() => (activeTab = 'pressure')}
-		>Pressure Response</button
-	>
-	<button class:active={activeTab === 'maxpressure'} onclick={() => (activeTab = 'maxpressure')}
-		>Max Pressure</button
-	>
-</div>
+<Tabs
+	tabs={[
+		{ id: 'specs', label: 'Specs' },
+		{ id: 'tablets', label: 'Compatible Tablets' },
+		{ id: 'included', label: 'Included With' },
+		{ id: 'inventory', label: 'Inventory', badge: inventoryUnits.length },
+		{ id: 'pressure', label: 'Pressure Response' },
+		{ id: 'maxpressure', label: 'Max Pressure' },
+	] satisfies Tab[]}
+	bind:active={activeTab}
+/>
 
 {#if activeTab === 'specs'}
 	<div class="tab-content">
@@ -445,36 +439,6 @@
 	}
 	.basics-item dd a:hover {
 		text-decoration: underline;
-	}
-
-	.detail-tabs {
-		display: flex;
-		gap: 0;
-		border-bottom: 2px solid var(--border);
-		margin-bottom: 16px;
-	}
-	.detail-tabs button {
-		padding: 6px 16px;
-		font-size: 13px;
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
-		background: transparent;
-		color: var(--text-muted);
-		cursor: pointer;
-		position: relative;
-		bottom: -2px;
-	}
-	.detail-tabs button:hover {
-		color: #2563eb;
-		background: var(--bg-card);
-		border-color: var(--border);
-	}
-	.detail-tabs button.active {
-		background: var(--bg);
-		color: #2563eb;
-		border-color: var(--border);
-		font-weight: 600;
 	}
 
 	.tab-content {

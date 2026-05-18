@@ -19,6 +19,7 @@
 	import { tabletFullName, tabletBrandAndName } from '$lib/tablet-helpers.js';
 	import { penFullName, comparePenByYearDesc } from '$lib/pen-helpers.js';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
+	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { buildPenNameMap } from '$lib/pen-helpers.js';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
@@ -266,27 +267,18 @@
 	</dl>
 </section>
 
-<div class="detail-tabs">
-	<button class:active={activeTab === 'model'} onclick={() => (activeTab = 'model')}>Model</button>
-	<button class:active={activeTab === 'specs'} onclick={() => (activeTab = 'specs')}>Specs</button>
-	<button class:active={activeTab === 'size'} onclick={() => (activeTab = 'size')}
-		>Size Comparison</button
-	>
-	{#if canShowForce}
-		<button class:active={activeTab === 'force'} onclick={() => (activeTab = 'force')}
-			>Force Proportions</button
-		>
-	{/if}
-	<button class:active={activeTab === 'pens'} onclick={() => (activeTab = 'pens')}
-		>Compatible Pens</button
-	>
-	<button class:active={activeTab === 'inventory'} onclick={() => (activeTab = 'inventory')}
-		>Inventory ({inventoryUnits.length})</button
-	>
-	<button class:active={activeTab === 'similar'} onclick={() => (activeTab = 'similar')}
-		>Similar Tablets</button
-	>
-</div>
+<Tabs
+	tabs={[
+		{ id: 'model', label: 'Model' },
+		{ id: 'specs', label: 'Specs' },
+		{ id: 'size', label: 'Size Comparison' },
+		{ id: 'force', label: 'Force Proportions', visible: canShowForce },
+		{ id: 'pens', label: 'Compatible Pens' },
+		{ id: 'inventory', label: 'Inventory', badge: inventoryUnits.length },
+		{ id: 'similar', label: 'Similar Tablets' },
+	] satisfies Tab[]}
+	bind:active={activeTab}
+/>
 
 {#if activeTab === 'model'}
 	<section class="tab-content specs-section">
@@ -702,39 +694,6 @@
 
 	.basics-item dd a:hover {
 		text-decoration: underline;
-	}
-
-	.detail-tabs {
-		display: flex;
-		gap: 0;
-		border-bottom: 2px solid var(--border);
-		margin-bottom: 16px;
-	}
-
-	.detail-tabs button {
-		padding: 6px 16px;
-		font-size: 13px;
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
-		background: transparent;
-		color: var(--text-muted);
-		cursor: pointer;
-		position: relative;
-		bottom: -2px;
-	}
-
-	.detail-tabs button:hover {
-		color: #2563eb;
-		background: var(--bg-card);
-		border-color: var(--border);
-	}
-
-	.detail-tabs button.active {
-		background: var(--bg);
-		color: #2563eb;
-		border-color: var(--border);
-		font-weight: 600;
 	}
 
 	.tab-content {
