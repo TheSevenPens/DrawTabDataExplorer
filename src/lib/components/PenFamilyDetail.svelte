@@ -16,6 +16,7 @@
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
+	import IafTab from '$lib/components/IafTab.svelte';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { penBrandAndName, penNameAndId } from '$lib/pen-helpers.js';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
@@ -55,7 +56,7 @@
 		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
-	let activeTab = $state<'specs' | 'members' | 'pressure' | 'maxpressure'>('specs');
+	let activeTab = $state<'specs' | 'members' | 'pressure' | 'iaf' | 'maxpressure'>('specs');
 
 	let sortedMemberPens: Pen[] = $derived([...memberPens].sort(comparePenByYearDesc));
 </script>
@@ -76,6 +77,7 @@
 		{ id: 'specs', label: 'Specs' },
 		{ id: 'members', label: 'Pens', badge: memberPens.length },
 		{ id: 'pressure', label: 'Pressure Response', badge: pressureSessions.length },
+		{ id: 'iaf', label: 'IAF' },
 		{ id: 'maxpressure', label: 'Max Pressure' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
@@ -153,6 +155,20 @@
 		{:else}
 			<p class="dim">No pressure response data available for any pen in this family.</p>
 		{/if}
+	</div>
+{/if}
+
+{#if activeTab === 'iaf'}
+	<div class="tab-content">
+		<IafTab
+			{pressureSessions}
+			{defectsByInventoryId}
+			{chartSessions}
+			hiddenIds={hiddenSessionIds}
+			displayName={family.FamilyName}
+			chartTitlePrefix={family.FamilyName}
+			entityLabel="this family"
+		/>
 	</div>
 {/if}
 

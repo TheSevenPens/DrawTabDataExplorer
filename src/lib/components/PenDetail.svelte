@@ -14,6 +14,7 @@
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
+	import IafTab from '$lib/components/IafTab.svelte';
 	import { tabletFullName, compareTabletByYearDesc } from '$lib/tablet-helpers.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import {
@@ -55,7 +56,7 @@
 
 	let showJson = $state(false);
 	let activeTab = $state<
-		'specs' | 'tablets' | 'included' | 'inventory' | 'pressure' | 'maxpressure'
+		'specs' | 'tablets' | 'included' | 'inventory' | 'pressure' | 'iaf' | 'maxpressure'
 	>('specs');
 
 	function tabletExportRows(tablets: Tablet[]): (string | number)[][] {
@@ -127,6 +128,7 @@
 		{ id: 'included', label: 'Included With' },
 		{ id: 'inventory', label: 'Inventory', badge: inventoryUnits.length },
 		{ id: 'pressure', label: 'Pressure Response' },
+		{ id: 'iaf', label: 'IAF' },
 		{ id: 'maxpressure', label: 'Max Pressure' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
@@ -194,6 +196,20 @@
 		{:else}
 			<p class="no-data">You don't own a unit of this pen model.</p>
 		{/if}
+	</div>
+{/if}
+
+{#if activeTab === 'iaf'}
+	<div class="tab-content">
+		<IafTab
+			{pressureSessions}
+			{defectsByInventoryId}
+			{chartSessions}
+			hiddenIds={hiddenSessionIds}
+			displayName={penBrandAndName(pen)}
+			chartTitlePrefix={pen.PenName}
+			entityLabel="this pen model"
+		/>
 	</div>
 {/if}
 
