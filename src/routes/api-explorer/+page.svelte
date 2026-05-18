@@ -4,6 +4,7 @@
 	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 
 	const dataTabs = [
 		{ href: '/reference', label: 'Reference' },
@@ -618,6 +619,19 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 	let viewMode = $state<'json' | 'table'>('json');
 	let tableShape = $derived(result === undefined ? null : buildTableShape(result));
 
+	// Headers + rows shaped for ExportTableButton. Only meaningful when
+	// tableShape is one of the renderable kinds; null otherwise so the
+	// button can be omitted.
+	let exportTable = $derived.by<{ headers: string[]; rows: (string | number)[][] } | null>(() => {
+		if (!tableShape || tableShape.kind === 'not-tabular') return null;
+		const headers: string[] = [...tableShape.columns];
+		const rows = tableShape.rows.map((r) => {
+			const rec = r as Record<string, string>;
+			return headers.map((h) => rec[h] ?? '');
+		});
+		return { headers, rows };
+	});
+
 	function handleKeyDown(e: KeyboardEvent) {
 		// Ctrl/Cmd+Enter runs the query.
 		if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -696,6 +710,15 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 						aria-pressed={viewMode === 'table'}>Table</button
 					>
 				</div>
+				{#if viewMode === 'table' && exportTable}
+					<ExportTableButton
+						entityType="api-explorer"
+						title="API Explorer result"
+						filename="api-explorer-result"
+						headers={exportTable.headers}
+						rows={exportTable.rows}
+					/>
+				{/if}
 				<button class="copy-btn" onclick={copyResult}>Copy</button>
 			{/if}
 		</div>
