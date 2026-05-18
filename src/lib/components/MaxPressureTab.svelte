@@ -45,11 +45,37 @@
 	// Per-session P100 estimates (max-force). Defective sessions are
 	// excluded — they reflect a broken digitizer, not the pen's true
 	// saturation force.
+	let nonDefectiveSessions = $derived(
+		pressureSessions.filter((s) => !defectsByInventoryId.has(s.InventoryId)),
+	);
+
 	let p100Values = $derived(
-		pressureSessions
-			.filter((s) => !defectsByInventoryId.has(s.InventoryId))
+		nonDefectiveSessions
 			.map((s) => estimateP100(s.Records))
 			.filter((v): v is number => v !== null && isFinite(v)),
+	);
+
+	// Per-session table rows: highest physically measured force and the
+	// extrapolated P100 (force at logical 100%). When `topLogical` is
+	// noticeably below 100, P100 is an extrapolation above the data; when
+	// it's at 100, P100 collapses to the measured value.
+	let perSessionRows = $derived(
+		nonDefectiveSessions.map((s) => {
+			let topForce = -Infinity;
+			let topLogical = -Infinity;
+			for (const [force, logical] of s.Records) {
+				if (force > topForce) topForce = force;
+				if (logical > topLogical) topLogical = logical;
+			}
+			return {
+				id: s._id,
+				inventoryId: s.InventoryId,
+				date: s.Date,
+				topForce: Number.isFinite(topForce) ? topForce : null,
+				topLogical: Number.isFinite(topLogical) ? topLogical : null,
+				p100: estimateP100(s.Records),
+			};
+		}),
 	);
 
 	let p100Stats = $derived.by(() => {
@@ -149,6 +175,40 @@
 			</tr>
 		</tbody>
 	</table>
+
+	<p class="ref-blurb summary-blurb">
+		Per-session comparison: the highest force actually recorded vs. the
+		<strong>P100</strong> estimate (extrapolated to logical 100%). When the highest measured logical pressure
+		is well below 100%, P100 is an extrapolation above the data.
+	</p>
+	<table class="per-session-table">
+		<thead>
+			<tr>
+				<th>Inventory ID</th>
+				<th>Date</th>
+				<th class="num">
+					Highest measured
+					<br /><span class="unit">(gf @ logical %)</span>
+				</th>
+				<th class="num">P100 estimate<br /><span class="unit">(gf)</span></th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each perSessionRows as r (r.id)}
+				<tr>
+					<td class="mono">{r.inventoryId}</td>
+					<td class="mono">{r.date}</td>
+					<td class="num mono">
+						{r.topForce !== null ? fmtP(r.topForce) : '—'}
+						{#if r.topLogical !== null}
+							<span class="logical-pct">@ {r.topLogical.toFixed(1)}%</span>
+						{/if}
+					</td>
+					<td class="num mono">{r.p100 !== null ? fmtP(r.p100) : '—'}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
 	<p class="ref-blurb summary-blurb">
 		Pressure response near saturation — the same chart from the Pressure Response tab, zoomed to the
 		95–100% region so you can compare each session's approach to P100.
@@ -237,6 +297,47 @@
 	}
 	.p100-summary-table tr:last-child {
 		border-bottom: none;
+	}
+
+	.per-session-table {
+		border-collapse: collapse;
+		font-size: 13px;
+		margin: 8px 0 16px;
+		width: fit-content;
+	}
+	.per-session-table th {
+		text-align: left;
+		padding: 6px 14px;
+		font-weight: 600;
+		color: var(--text-muted);
+		border-bottom: 2px solid var(--border);
+		vertical-align: bottom;
+	}
+	.per-session-table th.num {
+		text-align: right;
+	}
+	.per-session-table th .unit {
+		font-size: 11px;
+		font-weight: 400;
+	}
+	.per-session-table td {
+		padding: 5px 14px;
+		border-bottom: 1px solid var(--border);
+		font-variant-numeric: tabular-nums;
+	}
+	.per-session-table td.num {
+		text-align: right;
+	}
+	.per-session-table tr:last-child td {
+		border-bottom: none;
+	}
+	.per-session-table tr:hover td {
+		background: var(--hover-bg);
+	}
+	.logical-pct {
+		color: var(--text-dim);
+		font-weight: normal;
+		margin-left: 4px;
 	}
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
