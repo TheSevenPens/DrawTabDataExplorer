@@ -40,6 +40,7 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 
 	const dataTabs = [
 		{ href: '/reference', label: 'Reference' },
@@ -66,117 +67,6 @@
 	}
 
 	let { data } = $props();
-	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
-
-	interface SectionDef {
-		id: string;
-		category: string;
-		label: string;
-		count?: () => number;
-	}
-
-	// Source of truth for the navigation tree. Each entry is one node.
-	// `count` (optional) is read reactively in the template to display a
-	// badge next to the node label.
-	const sectionDefs: SectionDef[] = [
-		{ id: 'entity-counts', category: 'Summary', label: 'Entity Counts' },
-		{ id: 'issues', category: 'Summary', label: 'Issues', count: () => issues.length },
-		{
-			id: 'orphaned-compat',
-			category: 'Compatibility',
-			label: 'Orphaned Compat References',
-			count: () => orphanedCompat.length,
-		},
-		{
-			id: 'wacom-no-compat',
-			category: 'Compatibility',
-			label: 'Wacom Tablets Missing Compat',
-			count: () => tabletsNoCompat.length,
-		},
-		{
-			id: 'pens-no-compat',
-			category: 'Compatibility',
-			label: 'Pens Missing Compat',
-			count: () => pensNoCompat.length,
-		},
-		{
-			id: 'included-pen-no-compat',
-			category: 'Compatibility',
-			label: 'Included Pens Missing Compat',
-			count: () => includedPenMissingCompat.length,
-		},
-		{
-			id: 'orphaned-families',
-			category: 'Compatibility',
-			label: 'Orphaned Family References',
-			count: () => orphanedFamilies.length,
-		},
-		{
-			id: 'pressure-non-monotonic',
-			category: 'Pressure Response',
-			label: 'Non-Monotonic Sessions',
-			count: () => nonMonotonicSessions.length,
-		},
-		{
-			id: 'pressure-missing-low-end',
-			category: 'Pressure Response',
-			label: 'Missing Low-End',
-			count: () => missingLowEndPens.length,
-		},
-		{
-			id: 'pressure-single-session',
-			category: 'Pressure Response',
-			label: 'Single-Session Pens',
-			count: () => singleSessionPens.length,
-		},
-		{
-			id: 'pressure-stale',
-			category: 'Pressure Response',
-			label: 'Stale Measurements',
-			count: () => staleMeasurements.length,
-		},
-		{
-			id: 'pressure-remeasure',
-			category: 'Pressure Response',
-			label: 'Recommended for Re-measurement',
-			count: () => remeasureRecommendations.length,
-		},
-		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
-		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
-		{ id: 'completion-pen', category: 'Field Completion', label: 'Pens' },
-		{ id: 'completion-driver', category: 'Field Completion', label: 'Drivers' },
-		{ id: 'completion-pressure', category: 'Field Completion', label: 'Pressure Response' },
-		{ id: 'completion-inv-pen', category: 'Field Completion', label: 'Inventory Pens' },
-		{ id: 'completion-inv-tablet', category: 'Field Completion', label: 'Inventory Tablets' },
-	];
-
-	const sectionIds = new Set(sectionDefs.map((s) => s.id));
-	const defaultSection = 'entity-counts';
-
-	const groupedSections: [string, SectionDef[]][] = (() => {
-		const map = new Map<string, SectionDef[]>();
-		for (const s of sectionDefs) {
-			if (!map.has(s.category)) map.set(s.category, []);
-			map.get(s.category)!.push(s);
-		}
-		return [...map.entries()];
-	})();
-
-	let activeSection: string = $derived.by(() => {
-		const hash = page.url.hash.slice(1);
-		return sectionIds.has(hash) ? hash : defaultSection;
-	});
-
-	function setSection(id: string) {
-		// page.url.pathname is already resolved (includes base path).
-		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(`${page.url.pathname}#${id}`, {
-			replaceState: false,
-			noScroll: true,
-		});
-	}
-
 	// Single shared ExportDialog instance, opened by per-section trigger
 	// buttons. Each trigger sets `exportDialog` to a config object; the
 	// dialog mounts when set and closes by setting it back to null.
@@ -530,6 +420,81 @@
 	let singleSessionPens = $derived(analysis.singleSessionPens);
 	let staleMeasurements = $derived(analysis.staleMeasurements);
 	let remeasureRecommendations = $derived(analysis.remeasureRecommendations);
+
+	// Source of truth for the navigation tree. `count` (optional) is
+	// re-read every render so the badge stays in sync with the derived
+	// state above.
+	let sectionDefs: Section[] = $derived([
+		{ id: 'entity-counts', category: 'Summary', label: 'Entity Counts' },
+		{ id: 'issues', category: 'Summary', label: 'Issues', count: issues.length },
+		{
+			id: 'orphaned-compat',
+			category: 'Compatibility',
+			label: 'Orphaned Compat References',
+			count: orphanedCompat.length,
+		},
+		{
+			id: 'wacom-no-compat',
+			category: 'Compatibility',
+			label: 'Wacom Tablets Missing Compat',
+			count: tabletsNoCompat.length,
+		},
+		{
+			id: 'pens-no-compat',
+			category: 'Compatibility',
+			label: 'Pens Missing Compat',
+			count: pensNoCompat.length,
+		},
+		{
+			id: 'included-pen-no-compat',
+			category: 'Compatibility',
+			label: 'Included Pens Missing Compat',
+			count: includedPenMissingCompat.length,
+		},
+		{
+			id: 'orphaned-families',
+			category: 'Compatibility',
+			label: 'Orphaned Family References',
+			count: orphanedFamilies.length,
+		},
+		{
+			id: 'pressure-non-monotonic',
+			category: 'Pressure Response',
+			label: 'Non-Monotonic Sessions',
+			count: nonMonotonicSessions.length,
+		},
+		{
+			id: 'pressure-missing-low-end',
+			category: 'Pressure Response',
+			label: 'Missing Low-End',
+			count: missingLowEndPens.length,
+		},
+		{
+			id: 'pressure-single-session',
+			category: 'Pressure Response',
+			label: 'Single-Session Pens',
+			count: singleSessionPens.length,
+		},
+		{
+			id: 'pressure-stale',
+			category: 'Pressure Response',
+			label: 'Stale Measurements',
+			count: staleMeasurements.length,
+		},
+		{
+			id: 'pressure-remeasure',
+			category: 'Pressure Response',
+			label: 'Recommended for Re-measurement',
+			count: remeasureRecommendations.length,
+		},
+		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
+		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
+		{ id: 'completion-pen', category: 'Field Completion', label: 'Pens' },
+		{ id: 'completion-driver', category: 'Field Completion', label: 'Drivers' },
+		{ id: 'completion-pressure', category: 'Field Completion', label: 'Pressure Response' },
+		{ id: 'completion-inv-pen', category: 'Field Completion', label: 'Inventory Pens' },
+		{ id: 'completion-inv-tablet', category: 'Field Completion', label: 'Inventory Tablets' },
+	]);
 </script>
 
 <Nav />
@@ -539,31 +504,8 @@
 {#if !ds}
 	<p>Loading...</p>
 {:else}
-	<div class="dq-layout">
-		<nav class="dq-tree" aria-label="Data quality sections">
-			{#each groupedSections as [category, items] (category)}
-				<div class="tree-cat">
-					<div class="tree-cat-label">{category}</div>
-					<ul>
-						{#each items as item (item.id)}
-							{@const c = item.count?.()}
-							<li>
-								<button
-									type="button"
-									class:active={activeSection === item.id}
-									onclick={() => setSection(item.id)}
-								>
-									<span class="tree-label">{item.label}</span>
-									{#if c != null}<span class="tree-count" class:zero={c === 0}>{c}</span>{/if}
-								</button>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/each}
-		</nav>
-
-		<main class="dq-content">
+	<SectionedPage sections={sectionDefs} defaultSection="entity-counts">
+		{#snippet content(activeSection: string)}
 			{#if activeSection === 'entity-counts'}
 				<section class="section">
 					<div class="section-header">
@@ -1455,8 +1397,8 @@
 					</table>
 				</section>
 			{/if}
-		</main>
-	</div>
+		{/snippet}
+	</SectionedPage>
 
 	{#if exportDialog}
 		<ExportDialog
@@ -1473,112 +1415,6 @@
 <style>
 	h1 {
 		margin-bottom: 16px;
-	}
-
-	.dq-layout {
-		display: flex;
-		gap: 24px;
-		align-items: flex-start;
-	}
-
-	.dq-tree {
-		flex: 0 0 240px;
-		position: sticky;
-		top: 16px;
-		max-height: calc(100vh - 32px);
-		overflow-y: auto;
-		border-right: 1px solid var(--border, #e0e0e0);
-		padding: 4px 12px 4px 0;
-		font-size: 13px;
-	}
-
-	.dq-content {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.tree-cat {
-		margin-bottom: 14px;
-	}
-
-	.tree-cat-label {
-		font-size: 11px;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-muted, #888);
-		padding: 0 8px;
-		margin-bottom: 4px;
-	}
-
-	.tree-cat ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.tree-cat li {
-		margin: 0;
-	}
-
-	.tree-cat button {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		width: 100%;
-		padding: 5px 10px;
-		font-size: 13px;
-		text-align: left;
-		border: 1px solid transparent;
-		border-radius: 4px;
-		background: transparent;
-		color: var(--text, #333);
-		cursor: pointer;
-		line-height: 1.3;
-	}
-
-	.tree-cat button:hover {
-		background: #eff6ff;
-		color: #2563eb;
-	}
-
-	.tree-cat button.active {
-		background: #dbeafe;
-		color: #1e40af;
-		font-weight: 600;
-	}
-
-	.tree-label {
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.tree-count {
-		flex: 0 0 auto;
-		font-size: 11px;
-		font-variant-numeric: tabular-nums;
-		padding: 1px 6px;
-		border-radius: 9px;
-		background: #fee2e2;
-		color: #991b1b;
-	}
-
-	.tree-count.zero {
-		background: #dcfce7;
-		color: #166534;
-	}
-
-	.tree-cat button.active .tree-count {
-		background: #1e40af;
-		color: #fff;
-	}
-
-	.tree-cat button.active .tree-count.zero {
-		background: #166534;
 	}
 
 	.section {

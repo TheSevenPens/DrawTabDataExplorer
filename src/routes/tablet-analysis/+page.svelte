@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import DistributionTable from '$lib/components/DistributionTable.svelte';
+	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { flaggedCount } from '$lib/flagged-store.js';
 
 	let tabletTabs = $derived([
@@ -47,16 +46,9 @@
 	let usPaperSizes: USPaperSize[] = $derived(data.usPaperSizes ?? []);
 	let isMetric = $derived($unitPreference === 'metric');
 
-	interface SectionDef {
-		id: string;
-		category: string;
-		label: string;
-	}
-
-	// Source of truth for the navigation tree. Same pattern as the
-	// Data Quality page (src/routes/data-quality/+page.svelte) — each
-	// entry is one tree leaf, grouped under a category heading.
-	const sectionDefs: SectionDef[] = [
+	// Source of truth for the navigation tree. Each entry is one tree
+	// leaf, grouped under a category heading by <SectionedPage>.
+	const sectionDefs: Section[] = [
 		{ id: 'aspect-pen-tablet', category: 'Aspect Ratio', label: 'Pen Tablets' },
 		{
 			id: 'aspect-pen-tablet-by-category',
@@ -84,32 +76,6 @@
 		{ id: 'sizes-pen-tablet', category: 'Sizes', label: 'Pen Tablet diagonal' },
 		{ id: 'sizes-pen-display', category: 'Sizes', label: 'Pen Display diagonal' },
 	];
-
-	const sectionIds = new Set(sectionDefs.map((s) => s.id));
-	const defaultSection = 'aspect-pen-tablet';
-
-	const groupedSections: [string, SectionDef[]][] = (() => {
-		const map = new Map<string, SectionDef[]>();
-		for (const s of sectionDefs) {
-			if (!map.has(s.category)) map.set(s.category, []);
-			map.get(s.category)!.push(s);
-		}
-		return [...map.entries()];
-	})();
-
-	let activeSection: string = $derived.by(() => {
-		const hash = page.url.hash.slice(1);
-		return sectionIds.has(hash) ? hash : defaultSection;
-	});
-
-	function setSection(id: string) {
-		// page.url.pathname is already resolved (includes base path).
-		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(`${page.url.pathname}#${id}`, {
-			replaceState: false,
-			noScroll: true,
-		});
-	}
 
 	// --- Helpers ---
 
@@ -688,29 +654,8 @@
 <SubNav tabs={tabletTabs} />
 <h1>Analysis</h1>
 
-<div class="tree-layout">
-	<nav class="tree-pane" aria-label="Analysis sections">
-		{#each groupedSections as [category, items] (category)}
-			<div class="tree-cat">
-				<div class="tree-cat-label">{category}</div>
-				<ul>
-					{#each items as item (item.id)}
-						<li>
-							<button
-								type="button"
-								class:active={activeSection === item.id}
-								onclick={() => setSection(item.id)}
-							>
-								<span class="tree-label">{item.label}</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{/each}
-	</nav>
-
-	<main class="tree-content">
+<SectionedPage sections={sectionDefs} defaultSection="aspect-pen-tablet">
+	{#snippet content(activeSection: string)}
 		{#if activeSection === 'aspect-pen-tablet'}
 			<section class="section">
 				<div class="section-header">
@@ -1086,8 +1031,8 @@
 				{/if}
 			</section>
 		{/if}
-	</main>
-</div>
+	{/snippet}
+</SectionedPage>
 
 {#if exportDialog}
 	<ExportDialog
@@ -1103,88 +1048,6 @@
 <style>
 	h1 {
 		margin-bottom: 16px;
-	}
-
-	.tree-layout {
-		display: flex;
-		gap: 24px;
-		align-items: flex-start;
-	}
-
-	.tree-pane {
-		flex: 0 0 240px;
-		position: sticky;
-		top: 16px;
-		max-height: calc(100vh - 32px);
-		overflow-y: auto;
-		border-right: 1px solid var(--border, #e0e0e0);
-		padding: 4px 12px 4px 0;
-		font-size: 13px;
-	}
-
-	.tree-content {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.tree-cat {
-		margin-bottom: 14px;
-	}
-
-	.tree-cat-label {
-		font-size: 11px;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-muted, #888);
-		padding: 0 8px;
-		margin-bottom: 4px;
-	}
-
-	.tree-cat ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.tree-cat li {
-		margin: 0;
-	}
-
-	.tree-cat button {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		width: 100%;
-		padding: 5px 10px;
-		font-size: 13px;
-		text-align: left;
-		border: 1px solid transparent;
-		border-radius: 4px;
-		background: transparent;
-		color: var(--text, #333);
-		cursor: pointer;
-		line-height: 1.3;
-	}
-
-	.tree-cat button:hover {
-		background: #eff6ff;
-		color: #2563eb;
-	}
-
-	.tree-cat button.active {
-		background: #dbeafe;
-		color: #1e40af;
-		font-weight: 600;
-	}
-
-	.tree-label {
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	.section-header {

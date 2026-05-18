@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
 	import {
 		penTabletRangesCm,
 		penTabletRangesIn,
@@ -12,6 +10,7 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import BandsChart from '$lib/components/BandsChart.svelte';
+	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { IAF_BANDS, MAX_PRESSURE_BANDS } from '$lib/pressure-bands.js';
 	import {
 		BRIGHTNESS_BANDS,
@@ -33,13 +32,7 @@
 		{ href: '/wacom-driver-compat', label: 'Driver Compat' },
 	];
 
-	interface SectionDef {
-		id: string;
-		category: string;
-		label: string;
-	}
-
-	const sectionDefs: SectionDef[] = [
+	const sectionDefs: Section[] = [
 		{ id: 'tablet-sizes', category: 'Tablets', label: 'Tablet Sizes' },
 		{ id: 'display-resolutions', category: 'Tablets', label: 'Display Resolutions' },
 		{ id: 'iso-paper-a', category: 'Paper Sizes', label: 'ISO A Paper Sizes' },
@@ -132,32 +125,6 @@
 
 	function formatBandRange(b: SpecBand, unit: string): string {
 		return `${b.min} ${unit} to ${b.max} ${unit}`;
-	}
-
-	const sectionIds = new Set(sectionDefs.map((s) => s.id));
-	const defaultSection = 'tablet-sizes';
-
-	const groupedSections: [string, SectionDef[]][] = (() => {
-		const map = new Map<string, SectionDef[]>();
-		for (const s of sectionDefs) {
-			if (!map.has(s.category)) map.set(s.category, []);
-			map.get(s.category)!.push(s);
-		}
-		return [...map.entries()];
-	})();
-
-	let activeSection: string = $derived.by(() => {
-		const hash = page.url.hash.slice(1);
-		return sectionIds.has(hash) ? hash : defaultSection;
-	});
-
-	function setSection(id: string) {
-		// page.url.pathname is already resolved (includes base path).
-		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto(`${page.url.pathname}#${id}`, {
-			replaceState: false,
-			noScroll: true,
-		});
 	}
 
 	let { data } = $props();
@@ -255,29 +222,8 @@
 <SubNav tabs={dataTabs} />
 <h1>Reference</h1>
 
-<div class="ref-layout">
-	<nav class="ref-tree" aria-label="Reference sections">
-		{#each groupedSections as [category, items] (category)}
-			<div class="tree-cat">
-				<div class="tree-cat-label">{category}</div>
-				<ul>
-					{#each items as item (item.id)}
-						<li>
-							<button
-								type="button"
-								class:active={activeSection === item.id}
-								onclick={() => setSection(item.id)}
-							>
-								<span class="tree-label">{item.label}</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{/each}
-	</nav>
-
-	<main class="ref-content">
+<SectionedPage sections={sectionDefs} defaultSection="tablet-sizes">
+	{#snippet content(activeSection: string)}
 		{#if activeSection === 'tablet-sizes'}
 			<section>
 				<div class="section-header">
@@ -784,8 +730,8 @@
 				{/if}
 			{/each}
 		{/if}
-	</main>
-</div>
+	{/snippet}
+</SectionedPage>
 
 {#if exportDialog}
 	<ExportDialog
@@ -801,88 +747,6 @@
 <style>
 	h1 {
 		margin-bottom: 16px;
-	}
-
-	.ref-layout {
-		display: flex;
-		gap: 24px;
-		align-items: flex-start;
-	}
-
-	.ref-tree {
-		flex: 0 0 240px;
-		position: sticky;
-		top: 16px;
-		max-height: calc(100vh - 32px);
-		overflow-y: auto;
-		border-right: 1px solid var(--border, #e0e0e0);
-		padding: 4px 12px 4px 0;
-		font-size: 13px;
-	}
-
-	.ref-content {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.tree-cat {
-		margin-bottom: 14px;
-	}
-
-	.tree-cat-label {
-		font-size: 11px;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-muted, #888);
-		padding: 0 8px;
-		margin-bottom: 4px;
-	}
-
-	.tree-cat ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.tree-cat li {
-		margin: 0;
-	}
-
-	.tree-cat button {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		width: 100%;
-		padding: 5px 10px;
-		font-size: 13px;
-		text-align: left;
-		border: 1px solid transparent;
-		border-radius: 4px;
-		background: transparent;
-		color: var(--text, #333);
-		cursor: pointer;
-		line-height: 1.3;
-	}
-
-	.tree-cat button:hover {
-		background: #eff6ff;
-		color: #2563eb;
-	}
-
-	.tree-cat button.active {
-		background: #dbeafe;
-		color: #1e40af;
-		font-weight: 600;
-	}
-
-	.tree-label {
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	section {
