@@ -606,8 +606,8 @@
 	{#snippet content(activeSection: string)}
 		{#if activeSection === 'aspect-pen-tablet'}
 			<section class="section">
-				<div class="section-header">
-					<h2>Pen Tablets ({penTablets.length})</h2>
+				<h2>Pen Tablets ({penTablets.length})</h2>
+				<div class="table-export">
 					<button
 						class="export-trigger"
 						disabled={ptAR.length === 0}
@@ -647,8 +647,13 @@
 
 		{#if activeSection === 'aspect-pen-tablet-by-category'}
 			<section class="section">
-				<div class="section-header">
-					<h2>Pen Tablets — by Category ({penTablets.length})</h2>
+				<h2>Pen Tablets — by Category ({penTablets.length})</h2>
+				<p class="description">
+					Buckets each tablet's digitizer aspect ratio into a popular ratio (16:9, 16:10, 3:2, 4:3,
+					5:4, 1:1) at one of three closeness tiers (EXACT ≤ 0.005, VERYCLOSE ≤ 0.02, CLOSE ≤ 0.05),
+					or OTHER.
+				</p>
+				<div class="table-export">
 					<button
 						class="export-trigger"
 						disabled={ptARCat.length === 0}
@@ -663,11 +668,6 @@
 						}}>Export</button
 					>
 				</div>
-				<p class="description">
-					Buckets each tablet's digitizer aspect ratio into a popular ratio (16:9, 16:10, 3:2, 4:3,
-					5:4, 1:1) at one of three closeness tiers (EXACT ≤ 0.005, VERYCLOSE ≤ 0.02, CLOSE ≤ 0.05),
-					or OTHER.
-				</p>
 				<table class="stat-table">
 					<thead><tr><th>Category</th><th>Count</th><th></th></tr></thead>
 					<tbody>
@@ -690,8 +690,8 @@
 
 		{#if activeSection === 'aspect-pen-display'}
 			<section class="section">
-				<div class="section-header">
-					<h2>Pen Displays &amp; Standalones ({penDisplays.length})</h2>
+				<h2>Pen Displays &amp; Standalones ({penDisplays.length})</h2>
+				<div class="table-export">
 					<button
 						class="export-trigger"
 						disabled={pdAR.length === 0}
@@ -731,8 +731,12 @@
 
 		{#if activeSection === 'aspect-pen-display-by-category'}
 			<section class="section">
-				<div class="section-header">
-					<h2>Pen Displays &amp; Standalones — by Category ({penDisplays.length})</h2>
+				<h2>Pen Displays &amp; Standalones — by Category ({penDisplays.length})</h2>
+				<p class="description">
+					Buckets each pen display's (or standalone's) aspect ratio into a popular ratio at one of
+					three closeness tiers, or OTHER.
+				</p>
+				<div class="table-export">
 					<button
 						class="export-trigger"
 						disabled={pdARCat.length === 0}
@@ -747,10 +751,6 @@
 						}}>Export</button
 					>
 				</div>
-				<p class="description">
-					Buckets each pen display's (or standalone's) aspect ratio into a popular ratio at one of
-					three closeness tiers, or OTHER.
-				</p>
 				<table class="stat-table">
 					<thead><tr><th>Category</th><th>Count</th><th></th></tr></thead>
 					<tbody>
@@ -773,8 +773,12 @@
 
 		{#if activeSection === 'panel-tech'}
 			<section class="section">
-				<div class="section-header">
-					<h2>Panel Technology</h2>
+				<h2>Panel Technology</h2>
+				<p class="description">
+					{displaysWithTech.length} of {panelTechCovered} pen displays and standalones have panel tech
+					data.
+				</p>
+				<div class="table-export">
 					<button
 						class="export-trigger"
 						disabled={panelTechRows.length === 0}
@@ -787,10 +791,6 @@
 							)}>Export</button
 					>
 				</div>
-				<p class="description">
-					{displaysWithTech.length} of {panelTechCovered} pen displays and standalones have panel tech
-					data.
-				</p>
 				<DistributionTable labelHeader="Panel Tech" rows={panelTechRows} total={panelTechTotal} />
 			</section>
 		{/if}
@@ -798,24 +798,7 @@
 		{#each numericSections as section (section.id)}
 			{#if activeSection === section.id}
 				<section class="section">
-					<div class="section-header">
-						<h2>{section.title}</h2>
-						<button
-							class="export-trigger"
-							disabled={section.data.rows.length === 0}
-							onclick={() =>
-								openExport(
-									section.title,
-									section.filename,
-									[section.title, 'Count', '%'],
-									section.data.rows.map((r) => [
-										Number(r.label),
-										r.count,
-										pct(r.count, section.data.count),
-									]),
-								)}>Export</button
-						>
-					</div>
+					<h2>{section.title}</h2>
 					<p class="description">
 						{section.data.count} of {section.pool}
 						{section.poolLabel} have {section.title.toLowerCase()}
@@ -842,6 +825,22 @@
 						{/if}
 					{/if}
 					{#if section.data.rows.length > 0}
+						<div class="table-export">
+							<button
+								class="export-trigger"
+								onclick={() =>
+									openExport(
+										section.title,
+										section.filename,
+										[section.title, 'Count', '%'],
+										section.data.rows.map((r) => [
+											Number(r.label),
+											r.count,
+											pct(r.count, section.data.count),
+										]),
+									)}>Export</button
+							>
+						</div>
 						<DistributionTable
 							labelHeader={`${section.title} (${section.unit})`}
 							rows={section.data.rows}
@@ -855,8 +854,11 @@
 
 		{#if activeSection === 'pressure-levels'}
 			<section class="section">
-				<div class="section-header">
-					<h2>Pressure Levels</h2>
+				<h2>Pressure Levels</h2>
+				<p class="description">
+					{pressureTotal} of {allTablets.length} tablets have pressure level data.
+				</p>
+				<div class="table-export">
 					<button
 						class="export-trigger"
 						disabled={pressureRows.length === 0}
@@ -869,9 +871,6 @@
 							)}>Export</button
 					>
 				</div>
-				<p class="description">
-					{pressureTotal} of {allTablets.length} tablets have pressure level data.
-				</p>
 				<DistributionTable
 					labelHeader="Pressure Levels"
 					rows={pressureRows}
@@ -883,8 +882,11 @@
 
 		{#if activeSection === 'touch-support'}
 			<section class="section">
-				<div class="section-header">
-					<h2>Touch Support</h2>
+				<h2>Touch Support</h2>
+				<p class="description">
+					Distribution of {allTablets.length} tablets by digitizer touch support.
+				</p>
+				<div class="table-export">
 					<button
 						class="export-trigger"
 						disabled={touchSupportRows.length === 0}
@@ -897,9 +899,6 @@
 							)}>Export</button
 					>
 				</div>
-				<p class="description">
-					Distribution of {allTablets.length} tablets by digitizer touch support.
-				</p>
 				<DistributionTable labelHeader="Touch" rows={touchSupportRows} total={touchTotal} />
 			</section>
 		{/if}
@@ -1007,6 +1006,12 @@
 	}
 	.section-header h2 {
 		margin: 0;
+	}
+
+	.table-export {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 4px;
 	}
 
 	.export-trigger {
