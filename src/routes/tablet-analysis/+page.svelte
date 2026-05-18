@@ -30,6 +30,15 @@
 		MM_TO_IN,
 		MM_TO_CM,
 	} from '$lib/tablet-size-ranges.js';
+	import {
+		BRIGHTNESS_BANDS as BRIGHTNESS_RANGES,
+		CONTRAST_BANDS as CONTRAST_RANGES,
+		RESPONSE_TIME_BANDS as RESPONSE_TIME_RANGES,
+		DENSITY_BANDS as DENSITY_RANGES,
+		ACCURACY_CENTER_BANDS as ACCURACY_CENTER_RANGES,
+		ACCURACY_CORNER_BANDS as ACCURACY_CORNER_RANGES,
+		REPORT_RATE_BANDS as REPORT_RATE_RANGES,
+	} from '$lib/spec-bands.js';
 
 	let { data } = $props();
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
@@ -59,7 +68,16 @@
 			category: 'Aspect Ratio',
 			label: 'Pen Displays — by Category',
 		},
+		{ id: 'digitizer-density', category: 'Digitizer', label: 'Density' },
+		{ id: 'digitizer-accuracy-center', category: 'Digitizer', label: 'Accuracy (Center)' },
+		{ id: 'digitizer-accuracy-corner', category: 'Digitizer', label: 'Accuracy (Corner)' },
+		{ id: 'digitizer-report-rate', category: 'Digitizer', label: 'Report Rate' },
 		{ id: 'panel-tech', category: 'Display Tech', label: 'Panel Technology' },
+		{ id: 'display-brightness', category: 'Display Tech', label: 'Brightness' },
+		{ id: 'display-contrast', category: 'Display Tech', label: 'Contrast' },
+		{ id: 'display-refresh-rate', category: 'Display Tech', label: 'Refresh Rate' },
+		{ id: 'display-response-time', category: 'Display Tech', label: 'Response Time' },
+		{ id: 'display-bit-depth', category: 'Display Tech', label: 'Bit Depth' },
 		{ id: 'pressure-levels', category: 'Tablet Features', label: 'Pressure Levels' },
 		{ id: 'touch-support', category: 'Tablet Features', label: 'Touch Support' },
 		{ id: 'sizes-pen-tablet', category: 'Sizes', label: 'Pen Tablet diagonal' },
@@ -200,6 +218,227 @@
 
 	let panelTechTotal = $derived(displaysWithTech.length);
 	let panelTechCovered = $derived(penDisplays.length);
+
+	// Numeric Display.* stats — sorted ascending by numeric value rather
+	// than descending by count, since these are physical-quantity scales
+	// users want to read in order.
+	function numericDisplayRows(getValue: (t: Tablet) => string | null | undefined) {
+		const tablets = penDisplays.filter((t) => {
+			const v = getValue(t);
+			return v != null && v !== '' && !isNaN(Number(v));
+		});
+		const rows = countBy(tablets, (t) => String(getValue(t))).sort(
+			(a, b) => Number(a.label) - Number(b.label),
+		);
+		return { rows, count: tablets.length };
+	}
+
+	let brightnessData = $derived(numericDisplayRows((t) => t.Display?.Brightness));
+	let contrastData = $derived(numericDisplayRows((t) => t.Display?.Contrast));
+	let refreshData = $derived(numericDisplayRows((t) => t.Display?.RefreshRate));
+	let responseData = $derived(numericDisplayRows((t) => t.Display?.ResponseTime));
+	let bitDepthData = $derived(numericDisplayRows((t) => t.Display?.ColorBitDepth));
+
+	// Raw numeric values for histogram rendering. The exact-count tables below
+	// keep all data points; the histogram clips outliers (e.g. 100,000:1 OLED
+	// contrast values) so the linear-scale distribution stays readable.
+	function rawNumericDisplayValues(
+		getValue: (t: Tablet) => string | null | undefined,
+		max?: number,
+	): number[] {
+		return penDisplays
+			.map((t) => Number(getValue(t)))
+			.filter((v): v is number => Number.isFinite(v) && (max == null || v <= max));
+	}
+
+	let brightnessValues = $derived(rawNumericDisplayValues((t) => t.Display?.Brightness));
+	let contrastValues = $derived(rawNumericDisplayValues((t) => t.Display?.Contrast, 3500));
+	let responseValues = $derived(rawNumericDisplayValues((t) => t.Display?.ResponseTime, 30));
+
+	// --- Digitizer.* numeric stats (apply to ALL tablets, not just displays) ---
+
+	function numericTabletRows(getValue: (t: Tablet) => string | null | undefined) {
+		const tablets = allTablets.filter((t) => {
+			const v = getValue(t);
+			return v != null && v !== '' && !isNaN(Number(v));
+		});
+		const rows = countBy(tablets, (t) => String(getValue(t))).sort(
+			(a, b) => Number(a.label) - Number(b.label),
+		);
+		return { rows, count: tablets.length };
+	}
+
+	function rawNumericTabletValues(
+		getValue: (t: Tablet) => string | null | undefined,
+		max?: number,
+	): number[] {
+		return allTablets
+			.map((t) => Number(getValue(t)))
+			.filter((v): v is number => Number.isFinite(v) && (max == null || v <= max));
+	}
+
+	let densityData = $derived(numericTabletRows((t) => t.Digitizer?.Density));
+	let accuracyCenterData = $derived(numericTabletRows((t) => t.Digitizer?.AccuracyCenter));
+	let accuracyCornerData = $derived(numericTabletRows((t) => t.Digitizer?.AccuracyCorner));
+	let reportRateData = $derived(numericTabletRows((t) => t.Digitizer?.ReportRate));
+
+	let densityValues = $derived(rawNumericTabletValues((t) => t.Digitizer?.Density, 300));
+	let accuracyCenterValues = $derived(
+		rawNumericTabletValues((t) => t.Digitizer?.AccuracyCenter, 2),
+	);
+	let accuracyCornerValues = $derived(
+		rawNumericTabletValues((t) => t.Digitizer?.AccuracyCorner, 5),
+	);
+	let reportRateValues = $derived(rawNumericTabletValues((t) => t.Digitizer?.ReportRate));
+
+	const DISPLAY_POOL_LABEL = 'pen displays and standalones';
+	const TABLET_POOL_LABEL = 'tablets';
+
+	let numericSections = $derived([
+		{
+			id: 'display-brightness',
+			title: 'Brightness',
+			unit: 'cd/m²',
+			filename: 'analysis-brightness',
+			data: brightnessData,
+			pool: penDisplays.length,
+			poolLabel: DISPLAY_POOL_LABEL,
+			histogram: {
+				values: brightnessValues,
+				ranges: BRIGHTNESS_RANGES,
+				unit: ' cd/m²',
+				binSize: 25,
+				tickStep: 50,
+				note: undefined as string | undefined,
+			},
+		},
+		{
+			id: 'display-contrast',
+			title: 'Contrast',
+			unit: ':1',
+			filename: 'analysis-contrast',
+			data: contrastData,
+			pool: penDisplays.length,
+			poolLabel: DISPLAY_POOL_LABEL,
+			histogram: {
+				values: contrastValues,
+				ranges: CONTRAST_RANGES,
+				unit: ':1',
+				binSize: 100,
+				tickStep: 500,
+				note: 'OLED panels reporting 100,000:1 (~3% of records) are excluded from the histogram so the linear scale stays readable; they remain in the table below.',
+			},
+		},
+		{
+			id: 'display-refresh-rate',
+			title: 'Refresh Rate',
+			unit: 'Hz',
+			filename: 'analysis-refresh-rate',
+			data: refreshData,
+			pool: penDisplays.length,
+			poolLabel: DISPLAY_POOL_LABEL,
+			histogram: null as null | {
+				values: number[];
+				ranges: typeof BRIGHTNESS_RANGES;
+				unit: string;
+				binSize: number;
+				tickStep?: number;
+				note?: string;
+			},
+		},
+		{
+			id: 'display-response-time',
+			title: 'Response Time',
+			unit: 'ms',
+			filename: 'analysis-response-time',
+			data: responseData,
+			pool: penDisplays.length,
+			poolLabel: DISPLAY_POOL_LABEL,
+			histogram: {
+				values: responseValues,
+				ranges: RESPONSE_TIME_RANGES,
+				unit: ' ms',
+				binSize: 1,
+				note: undefined as string | undefined,
+			},
+		},
+		{
+			id: 'display-bit-depth',
+			title: 'Bit Depth',
+			unit: 'bit',
+			filename: 'analysis-bit-depth',
+			data: bitDepthData,
+			pool: penDisplays.length,
+			poolLabel: DISPLAY_POOL_LABEL,
+			histogram: null,
+		},
+		{
+			id: 'digitizer-density',
+			title: 'Density',
+			unit: 'LPmm',
+			filename: 'analysis-digitizer-density',
+			data: densityData,
+			pool: allTablets.length,
+			poolLabel: TABLET_POOL_LABEL,
+			histogram: {
+				values: densityValues,
+				ranges: DENSITY_RANGES,
+				unit: ' LPmm',
+				binSize: 10,
+				note: 'Values above 300 LPmm are excluded from the histogram for scale; they remain in the table below.',
+			},
+		},
+		{
+			id: 'digitizer-accuracy-center',
+			title: 'Accuracy (Center)',
+			unit: 'mm',
+			filename: 'analysis-digitizer-accuracy-center',
+			data: accuracyCenterData,
+			pool: allTablets.length,
+			poolLabel: TABLET_POOL_LABEL,
+			histogram: {
+				values: accuracyCenterValues,
+				ranges: ACCURACY_CENTER_RANGES,
+				unit: ' mm',
+				binSize: 0.1,
+				tickStep: 0.25,
+				note: undefined as string | undefined,
+			},
+		},
+		{
+			id: 'digitizer-accuracy-corner',
+			title: 'Accuracy (Corner)',
+			unit: 'mm',
+			filename: 'analysis-digitizer-accuracy-corner',
+			data: accuracyCornerData,
+			pool: allTablets.length,
+			poolLabel: TABLET_POOL_LABEL,
+			histogram: {
+				values: accuracyCornerValues,
+				ranges: ACCURACY_CORNER_RANGES,
+				unit: ' mm',
+				binSize: 0.25,
+				note: undefined as string | undefined,
+			},
+		},
+		{
+			id: 'digitizer-report-rate',
+			title: 'Report Rate',
+			unit: 'Hz',
+			filename: 'analysis-digitizer-report-rate',
+			data: reportRateData,
+			pool: allTablets.length,
+			poolLabel: TABLET_POOL_LABEL,
+			histogram: {
+				values: reportRateValues,
+				ranges: REPORT_RATE_RANGES,
+				unit: ' Hz',
+				binSize: 20,
+				tickStep: 50,
+				note: undefined as string | undefined,
+			},
+		},
+	]);
 
 	// --- Pressure Levels tab ---
 
@@ -558,6 +797,72 @@
 				</table>
 			</section>
 		{/if}
+
+		{#each numericSections as section (section.id)}
+			{#if activeSection === section.id}
+				<section class="section">
+					<div class="section-header">
+						<h2>{section.title}</h2>
+						<button
+							class="export-trigger"
+							disabled={section.data.rows.length === 0}
+							onclick={() =>
+								openExport(
+									section.title,
+									section.filename,
+									[section.title, 'Count', '%'],
+									section.data.rows.map((r) => [
+										Number(r.label),
+										r.count,
+										pct(r.count, section.data.count),
+									]),
+								)}>Export</button
+						>
+					</div>
+					<p class="description">
+						{section.data.count} of {section.pool}
+						{section.poolLabel} have {section.title.toLowerCase()}
+						data.
+					</p>
+					{#if section.histogram && section.histogram.values.length > 0}
+						<ValueHistogram
+							title={`${section.title} distribution`}
+							values={section.histogram.values}
+							currentValue={null}
+							ranges={section.histogram.ranges}
+							unit={section.histogram.unit}
+							binSize={section.histogram.binSize}
+							tickStep={section.histogram.tickStep}
+						/>
+						{#if section.histogram.note}
+							<p class="description histogram-note">{section.histogram.note}</p>
+						{/if}
+					{/if}
+					{#if section.data.rows.length > 0}
+						<table class="stat-table">
+							<thead
+								><tr><th>{section.title} ({section.unit})</th><th>Count</th><th></th></tr></thead
+							>
+							<tbody>
+								{#each section.data.rows as row (row.label)}
+									{@const pctVal = ((row.count / section.data.count) * 100).toFixed(1)}
+									<tr>
+										<td class="label">{Number(row.label).toLocaleString()}</td>
+										<td class="count">{row.count}</td>
+										<td class="bar-cell">
+											<div class="bar-bg">
+												<div class="bar-fill" style="width:{pctVal}%"></div>
+											</div>
+											<span class="pct">{pctVal}%</span>
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
+		{/each}
 
 		{#if activeSection === 'pressure-levels'}
 			<section class="section">

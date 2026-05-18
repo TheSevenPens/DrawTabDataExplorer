@@ -109,9 +109,11 @@
 			>
 		{/if}
 
-		<!-- Vertical band-divider dashed lines (between adjacent bands) -->
+		<!-- Vertical band-divider dashed lines. Drawn between adjacent bands,
+			 and also at the leftmost band's lower bound when that bound is > 0
+			 (e.g. Max Physical Pressure starts at 100 gf, not 0). -->
 		{#each bands as b, i (i)}
-			{#if i > 0}
+			{#if i > 0 || b.min > 0}
 				<line
 					x1={x(b.min)}
 					y1={PAD_TOP - 50}

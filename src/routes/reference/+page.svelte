@@ -13,6 +13,16 @@
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import BandsChart from '$lib/components/BandsChart.svelte';
 	import { IAF_BANDS, MAX_PRESSURE_BANDS } from '$lib/pressure-bands.js';
+	import {
+		BRIGHTNESS_BANDS,
+		CONTRAST_BANDS,
+		RESPONSE_TIME_BANDS,
+		DENSITY_BANDS,
+		ACCURACY_CENTER_BANDS,
+		ACCURACY_CORNER_BANDS,
+		REPORT_RATE_BANDS,
+		type SpecBand,
+	} from '$lib/spec-bands.js';
 
 	const dataTabs = [
 		{ href: '/reference', label: 'Reference' },
@@ -37,7 +47,92 @@
 		{ id: 'us-paper', category: 'Paper Sizes', label: 'US Paper Sizes' },
 		{ id: 'iaf-ranking', category: 'Pen Pressure', label: 'IAF Ranking' },
 		{ id: 'max-pressure', category: 'Pen Pressure', label: 'Max Physical Pressure' },
+		{ id: 'bands-brightness', category: 'Display Bands', label: 'Brightness' },
+		{ id: 'bands-contrast', category: 'Display Bands', label: 'Contrast' },
+		{ id: 'bands-response-time', category: 'Display Bands', label: 'Response Time' },
+		{ id: 'bands-density', category: 'Digitizer Bands', label: 'Density' },
+		{ id: 'bands-accuracy-center', category: 'Digitizer Bands', label: 'Accuracy (Center)' },
+		{ id: 'bands-accuracy-corner', category: 'Digitizer Bands', label: 'Accuracy (Corner)' },
+		{ id: 'bands-report-rate', category: 'Digitizer Bands', label: 'Report Rate' },
 	];
+
+	interface SpecBandSection {
+		id: string;
+		title: string;
+		blurb: string;
+		unit: string;
+		filename: string;
+		bands: SpecBand[];
+	}
+
+	const specBandSections: SpecBandSection[] = [
+		{
+			id: 'bands-brightness',
+			title: 'Brightness Bands',
+			blurb:
+				'Display brightness in cd/m². Most pen displays sit in the Average band; HDR-capable panels reach Very Bright.',
+			unit: 'cd/m²',
+			filename: 'bands-brightness',
+			bands: BRIGHTNESS_BANDS,
+		},
+		{
+			id: 'bands-contrast',
+			title: 'Contrast Bands',
+			blurb:
+				'Static contrast ratio reported by the manufacturer. OLED panels (often reported as 100,000:1 or higher) fall above the High band and are charted separately on the analysis page.',
+			unit: ':1',
+			filename: 'bands-contrast',
+			bands: CONTRAST_BANDS,
+		},
+		{
+			id: 'bands-response-time',
+			title: 'Response Time Bands',
+			blurb:
+				'Pixel response time in milliseconds. Lower is better — slow response shows up as visible ghosting under fast strokes.',
+			unit: 'ms',
+			filename: 'bands-response-time',
+			bands: RESPONSE_TIME_BANDS,
+		},
+		{
+			id: 'bands-density',
+			title: 'Digitizer Density Bands',
+			blurb:
+				'Sensor lines per mm reported by the manufacturer. Higher density gives finer positional resolution under the pen tip.',
+			unit: 'LPmm',
+			filename: 'bands-density',
+			bands: DENSITY_BANDS,
+		},
+		{
+			id: 'bands-accuracy-center',
+			title: 'Accuracy (Center) Bands',
+			blurb: 'Maximum positional error in mm at the centre of the active area. Lower is better.',
+			unit: 'mm',
+			filename: 'bands-accuracy-center',
+			bands: ACCURACY_CENTER_BANDS,
+		},
+		{
+			id: 'bands-accuracy-corner',
+			title: 'Accuracy (Corner) Bands',
+			blurb:
+				'Maximum positional error in mm at the corners of the active area. Typically several times worse than centre accuracy.',
+			unit: 'mm',
+			filename: 'bands-accuracy-corner',
+			bands: ACCURACY_CORNER_BANDS,
+		},
+		{
+			id: 'bands-report-rate',
+			title: 'Report Rate Bands',
+			blurb:
+				'Samples per second sent by the digitizer. Higher report rates produce smoother strokes under fast motion.',
+			unit: 'Hz',
+			filename: 'bands-report-rate',
+			bands: REPORT_RATE_BANDS,
+		},
+	];
+
+	function formatBandRange(b: SpecBand, unit: string): string {
+		return `${b.min} ${unit} to ${b.max} ${unit}`;
+	}
 
 	const sectionIds = new Set(sectionDefs.map((s) => s.id));
 	const defaultSection = 'tablet-sizes';
@@ -651,6 +746,43 @@
 					</tbody>
 				</table>
 			</section>
+		{:else}
+			{#each specBandSections as s (s.id)}
+				{#if activeSection === s.id}
+					<section>
+						<div class="section-header">
+							<h2>{s.title}</h2>
+							<button
+								class="copy-btn"
+								onclick={() =>
+									openExport(
+										s.title,
+										s.filename,
+										['Rank', `Range (${s.unit})`],
+										s.bands.map((b) => [b.label, formatBandRange(b, s.unit)]),
+									)}>Export</button
+							>
+						</div>
+						<p class="ref-blurb">{s.blurb}</p>
+						<p class="ref-blurb">
+							Used by the Tablets ▸ Analysis ▸ {s.title.replace(' Bands', '')} histogram. Edit
+							<code>src/lib/spec-bands.ts</code> to change thresholds — the histogram and this table both
+							read from the same source.
+						</p>
+						<table class="ref-table">
+							<thead><tr><th>Rank</th><th>Range</th></tr></thead>
+							<tbody>
+								{#each s.bands as b (b.label)}
+									<tr>
+										<td>{b.label}</td>
+										<td>{formatBandRange(b, s.unit)}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</section>
+				{/if}
+			{/each}
 		{/if}
 	</main>
 </div>

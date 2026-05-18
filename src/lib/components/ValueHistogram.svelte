@@ -25,6 +25,7 @@
 		compareYears = $bindable<number | null | undefined>(undefined),
 		compareYearOptions = [10, 15, 20, null] as (number | null)[],
 		markers = [] as HistogramMarker[],
+		tickStep: tickStepProp = undefined,
 	}: {
 		title?: string;
 		values: number[];
@@ -38,6 +39,11 @@
 		compareYears?: number | null | undefined;
 		compareYearOptions?: (number | null)[];
 		markers?: HistogramMarker[];
+		/** Override the auto-picked x-axis tick step. Defaults to the
+		 * range-based heuristic (5 for wide ranges, 2 for narrow). Useful
+		 * when label widths would collide on a dense scale (e.g. cd/m²
+		 * stepping by 25 produces tick labels every 5 cd/m² by default). */
+		tickStep?: number;
 	} = $props();
 
 	const MARKER_TIERS = 6;
@@ -54,8 +60,14 @@
 	let chartW = $derived(width - padLeft - padRight);
 	let chartH = $derived(chartHeight - 40 - padBottom);
 
-	let scaleMin = $derived(Math.min(...ranges.map((r) => r.min)) - 1);
-	let scaleMax = $derived(Math.max(...ranges.map((r) => r.max)) + 1);
+	// Pad each end by 2% of the band-defined span so a value sitting at the
+	// extreme edge isn't drawn flush against the chart wall, but small-unit
+	// scales (mm, ms) don't lose visible chart area to a fixed ±1 unit pad.
+	let scalePad = $derived(
+		(Math.max(...ranges.map((r) => r.max)) - Math.min(...ranges.map((r) => r.min))) * 0.02,
+	);
+	let scaleMin = $derived(Math.min(...ranges.map((r) => r.min)) - scalePad);
+	let scaleMax = $derived(Math.max(...ranges.map((r) => r.max)) + scalePad);
 
 	function xScale(val: number): number {
 		return padLeft + ((val - scaleMin) / (scaleMax - scaleMin)) * chartW;
@@ -114,7 +126,7 @@
 		return `M${firstX},${bottom} L${points.join(' L')} L${lastX},${bottom} Z`;
 	});
 
-	let tickStep = $derived(scaleMax - scaleMin > 40 ? 5 : 2);
+	let tickStep = $derived(tickStepProp ?? (scaleMax - scaleMin > 40 ? 5 : 2));
 	let tickStart = $derived(Math.ceil(scaleMin / tickStep) * tickStep);
 	let tickCount = $derived(Math.floor((scaleMax - tickStart) / tickStep) + 1);
 	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
