@@ -17,6 +17,19 @@ open the issue for current scope, design notes, and status.
 - User-facing tutorial doc for queriton — #146
 - Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
+- Split TabletDetail into tab-scoped subcomponents — #171
+- Extract shared pressure chart session state — #172
+- Centralize SubNav tab definitions — #173
+- Add buildTabletNameMap and fix canonical naming bypasses — #174
+- Migrate BrandDetail to shared Tabs component — #175
+- Modularize data-quality page into section components — #176
+- Modularize tablet-analysis page into section modules — #177
+- Extract CompatEntityTable for pen/tablet cross-ref tables — #178
+- Extend Playwright smoke tests (analysis, data-quality, session detail) — #179
+- Entity redirect helper + EntityListLayout for route boilerplate — #180
+
+## Shipped
+
 - Extract <Tabs> component for detail pages — #163
 - Extract <SectionedPage> for sidebar-tree pages — #164
 - Extract <DistributionTable> for bar-fill count tables — #165
@@ -25,9 +38,6 @@ open the issue for current scope, design notes, and status.
 - Factor inventory cellLinks boilerplate into makeInventoryCellLinks() — #168
 - Unify withinYears() and filterByYears() in tablet-analysis — #169
 - Compact numericSections via per-metric factory functions — #170
-
-## Shipped
-
 - Mechanical lint cleanup: require-each-key + no-navigation-without-resolve — #150
 - Promote byYearDesc to shared helper in tablet-helpers.ts — #153
 - Apply Type+Year+Export upgrade to TabletDetail / PenFamilyDetail / BrandDetail — #154
