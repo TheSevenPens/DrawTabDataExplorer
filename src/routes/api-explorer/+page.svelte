@@ -262,6 +262,42 @@ const tablet = await session.getTablet();
 return { session: session.InventoryId, pen: pen?.PenId, tablet: tablet?.Model.Id };`,
 		},
 		{
+			label: 'Top 10 pens with highest IAF (worst activation force)',
+			body: `// IAF (Initial Activation Force) is the smallest force at which the pen
+// first registers any pressure. Lower is better; "highest IAF" surfaces
+// the pens that need the heaviest touch to activate.
+//
+// Per-session IAF proxy = smallest force in Records where logical > 0.
+// Pen models are ranked by the median across their non-defective sessions.
+
+const defectiveUnits = new Set(
+  (await ds.InventoryPens.toArray())
+    .filter(p => (p.Defects?.length ?? 0) > 0)
+    .map(p => p.InventoryId),
+);
+
+return await ds.PressureResponse
+  .filter(s => !defectiveUnits.has(s.InventoryId))
+  .derive({
+    iaf: s => {
+      let lowForce = Infinity;
+      for (const [force, logical] of s.Records) {
+        if (logical > 0 && force < lowForce) lowForce = force;
+      }
+      return Number.isFinite(lowForce) ? lowForce : null;
+    },
+  })
+  .filter(s => s.iaf !== null)
+  .summarize({
+    by: 'PenEntityId',
+    median: { medianIaf: 'iaf' },
+    count: 'sessions',
+  })
+  .sort('medianIaf', 'desc')
+  .take(10)
+  .toArray();`,
+		},
+		{
 			label: 'Brand → its tablets and pens',
 			body: `const brand = await ds.Brands.find(b => b.BrandId === 'WACOM');
 const tablets = await brand.getTablets();
