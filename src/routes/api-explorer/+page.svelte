@@ -268,7 +268,7 @@ return { session: session.InventoryId, pen: pen?.PenId, tablet: tablet?.Model.Id
 // pressure — lower is better, so 'desc' surfaces the worst sessions.
 
 return await ds.PressureResponse
-  .filter('IAF', '!=', '')
+  .dropEmpty('IAF')
   .select(['PenEntityId', 'InventoryId', 'Date', 'IAF'])
   .sort('IAF', 'desc')
   .take(10)
@@ -277,17 +277,12 @@ return await ds.PressureResponse
 		{
 			label: 'Top 10 pens with highest IAF (worst activation force)',
 			body: `// Pen-model aggregate: median IAF (P00) per pen, ranked worst-first.
-// Excludes sessions whose inventory unit is flagged defective.
-
-const defectiveUnits = new Set(
-  (await ds.InventoryPens.toArray())
-    .filter(p => (p.Defects?.length ?? 0) > 0)
-    .map(p => p.InventoryId),
-);
+// Defective-unit sessions are filtered via the computed IsDefective
+// field instead of building a Set from InventoryPens at call-site.
 
 return await ds.PressureResponse
-  .filter('IAF', '!=', '')
-  .filter(s => !defectiveUnits.has(s.InventoryId))
+  .filter('IsDefective', '==', 'NO')
+  .dropEmpty('IAF')
   .summarize({
     by: 'PenEntityId',
     median: { medianIaf: 'IAF' },

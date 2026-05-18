@@ -44,6 +44,20 @@ describe('Null handling — filter operators', () => {
 		expect(empty + notEmpty).toBe(total);
 	});
 
+	it('.dropEmpty(field) is sugar for filter(field, notempty, "")', async () => {
+		const a = await rowsQ().dropEmpty('tag').toArray();
+		const b = await rowsQ().filter('tag', 'notempty', '').toArray();
+		expect(a.map((r) => r.id)).toEqual(b.map((r) => r.id));
+		// tag is null in b/g, empty-string in e → 3 rows excluded.
+		expect(a).toHaveLength((await rowsQ().count()) - 3);
+	});
+
+	it('.dropNulls(field) is an alias of .dropEmpty(field)', async () => {
+		const a = await rowsQ().dropNulls('tag').toArray();
+		const b = await rowsQ().dropEmpty('tag').toArray();
+		expect(a.map((r) => r.id)).toEqual(b.map((r) => r.id));
+	});
+
 	it("'==' with refValue '' matches null/missing fields", async () => {
 		// Null/missing tag fields stringify to "" → match.
 		const rows = await rowsQ().filter('tag', '==', '').toArray();

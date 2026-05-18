@@ -227,6 +227,20 @@ export class Query<T> {
 	}
 
 	/**
+	 * Keep rows where `field` is non-empty. Sugar for
+	 * `.filter(field, 'notempty', '')`. FieldDef.getValue normalises nulls
+	 * to the empty string, so this rejects both nulls and empty values.
+	 */
+	dropEmpty(field: string): Query<T> {
+		return this.filter(field, 'notempty', '');
+	}
+
+	/** Alias of `.dropEmpty()` — see that method for null vs. empty rules. */
+	dropNulls(field: string): Query<T> {
+		return this.dropEmpty(field);
+	}
+
+	/**
 	 * Explodes a top-level array-valued column into one row per element. For
 	 * nested arrays on entities (`Model.AlternateNames`) call `.derive()` first
 	 * to lift the array to a top-level column.
