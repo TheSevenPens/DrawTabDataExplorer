@@ -432,7 +432,6 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 
 	let code = $state(renderPreset(presets[0]));
 	let result = $state<unknown>(undefined);
-	let resultJson = $state<string>('');
 	let error = $state<string | null>(null);
 	let running = $state(false);
 	let elapsedMs = $state<number | null>(null);
@@ -448,7 +447,6 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		running = true;
 		error = null;
 		result = undefined;
-		resultJson = '';
 		elapsedMs = null;
 		const start = performance.now();
 		try {
@@ -457,7 +455,6 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 			const fn = new Function('ds', `return (async () => { ${code} })()`);
 			const out = await (fn as (d: DrawTabDataSet) => Promise<unknown>)(ds);
 			result = out;
-			resultJson = formatResult(out);
 			elapsedMs = Math.round(performance.now() - start);
 		} catch (e) {
 			error = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
@@ -478,7 +475,6 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 	function loadPreset(p: Preset) {
 		code = renderPreset(p);
 		result = undefined;
-		resultJson = '';
 		error = null;
 		elapsedMs = null;
 	}
@@ -617,7 +613,41 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 	}
 
 	let viewMode = $state<'json' | 'table'>('json');
-	let tableShape = $derived(result === undefined ? null : buildTableShape(result));
+
+	// Strip the loader-internal bookkeeping fields (Meta._id, top-level _id,
+	// _CreateDate, _ModifiedDate) from the result for display by default.
+	// Meta.EntityId stays — it's the canonical user-facing identifier.
+	// Toggling `showMeta` brings them back for inspection. Applies to
+	// both JSON and Table views so they stay consistent.
+	let showMeta = $state(false);
+
+	const META_NOISE_KEYS = new Set(['_id', '_CreateDate', '_ModifiedDate']);
+
+	function stripMetaNoise(value: unknown): unknown {
+		if (value === null || typeof value !== 'object') return value;
+		if (Array.isArray(value)) return value.map(stripMetaNoise);
+		const obj = value as Record<string, unknown>;
+		const out: Record<string, unknown> = {};
+		for (const [k, v] of Object.entries(obj)) {
+			if (META_NOISE_KEYS.has(k)) continue;
+			if (k === 'Meta' && v && typeof v === 'object' && !Array.isArray(v)) {
+				// Keep Meta.EntityId, drop the bookkeeping inside Meta.
+				const metaObj = v as Record<string, unknown>;
+				const filtered: Record<string, unknown> = {};
+				for (const [mk, mv] of Object.entries(metaObj)) {
+					if (!META_NOISE_KEYS.has(mk)) filtered[mk] = mv;
+				}
+				out[k] = filtered;
+				continue;
+			}
+			out[k] = stripMetaNoise(v);
+		}
+		return out;
+	}
+
+	let displayResult = $derived(showMeta ? result : stripMetaNoise(result));
+	let resultJson = $derived(displayResult === undefined ? '' : formatResult(displayResult));
+	let tableShape = $derived(displayResult === undefined ? null : buildTableShape(displayResult));
 
 	// Headers + rows shaped for ExportTableButton. Only meaningful when
 	// tableShape is one of the renderable kinds; null otherwise so the
@@ -696,6 +726,13 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		<div class="panel-header">
 			<span class="label">Result</span>
 			{#if resultJson}
+				<label
+					class="meta-toggle"
+					title="Show loader-internal Meta._id, _CreateDate, _ModifiedDate fields"
+				>
+					<input type="checkbox" bind:checked={showMeta} />
+					Show meta fields
+				</label>
 				<div class="view-toggle" role="group" aria-label="Result view">
 					<button
 						type="button"
@@ -1100,6 +1137,19 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		border-radius: 4px;
 		min-height: 200px;
 		margin: 0;
+	}
+
+	.meta-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 12px;
+		color: var(--text-muted);
+		cursor: pointer;
+		margin-right: 8px;
+	}
+	.meta-toggle:hover {
+		color: var(--text);
 	}
 
 	.view-toggle {
