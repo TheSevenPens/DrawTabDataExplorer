@@ -77,6 +77,7 @@ export interface ReverseStep {
  */
 export type AggregatorOp =
 	| 'count'
+	| 'countIf'
 	| 'sum'
 	| 'avg'
 	| 'min'
@@ -91,8 +92,15 @@ export interface AggregatorSpec {
 	/** Output column name in the summary rows. */
 	name: string;
 	op: AggregatorOp;
-	/** Field key to read; ignored when op is "count". */
+	/** Field key to read; ignored when op is "count" or "countIf". */
 	field?: string;
+	/**
+	 * For op='countIf': predicate function. Not serialisable — pipelines
+	 * persisted to URL/localStorage drop the aggregator.
+	 */
+	predicate?: (item: unknown) => boolean;
+	/** For op='countIf': boolean filter tree (URL-serialisable form). */
+	filterExpr?: FilterExpr;
 }
 
 /**

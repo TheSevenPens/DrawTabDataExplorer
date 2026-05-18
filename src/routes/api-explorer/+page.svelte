@@ -58,6 +58,7 @@
 			labels: [
 				'Count tablets per brand',
 				'Count tablets per brand and type',
+				'countIf: Excel-style conditional counts in summarize',
 				'Wacom launch-year stats (avg/min/max)',
 				'Brands with > 30 tablets (filter after summarize = SQL HAVING)',
 				'Median launch year per brand (with collect)',
@@ -333,6 +334,27 @@ return {
   caseInsensitive: await ds.Tablets.filter('ModelName', 'contains', 'CINTIQ').count(),
   caseSensitive: await ds.Tablets.filter('ModelName', 'containsStrict', 'CINTIQ').count(),
 };`,
+		},
+		{
+			label: 'countIf: Excel-style conditional counts in summarize',
+			body: `// Per group, count rows that match each condition. Each entry under
+// countIf becomes its own column. The condition is either a predicate
+// function (most ergonomic) or a FilterExpr leaf (URL-serialisable
+// for saved views).
+
+return await ds.Tablets
+  .summarize({
+    by: 'Brand',
+    count: 'total',
+    countIf: {
+      penDisplays: { field: 'ModelType', op: '==', value: 'PENDISPLAY' },
+      penTablets:  { field: 'ModelType', op: '==', value: 'PENTABLET' },
+      standalones: { field: 'ModelType', op: '==', value: 'STANDALONE' },
+      recent2020plus: (t) => (t.Model.LaunchYear ?? '') >= '2020',
+    },
+  })
+  .sort('total', 'desc')
+  .toArray();`,
 		},
 		{
 			label: 'Median launch year per brand (with collect)',

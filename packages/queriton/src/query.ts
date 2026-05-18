@@ -52,11 +52,27 @@ export type SortDirection = 'asc' | 'desc';
  *   { by: "Brand", avg: { avgYear: "ModelLaunchYear" } }
  *     → aggs: [{ name: "avgYear", op: "avg", field: "ModelLaunchYear" }]
  */
+/**
+ * One leaf of a `countIf` aggregator. A predicate function is the most
+ * ergonomic form; a `FilterExpr` (the same shape `.filter()` accepts) is
+ * URL-serialisable so it survives saved-view round-trips.
+ */
+export type CountIfCondition = ((item: unknown) => boolean) | FilterExpr;
+
 export interface SummarizeSpec {
 	/** Field key(s) to group by. Omit for a single all-rows summary. */
 	by?: string | string[];
 	/** `true` → adds a `count` column; string → uses that column name. */
 	count?: boolean | string;
+	/**
+	 * Excel-style `COUNTIF` per group. Map of output-column-name →
+	 * condition. The condition is either a predicate function or a
+	 * `FilterExpr` leaf (`{ field, op, value }` or a boolean tree).
+	 *
+	 *   countIf: { penDisplays: (t) => t.Model.Type === 'PENDISPLAY' }
+	 *   countIf: { penDisplays: { field: 'ModelType', op: '==', value: 'PENDISPLAY' } }
+	 */
+	countIf?: Record<string, CountIfCondition>;
 	/** Map of output-column-name → field key. Empty/non-numeric skipped. */
 	sum?: Record<string, string>;
 	avg?: Record<string, string>;
@@ -76,6 +92,15 @@ export function summarizeSpecToAggs(spec: SummarizeSpec): AggregatorSpec[] {
 	const aggs: AggregatorSpec[] = [];
 	if (spec.count) {
 		aggs.push({ name: spec.count === true ? 'count' : spec.count, op: 'count' });
+	}
+	if (spec.countIf) {
+		for (const [name, cond] of Object.entries(spec.countIf)) {
+			if (typeof cond === 'function') {
+				aggs.push({ name, op: 'countIf', predicate: cond as (item: unknown) => boolean });
+			} else {
+				aggs.push({ name, op: 'countIf', filterExpr: cond });
+			}
+		}
 	}
 	const fieldedOps = [
 		'sum',

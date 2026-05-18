@@ -367,6 +367,19 @@ function computeAggregator(
 	fields: FieldDef<unknown>[],
 ): number | string | string[] {
 	if (spec.op === 'count') return items.length;
+	if (spec.op === 'countIf') {
+		if (spec.predicate) {
+			let n = 0;
+			for (const it of items) if (spec.predicate(it)) n++;
+			return n;
+		}
+		if (spec.filterExpr) {
+			let n = 0;
+			for (const it of items) if (evalFilterExpr(spec.filterExpr, it, fields)) n++;
+			return n;
+		}
+		return 0;
+	}
 	if (!spec.field) return 0;
 	const def = getFieldDef(spec.field, fields);
 	if (!def) {

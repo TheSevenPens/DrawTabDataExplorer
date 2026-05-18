@@ -687,6 +687,66 @@ describe('Query — keyBy / collectBy', () => {
 	});
 });
 
+describe('Query — summarize.countIf', () => {
+	// mtcars: 32 cars; cyl ∈ {4,6,8}. 11x cyl=4, 7x cyl=6, 14x cyl=8.
+	// vs is binary 0/1 ; am is binary 0/1.
+
+	it('counts rows matching a predicate function per group', async () => {
+		const rows = await carsQ()
+			.summarize({
+				by: 'cyl',
+				count: 'total',
+				countIf: { automatic: (c: { am: number }) => c.am === 0 },
+			})
+			.sort('cyl', 'asc')
+			.toArray();
+		// am === 0 cars by cyl: 4-cyl→3, 6-cyl→4, 8-cyl→12.
+		expect(rows.map((r) => Number(r.cyl))).toEqual([4, 6, 8]);
+		expect(rows.map((r) => Number(r.automatic))).toEqual([3, 4, 12]);
+		// Sanity: automatic count never exceeds total.
+		expect(rows.every((r) => Number(r.automatic) <= Number(r.total))).toBe(true);
+	});
+
+	it('counts rows matching a FilterExpr leaf per group', async () => {
+		// Same answer via the serialisable form.
+		const rows = await carsQ()
+			.summarize({
+				by: 'cyl',
+				countIf: { automatic: { field: 'am', op: '==', value: '0' } },
+			})
+			.sort('cyl', 'asc')
+			.toArray();
+		expect(rows.map((r) => Number(r.automatic))).toEqual([3, 4, 12]);
+	});
+
+	it('supports multiple countIf columns side-by-side', async () => {
+		const rows = await carsQ()
+			.summarize({
+				by: 'cyl',
+				count: 'total',
+				countIf: {
+					automatic: (c: { am: number }) => c.am === 0,
+					vshape: (c: { vs: number }) => c.vs === 0,
+				},
+			})
+			.sort('cyl', 'asc')
+			.toArray();
+		expect(rows[0]).toHaveProperty('automatic');
+		expect(rows[0]).toHaveProperty('vshape');
+		expect(rows[0]).toHaveProperty('total');
+	});
+
+	it('returns 0 for groups where nothing matches', async () => {
+		const rows = await carsQ()
+			.summarize({
+				by: 'cyl',
+				countIf: { impossible: () => false },
+			})
+			.toArray();
+		expect(rows.every((r) => Number(r.impossible) === 0)).toBe(true);
+	});
+});
+
 describe('Query — filter after summarize (SQL HAVING)', () => {
 	it('filters on an aggregator output column', async () => {
 		const big = await carsQ().summarize({ by: 'cyl', count: 'n' }).filter('n', '>', 10).toArray();
