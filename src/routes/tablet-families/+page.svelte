@@ -9,16 +9,11 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import { flaggedCount } from '$lib/flagged-store.js';
+	import { tabletSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
 
-	let tabletTabs = $derived([
-		{ href: '/tablets', label: 'Tablet models' },
-		{ href: '/tablet-families', label: 'Tablet families' },
-		{ href: '/tablet-analysis', label: 'Analysis' },
-		{ href: '/tablet-inventory', label: 'Inventory' },
-		{ href: '/tablet-compare', label: 'Compare', badge: $flaggedCount },
-	]);
+	let tabletTabs = $derived(tabletSubNavTabs({ flaggedCount: $flaggedCount }));
 </script>
 
 <Nav />

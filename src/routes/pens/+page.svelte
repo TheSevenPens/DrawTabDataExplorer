@@ -11,16 +11,11 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
+	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
 
-	let penTabs = $derived([
-		{ href: '/pens', label: 'Pen models' },
-		{ href: '/pen-families', label: 'Pen families' },
-		{ href: '/pen-inventory', label: 'Inventory' },
-		{ href: '/pen-flagged', label: 'Flagged', badge: $flaggedPenTotalCount },
-		{ href: '/pressure-response', label: 'Pressure Response' },
-	]);
+	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
 
 	let cellLinks = $derived({
 		PenFamily: (p: Pen) => {
