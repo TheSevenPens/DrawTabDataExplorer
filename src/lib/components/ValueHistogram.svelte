@@ -29,8 +29,11 @@
 		showUnitInTitle = false,
 		showUnitInBands = true,
 		showUnitInAxis = true,
+		subtitle = '',
 	}: {
 		title?: string;
+		/** Optional sub-line rendered under the title, e.g. "313 tablets · 2018–2025". */
+		subtitle?: string;
 		values: number[];
 		currentValue: number | null;
 		currentLabel?: string;
@@ -62,7 +65,7 @@
 	const width = 900;
 	const padLeft = 30;
 	const padRight = 20;
-	let titleHeight = $derived(title ? 28 : 0);
+	let titleHeight = $derived(title ? (subtitle ? 44 : 28) : 0);
 	let padTop = $derived(40 + titleHeight);
 	const padBottom = 65;
 	let markerExtraHeight = $derived(
@@ -291,6 +294,11 @@
 					font-weight="600"
 					fill="var(--text)">{titleText}</text
 				>
+				{#if subtitle}
+					<text x={width / 2} y={38} text-anchor="middle" font-size="12" fill="var(--text-muted)"
+						>{subtitle}</text
+					>
+				{/if}
 			{/if}
 			<!-- Range backgrounds -->
 			{#each ranges as range, i (i)}

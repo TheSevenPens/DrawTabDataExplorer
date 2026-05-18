@@ -219,77 +219,171 @@
 	let panelTechTotal = $derived(displaysWithTech.length);
 	let panelTechCovered = $derived(penDisplays.length);
 
+	// Per-section "tablets released within N years" filter. `null` = no filter.
+	// One entry per numericSections id; the value is two-way-bound through
+	// ValueHistogram's compareYears dropdown.
+	let yearFilters = $state<Record<string, number | null>>({
+		'display-brightness': null,
+		'display-contrast': null,
+		'display-refresh-rate': null,
+		'display-response-time': null,
+		'display-bit-depth': null,
+		'digitizer-density': null,
+		'digitizer-accuracy-center': null,
+		'digitizer-accuracy-corner': null,
+		'digitizer-report-rate': null,
+	});
+
+	function withinYears(t: Tablet, n: number | null): boolean {
+		if (n === null) return true;
+		const y = parseInt(t.Model.LaunchYear, 10);
+		if (isNaN(y)) return false;
+		return y >= new Date().getFullYear() - n;
+	}
+
+	function subtitleFor(tablets: Tablet[]): string {
+		const n = tablets.length;
+		const noun = n === 1 ? 'tablet' : 'tablets';
+		if (n === 0) return `0 ${noun}`;
+		const ys = tablets.map((t) => parseInt(t.Model.LaunchYear, 10)).filter((y) => !isNaN(y));
+		if (ys.length === 0) return `${n} ${noun}`;
+		const min = Math.min(...ys);
+		const max = Math.max(...ys);
+		const range = min === max ? `${min}` : `${min}–${max}`;
+		return `${n} ${noun} · ${range}`;
+	}
+
 	// Numeric Display.* stats — sorted ascending by numeric value rather
 	// than descending by count, since these are physical-quantity scales
 	// users want to read in order.
-	function numericDisplayRows(getValue: (t: Tablet) => string | null | undefined) {
+	function numericDisplayRows(
+		getValue: (t: Tablet) => string | null | undefined,
+		yearsFilter: number | null = null,
+	) {
 		const tablets = penDisplays.filter((t) => {
+			if (!withinYears(t, yearsFilter)) return false;
 			const v = getValue(t);
 			return v != null && v !== '' && !isNaN(Number(v));
 		});
 		const rows = countBy(tablets, (t) => String(getValue(t))).sort(
 			(a, b) => Number(a.label) - Number(b.label),
 		);
-		return { rows, count: tablets.length };
+		return { rows, count: tablets.length, tablets };
 	}
 
-	let brightnessData = $derived(numericDisplayRows((t) => t.Display?.Brightness));
-	let contrastData = $derived(numericDisplayRows((t) => t.Display?.Contrast));
-	let refreshData = $derived(numericDisplayRows((t) => t.Display?.RefreshRate));
-	let responseData = $derived(numericDisplayRows((t) => t.Display?.ResponseTime));
-	let bitDepthData = $derived(numericDisplayRows((t) => t.Display?.ColorBitDepth));
+	let brightnessData = $derived(
+		numericDisplayRows((t) => t.Display?.Brightness, yearFilters['display-brightness']),
+	);
+	let contrastData = $derived(
+		numericDisplayRows((t) => t.Display?.Contrast, yearFilters['display-contrast']),
+	);
+	let refreshData = $derived(
+		numericDisplayRows((t) => t.Display?.RefreshRate, yearFilters['display-refresh-rate']),
+	);
+	let responseData = $derived(
+		numericDisplayRows((t) => t.Display?.ResponseTime, yearFilters['display-response-time']),
+	);
+	let bitDepthData = $derived(
+		numericDisplayRows((t) => t.Display?.ColorBitDepth, yearFilters['display-bit-depth']),
+	);
 
 	// Raw numeric values for histogram rendering. The exact-count tables below
 	// keep all data points; the histogram clips outliers (e.g. 100,000:1 OLED
 	// contrast values) so the linear-scale distribution stays readable.
 	function rawNumericDisplayValues(
 		getValue: (t: Tablet) => string | null | undefined,
-		max?: number,
+		max: number | undefined,
+		yearsFilter: number | null = null,
 	): number[] {
 		return penDisplays
+			.filter((t) => withinYears(t, yearsFilter))
 			.map((t) => Number(getValue(t)))
 			.filter((v): v is number => Number.isFinite(v) && (max == null || v <= max));
 	}
 
-	let brightnessValues = $derived(rawNumericDisplayValues((t) => t.Display?.Brightness));
-	let contrastValues = $derived(rawNumericDisplayValues((t) => t.Display?.Contrast, 3500));
-	let responseValues = $derived(rawNumericDisplayValues((t) => t.Display?.ResponseTime, 30));
+	let brightnessValues = $derived(
+		rawNumericDisplayValues(
+			(t) => t.Display?.Brightness,
+			undefined,
+			yearFilters['display-brightness'],
+		),
+	);
+	let contrastValues = $derived(
+		rawNumericDisplayValues((t) => t.Display?.Contrast, 3500, yearFilters['display-contrast']),
+	);
+	let responseValues = $derived(
+		rawNumericDisplayValues(
+			(t) => t.Display?.ResponseTime,
+			30,
+			yearFilters['display-response-time'],
+		),
+	);
 
 	// --- Digitizer.* numeric stats (apply to ALL tablets, not just displays) ---
 
-	function numericTabletRows(getValue: (t: Tablet) => string | null | undefined) {
+	function numericTabletRows(
+		getValue: (t: Tablet) => string | null | undefined,
+		yearsFilter: number | null = null,
+	) {
 		const tablets = allTablets.filter((t) => {
+			if (!withinYears(t, yearsFilter)) return false;
 			const v = getValue(t);
 			return v != null && v !== '' && !isNaN(Number(v));
 		});
 		const rows = countBy(tablets, (t) => String(getValue(t))).sort(
 			(a, b) => Number(a.label) - Number(b.label),
 		);
-		return { rows, count: tablets.length };
+		return { rows, count: tablets.length, tablets };
 	}
 
 	function rawNumericTabletValues(
 		getValue: (t: Tablet) => string | null | undefined,
-		max?: number,
+		max: number | undefined,
+		yearsFilter: number | null = null,
 	): number[] {
 		return allTablets
+			.filter((t) => withinYears(t, yearsFilter))
 			.map((t) => Number(getValue(t)))
 			.filter((v): v is number => Number.isFinite(v) && (max == null || v <= max));
 	}
 
-	let densityData = $derived(numericTabletRows((t) => t.Digitizer?.Density));
-	let accuracyCenterData = $derived(numericTabletRows((t) => t.Digitizer?.AccuracyCenter));
-	let accuracyCornerData = $derived(numericTabletRows((t) => t.Digitizer?.AccuracyCorner));
-	let reportRateData = $derived(numericTabletRows((t) => t.Digitizer?.ReportRate));
+	let densityData = $derived(
+		numericTabletRows((t) => t.Digitizer?.Density, yearFilters['digitizer-density']),
+	);
+	let accuracyCenterData = $derived(
+		numericTabletRows((t) => t.Digitizer?.AccuracyCenter, yearFilters['digitizer-accuracy-center']),
+	);
+	let accuracyCornerData = $derived(
+		numericTabletRows((t) => t.Digitizer?.AccuracyCorner, yearFilters['digitizer-accuracy-corner']),
+	);
+	let reportRateData = $derived(
+		numericTabletRows((t) => t.Digitizer?.ReportRate, yearFilters['digitizer-report-rate']),
+	);
 
-	let densityValues = $derived(rawNumericTabletValues((t) => t.Digitizer?.Density, 300));
+	let densityValues = $derived(
+		rawNumericTabletValues((t) => t.Digitizer?.Density, 300, yearFilters['digitizer-density']),
+	);
 	let accuracyCenterValues = $derived(
-		rawNumericTabletValues((t) => t.Digitizer?.AccuracyCenter, 2),
+		rawNumericTabletValues(
+			(t) => t.Digitizer?.AccuracyCenter,
+			2,
+			yearFilters['digitizer-accuracy-center'],
+		),
 	);
 	let accuracyCornerValues = $derived(
-		rawNumericTabletValues((t) => t.Digitizer?.AccuracyCorner, 5),
+		rawNumericTabletValues(
+			(t) => t.Digitizer?.AccuracyCorner,
+			5,
+			yearFilters['digitizer-accuracy-corner'],
+		),
 	);
-	let reportRateValues = $derived(rawNumericTabletValues((t) => t.Digitizer?.ReportRate));
+	let reportRateValues = $derived(
+		rawNumericTabletValues(
+			(t) => t.Digitizer?.ReportRate,
+			undefined,
+			yearFilters['digitizer-report-rate'],
+		),
+	);
 
 	const DISPLAY_POOL_LABEL = 'pen displays and standalones';
 	const TABLET_POOL_LABEL = 'tablets';
@@ -556,8 +650,10 @@
 			.filter((d): d is number => d !== null);
 	}
 
-	let ptSizesValues = $derived(diagsOf(filterByYears(allTablets, 'PENTABLET', ptSizesYears)));
-	let pdSizesValues = $derived(diagsOf(filterByYears(allTablets, 'PENDISPLAY', pdSizesYears)));
+	let ptSizesTablets = $derived(filterByYears(allTablets, 'PENTABLET', ptSizesYears));
+	let pdSizesTablets = $derived(filterByYears(allTablets, 'PENDISPLAY', pdSizesYears));
+	let ptSizesValues = $derived(diagsOf(ptSizesTablets));
+	let pdSizesValues = $derived(diagsOf(pdSizesTablets));
 	let ptSizesRanges = $derived(isMetric ? penTabletRangesCm : penTabletRangesIn);
 	let pdSizesRanges = $derived(isMetric ? displayRangesCm : displayRangesIn);
 
@@ -849,6 +945,7 @@
 					{#if section.histogram && section.histogram.values.length > 0}
 						<ValueHistogram
 							title={`${section.title} distribution`}
+							subtitle={subtitleFor(section.data.tablets)}
 							values={section.histogram.values}
 							currentValue={null}
 							ranges={section.histogram.ranges}
@@ -858,6 +955,8 @@
 							showUnitInTitle={section.histogram.showUnitInTitle ?? false}
 							showUnitInBands={section.histogram.showUnitInBands ?? true}
 							showUnitInAxis={section.histogram.showUnitInAxis ?? true}
+							bind:compareYears={yearFilters[section.id]}
+							compareYearOptions={[5, 10, 15, 20, null]}
 						/>
 						{#if section.histogram.note}
 							<p class="description histogram-note">{section.histogram.note}</p>
@@ -985,6 +1084,7 @@
 				{#if ptSizesValues.length > 0}
 					<ValueHistogram
 						title="Pen tablet active area diagonal"
+						subtitle={subtitleFor(ptSizesTablets)}
 						values={ptSizesValues}
 						currentValue={null}
 						ranges={ptSizesRanges}
@@ -992,6 +1092,7 @@
 						binSize={isMetric ? 1 : 0.5}
 						bandwidthMultiplier={0.2}
 						bind:compareYears={ptSizesYears}
+						compareYearOptions={[5, 10, 15, 20, null]}
 						markers={ptMarkers}
 						showUnitInTitle
 						showUnitInBands={false}
@@ -1021,6 +1122,7 @@
 				{#if pdSizesValues.length > 0}
 					<ValueHistogram
 						title="Pen display active area diagonal"
+						subtitle={subtitleFor(pdSizesTablets)}
 						values={pdSizesValues}
 						currentValue={null}
 						ranges={pdSizesRanges}
@@ -1028,6 +1130,7 @@
 						binSize={isMetric ? 1 : 0.5}
 						bandwidthMultiplier={0.2}
 						bind:compareYears={pdSizesYears}
+						compareYearOptions={[5, 10, 15, 20, null]}
 						markers={pdMarkers}
 						showUnitInTitle
 						showUnitInBands={false}
