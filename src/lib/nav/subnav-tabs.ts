@@ -22,6 +22,7 @@ export function penSubNavTabs(opts: { flaggedPenCount?: number } = {}): SubNavTa
 	return [
 		{ href: '/pens', label: 'Pen models' },
 		{ href: '/pen-families', label: 'Pen families' },
+		{ href: '/pen-analysis', label: 'Analysis' },
 		{ href: '/pen-inventory', label: 'Inventory' },
 		{ href: '/pen-flagged', label: 'Flagged', badge: opts.flaggedPenCount },
 		{ href: '/pressure-response', label: 'Pressure Response' },

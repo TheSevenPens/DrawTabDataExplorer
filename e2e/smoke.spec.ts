@@ -17,6 +17,7 @@ const ROUTES: { path: string; h1: RegExp }[] = [
 	{ path: '/timeline', h1: /Timeline/i },
 	{ path: '/tablet-compare', h1: /Compare/i },
 	{ path: '/tablet-analysis', h1: /Analysis/i },
+	{ path: '/pen-analysis', h1: /Pen Analysis/i },
 	{ path: '/reference', h1: /Reference/i },
 	{ path: '/data-quality', h1: /Data Quality/i },
 	{ path: '/about', h1: /About/i },
