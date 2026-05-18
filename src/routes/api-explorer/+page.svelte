@@ -263,34 +263,21 @@ return { session: session.InventoryId, pen: pen?.PenId, tablet: tablet?.Model.Id
 		},
 		{
 			label: 'Top 10 IAF measurements (worst single sessions)',
-			body: `// Per-session ranking: sort every measurement by its IAF proxy and
-// take the 10 highest. Compare with the pen-model aggregate version
-// below; this one surfaces individual measurement sessions instead.
+			body: `// Per-session ranking sorted by the computed IAF (P00) column.
+// IAF is the smallest force at which the pen first registers any
+// pressure — lower is better, so 'desc' surfaces the worst sessions.
 
 return await ds.PressureResponse
-  .derive({
-    iaf: s => {
-      let lowForce = Infinity;
-      for (const [force, logical] of s.Records) {
-        if (logical > 0 && force < lowForce) lowForce = force;
-      }
-      return Number.isFinite(lowForce) ? lowForce : null;
-    },
-  })
-  .filter(s => s.iaf !== null)
-  .select(['PenEntityId', 'InventoryId', 'Date', 'iaf'])
-  .sort('iaf', 'desc')
+  .filter('IAF', '!=', '')
+  .select(['PenEntityId', 'InventoryId', 'Date', 'IAF'])
+  .sort('IAF', 'desc')
   .take(10)
   .toArray();`,
 		},
 		{
 			label: 'Top 10 pens with highest IAF (worst activation force)',
-			body: `// IAF (Initial Activation Force) is the smallest force at which the pen
-// first registers any pressure. Lower is better; "highest IAF" surfaces
-// the pens that need the heaviest touch to activate.
-//
-// Per-session IAF proxy = smallest force in Records where logical > 0.
-// Pen models are ranked by the median across their non-defective sessions.
+			body: `// Pen-model aggregate: median IAF (P00) per pen, ranked worst-first.
+// Excludes sessions whose inventory unit is flagged defective.
 
 const defectiveUnits = new Set(
   (await ds.InventoryPens.toArray())
@@ -299,20 +286,11 @@ const defectiveUnits = new Set(
 );
 
 return await ds.PressureResponse
+  .filter('IAF', '!=', '')
   .filter(s => !defectiveUnits.has(s.InventoryId))
-  .derive({
-    iaf: s => {
-      let lowForce = Infinity;
-      for (const [force, logical] of s.Records) {
-        if (logical > 0 && force < lowForce) lowForce = force;
-      }
-      return Number.isFinite(lowForce) ? lowForce : null;
-    },
-  })
-  .filter(s => s.iaf !== null)
   .summarize({
     by: 'PenEntityId',
-    median: { medianIaf: 'iaf' },
+    median: { medianIaf: 'IAF' },
     count: 'sessions',
   })
   .sort('medianIaf', 'desc')
