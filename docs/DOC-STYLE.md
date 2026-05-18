@@ -13,14 +13,14 @@
 
 ## Roles (don't duplicate)
 
-| Kind | Location |
-|------|----------|
-| Must-follow rules | `CLAUDE.md` |
-| Routing / read order | `AGENTS.md` |
-| Goal → files | `WHERE.md` |
-| Workflows | `RECIPES.md` |
-| Component catalog | `ARCHITECTURE.md` |
-| Reject list | `ANTI-PATTERNS.md` |
+| Kind                 | Location           |
+| -------------------- | ------------------ |
+| Must-follow rules    | `CLAUDE.md`        |
+| Routing / read order | `AGENTS.md`        |
+| Goal → files         | `WHERE.md`         |
+| Workflows            | `RECIPES.md`       |
+| Component catalog    | `ARCHITECTURE.md`  |
+| Reject list          | `ANTI-PATTERNS.md` |
 
 When adding a rule, update `CLAUDE.md` and optionally one line in `ANTI-PATTERNS.md` — not three full copies.
 

@@ -8,18 +8,13 @@
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
+	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	const PEN_PRESSURE_DATA_URL = 'https://thesevenpens.github.io/PenPressureData/';
 
 	let { data } = $props();
 
-	let penTabs = $derived([
-		{ href: '/pens', label: 'Pen models' },
-		{ href: '/pen-families', label: 'Pen families' },
-		{ href: '/pen-inventory', label: 'Inventory' },
-		{ href: '/pen-flagged', label: 'Flagged', badge: $flaggedPenTotalCount },
-		{ href: '/pressure-response', label: 'Pressure Response' },
-	]);
+	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
 
 	let sessions = $derived(data.sessions);
 	let pens = $derived(data.pens);

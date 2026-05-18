@@ -17,6 +17,9 @@ open the issue for current scope, design notes, and status.
 - User-facing tutorial doc for queriton — #146
 - Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
+
+## Shipped
+
 - Extract shared pressure chart session state — #172
 - Centralize SubNav tab definitions — #173
 - Add buildTabletNameMap and fix canonical naming bypasses — #174
@@ -24,9 +27,6 @@ open the issue for current scope, design notes, and status.
 - Extract CompatEntityTable for pen/tablet cross-ref tables — #178
 - Extend Playwright smoke tests (analysis, data-quality, session detail) — #179
 - Entity redirect helper + EntityListLayout for route boilerplate — #180
-
-## Shipped
-
 - Add AGENTS.md entry point for AI agents — #181
 - Deduplicate CLAUDE.md vs ARCHITECTURE.md roles — #182
 - Add WHERE.md goal-to-files lookup — #183

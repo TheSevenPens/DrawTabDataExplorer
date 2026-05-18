@@ -152,6 +152,28 @@ What's automated (no manual action needed):
 
 ## UI component architecture
 
+### EntityListLayout
+
+Thin shell that wraps `<Nav>` + optional `<SubNav>` + `<EntityExplorer>`,
+used by the simple list routes (brands, drivers, tablet-families,
+pen-families). Pass `subNavTabs` from one of the
+[`src/lib/nav/subnav-tabs.ts`](src/lib/nav/subnav-tabs.ts) helpers
+(`tabletSubNavTabs(...)` or `penSubNavTabs(...)`); omit it for the
+brands route which has no sub-nav. Remaining props pass through to
+EntityExplorer. Routes with extra page-only logic (e.g. tablets and
+pens, which build `cellLinks` from a penNameMap and have flag columns)
+still wire `Nav` + `SubNav` + `EntityExplorer` directly.
+
+### Entity-typed redirect routes
+
+The typed routes (`/tablets/[entityId]`, `/pens/[entityId]`, …) all
+defer to the same one-liner helper in
+[`src/lib/entity-redirect.ts`](src/lib/entity-redirect.ts). When adding
+a new typed entity, copy one of the existing `+page.ts` files (it's
+just `prerender = false` plus `redirectToCanonicalEntity(params)`).
+
+### EntityExplorer / QueryPipelineBar / SearchBar
+
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) § Key components for **EntityExplorer**, **QueryPipelineBar**, **FilterBar**, **SortBar**, **ColumnBar**, and **SearchBar** (layout, operators, dropdown behavior).
 
 ## Label formatting (full names)

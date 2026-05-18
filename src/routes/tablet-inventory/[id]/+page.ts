@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { tabletFullName } from '$lib/tablet-helpers.js';
-import { penFullName } from '$lib/pen-helpers.js';
+import { buildPenNameMap } from '$lib/pen-helpers.js';
 
 export const prerender = false;
 
@@ -24,8 +24,7 @@ export async function load({ params, parent }) {
 			? inventoryPens.filter((p) => p.WithTabletInventoryId === item.InventoryId)
 			: [];
 
-	const penNameMap: Record<string, string> = {};
-	for (const p of allPens) penNameMap[p.EntityId] = penFullName(p);
+	const penNameMap = buildPenNameMap(allPens);
 
 	return { item, modelName, bundledPens, penNameMap };
 }

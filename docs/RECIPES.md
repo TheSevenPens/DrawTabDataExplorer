@@ -25,7 +25,7 @@ export async function load({ parent }) {
 }
 ```
 
-4. `+page.svelte`: `Nav` + optional `SubNav` + `EntityExplorer` with `*_FIELDS`, `detailBasePath="/entity"`.
+4. `+page.svelte`: wrap markup in `EntityListLayout` (simple case) with `*_FIELDS`, `detailBasePath="/entity"`. Drop down to `Nav` + `SubNav` + `EntityExplorer` directly only if the route needs page-only logic (e.g. flag column, custom cellLinks).
 
 **Verify:** `npm run check`, open `/<name>` in browser.
 

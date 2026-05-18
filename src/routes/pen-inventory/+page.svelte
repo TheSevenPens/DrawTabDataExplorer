@@ -12,16 +12,11 @@
 	import { flaggedPenUnits, toggleFlaggedPenUnit } from '$lib/flagged-store.js';
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
 	import { inventoryPenCellLinks } from '$lib/inventory-cell-links.js';
+	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
 
-	let penTabs = $derived([
-		{ href: '/pens', label: 'Pen models' },
-		{ href: '/pen-families', label: 'Pen families' },
-		{ href: '/pen-inventory', label: 'Inventory' },
-		{ href: '/pen-flagged', label: 'Flagged', badge: $flaggedPenTotalCount },
-		{ href: '/pressure-response', label: 'Pressure Response' },
-	]);
+	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
 
 	// Inventory IDs are stored uppercase in the data; the flag store uses
 	// lowercase. Normalize at the boundary so the flag column toggles

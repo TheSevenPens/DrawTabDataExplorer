@@ -7,7 +7,7 @@
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
-	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
+	import CompatEntityTable, { type CompatRow } from '$lib/components/CompatEntityTable.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
@@ -16,7 +16,11 @@
 	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
 	import { tabletFullName, compareTabletByYearDesc } from '$lib/tablet-helpers.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
-	import { paletteColor } from '$lib/chart-palette.js';
+	import {
+		buildSessionColors,
+		buildChartSessions,
+		toggleInSet,
+	} from '$lib/pressure/chart-session-state.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
 	let { data } = $props();
@@ -34,29 +38,19 @@
 		data.defectsByInventoryId ?? new Map(),
 	);
 
-	let sessionColors = $derived(new Map(pressureSessions.map((s, i) => [s._id, paletteColor(i)])));
+	let sessionColors = $derived(buildSessionColors(pressureSessions));
 
 	let chartSessions = $derived(
-		pressureSessions.map((s) => {
-			const info = defectsByInventoryId.get(s.InventoryId);
-			return {
-				id: s._id,
-				label: `${s.InventoryId} ${s.Date}`,
-				records: s.Records,
-				color: sessionColors.get(s._id),
-				defective: !!info,
-				defectInfo: info?.detailsLabel,
-			};
+		buildChartSessions(pressureSessions, {
+			colors: sessionColors,
+			defectsByInventoryId,
 		}),
 	);
 
 	let hiddenSessionIds = $state(new Set<string>());
 
 	function toggleSessionVisibility(id: string) {
-		const next = new Set(hiddenSessionIds);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
-		hiddenSessionIds = next;
+		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
 	let showJson = $state(false);
@@ -71,6 +65,13 @@
 			t.Model.Type,
 			t.Model.LaunchYear ?? '',
 		]);
+	}
+
+	function tabletCompatRows(tablets: Tablet[]): CompatRow[] {
+		return tablets.map((t) => ({
+			href: resolve('/entity/[entityId]', { entityId: t.Meta.EntityId }),
+			cells: [tabletFullName(t), t.Model.Type, t.Model.LaunchYear ?? ''],
+		}));
 	}
 </script>
 
@@ -139,81 +140,31 @@
 
 {#if activeTab === 'tablets'}
 	<div class="tab-content">
-		{#if compatibleTablets.length > 0}
-			<div class="table-header">
-				<ExportTableButton
-					entityType="pen-tablets"
-					title={`Compatible Tablets — ${penBrandAndName(pen)}`}
-					filename={`${pen.EntityId}-compatible-tablets`}
-					headers={['Tablet', 'Entity ID', 'Type', 'Year']}
-					rows={tabletExportRows(compatibleTablets)}
-				/>
-			</div>
-			<table class="compat-table">
-				<thead>
-					<tr>
-						<th>Tablet</th>
-						<th>Type</th>
-						<th>Year</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each compatibleTablets as tablet (tablet.Meta.EntityId)}
-						<tr>
-							<td
-								><a href={resolve('/entity/[entityId]', { entityId: tablet.Meta.EntityId })}
-									>{tabletFullName(tablet)}</a
-								></td
-							>
-							<td>{tablet.Model.Type}</td>
-							<td>{tablet.Model.LaunchYear ?? ''}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		{:else}
-			<p class="no-data">No tablet compatibility data available for this pen.</p>
-		{/if}
+		<CompatEntityTable
+			columns={['Tablet', 'Type', 'Year']}
+			rows={tabletCompatRows(compatibleTablets)}
+			emptyMessage="No tablet compatibility data available for this pen."
+			exportEntityType="pen-tablets"
+			exportTitle={`Compatible Tablets — ${penBrandAndName(pen)}`}
+			exportFilename={`${pen.EntityId}-compatible-tablets`}
+			exportHeaders={['Tablet', 'Entity ID', 'Type', 'Year']}
+			exportRows={tabletExportRows(compatibleTablets)}
+		/>
 	</div>
 {/if}
 
 {#if activeTab === 'included'}
 	<div class="tab-content">
-		{#if includedWithTablets.length > 0}
-			<div class="table-header">
-				<ExportTableButton
-					entityType="pen-tablets"
-					title={`Included With — ${penBrandAndName(pen)}`}
-					filename={`${pen.EntityId}-included-with-tablets`}
-					headers={['Tablet', 'Entity ID', 'Type', 'Year']}
-					rows={tabletExportRows(includedWithTablets)}
-				/>
-			</div>
-			<table class="compat-table">
-				<thead>
-					<tr>
-						<th>Tablet</th>
-						<th>Type</th>
-						<th>Year</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each includedWithTablets as tablet (tablet.Meta.EntityId)}
-						<tr>
-							<td
-								><a href={resolve('/entity/[entityId]', { entityId: tablet.Meta.EntityId })}
-									>{tabletFullName(tablet)}</a
-								></td
-							>
-							<td>{tablet.Model.Type}</td>
-							<td>{tablet.Model.LaunchYear ?? ''}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		{:else}
-			<p class="no-data">No tablets list this pen as included.</p>
-		{/if}
+		<CompatEntityTable
+			columns={['Tablet', 'Type', 'Year']}
+			rows={tabletCompatRows(includedWithTablets)}
+			emptyMessage="No tablets list this pen as included."
+			exportEntityType="pen-tablets"
+			exportTitle={`Included With — ${penBrandAndName(pen)}`}
+			exportFilename={`${pen.EntityId}-included-with-tablets`}
+			exportHeaders={['Tablet', 'Entity ID', 'Type', 'Year']}
+			exportRows={tabletExportRows(includedWithTablets)}
+		/>
 	</div>
 {/if}
 
@@ -369,12 +320,6 @@
 		font-size: 13px;
 		color: var(--text-dim);
 		font-style: italic;
-	}
-
-	.table-header {
-		display: flex;
-		justify-content: flex-end;
-		margin-bottom: 8px;
 	}
 
 	.compat-table {

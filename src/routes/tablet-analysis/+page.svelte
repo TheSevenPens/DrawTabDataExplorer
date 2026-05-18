@@ -35,14 +35,9 @@
 	import PressureLevelsSection from '$lib/tablet-analysis/PressureLevelsSection.svelte';
 	import TouchSupportSection from '$lib/tablet-analysis/TouchSupportSection.svelte';
 	import TabletDiagonalSection from '$lib/tablet-analysis/TabletDiagonalSection.svelte';
+	import { tabletSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
-	let tabletTabs = $derived([
-		{ href: '/tablets', label: 'Tablet models' },
-		{ href: '/tablet-families', label: 'Tablet families' },
-		{ href: '/tablet-analysis', label: 'Analysis' },
-		{ href: '/tablet-inventory', label: 'Inventory' },
-		{ href: '/tablet-compare', label: 'Compare', badge: $flaggedCount },
-	]);
+	let tabletTabs = $derived(tabletSubNavTabs({ flaggedCount: $flaggedCount }));
 
 	let { data } = $props();
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);

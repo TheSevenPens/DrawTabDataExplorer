@@ -21,16 +21,11 @@
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { paletteColor } from '$lib/chart-palette.js';
+	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
 
-	let penTabs = $derived([
-		{ href: '/pens', label: 'Pen models' },
-		{ href: '/pen-families', label: 'Pen families' },
-		{ href: '/pen-inventory', label: 'Inventory' },
-		{ href: '/pen-flagged', label: 'Flagged', badge: $flaggedPenTotalCount },
-		{ href: '/pressure-response', label: 'Pressure Response' },
-	]);
+	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
 
 	// Cast to the bare entity types: the DataSet returns *WithRels-augmented
 	// records, but this page doesn't use any relationship methods, and

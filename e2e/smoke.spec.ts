@@ -98,6 +98,44 @@ test.describe('Reference left-nav sections', () => {
 	}
 });
 
+test.describe('SectionedPage routes render their sections', () => {
+	test('/tablet-analysis renders the default section with content', async ({ page }) => {
+		const errors = await watchConsoleErrors(page);
+		await page.goto('/tablet-analysis', { waitUntil: 'networkidle' });
+		// SectionedPage renders the sidebar tree (Aspect Ratio, Digitizer, etc.)
+		// and the active section's <h2> heading.
+		await expect(page.locator('h1')).toContainText(/Analysis/i);
+		await expect(page.locator('section.section h2').first()).toBeVisible({ timeout: 10_000 });
+		expect(errors).toEqual([]);
+	});
+
+	test('/data-quality renders sidebar and main panel', async ({ page }) => {
+		const errors = await watchConsoleErrors(page);
+		await page.goto('/data-quality', { waitUntil: 'networkidle' });
+		await expect(page.locator('h1')).toContainText(/Data Quality/i);
+		// Default section "Entity Counts" should render a table.
+		await expect(page.locator('section.section h2').first()).toBeVisible({ timeout: 10_000 });
+		await expect(page.locator('section.section table').first()).toBeVisible();
+		expect(errors).toEqual([]);
+	});
+});
+
+test.describe('Session detail navigation', () => {
+	test('Pressure Response list → session detail page', async ({ page }) => {
+		const errors = await watchConsoleErrors(page);
+		await page.goto('/pressure-response', { waitUntil: 'networkidle' });
+		// Sessions table has /entity/<brand>.session.<id>_<date> links.
+		const firstSessionLink = page.locator('a[href*="/entity/"][href*=".session."]').first();
+		await expect(firstSessionLink).toBeVisible({ timeout: 10_000 });
+		await firstSessionLink.click();
+		await page.waitForURL(/\/entity\/[a-z0-9._-]+\.session\./);
+		await expect(page.locator('h1').first()).toBeVisible();
+		// Session detail renders a PressureChart canvas.
+		await expect(page.locator('canvas').first()).toBeVisible({ timeout: 10_000 });
+		expect(errors).toEqual([]);
+	});
+});
+
 test.describe('Compare workflow', () => {
 	test('flag a tablet from the list, then see it on /tablet-compare', async ({ page }) => {
 		await page.goto('/tablets', { waitUntil: 'networkidle' });

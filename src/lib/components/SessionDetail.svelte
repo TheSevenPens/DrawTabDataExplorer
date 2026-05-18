@@ -15,14 +15,9 @@
 	} = $props();
 
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
+	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
-	let penTabs = $derived([
-		{ href: '/pens', label: 'Pen models' },
-		{ href: '/pen-families', label: 'Pen families' },
-		{ href: '/pen-inventory', label: 'Inventory' },
-		{ href: '/pen-flagged', label: 'Flagged', badge: $flaggedPenTotalCount },
-		{ href: '/pressure-response', label: 'Pressure Response' },
-	]);
+	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
 
 	let session = $derived(data.session);
 	let pen = $derived(data.pen);

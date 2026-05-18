@@ -24,16 +24,11 @@
 	} from '$lib/tablet-size-ranges.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
+	import { tabletSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
 
-	let tabletTabs = $derived([
-		{ href: '/tablets', label: 'Tablet models' },
-		{ href: '/tablet-families', label: 'Tablet families' },
-		{ href: '/tablet-analysis', label: 'Analysis' },
-		{ href: '/tablet-inventory', label: 'Inventory' },
-		{ href: '/tablet-compare', label: 'Compare', badge: $flaggedCount },
-	]);
+	let tabletTabs = $derived(tabletSubNavTabs({ flaggedCount: $flaggedCount }));
 
 	let activeTab: 'flagged' | 'compare' | 'sizes' = $state('flagged');
 	let showPicker = $state(false);

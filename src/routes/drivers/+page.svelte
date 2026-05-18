@@ -5,14 +5,12 @@
 		DRIVER_DEFAULT_COLUMNS,
 		DRIVER_DEFAULT_VIEW,
 	} from '$data/lib/entities/driver-fields.js';
-	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
-	import Nav from '$lib/components/Nav.svelte';
+	import EntityListLayout from '$lib/components/EntityListLayout.svelte';
 
 	let { data } = $props();
 </script>
 
-<Nav />
-<EntityExplorer
+<EntityListLayout
 	title="Drivers"
 	entityType="drivers"
 	entityLabel="drivers"

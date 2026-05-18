@@ -1,4 +1,4 @@
-import { tabletFullName } from '$lib/tablet-helpers.js';
+import { buildTabletNameMap } from '$lib/tablet-helpers.js';
 
 export async function load({ parent }) {
 	const { ds } = await parent();
@@ -6,7 +6,6 @@ export async function load({ parent }) {
 		ds.InventoryTablets.toArray(),
 		ds.Tablets.toArray(),
 	]);
-	const tabletNameMap: Record<string, string> = {};
-	for (const t of allTablets) tabletNameMap[t.Meta.EntityId] = tabletFullName(t);
+	const tabletNameMap = buildTabletNameMap(allTablets);
 	return { tablets, tabletNameMap };
 }
