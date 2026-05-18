@@ -262,6 +262,28 @@ const tablet = await session.getTablet();
 return { session: session.InventoryId, pen: pen?.PenId, tablet: tablet?.Model.Id };`,
 		},
 		{
+			label: 'Top 10 IAF measurements (worst single sessions)',
+			body: `// Per-session ranking: sort every measurement by its IAF proxy and
+// take the 10 highest. Compare with the pen-model aggregate version
+// below; this one surfaces individual measurement sessions instead.
+
+return await ds.PressureResponse
+  .derive({
+    iaf: s => {
+      let lowForce = Infinity;
+      for (const [force, logical] of s.Records) {
+        if (logical > 0 && force < lowForce) lowForce = force;
+      }
+      return Number.isFinite(lowForce) ? lowForce : null;
+    },
+  })
+  .filter(s => s.iaf !== null)
+  .select(['PenEntityId', 'InventoryId', 'Date', 'iaf'])
+  .sort('iaf', 'desc')
+  .take(10)
+  .toArray();`,
+		},
+		{
 			label: 'Top 10 pens with highest IAF (worst activation force)',
 			body: `// IAF (Initial Activation Force) is the smallest force at which the pen
 // first registers any pressure. Lower is better; "highest IAF" surfaces
