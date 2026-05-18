@@ -5,6 +5,7 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import Nav from '$lib/components/Nav.svelte';
+	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import { tabletNameAndId } from '$lib/tablet-helpers.js';
 
 	let { data } = $props();
@@ -50,29 +51,14 @@
 <DetailView item={brand} fields={BRAND_FIELDS} fieldGroups={BRAND_FIELD_GROUPS} />
 
 <div class="tabs-section">
-	<div class="tab-bar">
-		<button
-			class="tab-btn"
-			class:active={activeTab === 'tablets'}
-			onclick={() => (activeTab = 'tablets')}
-		>
-			Tablets ({tablets.length})
-		</button>
-		<button
-			class="tab-btn"
-			class:active={activeTab === 'pens'}
-			onclick={() => (activeTab = 'pens')}
-		>
-			Pens ({pens.length})
-		</button>
-		<button
-			class="tab-btn"
-			class:active={activeTab === 'timeline'}
-			onclick={() => (activeTab = 'timeline')}
-		>
-			Timeline
-		</button>
-	</div>
+	<Tabs
+		tabs={[
+			{ id: 'tablets', label: 'Tablets', badge: tablets.length },
+			{ id: 'pens', label: 'Pens', badge: pens.length },
+			{ id: 'timeline', label: 'Timeline' },
+		] satisfies Tab[]}
+		bind:active={activeTab}
+	/>
 
 	<div class="tab-panel">
 		{#if activeTab === 'tablets'}
@@ -219,34 +205,6 @@
 
 	.tabs-section {
 		margin-top: 24px;
-	}
-
-	.tab-bar {
-		display: flex;
-		gap: 2px;
-		border-bottom: 2px solid var(--border);
-		margin-bottom: 0;
-	}
-
-	.tab-btn {
-		padding: 6px 16px;
-		font-size: 13px;
-		font-weight: 600;
-		border: none;
-		background: none;
-		cursor: pointer;
-		color: var(--text-muted);
-		border-bottom: 2px solid transparent;
-		margin-bottom: -2px;
-	}
-
-	.tab-btn:hover {
-		color: var(--text);
-	}
-
-	.tab-btn.active {
-		color: #6b21a8;
-		border-bottom-color: #6b21a8;
 	}
 
 	.tab-panel {
