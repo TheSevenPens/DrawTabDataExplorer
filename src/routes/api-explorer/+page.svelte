@@ -19,6 +19,80 @@
 		body: string;
 	}
 
+	// Sidebar grouping for the Load example… dropdown. Each label here
+	// must match a preset's `label` exactly; extras and misses are
+	// fenced by the runtime assertion in `groupedPresets` below. Add a
+	// new preset → also add its label to the appropriate group.
+	const PRESET_GROUPS: { group: string; labels: string[] }[] = [
+		{
+			group: 'Lookups & ranking',
+			labels: [
+				'Top 5 newest Wacom pen displays',
+				'Find an entity by its canonical EntityId',
+				'Find a record by a single field (.findBy)',
+				'keyBy: lookup tablets by ModelId',
+			],
+		},
+		{
+			group: 'Filtering',
+			labels: [
+				'Predicate-function filter',
+				'Boolean expression filter (OR / AND / NOT)',
+				'filterIn: brand is one of a set',
+				'between operator: launch year range',
+				'Strict (case-sensitive) contains',
+				'Distinct values of a field',
+			],
+		},
+		{
+			group: 'Sorting & paging',
+			labels: ['Pagination: skip + take', 'Multi-key sort (primary-by-first)'],
+		},
+		{
+			group: 'Projection & reshape',
+			labels: ['Project to specific columns with .select()', 'unroll: explode alternate names'],
+		},
+		{
+			group: 'Aggregation',
+			labels: [
+				'Count tablets per brand',
+				'Count tablets per brand and type',
+				'Wacom launch-year stats (avg/min/max)',
+				'Brands with > 30 tablets (filter after summarize = SQL HAVING)',
+				'Median launch year per brand (with collect)',
+				'Derive + summarize: tablet age buckets',
+			],
+		},
+		{
+			group: 'Joins',
+			labels: [
+				'Join: PenCompat × Pens (inner) for a tablet',
+				'Semijoin: pens compatible with a tablet (no col merge)',
+				'antijoin: pens with no compatible tablet (data-quality)',
+				'leftjoin: every pen + its compat tablets (if any)',
+				'concat: combine two filtered queries',
+			],
+		},
+		{
+			group: 'Record-method API',
+			labels: [
+				'Compatible pens for a tablet (record-method API)',
+				'Tablet family + its members',
+				'Reverse compatibility (pen → tablets)',
+				'Brand → its tablets and pens',
+				'Inventory: getPen() on first inventory record',
+			],
+		},
+		{
+			group: 'Pressure response',
+			labels: [
+				'Pressure-response session lookup',
+				'Top 10 IAF measurements (worst single sessions)',
+				'Top 10 pens with highest IAF (worst activation force)',
+			],
+		},
+	];
+
 	const presets: Preset[] = [
 		{
 			label: 'Top 5 newest Wacom pen displays',
@@ -328,6 +402,33 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		return `// ${p.label}\n${p.body}`;
 	}
 
+	// Resolve each PRESET_GROUPS entry to its actual Preset objects.
+	// Throws on a label that's listed in a group but missing from
+	// `presets[]` (or vice versa) so the assertion catches typos at
+	// load time instead of producing a silently-empty group.
+	const groupedPresets: { group: string; presets: Preset[] }[] = (() => {
+		const byLabel = new Map(presets.map((p) => [p.label, p]));
+		const grouped: { group: string; presets: Preset[] }[] = [];
+		const seen = new Set<string>();
+		for (const g of PRESET_GROUPS) {
+			const items: Preset[] = [];
+			for (const l of g.labels) {
+				const p = byLabel.get(l);
+				if (!p) throw new Error(`PRESET_GROUPS references unknown preset label: "${l}"`);
+				items.push(p);
+				seen.add(l);
+			}
+			grouped.push({ group: g.group, presets: items });
+		}
+		const ungrouped = presets.filter((p) => !seen.has(p.label));
+		if (ungrouped.length > 0) {
+			throw new Error(
+				`Presets missing from PRESET_GROUPS: ${ungrouped.map((p) => `"${p.label}"`).join(', ')}`,
+			);
+		}
+		return grouped;
+	})();
+
 	let code = $state(renderPreset(presets[0]));
 	let result = $state<unknown>(undefined);
 	let resultJson = $state<string>('');
@@ -430,8 +531,12 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 				}}
 			>
 				<option value="">Load example…</option>
-				{#each presets as p (p.label)}
-					<option value={p.label}>{p.label}</option>
+				{#each groupedPresets as g (g.group)}
+					<optgroup label={g.group}>
+						{#each g.presets as p (p.label)}
+							<option value={p.label}>{p.label}</option>
+						{/each}
+					</optgroup>
 				{/each}
 			</select>
 		</div>
