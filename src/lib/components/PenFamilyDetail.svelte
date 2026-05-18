@@ -17,7 +17,7 @@
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
-	import { penBrandAndName } from '$lib/pen-helpers.js';
+	import { penBrandAndName, penNameAndId } from '$lib/pen-helpers.js';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
@@ -32,14 +32,7 @@
 
 	// Build a per-pen label so the chart legend distinguishes models
 	// within the same family.
-	let penLabelById = $derived(
-		new Map(
-			memberPens.map((p) => [
-				p.EntityId,
-				penIdRedundantInName(p) ? p.PenName : `${p.PenName} (${p.PenId})`,
-			]),
-		),
-	);
+	let penLabelById = $derived(new Map(memberPens.map((p) => [p.EntityId, penNameAndId(p)])));
 
 	let sessionColors = $derived(new Map(pressureSessions.map((s, i) => [s._id, paletteColor(i)])));
 

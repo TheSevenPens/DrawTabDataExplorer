@@ -20,6 +20,11 @@ export async function load({ parent }) {
 	const data: EnrichedPenCompat[] = compat.map((c) => {
 		const tablet = tabletMap.get(c.TabletId);
 		const pen = penMap.get(c.PenId);
+		// Fallbacks are only hit when the compat row references a
+		// Tablet/Pen entity that no longer exists in our data. We have
+		// brand + bare id and no name, so the canonical formatters can't
+		// help — we just stitch "Brand Id" for display. Cross-entity
+		// data-quality checks surface these as orphans.
 		return {
 			...c,
 			TabletFullName: tablet ? fmtTabletFullName(tablet) : `${brandName(c.Brand)} ${c.TabletId}`,

@@ -13,7 +13,7 @@ import type { InventoryTablet } from '$data/lib/entities/inventory-tablet-fields
 type CellLink = { label: string; href: string };
 
 export function inventoryPenCellLinks(
-	penNameMap: Record<string, string>,
+	penNameMap: ReadonlyMap<string, string>,
 ): Record<string, (item: InventoryPen) => CellLink[]> {
 	return {
 		InventoryId: (item) => [
@@ -21,7 +21,7 @@ export function inventoryPenCellLinks(
 		],
 		PenEntityId: (item) => [
 			{
-				label: penNameMap[item.PenEntityId] ?? item.PenEntityId,
+				label: penNameMap.get(item.PenEntityId) ?? item.PenEntityId,
 				href: `${base}/entity/${encodeURIComponent(item.PenEntityId)}`,
 			},
 		],
@@ -29,7 +29,7 @@ export function inventoryPenCellLinks(
 }
 
 export function inventoryTabletCellLinks(
-	tabletNameMap: Record<string, string>,
+	tabletNameMap: ReadonlyMap<string, string>,
 ): Record<string, (item: InventoryTablet) => CellLink[]> {
 	return {
 		InventoryId: (item) => [
@@ -37,7 +37,7 @@ export function inventoryTabletCellLinks(
 		],
 		TabletEntityId: (item) => [
 			{
-				label: tabletNameMap[item.TabletEntityId] ?? item.TabletEntityId,
+				label: tabletNameMap.get(item.TabletEntityId) ?? item.TabletEntityId,
 				href: `${base}/entity/${encodeURIComponent(item.TabletEntityId)}`,
 			},
 		],

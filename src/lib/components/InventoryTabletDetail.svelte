@@ -13,7 +13,7 @@
 	let item: InventoryTablet = $derived(data.item);
 	let modelName: string = $derived(data.modelName ?? data.item.TabletEntityId);
 	let bundledPens: InventoryPen[] = $derived(data.bundledPens ?? []);
-	let penNameMap: Record<string, string> = $derived(data.penNameMap ?? {});
+	let penNameMap: ReadonlyMap<string, string> = $derived(data.penNameMap ?? new Map());
 </script>
 
 <Nav />
@@ -50,7 +50,7 @@
 						</td>
 						<td>
 							<a href={resolve('/entity/[entityId]', { entityId: p.PenEntityId })}>
-								{penNameMap[p.PenEntityId] ?? p.PenEntityId}
+								{penNameMap.get(p.PenEntityId) ?? p.PenEntityId}
 							</a>
 						</td>
 						<td>{p.Brand}</td>

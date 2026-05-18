@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { brandName, type Tablet } from '$data/lib/drawtab-loader.js';
+	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import { toggleFlag } from '$lib/flagged-store.js';
 	import { onMount } from 'svelte';
 
@@ -35,8 +36,7 @@
 			if (filterType && t.Model.Type !== filterType) return false;
 			if (q) {
 				const altNames = (t.Model.AlternateNames ?? []).join(' ');
-				const hay =
-					`${brandName(t.Model.Brand)} ${t.Model.Name} ${t.Model.Id} ${altNames}`.toLowerCase();
+				const hay = `${tabletFullName(t)} ${altNames}`.toLowerCase();
 				if (!hay.includes(q)) return false;
 			}
 			return true;
