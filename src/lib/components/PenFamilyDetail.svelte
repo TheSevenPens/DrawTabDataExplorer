@@ -19,7 +19,11 @@
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { penBrandAndName, penNameAndId } from '$lib/pen-helpers.js';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
-	import { paletteColor } from '$lib/chart-palette.js';
+	import {
+		buildSessionColors,
+		buildChartSessions,
+		toggleInSet,
+	} from '$lib/pressure/chart-session-state.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 
 	let { data } = $props();
@@ -34,29 +38,21 @@
 	// within the same family.
 	let penLabelById = $derived(new Map(memberPens.map((p) => [p.EntityId, penNameAndId(p)])));
 
-	let sessionColors = $derived(new Map(pressureSessions.map((s, i) => [s._id, paletteColor(i)])));
+	let sessionColors = $derived(buildSessionColors(pressureSessions));
 
 	let chartSessions = $derived(
-		pressureSessions.map((s) => {
-			const info = defectsByInventoryId.get(s.InventoryId);
-			return {
-				id: s._id,
-				label: `${penLabelById.get(s.PenEntityId) ?? s.PenEntityId} · ${s.InventoryId} ${s.Date}`,
-				records: s.Records,
-				color: sessionColors.get(s._id),
-				defective: !!info,
-				defectInfo: info?.detailsLabel,
-			};
+		buildChartSessions(pressureSessions, {
+			colors: sessionColors,
+			defectsByInventoryId,
+			labelFor: (s) =>
+				`${penLabelById.get(s.PenEntityId) ?? s.PenEntityId} · ${s.InventoryId} ${s.Date}`,
 		}),
 	);
 
 	let hiddenSessionIds = $state(new Set<string>());
 
 	function toggleSessionVisibility(id: string) {
-		const next = new Set(hiddenSessionIds);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
-		hiddenSessionIds = next;
+		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
 	let activeTab = $state<'specs' | 'members' | 'pressure' | 'maxpressure'>('specs');

@@ -12,32 +12,29 @@
 		INVENTORY_PEN_FIELD_GROUPS,
 	} from '$data/lib/entities/inventory-pen-fields.js';
 	import type { PressureResponse } from '$data/lib/drawtab-loader.js';
-	import { paletteColor } from '$lib/chart-palette.js';
+	import {
+		buildSessionColors,
+		buildChartSessions,
+		toggleInSet,
+	} from '$lib/pressure/chart-session-state.js';
 
 	let { data } = $props();
 	let item: InventoryPen = $derived(data.item);
 	let modelName: string = $derived(data.modelName ?? data.item.PenEntityId);
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
 
-	let sessionColors = $derived(new Map(pressureSessions.map((s, i) => [s._id, paletteColor(i)])));
+	let sessionColors = $derived(buildSessionColors(pressureSessions));
 
 	let chartSessions = $derived(
-		pressureSessions.map((s) => ({
-			id: s._id,
-			label: `${s.Date}`,
-			records: s.Records,
-			color: sessionColors.get(s._id),
-			defective: false,
-			defectInfo: undefined,
-		})),
+		buildChartSessions(pressureSessions, {
+			colors: sessionColors,
+			labelFor: (s) => `${s.Date}`,
+		}),
 	);
 
 	let hiddenSessionIds = $state(new Set<string>());
 	function toggleSessionVisibility(id: string) {
-		const next = new Set(hiddenSessionIds);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
-		hiddenSessionIds = next;
+		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
 	let activeTab = $state<'specs' | 'pressure'>('specs');

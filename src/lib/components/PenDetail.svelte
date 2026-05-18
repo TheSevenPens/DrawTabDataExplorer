@@ -16,7 +16,11 @@
 	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
 	import { tabletFullName, compareTabletByYearDesc } from '$lib/tablet-helpers.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
-	import { paletteColor } from '$lib/chart-palette.js';
+	import {
+		buildSessionColors,
+		buildChartSessions,
+		toggleInSet,
+	} from '$lib/pressure/chart-session-state.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
 	let { data } = $props();
@@ -34,29 +38,19 @@
 		data.defectsByInventoryId ?? new Map(),
 	);
 
-	let sessionColors = $derived(new Map(pressureSessions.map((s, i) => [s._id, paletteColor(i)])));
+	let sessionColors = $derived(buildSessionColors(pressureSessions));
 
 	let chartSessions = $derived(
-		pressureSessions.map((s) => {
-			const info = defectsByInventoryId.get(s.InventoryId);
-			return {
-				id: s._id,
-				label: `${s.InventoryId} ${s.Date}`,
-				records: s.Records,
-				color: sessionColors.get(s._id),
-				defective: !!info,
-				defectInfo: info?.detailsLabel,
-			};
+		buildChartSessions(pressureSessions, {
+			colors: sessionColors,
+			defectsByInventoryId,
 		}),
 	);
 
 	let hiddenSessionIds = $state(new Set<string>());
 
 	function toggleSessionVisibility(id: string) {
-		const next = new Set(hiddenSessionIds);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
-		hiddenSessionIds = next;
+		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
 	let showJson = $state(false);
