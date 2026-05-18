@@ -495,6 +495,129 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		return typeof result;
 	});
 
+	// --- Table view ----------------------------------------------------------
+	//
+	// Flatten the result into { columns, rows } shapes that an HTML table
+	// can render. Three supported kinds:
+	//
+	//   array-of-objects     → columns = union of leaf keys, rows = one per item
+	//   object               → two columns (Key / Value), one row per top-level key
+	//   array-of-primitives  → one column "Value", one row per item
+	//
+	// Nested objects flatten with dot-paths (Model.Brand). Arrays inside
+	// cells are summarised — primitive arrays as comma-joined values,
+	// object arrays as "[N items]" so the cell stays scannable. Use the
+	// JSON view for the full payload.
+
+	type TableShape =
+		| { kind: 'array-of-objects'; columns: string[]; rows: Record<string, string>[] }
+		| { kind: 'object'; columns: ['Key', 'Value']; rows: { Key: string; Value: string }[] }
+		| { kind: 'array-of-primitives'; columns: ['Value']; rows: { Value: string }[] }
+		| { kind: 'not-tabular'; reason: string };
+
+	const MAX_CELL_CHARS = 120;
+
+	function formatCell(v: unknown): string {
+		if (v === null || v === undefined) return '';
+		if (typeof v === 'string') return v;
+		if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+		if (Array.isArray(v)) {
+			if (v.length === 0) return '[]';
+			const allPrimitive = v.every(
+				(x) => x === null || x === undefined || ['string', 'number', 'boolean'].includes(typeof x),
+			);
+			if (allPrimitive) {
+				const joined = v.map((x) => (x === null || x === undefined ? '' : String(x))).join(', ');
+				return joined.length > MAX_CELL_CHARS ? joined.slice(0, MAX_CELL_CHARS - 1) + '…' : joined;
+			}
+			return `[${v.length} item${v.length === 1 ? '' : 's'}]`;
+		}
+		// Object — small summary (avoid full nested stringify).
+		const keys = Object.keys(v as object);
+		return keys.length === 0 ? '{}' : `{${keys.length} key${keys.length === 1 ? '' : 's'}}`;
+	}
+
+	function flattenObject(
+		obj: Record<string, unknown>,
+		prefix: string,
+		out: Map<string, string>,
+	): void {
+		for (const [k, v] of Object.entries(obj)) {
+			const key = prefix ? `${prefix}.${k}` : k;
+			if (
+				v !== null &&
+				typeof v === 'object' &&
+				!Array.isArray(v) &&
+				// Don't flatten Date / Map / Set / etc.
+				v.constructor === Object
+			) {
+				flattenObject(v as Record<string, unknown>, key, out);
+			} else {
+				out.set(key, formatCell(v));
+			}
+		}
+	}
+
+	function buildTableShape(value: unknown): TableShape {
+		if (value === null || value === undefined) {
+			return { kind: 'not-tabular', reason: 'Result is null/undefined.' };
+		}
+		if (Array.isArray(value)) {
+			if (value.length === 0) {
+				return { kind: 'not-tabular', reason: 'Empty array.' };
+			}
+			const allPrimitive = value.every(
+				(x) => x === null || x === undefined || ['string', 'number', 'boolean'].includes(typeof x),
+			);
+			if (allPrimitive) {
+				return {
+					kind: 'array-of-primitives',
+					columns: ['Value'],
+					rows: value.map((x) => ({
+						Value: x === null || x === undefined ? '' : String(x),
+					})),
+				};
+			}
+			const allObjects = value.every(
+				(x) => x !== null && typeof x === 'object' && !Array.isArray(x),
+			);
+			if (!allObjects) {
+				return { kind: 'not-tabular', reason: 'Mixed-shape array — use JSON view.' };
+			}
+			// Flatten each row; union the column order in first-seen sequence.
+			const columns: string[] = [];
+			const seen = new Set<string>();
+			const rows = value.map((row) => {
+				const flat = new Map<string, string>();
+				flattenObject(row as Record<string, unknown>, '', flat);
+				for (const k of flat.keys()) {
+					if (!seen.has(k)) {
+						seen.add(k);
+						columns.push(k);
+					}
+				}
+				return Object.fromEntries(flat);
+			});
+			return { kind: 'array-of-objects', columns, rows };
+		}
+		if (typeof value === 'object') {
+			const flat = new Map<string, string>();
+			flattenObject(value as Record<string, unknown>, '', flat);
+			return {
+				kind: 'object',
+				columns: ['Key', 'Value'],
+				rows: [...flat.entries()].map(([Key, Value]) => ({ Key, Value })),
+			};
+		}
+		return {
+			kind: 'not-tabular',
+			reason: `Result is a ${typeof value}, not an array or object.`,
+		};
+	}
+
+	let viewMode = $state<'json' | 'table'>('json');
+	let tableShape = $derived(result === undefined ? null : buildTableShape(result));
+
 	function handleKeyDown(e: KeyboardEvent) {
 		// Ctrl/Cmd+Enter runs the query.
 		if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -559,13 +682,54 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		<div class="panel-header">
 			<span class="label">Result</span>
 			{#if resultJson}
+				<div class="view-toggle" role="group" aria-label="Result view">
+					<button
+						type="button"
+						class:active={viewMode === 'json'}
+						onclick={() => (viewMode = 'json')}
+						aria-pressed={viewMode === 'json'}>JSON</button
+					>
+					<button
+						type="button"
+						class:active={viewMode === 'table'}
+						onclick={() => (viewMode = 'table')}
+						aria-pressed={viewMode === 'table'}>Table</button
+					>
+				</div>
 				<button class="copy-btn" onclick={copyResult}>Copy</button>
 			{/if}
 		</div>
 		{#if error}
 			<pre class="result-pane error">{error}</pre>
 		{:else if resultJson}
-			<pre class="result-pane">{resultJson}</pre>
+			{#if viewMode === 'json'}
+				<pre class="result-pane">{resultJson}</pre>
+			{:else if tableShape}
+				{#if tableShape.kind === 'not-tabular'}
+					<p class="placeholder">{tableShape.reason} Switch to JSON to see this result.</p>
+				{:else}
+					<div class="result-pane table-wrap">
+						<table class="result-table">
+							<thead>
+								<tr>
+									{#each tableShape.columns as col (col)}
+										<th>{col}</th>
+									{/each}
+								</tr>
+							</thead>
+							<tbody>
+								{#each tableShape.rows as row, i (i)}
+									<tr>
+										{#each tableShape.columns as col (col)}
+											<td>{(row as Record<string, string>)[col] ?? ''}</td>
+										{/each}
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
+			{/if}
 		{:else if running}
 			<p class="placeholder">Running…</p>
 		{:else}
@@ -913,6 +1077,69 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 		border-radius: 4px;
 		min-height: 200px;
 		margin: 0;
+	}
+
+	.view-toggle {
+		display: inline-flex;
+		gap: 0;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		overflow: hidden;
+		margin-right: 4px;
+	}
+	.view-toggle button {
+		appearance: none;
+		border: none;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		padding: 2px 10px;
+		font-size: 12px;
+		cursor: pointer;
+		border-right: 1px solid var(--border);
+	}
+	.view-toggle button:last-child {
+		border-right: none;
+	}
+	.view-toggle button:hover {
+		color: var(--text);
+	}
+	.view-toggle button.active {
+		background: var(--bg);
+		color: #6b21a8;
+		font-weight: 600;
+	}
+
+	.table-wrap {
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		padding: 0;
+		white-space: normal;
+	}
+	.result-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 12px;
+	}
+	.result-table th {
+		text-align: left;
+		padding: 6px 10px;
+		font-weight: 600;
+		color: var(--text-muted);
+		background: var(--bg-card);
+		border-bottom: 2px solid var(--border);
+		position: sticky;
+		top: 0;
+		white-space: nowrap;
+	}
+	.result-table td {
+		padding: 4px 10px;
+		border-bottom: 1px solid var(--border);
+		vertical-align: top;
+		font-variant-numeric: tabular-nums;
+		word-break: break-word;
+		max-width: 320px;
+	}
+	.result-table tr:hover td {
+		background: var(--hover-bg);
 	}
 
 	.ref {
