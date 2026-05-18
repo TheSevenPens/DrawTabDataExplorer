@@ -5,9 +5,7 @@
 		PEN_FAMILY_DEFAULT_COLUMNS,
 		PEN_FAMILY_DEFAULT_VIEW,
 	} from '$data/lib/entities/pen-family-fields.js';
-	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
-	import Nav from '$lib/components/Nav.svelte';
-	import SubNav from '$lib/components/SubNav.svelte';
+	import EntityListLayout from '$lib/components/EntityListLayout.svelte';
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
@@ -16,9 +14,8 @@
 	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
 </script>
 
-<Nav />
-<SubNav tabs={penTabs} />
-<EntityExplorer
+<EntityListLayout
+	subNavTabs={penTabs}
 	title="Pen Families"
 	entityType="pen-families"
 	entityLabel="pen families"

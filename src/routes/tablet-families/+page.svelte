@@ -5,9 +5,7 @@
 		TABLET_FAMILY_DEFAULT_COLUMNS,
 		TABLET_FAMILY_DEFAULT_VIEW,
 	} from '$data/lib/entities/tablet-family-fields.js';
-	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
-	import Nav from '$lib/components/Nav.svelte';
-	import SubNav from '$lib/components/SubNav.svelte';
+	import EntityListLayout from '$lib/components/EntityListLayout.svelte';
 	import { flaggedCount } from '$lib/flagged-store.js';
 	import { tabletSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
@@ -16,9 +14,8 @@
 	let tabletTabs = $derived(tabletSubNavTabs({ flaggedCount: $flaggedCount }));
 </script>
 
-<Nav />
-<SubNav tabs={tabletTabs} />
-<EntityExplorer
+<EntityListLayout
+	subNavTabs={tabletTabs}
 	title="Tablet Families"
 	entityType="tablet-families"
 	entityLabel="tablet families"
