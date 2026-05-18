@@ -27,6 +27,18 @@ open the issue for current scope, design notes, and status.
 - Extract CompatEntityTable for pen/tablet cross-ref tables — #178
 - Extend Playwright smoke tests (analysis, data-quality, session detail) — #179
 - Entity redirect helper + EntityListLayout for route boilerplate — #180
+- Add AGENTS.md entry point for AI agents — #181
+- Deduplicate CLAUDE.md vs ARCHITECTURE.md roles — #182
+- Add WHERE.md goal-to-files lookup — #183
+- Add RECIPES.md task guides — #184
+- Add verify-docs staleness script — #185
+- Cross-link Explorer and data-repo docs — #186
+- Clarify FUTURES / FUTURE / WORKSTREAMS roles for agents — #187
+- Add ANTI-PATTERNS.md checklist — #188
+- Add Agent note headers on hot files — #189
+- Add Cursor rules pointer-linking to CLAUDE.md — #190
+- Add DOC-STYLE.md for LLM-friendly docs — #191
+- Add TESTING.md for agent verification — #192
 
 ## Shipped
 
