@@ -134,17 +134,17 @@
 
 {#if p100Stats}
 	<table class="p100-summary-table">
-		<thead>
-			<tr>
-				<th>Min<br /><span class="unit">(gf)</span></th>
-				<th>Median<br /><span class="unit">(gf)</span></th>
-				<th>Max<br /><span class="unit">(gf)</span></th>
-			</tr>
-		</thead>
 		<tbody>
 			<tr>
+				<th>Min <span class="unit">(gf)</span></th>
 				<td class="mono">{fmtP(p100Stats.min)}</td>
+			</tr>
+			<tr>
+				<th>Median <span class="unit">(gf)</span></th>
 				<td class="mono">{fmtP(p100Stats.median)}</td>
+			</tr>
+			<tr>
+				<th>Max <span class="unit">(gf)</span></th>
 				<td class="mono">{fmtP(p100Stats.max)}</td>
 			</tr>
 		</tbody>
@@ -216,13 +216,13 @@
 		border-collapse: collapse;
 		font-size: 13px;
 		margin: 12px 0;
+		width: fit-content;
 	}
 	.p100-summary-table th {
 		text-align: left;
 		padding: 6px 14px;
 		font-weight: 600;
 		color: var(--text-muted);
-		border-bottom: 2px solid var(--border);
 	}
 	.p100-summary-table th .unit {
 		font-size: 11px;
@@ -231,6 +231,12 @@
 	.p100-summary-table td {
 		padding: 6px 14px;
 		font-variant-numeric: tabular-nums;
+	}
+	.p100-summary-table tr {
+		border-bottom: 1px solid var(--border);
+	}
+	.p100-summary-table tr:last-child {
+		border-bottom: none;
 	}
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
