@@ -52,8 +52,6 @@
 			.filter((v): v is number => v !== null && isFinite(v)),
 	);
 
-	let p100Markers: BandMarker[] = $derived(p100Values.map((v) => ({ value: v, dashed: false })));
-
 	let p100Stats = $derived.by(() => {
 		const xs = [...p100Values].sort((a, b) => a - b);
 		if (xs.length === 0) return null;
@@ -64,7 +62,12 @@
 		return { min, median, max };
 	});
 
-	let p100SummaryMarkers: BandMarker[] = $derived(
+	type View = 'all' | 'summary';
+	let view = $state<View>('all');
+
+	let allMarkers: BandMarker[] = $derived(p100Values.map((v) => ({ value: v, dashed: false })));
+
+	let summaryMarkers: BandMarker[] = $derived(
 		p100Stats
 			? [
 					{ value: p100Stats.min, dashed: false },
@@ -73,37 +76,63 @@
 				]
 			: [],
 	);
+
+	let currentMarkers = $derived(view === 'all' ? allMarkers : summaryMarkers);
+	let currentShadedRange = $derived(
+		view === 'summary' && p100Stats ? { min: p100Stats.min, max: p100Stats.max } : undefined,
+	);
+	let currentHeading = $derived(
+		view === 'all' ? `${displayName} — All max pressures` : `${displayName} — Max pressure range`,
+	);
+	let currentTitle = $derived(
+		view === 'all'
+			? `${chartTitlePrefix} max pressure`
+			: `${chartTitlePrefix} max pressure summary`,
+	);
 </script>
 
 <p class="ref-blurb">
 	Maximum physical pressure is the force at which the digitizer saturates (reports its maximum
-	pressure value). The red lines show the estimated <strong>P100</strong> (max-force) for each
-	measurement session for {entityLabel}.
+	pressure value). Each red line marks the estimated <strong>P100</strong> (max-force) for {entityLabel}.
 </p>
+
+{#if p100Stats}
+	<div class="view-toggle" role="group" aria-label="View">
+		<button
+			type="button"
+			class:active={view === 'all'}
+			onclick={() => (view = 'all')}
+			aria-pressed={view === 'all'}>All sessions ({p100Values.length})</button
+		>
+		<button
+			type="button"
+			class:active={view === 'summary'}
+			onclick={() => (view = 'summary')}
+			aria-pressed={view === 'summary'}>Summary (min / median / max)</button
+		>
+	</div>
+	<p class="ref-blurb view-blurb">
+		{#if view === 'all'}
+			One red line per measurement session.
+		{:else}
+			Outer lines mark <strong>min</strong> and <strong>max</strong>; the thick line marks the
+			<strong>median</strong>; the shaded band spans the full range.
+		{/if}
+	</p>
+{/if}
+
 <BandsChart
 	bands={MAX_PRESSURE_BANDS}
 	axisMax={1000}
 	axisStep={100}
 	unit="gf"
-	title={`${chartTitlePrefix} max pressure`}
-	heading={`${displayName} — All max pressures`}
-	markers={p100Markers}
+	title={currentTitle}
+	heading={currentHeading}
+	markers={currentMarkers}
+	shadedRange={currentShadedRange}
 />
+
 {#if p100Stats}
-	<p class="ref-blurb summary-blurb">
-		Summary across sessions — outer lines mark <strong>min</strong> and
-		<strong>max</strong>, the thick line marks the <strong>median</strong>.
-	</p>
-	<BandsChart
-		bands={MAX_PRESSURE_BANDS}
-		axisMax={1000}
-		axisStep={100}
-		unit="gf"
-		title={`${chartTitlePrefix} max pressure summary`}
-		heading={`${displayName} — Max pressure range`}
-		markers={p100SummaryMarkers}
-		shadedRange={{ min: p100Stats.min, max: p100Stats.max }}
-	/>
 	<table class="p100-summary-table">
 		<thead>
 			<tr>
@@ -141,6 +170,9 @@
 		max-width: 800px;
 		margin: 0 0 12px;
 	}
+	.view-blurb {
+		margin-top: 4px;
+	}
 	.summary-blurb {
 		margin-top: 16px;
 	}
@@ -149,6 +181,37 @@
 		color: var(--text-muted);
 		font-style: italic;
 	}
+
+	.view-toggle {
+		display: inline-flex;
+		gap: 0;
+		margin: 0 0 8px;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		overflow: hidden;
+	}
+	.view-toggle button {
+		appearance: none;
+		border: none;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		padding: 5px 12px;
+		font-size: 12px;
+		cursor: pointer;
+		border-right: 1px solid var(--border);
+	}
+	.view-toggle button:last-child {
+		border-right: none;
+	}
+	.view-toggle button:hover {
+		color: var(--text);
+	}
+	.view-toggle button.active {
+		background: var(--bg);
+		color: #6b21a8;
+		font-weight: 600;
+	}
+
 	.p100-summary-table {
 		border-collapse: collapse;
 		font-size: 13px;
