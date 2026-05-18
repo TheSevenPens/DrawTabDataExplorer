@@ -30,41 +30,58 @@
   .toArray();`,
 		},
 		{
-			label: 'Find a tablet by Model.Id',
-			body: `return await ds.Tablets.find(t => t.Model.Id === 'PTH-660');`,
+			label: 'Find an entity by its canonical EntityId',
+			body: `// ds.getEntity() dispatches on the 2nd dot-segment of the EntityId
+// (or returns a Brand for a single-segment id). Same lookup the URL
+// router uses, available across every entity type via one method.
+
+return {
+  tablet: await ds.getEntity('wacom.tablet.pth660'),
+  pen:    await ds.getEntity('wacom.pen.up911e'),
+  brand:  await ds.getEntity('wacom'),
+};`,
+		},
+		{
+			label: 'Find a record by a single field (.findBy)',
+			body: `// .findBy(field, value) is sugar for the common
+// .find(t => t.<field> === value) pattern. Routes through FieldDef
+// so nested paths work too.
+
+return {
+  pl550: await ds.Tablets.findBy('ModelId', 'PL-550'),
+  up911: await ds.Pens.findBy('PenId', 'UP-911E'),
+};`,
 		},
 		{
 			label: 'Compatible pens for a tablet (record-method API)',
-			body: `const t = await ds.Tablets.find(t => t.Model.Id === 'PL-550');
+			body: `const t = await ds.getEntity('wacom.tablet.pl550');
 return await t.getCompatiblePens();`,
 		},
 		{
 			label: 'Tablet family + its members',
-			body: `const t = await ds.Tablets.find(t => t.Model.Id === 'PL-550');
+			body: `const t = await ds.getEntity('wacom.tablet.pl550');
 const family = await t.getFamily();
 const members = await family.getTablets();
 return { family: family.FamilyName, count: members.length, members: members.map(m => m.Model.Id) };`,
 		},
 		{
 			label: 'Reverse compatibility (pen → tablets)',
-			body: `const pen = await ds.Pens.find(p => p.PenId === 'UP-911E');
+			body: `const pen = await ds.Pens.findBy('PenId', 'UP-911E');
 const tablets = await pen.getCompatibleTablets();
 return tablets.map(t => t.Meta.EntityId);`,
 		},
 		{
 			label: 'Count tablets per brand',
-			body: `return await ds.Tablets
-  .summarize({ by: 'Brand', count: 'tablets' })
-  .sort('tablets', 'desc')
-  .toArray();`,
+			body: `// .countBy(field) is sugar for .summarize({by:field, count:'count'})
+// .sort('count','desc'). Default alias is 'count'; pass
+// { countAlias: 'tablets' } if you want a custom column name.
+
+return await ds.Tablets.countBy('Brand').toArray();`,
 		},
 		{
 			label: 'Count tablets per brand and type',
 			body: `// Multi-field grouping — one row per (Brand, ModelType) pair.
-return await ds.Tablets
-  .summarize({ by: ['Brand', 'ModelType'], count: 'tablets' })
-  .sort('tablets', 'desc')
-  .toArray();`,
+return await ds.Tablets.countBy(['Brand', 'ModelType']).toArray();`,
 		},
 		{
 			label: 'Wacom launch-year stats (avg/min/max)',
@@ -183,7 +200,7 @@ return await ds.Tablets
 			label: 'filterIn: brand is one of a set',
 			body: `return await ds.Tablets
   .filterIn('Brand', ['WACOM', 'XENCELABS'])
-  .summarize({ by: 'Brand', count: 'tablets' })
+  .countBy('Brand')
   .toArray();`,
 		},
 		{
@@ -256,7 +273,7 @@ return {
 		},
 		{
 			label: 'Pressure-response session lookup',
-			body: `const session = await ds.PressureResponse.find(s => s.InventoryId === 'WAP.0001');
+			body: `const session = await ds.PressureResponse.findBy('InventoryId', 'WAP.0001');
 const pen = await session.getPen();
 const tablet = await session.getTablet();
 return { session: session.InventoryId, pen: pen?.PenId, tablet: tablet?.Model.Id };`,
@@ -294,7 +311,7 @@ return await ds.PressureResponse
 		},
 		{
 			label: 'Brand → its tablets and pens',
-			body: `const brand = await ds.Brands.find(b => b.BrandId === 'WACOM');
+			body: `const brand = await ds.getEntity('wacom');
 const tablets = await brand.getTablets();
 const pens = await brand.getPens();
 return { tablets: tablets.length, pens: pens.length };`,

@@ -216,6 +216,48 @@ describe('Query — filter forms', () => {
 		const out = await carsQ().filterNotIn('cyl', [4, 8]).count();
 		expect(inSet + out).toBe(32);
 	});
+
+	it('.findBy returns the first row whose field equals the value', async () => {
+		const row = await carsQ().findBy('cyl', 8);
+		expect(row?.cyl).toBe(8);
+	});
+
+	it('.findBy returns undefined when no row matches', async () => {
+		const row = await carsQ().findBy('cyl', 999);
+		expect(row).toBeUndefined();
+	});
+
+	it('.findBy coerces numeric values to string for the filter call', async () => {
+		// number 4 and string '4' must agree
+		const a = await carsQ().findBy('cyl', 4);
+		const b = await carsQ().findBy('cyl', '4');
+		expect(a?.cyl).toBe(b?.cyl);
+	});
+});
+
+describe('Query — countBy', () => {
+	it('counts rows per single field, sorted desc by default', async () => {
+		const rows = await carsQ().countBy('cyl').toArray();
+		// Three distinct cyl values: 4, 6, 8. Descending by count.
+		expect(rows.length).toBe(3);
+		expect(rows[0].count).toBeGreaterThanOrEqual(rows[1].count);
+		expect(rows[1].count).toBeGreaterThanOrEqual(rows[2].count);
+		const totalAcrossGroups = rows.reduce((s, r) => s + Number(r.count), 0);
+		expect(totalAcrossGroups).toBe(32);
+	});
+
+	it('counts rows per multi-field group', async () => {
+		const rows = await carsQ().countBy(['cyl', 'gear']).toArray();
+		// 32 cars split across distinct (cyl, gear) buckets.
+		const totalAcrossGroups = rows.reduce((s, r) => s + Number(r.count), 0);
+		expect(totalAcrossGroups).toBe(32);
+	});
+
+	it('honours { countAlias, sort: "none" }', async () => {
+		const rows = await carsQ().countBy('cyl', { countAlias: 'cars', sort: 'none' }).toArray();
+		expect(rows[0]).toHaveProperty('cars');
+		expect(rows[0]).not.toHaveProperty('count');
+	});
 });
 
 describe('Query — sort', () => {

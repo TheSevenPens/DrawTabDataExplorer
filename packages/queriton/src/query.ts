@@ -241,6 +241,28 @@ export class Query<T> {
 	}
 
 	/**
+	 * Sugar for the dominant `.summarize({ by, count })` pattern.
+	 * Counts records per group, sorted descending by count by default.
+	 * Returns a Query so the caller can still chain `.take(10)` etc.
+	 *
+	 * Default count alias is `'count'`. Pass `{ countAlias: 'tablets' }` to
+	 * match older `.summarize` examples that named the count column.
+	 *
+	 * Returns `Query<SummaryRow>` since `.summarize()` swaps row shape —
+	 * use the result like any other summary chain.
+	 */
+	countBy(
+		field: string | string[],
+		opts: { countAlias?: string; sort?: 'asc' | 'desc' | 'none' } = {},
+	): Query<SummaryRow> {
+		const countAlias = opts.countAlias ?? 'count';
+		const sortDir = opts.sort ?? 'desc';
+		let q = this.summarize({ by: field, count: countAlias });
+		if (sortDir !== 'none') q = q.sort(countAlias, sortDir);
+		return q;
+	}
+
+	/**
 	 * Explodes a top-level array-valued column into one row per element. For
 	 * nested arrays on entities (`Model.AlternateNames`) call `.derive()` first
 	 * to lift the array to a top-level column.
@@ -475,6 +497,16 @@ export class Query<T> {
 
 	async find(predicate: (item: T) => boolean): Promise<T | undefined> {
 		return (await this.toArray()).find(predicate);
+	}
+
+	/**
+	 * Convenience for the single-field equality lookup that's `.find()`'s
+	 * most common shape. Routes through FieldDef.getValue like every other
+	 * filter — nested paths and computed fields work.
+	 */
+	async findBy(field: string, value: string | number): Promise<T | undefined> {
+		const rows = await this.filter(field, '==', String(value)).toArray();
+		return rows[0];
 	}
 
 	async count(): Promise<number> {
