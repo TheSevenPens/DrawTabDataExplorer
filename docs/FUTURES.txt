@@ -17,6 +17,14 @@ open the issue for current scope, design notes, and status.
 - User-facing tutorial doc for queriton — #146
 - Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
+- Extract <Tabs> component for detail pages — #163
+- Extract <SectionedPage> for sidebar-tree pages — #164
+- Extract <DistributionTable> for bar-fill count tables — #165
+- Merge pressure-bands.ts and spec-bands.ts into one band module — #166
+- Extract shared <MaxPressureTab> (PenDetail + PenFamilyDetail dedup) — #167
+- Factor inventory cellLinks boilerplate into makeInventoryCellLinks() — #168
+- Unify withinYears() and filterByYears() in tablet-analysis — #169
+- Compact numericSections via per-metric factory functions — #170
 
 ## Shipped
 

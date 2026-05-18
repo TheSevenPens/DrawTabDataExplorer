@@ -4,6 +4,7 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import DistributionTable from '$lib/components/DistributionTable.svelte';
 	import { flaggedCount } from '$lib/flagged-store.js';
 
 	let tabletTabs = $derived([
@@ -897,22 +898,7 @@
 					{displaysWithTech.length} of {panelTechCovered} pen displays and standalones have panel tech
 					data.
 				</p>
-				<table class="stat-table">
-					<thead><tr><th>Panel Tech</th><th>Count</th><th></th></tr></thead>
-					<tbody>
-						{#each panelTechRows as row (row.label)}
-							{@const pct = ((row.count / panelTechTotal) * 100).toFixed(1)}
-							<tr>
-								<td class="label">{row.label}</td>
-								<td class="count">{row.count}</td>
-								<td class="bar-cell">
-									<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
-									<span class="pct">{pct}%</span>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+				<DistributionTable labelHeader="Panel Tech" rows={panelTechRows} total={panelTechTotal} />
 			</section>
 		{/if}
 
@@ -963,26 +949,12 @@
 						{/if}
 					{/if}
 					{#if section.data.rows.length > 0}
-						<table class="stat-table">
-							<thead
-								><tr><th>{section.title} ({section.unit})</th><th>Count</th><th></th></tr></thead
-							>
-							<tbody>
-								{#each section.data.rows as row (row.label)}
-									{@const pctVal = ((row.count / section.data.count) * 100).toFixed(1)}
-									<tr>
-										<td class="label">{Number(row.label).toLocaleString()}</td>
-										<td class="count">{row.count}</td>
-										<td class="bar-cell">
-											<div class="bar-bg">
-												<div class="bar-fill" style="width:{pctVal}%"></div>
-											</div>
-											<span class="pct">{pctVal}%</span>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
+						<DistributionTable
+							labelHeader={`${section.title} (${section.unit})`}
+							rows={section.data.rows}
+							total={section.data.count}
+							formatLabel={(l) => Number(l).toLocaleString()}
+						/>
 					{/if}
 				</section>
 			{/if}
@@ -1007,22 +979,12 @@
 				<p class="description">
 					{pressureTotal} of {allTablets.length} tablets have pressure level data.
 				</p>
-				<table class="stat-table">
-					<thead><tr><th>Pressure Levels</th><th>Count</th><th></th></tr></thead>
-					<tbody>
-						{#each pressureRows as row (row.label)}
-							{@const pct = ((row.count / pressureTotal) * 100).toFixed(1)}
-							<tr>
-								<td class="label">{Number(row.label).toLocaleString()}</td>
-								<td class="count">{row.count}</td>
-								<td class="bar-cell">
-									<div class="bar-bg"><div class="bar-fill" style="width:{pct}%"></div></div>
-									<span class="pct">{pct}%</span>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+				<DistributionTable
+					labelHeader="Pressure Levels"
+					rows={pressureRows}
+					total={pressureTotal}
+					formatLabel={(l) => Number(l).toLocaleString()}
+				/>
 			</section>
 		{/if}
 
@@ -1045,22 +1007,7 @@
 				<p class="description">
 					Distribution of {allTablets.length} tablets by digitizer touch support.
 				</p>
-				<table class="stat-table">
-					<thead><tr><th>Touch</th><th>Count</th><th></th></tr></thead>
-					<tbody>
-						{#each touchSupportRows as row (row.label)}
-							{@const pctVal = ((row.count / touchTotal) * 100).toFixed(1)}
-							<tr>
-								<td class="label">{row.label}</td>
-								<td class="count">{row.count}</td>
-								<td class="bar-cell">
-									<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
-									<span class="pct">{pctVal}%</span>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
+				<DistributionTable labelHeader="Touch" rows={touchSupportRows} total={touchTotal} />
 			</section>
 		{/if}
 
@@ -1307,66 +1254,8 @@
 		margin-bottom: 8px;
 	}
 
-	.stat-table {
-		border-collapse: collapse;
-		font-size: 13px;
-		width: 100%;
-	}
-
-	.stat-table th {
-		text-align: left;
-		padding: 5px 10px;
-		background: var(--th-bg);
-		color: var(--th-text);
-		border-bottom: 1px solid var(--border);
-	}
-
-	.stat-table td {
-		padding: 5px 10px;
-		border-bottom: 1px solid var(--border);
-	}
-
-	.stat-table tr:hover td {
-		background: var(--hover-bg);
-	}
-
-	.label {
-		font-weight: 600;
-	}
-	.decimal {
-		color: var(--text-muted);
-		font-variant-numeric: tabular-nums;
-		width: 60px;
-	}
-	.count {
-		color: var(--text-muted);
-		width: 50px;
-	}
-
-	.bar-cell {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
-
-	.bar-bg {
-		width: 120px;
-		height: 12px;
-		background: var(--border);
-		border-radius: 3px;
-		overflow: hidden;
-		flex-shrink: 0;
-	}
-
-	.bar-fill {
-		height: 100%;
-		background: #2563eb;
-		border-radius: 3px;
-	}
-
-	.pct {
-		font-size: 12px;
-		color: var(--text-dim);
-		white-space: nowrap;
-	}
+	/* .stat-table / .label / .count / .bar-cell / .bar-bg / .bar-fill / .pct
+		 styles now live in DistributionTable.svelte's :global() block. The
+		 bespoke aspect-ratio tables on this page still use those class names
+		 directly. */
 </style>
