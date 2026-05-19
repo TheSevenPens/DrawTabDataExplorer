@@ -6,14 +6,14 @@
 
 ## Repo map
 
-| Path                 | What it is                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `src/`               | SvelteKit app (routes, components)                                                         |
-| `data-repo/`         | Git submodule → [DrawTabData](https://github.com/TheSevenPens/DrawTabData) (JSON + TS lib) |
-| `packages/queriton/` | Workspace package — query/pipeline engine used by the UI                                   |
-| `static/`            | Junctions → `data-repo/data/*` (created by `npm run setup-static`)                         |
-| `docs/`              | Explorer docs (architecture, manual, planning index)                                       |
-| `data-repo/docs/`    | Dataset & library docs (schemas, importing, defects)                                       |
+| Path                 | What it is                                                                                                      |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `src/`               | SvelteKit app (routes, components)                                                                              |
+| `data-repo/`         | Git submodule → [DrawTabData](https://github.com/TheSevenPens/DrawTabData) (JSON + TS lib)                      |
+| `packages/queriton/` | Git submodule → [queriton](https://github.com/TheSevenPens/queriton) (workspace package, also published to npm) |
+| `static/`            | Junctions → `data-repo/data/*` (created by `npm run setup-static`)                                              |
+| `docs/`              | Explorer docs (architecture, manual, planning index)                                                            |
+| `data-repo/docs/`    | Dataset & library docs (schemas, importing, defects)                                                            |
 
 ## Read order by task
 
@@ -60,7 +60,7 @@
 | `npm run verify-docs`  | After editing `docs/FUTURES.txt` Open section |
 | `npm run lint`         | Before commit (CI runs this)                  |
 
-Submodule: `git submodule update --init --recursive` if `data-repo/` is empty.
+Submodules: `git submodule update --init --recursive` if `data-repo/` or `packages/queriton/` is empty.
 
 ## Cursor / IDE rules
 

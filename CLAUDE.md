@@ -9,6 +9,19 @@ displays tablet/pen data from the `data-repo` git submodule. Data files are
 served via symlinks from `static/` → `data-repo/data/` so Vite picks them up
 as static assets. The app is deployed to GitHub Pages.
 
+## Git submodules
+
+Two submodules need to be initialised after a fresh clone:
+
+| Path                 | Repo                                                                    | Contents                                                               |
+| -------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `data-repo/`         | [TheSevenPens/DrawTabData](https://github.com/TheSevenPens/DrawTabData) | Tablet/pen/driver JSON + the shared TS library                         |
+| `packages/queriton/` | [TheSevenPens/queriton](https://github.com/TheSevenPens/queriton)       | Query/pipeline engine consumed via `import "queriton"` (npm workspace) |
+
+Run `git submodule update --init --recursive` after cloning. Both submodules
+are pinned to a specific commit in this repo; advancing them is a two-commit
+flow (commit inside, commit pointer outside) — see "Submodule workflow" below.
+
 ## First-time setup — `static/` symlinks
 
 `npm install` runs `scripts/setup-static.mjs` via the `postinstall` hook,
@@ -16,13 +29,15 @@ which creates symlinks (Windows: directory junctions) from `static/` →
 `data-repo/data/` for every subdirectory the dev server needs. Idempotent —
 re-runnable any time as `npm run setup-static`.
 
-If the data submodule isn't checked out yet, the setup script warns and
-skips. Run `git submodule update --init --recursive` first, then
-`npm run setup-static`.
+If either submodule isn't checked out yet, the setup script warns. Run
+`git submodule update --init --recursive` first, then `npm run setup-static`.
 
-Symptom of missing links: empty list pages and 404s on every entity detail
-URL. The dev server prints `[404] GET /tablets/WACOM-tablets.json` and
-similar in its terminal output. Re-run `npm run setup-static` to fix.
+Symptom of missing data-repo links: empty list pages and 404s on every entity
+detail URL. The dev server prints `[404] GET /tablets/WACOM-tablets.json` and
+similar in its terminal output.
+
+Symptom of missing queriton submodule: module-not-found errors on any
+`import "queriton"` — every UI component and load function fails.
 
 ## Key aliases
 
@@ -101,16 +116,26 @@ addition to the loaded data). Avoid `$effect` for pure derivations.
 
 ## Submodule workflow
 
-Data lives in `data-repo/` (a git submodule pointing to DrawTabData). Changes
-to data files require two commits:
+Both submodules use the same two-commit flow: commit inside the submodule,
+then commit in the outer repo to advance the pointer.
 
-1. Commit inside `data-repo/`
-2. Commit in the outer repo to advance the submodule pointer
+**data-repo** (JSON + TS library):
 
 ```bash
 cd data-repo && git add . && git commit -m "..." && git push
 cd .. && git add data-repo && git commit -m "chore: update data-repo submodule (...)"
 ```
+
+**packages/queriton** (query engine, also published to npm):
+
+```bash
+cd packages/queriton && git add . && git commit -m "..." && git push
+cd ../.. && git add packages/queriton && git commit -m "chore: bump queriton submodule (...)"
+```
+
+If a queriton change is needed for an explorer feature, push queriton first,
+then make the explorer commit that bumps the pointer and uses the new API in
+the same PR — the pointer bump and the consumer change should land together.
 
 ## Adding a new brand
 

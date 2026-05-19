@@ -14,7 +14,15 @@ import globals from 'globals';
 
 export default [
 	{
-		ignores: ['node_modules/', 'build/', 'dist/', '.svelte-kit/', 'data-repo/', 'static/'],
+		ignores: [
+			'node_modules/',
+			'build/',
+			'dist/',
+			'.svelte-kit/',
+			'data-repo/',
+			'packages/queriton/',
+			'static/',
+		],
 	},
 
 	js.configs.recommended,
