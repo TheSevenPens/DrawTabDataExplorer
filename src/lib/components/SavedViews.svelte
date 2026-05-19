@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { Step } from 'queriton';
+	import type { Step } from '@thesevenpens/queriton';
 	import { type SavedView, loadViews, saveView, deleteView, renameView } from '$lib/views.js';
 	import { promptModal } from '$lib/modal-store.js';
 

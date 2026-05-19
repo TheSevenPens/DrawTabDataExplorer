@@ -4,7 +4,7 @@
 		type FilterStep,
 		getFieldDef,
 		getOperatorsForField,
-	} from 'queriton';
+	} from '@thesevenpens/queriton';
 
 	let {
 		step = $bindable(),

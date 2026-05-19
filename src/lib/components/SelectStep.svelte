@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { SelectStep, AnyFieldDisplayDef } from 'queriton';
+	import type { SelectStep, AnyFieldDisplayDef } from '@thesevenpens/queriton';
 
 	let {
 		step = $bindable(),

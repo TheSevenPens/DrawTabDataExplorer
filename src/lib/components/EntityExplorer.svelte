@@ -7,7 +7,7 @@
 		type SelectStep as SelectStepType,
 		type AnyFieldDisplayDef,
 		executePipeline,
-	} from 'queriton';
+	} from '@thesevenpens/queriton';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
