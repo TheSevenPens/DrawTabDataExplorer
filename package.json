@@ -14,6 +14,7 @@
 		"verify-docs": "node scripts/verify-docs.mjs",
 		"lint": "eslint . && prettier --check .",
 		"format": "prettier --write . && eslint --fix .",
+		"pretest:unit": "node packages/queriton/scripts/build-tutorial-tests.mjs",
 		"test:unit": "vitest run",
 		"test:unit:watch": "vitest",
 		"test:unit:coverage": "vitest run --coverage",

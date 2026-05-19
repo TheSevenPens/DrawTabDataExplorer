@@ -13,6 +13,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const STATIC_DIR = path.join(ROOT, 'static');
 const DATA_DIR = path.join(ROOT, 'data-repo', 'data');
+const QUERITON_DIR = path.join(ROOT, 'packages', 'queriton');
+
+// Warn early if the queriton submodule isn't checked out — every UI/test
+// path imports from 'queriton', and an empty submodule fails confusingly
+// with module-not-found rather than a clear "run submodule update" hint.
+if (!fs.existsSync(path.join(QUERITON_DIR, 'package.json'))) {
+	console.warn(
+		`[setup-static] packages/queriton/ not initialised — run 'git submodule update --init --recursive' to populate it`,
+	);
+}
 
 // Each entry: name in static/, target relative to static/, kind for Windows.
 const LINKS = [
