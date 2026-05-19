@@ -5,3 +5,4 @@ dist/
 data-repo/
 static/
 package-lock.json
+packages/queriton/test/tutorial-snippets.generated.test.ts

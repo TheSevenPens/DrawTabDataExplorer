@@ -37,6 +37,8 @@
 		"README.md"
 	],
 	"scripts": {
+		"build-tutorial-tests": "node scripts/build-tutorial-tests.mjs",
+		"pretest": "node scripts/build-tutorial-tests.mjs",
 		"test": "vitest run",
 		"test:watch": "vitest"
 	},
