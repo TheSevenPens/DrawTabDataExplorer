@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { type AnyFieldDisplayDef, getFieldDef, getOperatorsForField } from 'queriton';
+	import {
+		type AnyFieldDisplayDef,
+		getFieldDef,
+		getOperatorsForField,
+	} from '@thesevenpens/queriton';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 
 	interface FilterItem {
