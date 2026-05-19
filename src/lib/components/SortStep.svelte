@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { SortStep, AnyFieldDef } from 'queriton';
+	import type { SortStep, AnyFieldDisplayDef } from 'queriton';
 
 	let {
 		step = $bindable(),
@@ -8,7 +8,7 @@
 		onremove,
 	}: {
 		step: SortStep;
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		onchange: () => void;
 		onremove: () => void;
 	} = $props();

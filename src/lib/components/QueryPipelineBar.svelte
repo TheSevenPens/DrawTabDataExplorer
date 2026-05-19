@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnyFieldDef, type Step } from 'queriton';
+	import { type AnyFieldDisplayDef, type Step } from 'queriton';
 	import FilterBar from '$lib/components/FilterBar.svelte';
 	import SortBar from '$lib/components/SortBar.svelte';
 	import ColumnBar from '$lib/components/ColumnBar.svelte';
@@ -33,7 +33,7 @@
 		filters: FilterItem[];
 		sorts: SortItem[];
 		columns: string[];
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		defaultFilterField?: string;
 		onchange: () => void;

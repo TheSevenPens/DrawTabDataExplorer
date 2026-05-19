@@ -8,7 +8,7 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import type { SubNavTab } from '$lib/nav/subnav-tabs.js';
-	import type { AnyFieldDef, Step } from 'queriton';
+	import type { AnyFieldDisplayDef, Step } from 'queriton';
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	type CellLinkFn = (item: any) => { label: string; href: string }[];
@@ -21,7 +21,7 @@
 		entityLabel: string;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		data: any[];
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		defaultColumns: string[];
 		defaultView: Step[];

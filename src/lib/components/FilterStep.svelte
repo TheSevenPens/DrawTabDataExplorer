@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { type AnyFieldDef, type FilterStep, getFieldDef, getOperatorsForField } from 'queriton';
+	import {
+		type AnyFieldDisplayDef,
+		type FilterStep,
+		getFieldDef,
+		getOperatorsForField,
+	} from 'queriton';
 
 	let {
 		step = $bindable(),
@@ -8,7 +13,7 @@
 		onremove,
 	}: {
 		step: FilterStep;
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		onchange: () => void;
 		onremove: () => void;
 	} = $props();

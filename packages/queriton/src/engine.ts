@@ -1,5 +1,6 @@
 import type {
 	FieldDef,
+	FieldDisplayDef,
 	Step,
 	FilterStep,
 	SortStep,
@@ -21,7 +22,8 @@ import type {
 
 // --- Field lookup ---
 
-export function getFieldDef<T>(key: string, fields: FieldDef<T>[]): FieldDef<T> | undefined {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getFieldDef<F extends FieldDef<any>>(key: string, fields: F[]): F | undefined {
 	return fields.find((f) => f.key === key);
 }
 
@@ -335,7 +337,7 @@ function applySummarize(
 
 	// Synthetic field-defs over the new row shape so downstream sort/filter/take
 	// can target groupBy keys and aggregator output columns.
-	const syntheticFields: FieldDef<unknown>[] = [
+	const syntheticFields: FieldDisplayDef<unknown>[] = [
 		...step.groupBy.map((k) => ({
 			key: k,
 			label: k,
@@ -450,7 +452,7 @@ function applyProject(
 		return row;
 	});
 
-	const syntheticFields: FieldDef<unknown>[] = step.fields.map((k) => ({
+	const syntheticFields: FieldDisplayDef<unknown>[] = step.fields.map((k) => ({
 		key: k,
 		label: k,
 		getValue: (row: unknown) => String((row as SummaryRow)[k] ?? ''),
@@ -507,7 +509,7 @@ function applyDerive(
 	// The derived columns become synthetic field-defs whose getValue reads
 	// the merged property. Original fields keep working because the clone
 	// still has the entity's nested structure.
-	const derivedFields: FieldDef<unknown>[] = colNames.map((k) => ({
+	const derivedFields: FieldDisplayDef<unknown>[] = colNames.map((k) => ({
 		key: k,
 		label: k,
 		getValue: (row: unknown) => String((row as Record<string, unknown>)[k] ?? ''),

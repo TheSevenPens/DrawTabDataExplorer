@@ -311,30 +311,63 @@ export type Step =
  */
 export type SummaryRow = Record<string, string | number | string[]>;
 
-// --- Convenience alias ---
-
-/**
- * A FieldDef where the item type is not statically known.
- * Use this in generic UI components (EntityExplorer, ResultsTable, etc.) that
- * accept field definitions for any entity type. Callers with a concrete entity
- * type should continue to use FieldDef<T> directly.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyFieldDef = FieldDef<any>;
-
 // --- Field metadata ---
 
+/**
+ * Core field descriptor used by the query engine. Carries only what's
+ * needed to read, filter, sort, and group values from a row — no
+ * UI-rendering hints. Non-UI consumers of queriton (CLI tools, backend
+ * query layers) should depend on this type.
+ *
+ * UI layers that need display affordances (grouping, link rendering,
+ * unit-aware formatting, computed-badge) should use `FieldDisplayDef<T>`
+ * instead, which extends this with optional display metadata.
+ */
 export interface FieldDef<T> {
 	key: string;
 	label: string;
 	getValue: (item: T) => string;
+	type: 'string' | 'number' | 'enum';
+	enumValues?: string[];
+}
+
+/**
+ * Display-layer extension of `FieldDef`. Adds the optional metadata UI
+ * components rely on: a `group` for sectioned rendering, display-only
+ * value/href overrides, a `computed` flag for the badge, and an
+ * optional `unit` consumed by the value formatters.
+ *
+ * Field arrays exported from app/entity code should be typed as
+ * `FieldDisplayDef<T>[]` so UI components see the richer shape; the
+ * engine still accepts them anywhere a `FieldDef<T>[]` is required.
+ */
+export interface FieldDisplayDef<T> extends FieldDef<T> {
+	/** Section label used by FieldPicker, ColumnBar, DetailView, etc. */
+	group: string;
 	/** Override display text shown in DetailView (does not affect filtering/sorting). */
 	getDisplayValue?: (item: T) => string;
 	/** Return an internal href (no base prefix needed) to render the value as a link in DetailView. */
 	getHref?: (item: T) => string | null;
-	type: 'string' | 'number' | 'enum';
-	enumValues?: string[];
+	/** Marks a derived/computed field; UI shows a badge. */
 	computed?: boolean;
-	group: string;
+	/** Unit suffix consumed by unit-aware value formatters. */
 	unit?: string;
 }
+
+// --- Convenience aliases ---
+
+/**
+ * A FieldDef where the item type is not statically known.
+ * Use this in generic engine helpers that don't need display metadata.
+ * UI components should prefer `AnyFieldDisplayDef`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyFieldDef = FieldDef<any>;
+
+/**
+ * A FieldDisplayDef where the item type is not statically known.
+ * Use this in generic UI components (EntityExplorer, ResultsTable,
+ * FilterBar, etc.) that operate on field definitions for any entity.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyFieldDisplayDef = FieldDisplayDef<any>;

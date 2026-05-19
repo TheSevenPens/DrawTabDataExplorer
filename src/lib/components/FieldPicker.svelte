@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AnyFieldDef } from 'queriton';
+	import type { AnyFieldDisplayDef } from 'queriton';
 
 	let {
 		fields,
@@ -11,7 +11,7 @@
 		onremovegroup,
 		onclose,
 	}: {
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		selected?: string;
 		exclude?: string[];
@@ -27,7 +27,7 @@
 		onselect(key);
 	}
 
-	function toggleGroup(allGroupFields: AnyFieldDef[]) {
+	function toggleGroup(allGroupFields: AnyFieldDisplayDef[]) {
 		const allKeys = allGroupFields.map((f) => f.key);
 		const allChosen = allKeys.every((k) => excludeSet.has(k));
 		if (allChosen && onremovegroup) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AnyFieldDef } from 'queriton';
+	import type { AnyFieldDisplayDef } from 'queriton';
 	import { exportTableAsPptx } from '$lib/pptx-export';
 
 	interface Props {
@@ -8,7 +8,7 @@
 		// Rich mode — scope toggles enabled (rows: view vs all, columns: view vs all)
 		allData?: any[];
 		filteredData?: any[];
-		allFields?: AnyFieldDef[];
+		allFields?: AnyFieldDisplayDef[];
 		visibleFields?: string[];
 		// Simple mode — pre-built headers + rows, no scope toggles
 		headers?: string[];
@@ -76,7 +76,7 @@
 		const keys = colMode === 'all' ? (allFields ?? []).map((f) => f.key) : (visibleFields ?? []);
 		return keys
 			.map((k) => (allFields ?? []).find((f) => f.key === k))
-			.filter((f): f is AnyFieldDef => Boolean(f))
+			.filter((f): f is AnyFieldDisplayDef => Boolean(f))
 			.map((f) => ({ key: f.key, label: f.label, getValue: (row: any) => f.getValue(row) }));
 	});
 

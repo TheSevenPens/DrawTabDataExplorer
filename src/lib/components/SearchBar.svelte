@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { AnyFieldDef } from 'queriton';
+	import type { AnyFieldDisplayDef } from 'queriton';
 
 	interface QuickFilterOption {
-		fieldDef: AnyFieldDef;
+		fieldDef: AnyFieldDisplayDef;
 		values: string[];
 	}
 

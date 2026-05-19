@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { SelectStep, AnyFieldDef } from 'queriton';
+	import type { SelectStep, AnyFieldDisplayDef } from 'queriton';
 
 	let {
 		step = $bindable(),
@@ -10,7 +10,7 @@
 		removable = true,
 	}: {
 		step: SelectStep;
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		onchange: () => void;
 		onremove: () => void;

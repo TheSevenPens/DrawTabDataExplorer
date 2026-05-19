@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnyFieldDef, getFieldDef } from 'queriton';
+	import { type AnyFieldDisplayDef, getFieldDef } from 'queriton';
 	import { base } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference } from '$lib/unit-store.js';
@@ -19,7 +19,7 @@
 	}: {
 		data: any[];
 		visibleFields: string[];
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		detailBasePath?: string;
 		linkField?: string;
 		cellLinks?: Record<string, (item: any) => { label: string; href: string }[]>;

@@ -5,7 +5,7 @@
 		type FilterStep as FilterStepType,
 		type SortStep as SortStepType,
 		type SelectStep as SelectStepType,
-		type AnyFieldDef,
+		type AnyFieldDisplayDef,
 		executePipeline,
 	} from 'queriton';
 	import { page } from '$app/state';
@@ -39,7 +39,7 @@
 		entityType: string;
 		entityLabel: string;
 		data: any[];
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		defaultColumns: string[];
 		defaultView: Step[];
@@ -114,7 +114,7 @@
 	let showExport = $state(false);
 
 	interface QuickFilterOption {
-		fieldDef: AnyFieldDef;
+		fieldDef: AnyFieldDisplayDef;
 		values: string[];
 	}
 

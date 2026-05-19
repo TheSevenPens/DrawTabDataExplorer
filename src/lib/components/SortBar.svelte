@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnyFieldDef } from 'queriton';
+	import { type AnyFieldDisplayDef } from 'queriton';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 
 	interface SortItem {
@@ -16,7 +16,7 @@
 		ontoggle,
 	}: {
 		sorts: SortItem[];
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		isOpen: boolean;
 		onchange: () => void;

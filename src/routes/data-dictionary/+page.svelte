@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
-	import type { AnyFieldDef } from 'queriton';
+	import type { AnyFieldDisplayDef } from 'queriton';
 	import { BRAND_FIELDS } from '$data/lib/entities/brand-fields.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { TABLET_FAMILY_FIELDS } from '$data/lib/entities/tablet-family-fields.js';
@@ -28,7 +28,7 @@
 		id: string;
 		category: string;
 		label: string;
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 	}
 
 	const entityDefs: EntityDef[] = [
@@ -99,8 +99,8 @@
 		});
 	}
 
-	function fieldsByGroup(fields: AnyFieldDef[]): [string, AnyFieldDef[]][] {
-		const map = new Map<string, AnyFieldDef[]>();
+	function fieldsByGroup(fields: AnyFieldDisplayDef[]): [string, AnyFieldDisplayDef[]][] {
+		const map = new Map<string, AnyFieldDisplayDef[]>();
 		for (const f of fields) {
 			if (!map.has(f.group)) map.set(f.group, []);
 			map.get(f.group)!.push(f);
@@ -108,7 +108,7 @@
 		return [...map.entries()];
 	}
 
-	function formatType(f: AnyFieldDef): string {
+	function formatType(f: AnyFieldDisplayDef): string {
 		if (f.type === 'enum' && f.enumValues && f.enumValues.length > 0) {
 			return `enum (${f.enumValues.length})`;
 		}

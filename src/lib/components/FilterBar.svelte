@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnyFieldDef, getFieldDef, getOperatorsForField } from 'queriton';
+	import { type AnyFieldDisplayDef, getFieldDef, getOperatorsForField } from 'queriton';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 
 	interface FilterItem {
@@ -19,7 +19,7 @@
 		ontoggle,
 	}: {
 		filters: FilterItem[];
-		fields: AnyFieldDef[];
+		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		defaultFilterField?: string;
 		isOpen: boolean;
