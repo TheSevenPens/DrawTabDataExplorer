@@ -10,12 +10,26 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
-	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
+	import {
+		flaggedPenModels,
+		flaggedPenModelCount,
+		flaggedPenTotalCount,
+		toggleFlaggedPenModel,
+	} from '$lib/flagged-store.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
 
-	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
+	let penTabs = $derived(
+		penSubNavTabs({
+			flaggedPenCount: $flaggedPenTotalCount,
+			flaggedPenModelCount: $flaggedPenModelCount,
+		}),
+	);
+
+	// flaggedPenModels stores lowercased EntityIds, which matches the lowercase
+	// EntityIds the rows expose, so direct Set.has() lookups work.
+	let flaggedSet = $derived(new Set($flaggedPenModels));
 
 	let cellLinks = $derived({
 		PenFamily: (p: Pen) => {
@@ -47,4 +61,6 @@
 	{cellLinks}
 	defaultFilterField="PenFamily"
 	quickFilterFields={['Brand']}
+	flaggedIds={flaggedSet}
+	onToggleFlag={toggleFlaggedPenModel}
 />

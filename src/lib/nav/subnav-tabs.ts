@@ -18,13 +18,16 @@ export function tabletSubNavTabs(opts: { flaggedCount?: number } = {}): SubNavTa
 	];
 }
 
-export function penSubNavTabs(opts: { flaggedPenCount?: number } = {}): SubNavTab[] {
+export function penSubNavTabs(
+	opts: { flaggedPenCount?: number; flaggedPenModelCount?: number } = {},
+): SubNavTab[] {
 	return [
 		{ href: '/pens', label: 'Pen models' },
 		{ href: '/pen-families', label: 'Pen families' },
 		{ href: '/pen-analysis', label: 'Analysis' },
 		{ href: '/pen-inventory', label: 'Inventory' },
 		{ href: '/pen-flagged', label: 'Flagged', badge: opts.flaggedPenCount },
+		{ href: '/pen-compare', label: 'Compare', badge: opts.flaggedPenModelCount },
 		{ href: '/pressure-response', label: 'Pressure Response' },
 	];
 }

@@ -103,6 +103,19 @@ export function clearAllPenFlags() {
 	persist(PEN_FAMILIES_KEY, []);
 }
 
+/**
+ * Clear only the pen-model flags. Used by /pen-compare's "Clear all"
+ * button — mirrors the tablet-side `clearFlags` which only touches the
+ * flag set that page actually manages.
+ */
+export function clearFlaggedPenModels() {
+	flaggedPenModels.set([]);
+	persist(PEN_MODELS_KEY, []);
+}
+
+/** Count of flagged pen models (drives the /pen-compare sub-nav badge). */
+export const flaggedPenModelCount = derived(flaggedPenModels, ($f) => $f.length);
+
 export const flaggedPenTotalCount = derived(
 	[flaggedPenUnits, flaggedPenModels, flaggedPenFamilies],
 	([$u, $m, $f]) => $u.length + $m.length + $f.length,
