@@ -5,6 +5,8 @@
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
+	import IafTab from '$lib/components/IafTab.svelte';
+	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import {
 		type InventoryPen,
@@ -12,6 +14,7 @@
 		INVENTORY_PEN_FIELD_GROUPS,
 	} from '$data/lib/entities/inventory-pen-fields.js';
 	import type { PressureResponse } from '$data/lib/drawtab-loader.js';
+	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import {
 		buildSessionColors,
 		buildChartSessions,
@@ -22,12 +25,16 @@
 	let item: InventoryPen = $derived(data.item);
 	let modelName: string = $derived(data.modelName ?? data.item.PenEntityId);
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
+	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
+		data.defectsByInventoryId ?? new Map(),
+	);
 
 	let sessionColors = $derived(buildSessionColors(pressureSessions));
 
 	let chartSessions = $derived(
 		buildChartSessions(pressureSessions, {
 			colors: sessionColors,
+			defectsByInventoryId,
 			labelFor: (s) => `${s.Date}`,
 		}),
 	);
@@ -37,7 +44,7 @@
 		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
-	let activeTab = $state<'specs' | 'pressure'>('specs');
+	let activeTab = $state<'specs' | 'pressure' | 'iaf' | 'maxpressure'>('specs');
 </script>
 
 <Nav />
@@ -53,6 +60,8 @@
 	tabs={[
 		{ id: 'specs', label: 'Specs' },
 		{ id: 'pressure', label: 'Pressure Response', badge: pressureSessions.length },
+		{ id: 'iaf', label: 'IAF' },
+		{ id: 'maxpressure', label: 'Max Pressure' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
 />
@@ -80,14 +89,44 @@
 				colors={sessionColors}
 				hiddenIds={hiddenSessionIds}
 				onToggle={toggleSessionVisibility}
+				{defectsByInventoryId}
 			/>
 			<SessionStats
 				sessions={pressureSessions}
 				title={`Aggregated across sessions for ${item.InventoryId}`}
+				{defectsByInventoryId}
 			/>
 		{:else}
 			<p class="no-data">No pressure response sessions recorded for this pen unit.</p>
 		{/if}
+	</div>
+{/if}
+
+{#if activeTab === 'iaf'}
+	<div class="tab-content">
+		<IafTab
+			{pressureSessions}
+			{defectsByInventoryId}
+			{chartSessions}
+			hiddenIds={hiddenSessionIds}
+			displayName={`${modelName} ${item.InventoryId}`}
+			chartTitlePrefix={item.InventoryId}
+			entityLabel="this pen unit"
+		/>
+	</div>
+{/if}
+
+{#if activeTab === 'maxpressure'}
+	<div class="tab-content">
+		<MaxPressureTab
+			{pressureSessions}
+			{defectsByInventoryId}
+			{chartSessions}
+			hiddenIds={hiddenSessionIds}
+			displayName={`${modelName} ${item.InventoryId}`}
+			chartTitlePrefix={item.InventoryId}
+			entityLabel="this pen unit"
+		/>
 	</div>
 {/if}
 

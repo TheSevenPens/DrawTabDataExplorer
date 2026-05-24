@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { penFullName } from '$lib/pen-helpers.js';
+import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 
 export const prerender = false;
 
@@ -22,5 +23,9 @@ export async function load({ params, parent }) {
 			? pressureSessions.filter((s) => s.InventoryId === item.InventoryId)
 			: [];
 
-	return { item, modelName, pressureSessions: sessions };
+	// Only this unit's defects matter for IAF/Max Pressure exclusion on this
+	// page — sessions are pre-filtered to one InventoryId.
+	const defectsByInventoryId = buildInventoryDefects([item]);
+
+	return { item, modelName, pressureSessions: sessions, defectsByInventoryId };
 }
