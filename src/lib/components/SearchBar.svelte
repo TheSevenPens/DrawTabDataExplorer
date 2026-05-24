@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AnyFieldDisplayDef } from 'queriton';
+	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
 
 	interface QuickFilterOption {
 		fieldDef: AnyFieldDisplayDef;

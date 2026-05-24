@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnyFieldDisplayDef, getFieldDef } from 'queriton';
+	import { type AnyFieldDisplayDef, getFieldDef } from '@thesevenpens/queriton';
 	import { base } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference } from '$lib/unit-store.js';

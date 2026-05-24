@@ -6,7 +6,7 @@
 | -------------------------------------------------------------- | ---------------------------------------------------------- |
 | `onMount` + `fetch` for route data                             | `+page.ts` `load()` + `$props().data`                      |
 | Reconstruct `` `${brandName(x)} ${name} (${id})` `` for labels | `penFullName`, `tabletFullName`, etc. via `$lib/*-helpers` |
-| Import from `data-repo/lib/pipeline`                           | `import … from 'queriton'`                                 |
+| Import from `data-repo/lib/pipeline`                           | `import … from '@thesevenpens/queriton'`                   |
 | Edit JSON under `static/`                                      | Edit `data-repo/data/`, run `npm run setup-static`         |
 | `prerender = true` on `/entity/[entityId]` loader              | Keep `prerender = false` (SPA fallback)                    |
 | `structuredClone()` on Svelte 5 proxies in views/pipeline      | `JSON.parse(JSON.stringify(...))` for deep clone           |

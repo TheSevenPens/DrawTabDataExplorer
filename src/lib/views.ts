@@ -1,4 +1,4 @@
-import type { Step } from 'queriton';
+import type { Step } from '@thesevenpens/queriton';
 import { getStorageJson, setStorageJson, removeStorageItem } from '$lib/storage.js';
 
 export interface SavedView {

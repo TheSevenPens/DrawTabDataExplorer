@@ -284,7 +284,7 @@ several files:
 exported from the workspace package `queriton`. Import it as:
 
 ```ts
-import type { AnyFieldDef } from 'queriton';
+import type { AnyFieldDef } from '@thesevenpens/queriton';
 ```
 
 ## Setup

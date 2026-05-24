@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type AnyFieldDisplayDef } from 'queriton';
+	import { type AnyFieldDisplayDef } from '@thesevenpens/queriton';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 
 	interface SortItem {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TakeStep } from 'queriton';
+	import type { TakeStep } from '@thesevenpens/queriton';
 
 	let {
 		step = $bindable(),

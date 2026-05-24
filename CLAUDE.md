@@ -267,10 +267,10 @@ chart alongside the bands charts.
 components that operate on fields generically (FilterBar, SortBar, ColumnBar,
 FilterStep, SortStep, SelectStep, ResultsTable, etc.).
 
-Import from the workspace package `queriton` (see [packages/queriton/](packages/queriton/)):
+Import from the workspace package `@thesevenpens/queriton` (see [packages/queriton/](packages/queriton/)):
 
 ```ts
-import type { AnyFieldDef } from 'queriton';
+import type { AnyFieldDef } from '@thesevenpens/queriton';
 ```
 
 ## EntityId formats
