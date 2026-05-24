@@ -53,21 +53,26 @@
 		return converted + valueSuffix(f.label, f.unit, $unitPreference);
 	}
 
-	// Group fields and filter out those with no data across all flagged tablets
+	// Group fields and filter out those with no data across all flagged tablets.
+	// Each row carries `key` (the unique field key, used as the {#each} key) and
+	// `label` (the unit-stripped display label, which can collide across fields
+	// — e.g. "Active Area (mm²)" and "Active Area (cm²)" both strip to "Active
+	// Area"). Keying on `label` was the source of an each_key_duplicate crash.
 	let comparisonGroups = $derived.by(() => {
 		if (flaggedItems.length === 0) return [];
 		const groups: {
 			group: string;
-			fields: { label: string; values: string[]; differs: boolean }[];
+			fields: { key: string; label: string; values: string[]; differs: boolean }[];
 		}[] = [];
 		for (const groupName of TABLET_FIELD_GROUPS) {
 			const groupFields = TABLET_FIELDS.filter((f) => f.group === groupName);
-			const rows: { label: string; values: string[]; differs: boolean }[] = [];
+			const rows: { key: string; label: string; values: string[]; differs: boolean }[] = [];
 			for (const f of groupFields) {
 				const values = flaggedItems.map((t) => getDisplayVal(f, t));
 				if (values.every((v) => v === '')) continue;
 				const unique = new Set(values.filter((v) => v !== ''));
 				rows.push({
+					key: f.key,
 					label: stripUnit(f.label, f.unit),
 					values,
 					differs: unique.size > 1,
@@ -267,7 +272,7 @@
 						<tr class="group-row">
 							<td class="group-header" colspan={flaggedItems.length + 1}>{group.group}</td>
 						</tr>
-						{#each group.fields as row (row.label)}
+						{#each group.fields as row (row.key)}
 							<tr>
 								<td class="spec-label">{row.label}</td>
 								{#each row.values as val, i (i)}
