@@ -8,12 +8,16 @@
 	// flagged pens, because the same store also feeds the /pen-flagged
 	// pressure-overlay chart which benefits from many flags.
 	import { resolve } from '$app/paths';
-	import { type Pen } from '$data/lib/drawtab-loader.js';
+	import { type Pen, type PressureResponse } from '$data/lib/drawtab-loader.js';
+	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import { PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
+	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue } from '$data/lib/units.js';
 	import {
 		flaggedPenModels,
+		flaggedPenUnits,
+		flaggedPenFamilies,
 		flaggedPenTotalCount,
 		flaggedPenModelCount,
 		toggleFlaggedPenModel,
@@ -23,9 +27,16 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 	import PenPicker from '$lib/components/PenPicker.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
+	import IafTab from '$lib/components/IafTab.svelte';
+	import PressureChart from '$lib/components/PressureChart.svelte';
+	import SessionStats from '$lib/components/SessionStats.svelte';
+	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
+	import { paletteColor } from '$lib/chart-palette.js';
 	import { penFullName, penBrandAndName } from '$lib/pen-helpers.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
+	import { buildSessionColors, buildChartSessions } from '$lib/pressure/chart-session-state.js';
 
 	let { data } = $props();
 
@@ -36,9 +47,13 @@
 		}),
 	);
 
-	let activeTab: 'flagged' | 'compare' = $state('flagged');
+	let activeTab: 'flagged' | 'compare' | 'pressure' | 'iaf' | 'maxpressure' = $state('flagged');
 	let showPicker = $state(false);
 	let allPens: Pen[] = $derived(data.allPens ?? []);
+	let allSessions: PressureResponse[] = $derived(data.allSessions ?? []);
+	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
+		data.defectsByInventoryId ?? new Map(),
+	);
 
 	// flaggedPenModels stores lowercase EntityIds; match the same casing when
 	// looking up the full pen record.
@@ -47,6 +62,113 @@
 			.map((id) => allPens.find((p) => p.EntityId.toLowerCase() === id))
 			.filter((p): p is Pen => !!p),
 	);
+
+	// Group all pressure sessions by PenEntityId once so per-pen lookups in
+	// the Max Pressure tab are O(1) and don't re-scan the full session list
+	// for each flagged pen.
+	let sessionsByPenEntityId = $derived.by(() => {
+		const out = new Map<string, PressureResponse[]>();
+		for (const s of allSessions) {
+			const arr = out.get(s.PenEntityId);
+			if (arr) arr.push(s);
+			else out.set(s.PenEntityId, [s]);
+		}
+		return out;
+	});
+
+	// Per-pen bundles shared by the IAF and Max Pressure tabs. Each pen gets
+	// its own color set + chart sessions so colors are stable within a section
+	// but independent across sections.
+	let perPenSections = $derived(
+		flaggedItems.map((p) => {
+			const sessions = sessionsByPenEntityId.get(p.EntityId) ?? [];
+			const colors = buildSessionColors(sessions);
+			const chartSessions = buildChartSessions(sessions, { colors, defectsByInventoryId });
+			return { pen: p, sessions, chartSessions };
+		}),
+	);
+
+	// The embedded MaxPressureTab takes a `hiddenIds` set; we don't expose
+	// toggle UI here, so it stays empty. Shared reference avoids unnecessary
+	// re-renders from new empty-set identities.
+	const EMPTY_HIDDEN: ReadonlySet<string> = new Set();
+
+	// --- Pressure Response tab: cross-scope overlay ---
+	//
+	// Aggregates sessions matching ANY of the three pen flag scopes
+	// (unit / model / family). This mirrors the behavior previously hosted
+	// on /pen-flagged so users who flag from inventory or family pages
+	// still see those sessions overlaid here. (The Compare and Max Pressure
+	// tabs only consider flagged pen models, since spec / per-pen-max-pressure
+	// only make sense at the model level.)
+	let matchedSessions = $derived.by(() => {
+		const flaggedFamilyPenIds = new Set(
+			allPens
+				.filter((p) => $flaggedPenFamilies.includes(p.PenFamily.toLowerCase()))
+				.map((p) => p.EntityId.toLowerCase()),
+		);
+		return allSessions.filter((s) => {
+			const inv = s.InventoryId.toLowerCase();
+			const model = s.PenEntityId.toLowerCase();
+			if ($flaggedPenUnits.includes(inv)) return true;
+			if ($flaggedPenModels.includes(model)) return true;
+			if (flaggedFamilyPenIds.has(model)) return true;
+			return false;
+		});
+	});
+
+	let overlayColors = $derived(
+		new Map(matchedSessions.map((s, i) => [s._id, paletteColor(i)])),
+	);
+
+	let penNameById = $derived(
+		new Map(
+			allPens.map((p) => [
+				p.EntityId,
+				penIdRedundantInName(p) ? p.PenName : `${p.PenName} (${p.PenId})`,
+			]),
+		),
+	);
+
+	let overlayChartSessions = $derived(
+		matchedSessions.map((s) => {
+			const penLabel = penNameById.get(s.PenEntityId) ?? s.PenEntityId;
+			const info = defectsByInventoryId.get(s.InventoryId);
+			return {
+				id: s._id,
+				label: `${penLabel} · ${s.InventoryId} ${s.Date}`,
+				records: s.Records,
+				color: overlayColors.get(s._id),
+				defective: !!info,
+				defectInfo: info?.detailsLabel,
+			};
+		}),
+	);
+
+	let overlayHiddenIds = $state(new Set<string>());
+
+	function toggleOverlaySessionVisibility(id: string) {
+		const next = new Set(overlayHiddenIds);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		overlayHiddenIds = next;
+	}
+
+	// Brief one-line summary of *what* is currently flagged across all three
+	// scopes — gives context to the overlay since flags came from other pages
+	// (inventory / family / model pages) and this tab is read-only.
+	let flagSummary = $derived.by(() => {
+		const parts: string[] = [];
+		if ($flaggedPenModels.length > 0)
+			parts.push(`${$flaggedPenModels.length} model${$flaggedPenModels.length === 1 ? '' : 's'}`);
+		if ($flaggedPenFamilies.length > 0)
+			parts.push(
+				`${$flaggedPenFamilies.length} famil${$flaggedPenFamilies.length === 1 ? 'y' : 'ies'}`,
+			);
+		if ($flaggedPenUnits.length > 0)
+			parts.push(`${$flaggedPenUnits.length} unit${$flaggedPenUnits.length === 1 ? '' : 's'}`);
+		return parts.join(' · ');
+	});
 
 	function getDisplayVal(f: (typeof PEN_FIELDS)[0], pen: Pen): string {
 		const val = f.getValue(pen);
@@ -130,6 +252,16 @@
 	<button class:active={activeTab === 'compare'} onclick={() => (activeTab = 'compare')}>
 		Compare
 	</button>
+	<button class:active={activeTab === 'pressure'} onclick={() => (activeTab = 'pressure')}>
+		Pressure Response ({matchedSessions.length})
+	</button>
+	<button class:active={activeTab === 'iaf'} onclick={() => (activeTab = 'iaf')}> IAF </button>
+	<button
+		class:active={activeTab === 'maxpressure'}
+		onclick={() => (activeTab = 'maxpressure')}
+	>
+		Max Pressure
+	</button>
 </div>
 
 {#if activeTab === 'flagged'}
@@ -204,6 +336,99 @@
 				</tbody>
 			</table>
 		</div>
+	{/if}
+{:else if activeTab === 'pressure'}
+	{#if $flaggedPenTotalCount === 0}
+		<p class="no-data">
+			Nothing flagged. Flag a pen model from the <a href={resolve('/pens')}>pens list</a>, a pen
+			family, or a pen unit to see its sessions overlaid here.
+		</p>
+	{:else if matchedSessions.length === 0}
+		<p class="no-data">
+			Flagged: {flagSummary}. No pressure-response sessions match the current flags.
+		</p>
+	{:else}
+		<p class="overlay-summary">
+			{matchedSessions.length} session{matchedSessions.length === 1 ? '' : 's'} from {flagSummary}.
+		</p>
+		<PressureChart
+			sessions={overlayChartSessions}
+			title="Flagged pens"
+			hiddenIds={overlayHiddenIds}
+		/>
+		<PressureResponseChartLegendTable
+			sessions={matchedSessions}
+			colors={overlayColors}
+			hiddenIds={overlayHiddenIds}
+			onToggle={toggleOverlaySessionVisibility}
+			{penNameById}
+			{defectsByInventoryId}
+			showBrand
+			showModel
+		/>
+		<SessionStats
+			sessions={matchedSessions}
+			title="Aggregated across flagged sessions"
+			{defectsByInventoryId}
+		/>
+	{/if}
+{:else if activeTab === 'iaf'}
+	{#if flaggedItems.length === 0}
+		<p class="no-data">
+			Flag at least one pen to see its IAF chart. Currently {flaggedItems.length} flagged.
+		</p>
+	{:else}
+		{#each perPenSections as section (section.pen.EntityId)}
+			<section class="per-pen-section">
+				<h2 class="per-pen-heading">
+					<a href={resolve('/entity/[entityId]', { entityId: section.pen.EntityId })}
+						>{penBrandAndName(section.pen)}</a
+					>
+				</h2>
+				{#if section.sessions.length === 0}
+					<p class="no-data">No pressure response measurements for this pen model.</p>
+				{:else}
+					<IafTab
+						pressureSessions={section.sessions}
+						{defectsByInventoryId}
+						chartSessions={section.chartSessions}
+						hiddenIds={EMPTY_HIDDEN}
+						displayName={penBrandAndName(section.pen)}
+						chartTitlePrefix={section.pen.PenName}
+						entityLabel="this pen model"
+					/>
+				{/if}
+			</section>
+		{/each}
+	{/if}
+{:else if activeTab === 'maxpressure'}
+	{#if flaggedItems.length === 0}
+		<p class="no-data">
+			Flag at least one pen to see its Max Pressure chart. Currently {flaggedItems.length} flagged.
+		</p>
+	{:else}
+		{#each perPenSections as section (section.pen.EntityId)}
+			<section class="per-pen-section">
+				<h2 class="per-pen-heading">
+					<a href={resolve('/entity/[entityId]', { entityId: section.pen.EntityId })}
+						>{penBrandAndName(section.pen)}</a
+					>
+				</h2>
+				{#if section.sessions.length === 0}
+					<p class="no-data">No pressure response measurements for this pen model.</p>
+				{:else}
+					<MaxPressureTab
+						pressureSessions={section.sessions}
+						{defectsByInventoryId}
+						chartSessions={section.chartSessions}
+						hiddenIds={EMPTY_HIDDEN}
+						displayName={penBrandAndName(section.pen)}
+						chartTitlePrefix={section.pen.PenName}
+						entityLabel="this pen model"
+					/>
+				{/if}
+			</section>
+		{/each}
 	{/if}
 {/if}
 
@@ -424,5 +649,39 @@
 
 	.no-data a {
 		color: var(--link);
+	}
+
+	.overlay-summary {
+		font-size: 13px;
+		color: var(--text-muted);
+		margin: 0 0 12px;
+	}
+
+	.per-pen-section {
+		margin-bottom: 32px;
+		padding-bottom: 24px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.per-pen-section:last-child {
+		border-bottom: none;
+	}
+
+	.per-pen-heading {
+		font-size: 16px;
+		font-weight: 600;
+		color: #6b21a8;
+		margin: 0 0 12px;
+		padding-bottom: 4px;
+		border-bottom: 2px solid var(--border);
+	}
+
+	.per-pen-heading a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.per-pen-heading a:hover {
+		text-decoration: underline;
 	}
 </style>

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { brandName, type Pen, type PenFamily } from '$data/lib/drawtab-loader.js';
-	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import {
@@ -16,11 +15,7 @@
 	} from '$lib/flagged-store.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
-	import PressureChart from '$lib/components/PressureChart.svelte';
-	import SessionStats from '$lib/components/SessionStats.svelte';
-	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
-	import { paletteColor } from '$lib/chart-palette.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
@@ -32,10 +27,9 @@
 	// downstream predicates are typed against the bare shapes.
 	let pens: Pen[] = $derived(data.pens as Pen[]);
 	let families: PenFamily[] = $derived(data.families as PenFamily[]);
+	// `sessions` is still needed to look up pen/brand metadata for the
+	// Flagged Pen Units list (inventory IDs alone don't carry pen info).
 	let sessions = $derived(data.sessions);
-	let inventoryPens = $derived(data.inventoryPens);
-
-	let defectsByInventoryId = $derived(buildInventoryDefects(inventoryPens));
 
 	let pensByEntityId = $derived(new Map(pens.map((p) => [p.EntityId.toLowerCase(), p])));
 	let familiesByEntityId = $derived(new Map(families.map((f) => [f.EntityId.toLowerCase(), f])));
@@ -75,60 +69,6 @@
 	);
 
 	let flaggedUnitEntries = $derived($flaggedPenUnits.map((id) => ({ id, info: unitInfo.get(id) })));
-
-	// Sessions matching any current flag (pen unit / model / family).
-	let matchedSessions = $derived(
-		(() => {
-			const flaggedFamilyPenIds = new Set(
-				pens
-					.filter((p) => $flaggedPenFamilies.includes(p.PenFamily.toLowerCase()))
-					.map((p) => p.EntityId.toLowerCase()),
-			);
-			return sessions.filter((s) => {
-				const inv = s.InventoryId.toLowerCase();
-				const model = s.PenEntityId.toLowerCase();
-				if ($flaggedPenUnits.includes(inv)) return true;
-				if ($flaggedPenModels.includes(model)) return true;
-				if (flaggedFamilyPenIds.has(model)) return true;
-				return false;
-			});
-		})(),
-	);
-
-	let sessionColors = $derived(new Map(matchedSessions.map((s, i) => [s._id, paletteColor(i)])));
-
-	let penNameById = $derived(
-		new Map(
-			pens.map((p) => [
-				p.EntityId,
-				penIdRedundantInName(p) ? p.PenName : `${p.PenName} (${p.PenId})`,
-			]),
-		),
-	);
-
-	let chartSessions = $derived(
-		matchedSessions.map((s) => {
-			const penLabel = penNameById.get(s.PenEntityId) ?? s.PenEntityId;
-			const info = defectsByInventoryId.get(s.InventoryId);
-			return {
-				id: s._id,
-				label: `${penLabel} · ${s.InventoryId} ${s.Date}`,
-				records: s.Records,
-				color: sessionColors.get(s._id),
-				defective: !!info,
-				defectInfo: info?.detailsLabel,
-			};
-		}),
-	);
-
-	let hiddenSessionIds = $state(new Set<string>());
-
-	function toggleSessionVisibility(id: string) {
-		const next = new Set(hiddenSessionIds);
-		if (next.has(id)) next.delete(id);
-		else next.add(id);
-		hiddenSessionIds = next;
-	}
 </script>
 
 <Nav />
@@ -138,7 +78,8 @@
 	<h1>Flagged Pens</h1>
 	<p class="meta">
 		{$flaggedPenTotalCount} item{$flaggedPenTotalCount === 1 ? '' : 's'} flagged across pen units, models,
-		and families. Flagged sessions overlay together on the chart below for cross-pen comparison.
+		and families. See the pressure-response overlay on
+		<a href={resolve('/pen-compare')}>Pens ▸ Compare ▸ Pressure Response</a>.
 	</p>
 	{#if $flaggedPenTotalCount > 0}
 		<button class="clear-btn" onclick={clearAllPenFlags}>Clear all flags</button>
@@ -150,34 +91,6 @@
 		Nothing flagged yet. Open a pen, pen family, or inventory pen and click the ⚐ button to flag it.
 	</p>
 {:else}
-	{#if chartSessions.length > 0}
-		<section class="chart-section">
-			<h2>Pressure Response Overlay ({chartSessions.length} sessions)</h2>
-			<PressureChart
-				sessions={chartSessions}
-				title="Flagged sessions"
-				hiddenIds={hiddenSessionIds}
-			/>
-			<PressureResponseChartLegendTable
-				sessions={matchedSessions}
-				colors={sessionColors}
-				hiddenIds={hiddenSessionIds}
-				onToggle={toggleSessionVisibility}
-				{penNameById}
-				{defectsByInventoryId}
-				showBrand
-				showModel
-			/>
-			<SessionStats
-				sessions={matchedSessions}
-				title="Aggregated across flagged sessions"
-				{defectsByInventoryId}
-			/>
-		</section>
-	{:else}
-		<p class="empty">No pressure-response sessions match the current flags.</p>
-	{/if}
-
 	{#if flaggedModelEntries.length > 0}
 		<section>
 			<h2>Pen Models ({flaggedModelEntries.length})</h2>
@@ -274,9 +187,6 @@
 		font-size: 14px;
 		color: var(--text-muted);
 		font-style: italic;
-	}
-	.chart-section {
-		margin-bottom: 24px;
 	}
 	section h2 {
 		font-size: 16px;

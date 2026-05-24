@@ -27,12 +27,16 @@
 	let p00 = $derived(estimateP00(session.Records));
 	let p100 = $derived(estimateP100(session.Records));
 
+	// On a single-session detail page, the user explicitly navigated to this
+	// session — the chart must render even if the pen unit is flagged
+	// defective. (The defect banner above the chart conveys the warning;
+	// PressureChart's default "hide defective" filter would otherwise
+	// leave the canvas blank with only a "Show 1 defective" toggle, which
+	// looks like a broken page rather than a deliberate safety filter.)
 	let chartSessions = $derived([
 		{
 			label: `${session.InventoryId} ${session.Date}`,
 			records: session.Records,
-			defective: !!defectInfo,
-			defectInfo: defectInfo?.detailsLabel,
 		},
 	]);
 </script>
