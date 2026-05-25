@@ -11,6 +11,23 @@
 		dashed?: boolean;
 		/** SVG stroke-width (default 2). */
 		strokeWidth?: number;
+		/** Stroke color (default #dc2626 red). Used to distinguish markers
+		 * for different pens / sessions when several are overlaid on one
+		 * chart. */
+		color?: string;
+		/** When set together with `shadedRanges`, restricts the marker line
+		 * to the vertical slice for that series (same slicing scheme as
+		 * `shadedRanges`). Lets per-pen min/median/max markers stay aligned
+		 * with their pen's shaded stripe instead of spanning the full chart.
+		 *
+		 * Use sparingly: this trades the chart's "shared-axis reading" (every
+		 * marker spans the full height so values across pens are visually
+		 * comparable) for stripe-affinity (each pen's markers stay in their
+		 * own slice). Tried on /pen-compare's Max Pressure summary view and
+		 * rolled back there — the shared-axis reading was the point. Kept as
+		 * an API because it's the right choice when the per-series slice
+		 * association matters more than cross-series value comparison. */
+		seriesIndex?: number;
 	}
 
 	let {
@@ -24,6 +41,7 @@
 		exportFilename,
 		markers = [],
 		shadedRange,
+		shadedRanges,
 	}: {
 		bands: Band[];
 		axisMax: number;
@@ -40,8 +58,16 @@
 		exportFilename?: string;
 		/** Optional red dashed vertical lines drawn over the chart. */
 		markers?: BandMarker[];
-		/** Optional semi-transparent red band drawn behind markers. */
+		/** Optional single semi-transparent red band drawn behind markers.
+		 * Use this when there's only one range to show (e.g. min/max across
+		 * a single pen model). For multiple ranges (one per pen in a merged
+		 * comparison view) use `shadedRanges` instead. */
 		shadedRange?: { min: number; max: number };
+		/** Optional list of semi-transparent ranges, drawn as horizontal
+		 * stripes so multiple pens' min/max bands don't pile up on each
+		 * other. Each range gets its own vertical slice of the marker area.
+		 * Color defaults to red if omitted, matching `shadedRange`. */
+		shadedRanges?: { min: number; max: number; color?: string }[];
 	} = $props();
 
 	let svgEl: SVGElement | undefined = $state();
@@ -66,6 +92,16 @@
 	function x(value: number): number {
 		return PAD_L + (value / axisMax) * innerW;
 	}
+
+	// Marker-area vertical extent — shared by single-`shadedRange`, per-pen
+	// `shadedRanges` stripes, and the marker lines themselves (which can be
+	// bounded to a slice when both `seriesIndex` and `shadedRanges` are set).
+	const markerBandTop = $derived(PAD_TOP + 30);
+	const markerBandBot = $derived(axisY + 4);
+	const markerSliceN = $derived(shadedRanges?.length ?? 0);
+	const markerSliceH = $derived(
+		markerSliceN > 0 ? (markerBandBot - markerBandTop) / markerSliceN : 0,
+	);
 
 	let ticks = $derived.by(() => {
 		const out: number[] = [];
@@ -197,15 +233,43 @@
 			{/if}
 		{/if}
 
-		<!-- Red marker lines (e.g. measured P100 values) -->
+		<!-- Optional per-pen shaded ranges, drawn as horizontal stripes so
+			 multiple pens' min/max bands don't pile up on each other. -->
+		{#if shadedRanges && shadedRanges.length > 0}
+			{#each shadedRanges as r, i (i)}
+				{@const lo = Math.max(0, Math.min(r.min, r.max))}
+				{@const hi = Math.min(axisMax, Math.max(r.min, r.max))}
+				{#if hi > lo}
+					<rect
+						x={x(lo)}
+						y={markerBandTop + i * markerSliceH}
+						width={x(hi) - x(lo)}
+						height={markerSliceH}
+						fill={r.color ?? '#dc2626'}
+						fill-opacity="0.22"
+					/>
+				{/if}
+			{/each}
+		{/if}
+
+		<!-- Red marker lines (e.g. measured P100 values). When the marker
+			 declares a seriesIndex AND shadedRanges is present, the line is
+			 bounded to that pen's vertical slice (same slicing scheme as
+			 the stripes above) so per-pen min/median/max stay aligned with
+			 their stripe. -->
 		{#each markers as m, i (i)}
 			{#if m.value >= 0 && m.value <= axisMax}
+				{@const sliced = m.seriesIndex !== undefined && markerSliceN > 0}
+				{@const y1Val = sliced ? markerBandTop + m.seriesIndex! * markerSliceH : markerBandTop}
+				{@const y2Val = sliced
+					? markerBandTop + (m.seriesIndex! + 1) * markerSliceH
+					: markerBandBot}
 				<line
 					x1={x(m.value)}
-					y1={PAD_TOP + 30}
+					y1={y1Val}
 					x2={x(m.value)}
-					y2={axisY + 4}
-					stroke="#dc2626"
+					y2={y2Val}
+					stroke={m.color ?? '#dc2626'}
 					stroke-width={m.strokeWidth ?? 2}
 					stroke-dasharray={m.dashed === false ? undefined : '5 4'}
 				/>

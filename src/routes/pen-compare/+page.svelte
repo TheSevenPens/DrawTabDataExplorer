@@ -29,6 +29,9 @@
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
 	import IafTab from '$lib/components/IafTab.svelte';
+	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
+	import { MAX_PRESSURE_BANDS } from '$lib/bands.js';
+	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
@@ -78,15 +81,129 @@
 
 	// Per-pen bundles shared by the IAF and Max Pressure tabs. Each pen gets
 	// its own color set + chart sessions so colors are stable within a section
-	// but independent across sections.
+	// but independent across sections. `penColor` is shared with the combined
+	// view at the top of the Max Pressure tab so a pen's marker color in the
+	// merged BandsChart matches its session curves in the merged PressureChart.
 	let perPenSections = $derived(
-		flaggedItems.map((p) => {
+		flaggedItems.map((p, i) => {
 			const sessions = sessionsByPenEntityId.get(p.EntityId) ?? [];
 			const colors = buildSessionColors(sessions);
 			const chartSessions = buildChartSessions(sessions, { colors, defectsByInventoryId });
-			return { pen: p, sessions, chartSessions };
+			return { pen: p, sessions, chartSessions, penColor: paletteColor(i) };
 		}),
 	);
+
+	// --- Combined Max Pressure comparison ---
+	//
+	// Aggregates every flagged pen's non-defective sessions onto one
+	// BandsChart (P100 markers colored per pen) plus one zoomed
+	// PressureChart (curves recolored per pen, so a pen's sessions cluster
+	// visually even when its individual sessions are still distinct lines).
+	let nonDefectiveByPen = $derived(
+		perPenSections.map((s) => ({
+			...s,
+			nonDefectiveSessions: s.sessions.filter(
+				(sess) => !defectsByInventoryId.has(sess.InventoryId),
+			),
+		})),
+	);
+
+	// Per-pen P100 lists — computed once and reused by both the "all" and
+	// "summary" combined-view markers as well as the summary table below.
+	let p100sByPen = $derived(
+		nonDefectiveByPen.map((s) => ({
+			...s,
+			p100Values: s.nonDefectiveSessions
+				.map((sess) => estimateP100(sess.Records))
+				.filter((v): v is number => v !== null && isFinite(v))
+				.sort((a, b) => a - b),
+		})),
+	);
+
+	// "All" view: one marker per session per pen, colored by pen.
+	let combinedMaxMarkersAll: BandMarker[] = $derived.by(() => {
+		const out: BandMarker[] = [];
+		for (const s of p100sByPen) {
+			for (const v of s.p100Values) {
+				out.push({ value: v, color: s.penColor, dashed: false });
+			}
+		}
+		return out;
+	});
+
+	// "Summary" view: three markers per pen (min / median / max) in the
+	// pen's color, median thicker — mirrors the per-pen MaxPressureTab's
+	// summary style but with pen-color discrimination. Labels are
+	// suppressed: with multiple pens, repeating "Median" would clutter the
+	// chart, and the colored legend below already conveys pen identity.
+	//
+	// Note: BandMarker.seriesIndex would let us bound each marker to its
+	// pen's horizontal stripe (matching `combinedShadedRanges`). It was
+	// tried and rolled back here — full-height markers read better as
+	// "P100 estimates on a shared axis," which is the point of the chart.
+	// The slicing capability is left intact in BandsChart for future use.
+	let combinedMaxMarkersSummary: BandMarker[] = $derived.by(() => {
+		const out: BandMarker[] = [];
+		for (const s of p100sByPen) {
+			const xs = s.p100Values;
+			if (xs.length === 0) continue;
+			const min = xs[0];
+			const max = xs[xs.length - 1];
+			const mid = Math.floor(xs.length / 2);
+			const median = xs.length % 2 === 0 ? (xs[mid - 1] + xs[mid]) / 2 : xs[mid];
+			out.push({ value: min, color: s.penColor, dashed: false });
+			out.push({ value: max, color: s.penColor, dashed: false });
+			out.push({ value: median, color: s.penColor, dashed: false, strokeWidth: 4 });
+		}
+		return out;
+	});
+
+	type CombinedView = 'all' | 'summary';
+	let combinedView = $state<CombinedView>('all');
+
+	let combinedMaxMarkers: BandMarker[] = $derived(
+		combinedView === 'all' ? combinedMaxMarkersAll : combinedMaxMarkersSummary,
+	);
+
+	// In summary view, draw a horizontal stripe per pen spanning that pen's
+	// min..max P100. Pens with a single session collapse to min === max and
+	// are omitted (no band to draw).
+	let combinedShadedRanges = $derived(
+		combinedView === 'summary'
+			? p100sByPen
+					.filter((s) => s.p100Values.length > 0)
+					.map((s) => ({
+						min: s.p100Values[0],
+						max: s.p100Values[s.p100Values.length - 1],
+						color: s.penColor,
+					}))
+			: undefined,
+	);
+
+	// All flagged-pen sessions on one zoomed chart, recolored by pen so the
+	// eye can pick out one pen's family of curves at a glance. Defective
+	// sessions inherit the same `defective` flag they already had — the
+	// chart's "Show N defective" toggle still applies.
+	let combinedChartSessions = $derived(
+		perPenSections.flatMap((s) =>
+			s.chartSessions.map((cs) => ({ ...cs, color: s.penColor })),
+		),
+	);
+
+	// Per-pen P100 stats for the small summary table under the combined chart.
+	let combinedSummary = $derived(
+		p100sByPen.map((s) => {
+			const xs = s.p100Values;
+			if (xs.length === 0) return { ...s, count: 0, min: null, median: null, max: null };
+			const mid = Math.floor(xs.length / 2);
+			const median = xs.length % 2 === 0 ? (xs[mid - 1] + xs[mid]) / 2 : xs[mid];
+			return { ...s, count: xs.length, min: xs[0], median, max: xs[xs.length - 1] };
+		}),
+	);
+
+	let combinedSessionCount = $derived(combinedMaxMarkersAll.length);
+	let combinedPenWithDataCount = $derived(p100sByPen.filter((s) => s.p100Values.length > 0).length);
+	let anyCombinedData = $derived(combinedSessionCount > 0);
 
 	// The embedded MaxPressureTab takes a `hiddenIds` set; we don't expose
 	// toggle UI here, so it stays empty. Shared reference avoids unnecessary
@@ -407,9 +524,98 @@
 			Flag at least one pen to see its Max Pressure chart. Currently {flaggedItems.length} flagged.
 		</p>
 	{:else}
+		{#if anyCombinedData}
+			<section class="per-pen-section combined-section">
+				<h2 class="per-pen-heading">Combined comparison</h2>
+				<ul class="pen-legend" aria-label="Pen color legend">
+					{#each perPenSections as s (s.pen.EntityId)}
+						<li>
+							<span class="pen-swatch" style:background={s.penColor} aria-hidden="true"></span>
+							<a href={resolve('/entity/[entityId]', { entityId: s.pen.EntityId })}
+								>{penBrandAndName(s.pen)}</a
+							>
+						</li>
+					{/each}
+				</ul>
+				<div class="view-toggle" role="group" aria-label="View">
+					<button
+						type="button"
+						class:active={combinedView === 'all'}
+						onclick={() => (combinedView = 'all')}
+						aria-pressed={combinedView === 'all'}
+						>All sessions ({combinedSessionCount})</button
+					>
+					<button
+						type="button"
+						class:active={combinedView === 'summary'}
+						onclick={() => (combinedView = 'summary')}
+						aria-pressed={combinedView === 'summary'}
+						>Summary (min / median / max)</button
+					>
+				</div>
+				<p class="ref-blurb view-blurb">
+					{#if combinedView === 'all'}
+						One line per session, colored by pen.
+					{:else}
+						Three lines per pen — outer two mark <strong>min</strong> and <strong>max</strong>; the
+						thick middle line marks the <strong>median</strong>. {combinedPenWithDataCount} pen{combinedPenWithDataCount ===
+						1
+							? ''
+							: 's'} with data.
+					{/if}
+				</p>
+				<BandsChart
+					bands={MAX_PRESSURE_BANDS}
+					axisMax={1000}
+					axisStep={100}
+					unit="gf"
+					heading="P100 across flagged pens"
+					markers={combinedMaxMarkers}
+					shadedRanges={combinedShadedRanges}
+				/>
+				<table class="pen-summary-table">
+					<thead>
+						<tr>
+							<th>Pen</th>
+							<th class="num">Sessions</th>
+							<th class="num">Min <span class="unit">(gf)</span></th>
+							<th class="num">Median <span class="unit">(gf)</span></th>
+							<th class="num">Max <span class="unit">(gf)</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each combinedSummary as s (s.pen.EntityId)}
+							<tr>
+								<td>
+									<span class="pen-swatch" style:background={s.penColor} aria-hidden="true"
+									></span>{penBrandAndName(s.pen)}
+								</td>
+								<td class="num mono">{s.count}</td>
+								<td class="num mono">{s.min !== null ? fmtP(s.min) : '—'}</td>
+								<td class="num mono">{s.median !== null ? fmtP(s.median) : '—'}</td>
+								<td class="num mono">{s.max !== null ? fmtP(s.max) : '—'}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+				<p class="ref-blurb">
+					Per-session pressure-response curves near saturation, with each pen's sessions sharing one
+					color — clusters of like-colored curves let you compare pens against each other on the same
+					axis.
+				</p>
+				<PressureChart
+					sessions={combinedChartSessions}
+					title="Flagged pens — max pressure"
+					hiddenIds={EMPTY_HIDDEN}
+					lockedZoom="max"
+				/>
+			</section>
+		{/if}
+
 		{#each perPenSections as section (section.pen.EntityId)}
 			<section class="per-pen-section">
 				<h2 class="per-pen-heading">
+					<span class="pen-swatch" style:background={section.penColor} aria-hidden="true"></span>
 					<a href={resolve('/entity/[entityId]', { entityId: section.pen.EntityId })}
 						>{penBrandAndName(section.pen)}</a
 					>
@@ -683,5 +889,143 @@
 
 	.per-pen-heading a:hover {
 		text-decoration: underline;
+	}
+
+	.combined-section {
+		border-bottom: 2px solid var(--border);
+	}
+
+	.pen-legend {
+		list-style: none;
+		padding: 0;
+		margin: 0 0 12px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px 16px;
+		font-size: 13px;
+	}
+
+	.pen-legend li {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.pen-legend a {
+		color: var(--link);
+		text-decoration: none;
+	}
+
+	.pen-legend a:hover {
+		text-decoration: underline;
+	}
+
+	.pen-swatch {
+		display: inline-block;
+		width: 12px;
+		height: 12px;
+		border-radius: 2px;
+		flex-shrink: 0;
+	}
+
+	.per-pen-heading .pen-swatch {
+		margin-right: 8px;
+		vertical-align: middle;
+	}
+
+	.pen-summary-table {
+		border-collapse: collapse;
+		font-size: 13px;
+		margin: 12px 0 16px;
+		width: fit-content;
+	}
+
+	.pen-summary-table th {
+		text-align: left;
+		padding: 6px 14px;
+		font-weight: 600;
+		color: var(--text-muted);
+		border-bottom: 2px solid var(--border);
+	}
+
+	.pen-summary-table th.num {
+		text-align: right;
+	}
+
+	.pen-summary-table th .unit {
+		font-size: 11px;
+		font-weight: 400;
+	}
+
+	.pen-summary-table td {
+		padding: 5px 14px;
+		border-bottom: 1px solid var(--border);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.pen-summary-table td.num {
+		text-align: right;
+	}
+
+	.pen-summary-table tr:last-child td {
+		border-bottom: none;
+	}
+
+	.pen-summary-table .pen-swatch {
+		margin-right: 8px;
+		vertical-align: middle;
+	}
+
+	.mono {
+		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+	}
+
+	.num {
+		text-align: right;
+	}
+
+	.ref-blurb {
+		font-size: 13px;
+		color: var(--text-muted);
+		max-width: 800px;
+		margin: 12px 0;
+	}
+
+	.view-blurb {
+		margin: 4px 0 8px;
+	}
+
+	.view-toggle {
+		display: inline-flex;
+		gap: 0;
+		margin: 0 0 8px;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		overflow: hidden;
+	}
+
+	.view-toggle button {
+		appearance: none;
+		border: none;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		padding: 5px 12px;
+		font-size: 12px;
+		cursor: pointer;
+		border-right: 1px solid var(--border);
+	}
+
+	.view-toggle button:last-child {
+		border-right: none;
+	}
+
+	.view-toggle button:hover {
+		color: var(--text);
+	}
+
+	.view-toggle button.active {
+		background: var(--bg);
+		color: #6b21a8;
+		font-weight: 600;
 	}
 </style>
