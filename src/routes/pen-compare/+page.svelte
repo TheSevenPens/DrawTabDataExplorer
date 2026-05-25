@@ -39,7 +39,12 @@
 	import { penFullName, penBrandAndName } from '$lib/pen-helpers.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
-	import { buildSessionColors, buildChartSessions } from '$lib/pressure/chart-session-state.js';
+	import {
+		buildSessionColors,
+		buildSessionColorsBy,
+		buildChartSessions,
+		type ColorBy,
+	} from '$lib/pressure/chart-session-state.js';
 
 	let { data } = $props();
 
@@ -232,7 +237,8 @@
 		});
 	});
 
-	let overlayColors = $derived(new Map(matchedSessions.map((s, i) => [s._id, paletteColor(i)])));
+	let overlayColorBy = $state<ColorBy>('session');
+	let overlayColors = $derived(buildSessionColorsBy(matchedSessions, overlayColorBy));
 
 	let penNameById = $derived(
 		new Map(
@@ -458,9 +464,20 @@
 			Flagged: {flagSummary}. No pressure-response sessions match the current flags.
 		</p>
 	{:else}
-		<p class="overlay-summary">
-			{matchedSessions.length} session{matchedSessions.length === 1 ? '' : 's'} from {flagSummary}.
-		</p>
+		<div class="overlay-toolbar">
+			<p class="overlay-summary">
+				{matchedSessions.length} session{matchedSessions.length === 1 ? '' : 's'} from {flagSummary}.
+			</p>
+			<label class="color-by-label">
+				Color by
+				<select bind:value={overlayColorBy}>
+					<option value="session">Session</option>
+					<option value="unit">Pen unit</option>
+					<option value="model">Pen model</option>
+					<option value="tablet">Tablet</option>
+				</select>
+			</label>
+		</div>
 		<PressureChart
 			sessions={overlayChartSessions}
 			title="Flagged pens"
@@ -848,10 +865,35 @@
 		color: var(--link);
 	}
 
+	.overlay-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin: 0 0 12px;
+		flex-wrap: wrap;
+	}
+
 	.overlay-summary {
 		font-size: 13px;
 		color: var(--text-muted);
-		margin: 0 0 12px;
+		margin: 0;
+	}
+
+	.color-by-label {
+		font-size: 12px;
+		color: var(--text-muted);
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.color-by-label select {
+		font-size: 12px;
+		padding: 3px 6px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	.per-pen-section {

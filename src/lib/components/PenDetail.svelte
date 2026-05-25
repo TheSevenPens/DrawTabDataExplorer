@@ -3,7 +3,12 @@
 	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
-	import { type Pen, PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
+	import {
+		type Pen,
+		PEN_FIELDS,
+		PEN_FIELD_GROUPS,
+		getPenFamilyName,
+	} from '$data/lib/entities/pen-fields.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonDialog from '$lib/components/JsonDialog.svelte';
@@ -18,9 +23,10 @@
 	import { tabletFullName, compareTabletByYearDesc } from '$lib/tablet-helpers.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import {
-		buildSessionColors,
+		buildSessionColorsBy,
 		buildChartSessions,
 		toggleInSet,
+		type ColorBy,
 	} from '$lib/pressure/chart-session-state.js';
 	import { flaggedPenModels, toggleFlaggedPenModel } from '$lib/flagged-store.js';
 
@@ -39,7 +45,13 @@
 		data.defectsByInventoryId ?? new Map(),
 	);
 
-	let sessionColors = $derived(buildSessionColors(pressureSessions));
+	// Coloring axis for the pressure-response overlay. On a single-model
+	// page "model" is degenerate (all sessions share PenEntityId) so we
+	// only offer Session / Unit / Tablet in the dropdown. The same color
+	// map feeds the embedded IAF and Max Pressure charts below so the
+	// visual reading stays consistent across all three tabs.
+	let colorBy = $state<ColorBy>('session');
+	let sessionColors = $derived(buildSessionColorsBy(pressureSessions, colorBy));
 
 	let chartSessions = $derived(
 		buildChartSessions(pressureSessions, {
@@ -115,7 +127,11 @@
 		{#if pen.PenFamily}
 			<div class="basics-item">
 				<dt>Family</dt>
-				<dd>{pen.PenFamily}</dd>
+				<dd>
+					<a href={resolve('/entity/[entityId]', { entityId: pen.PenFamily })}
+						>{getPenFamilyName(pen.PenFamily)}</a
+					>
+				</dd>
 			</div>
 		{/if}
 	</dl>
@@ -230,9 +246,19 @@
 {#if activeTab === 'pressure'}
 	<div class="tab-content">
 		{#if pressureSessionCount > 0}
-			<p class="pr-summary">
-				{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} for this pen.
-			</p>
+			<div class="pr-toolbar">
+				<p class="pr-summary">
+					{pressureSessionCount} measurement session{pressureSessionCount === 1 ? '' : 's'} for this pen.
+				</p>
+				<label class="color-by-label">
+					Color by
+					<select bind:value={colorBy}>
+						<option value="session">Session</option>
+						<option value="unit">Pen unit</option>
+						<option value="tablet">Tablet</option>
+					</select>
+				</label>
+			</div>
 			<PressureChart
 				sessions={chartSessions}
 				title={`${pen.PenName} pressure response`}
@@ -326,10 +352,35 @@
 		margin-bottom: 24px;
 	}
 
+	.pr-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin: 0 0 12px;
+		flex-wrap: wrap;
+	}
+
 	.pr-summary {
 		font-size: 13px;
 		color: var(--text-muted);
-		margin: 0 0 12px;
+		margin: 0;
+	}
+
+	.color-by-label {
+		font-size: 12px;
+		color: var(--text-muted);
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.color-by-label select {
+		font-size: 12px;
+		padding: 3px 6px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	.no-data {
