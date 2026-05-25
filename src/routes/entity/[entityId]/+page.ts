@@ -104,10 +104,14 @@ export async function load({ params, parent }) {
 		case 'session': {
 			const session = await ds.PressureResponse.find((s) => sessionEntityId(s) === entityId);
 			if (!session) error(404, 'Pressure-response session not found');
-			const [pen, allInventory] = await Promise.all([session.getPen(), ds.InventoryPens.toArray()]);
+			const [pen, tablet, allInventory] = await Promise.all([
+				session.getPen(),
+				session.getTablet(),
+				ds.InventoryPens.toArray(),
+			]);
 			const defectsByInventoryId = buildInventoryDefects(allInventory);
 			const defectInfo = defectsByInventoryId.get(session.InventoryId) ?? null;
-			return { entityType, session, pen, defectInfo };
+			return { entityType, session, pen, tablet, defectInfo };
 		}
 
 		case 'brand': {

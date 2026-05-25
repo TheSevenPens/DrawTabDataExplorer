@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { type PressureResponse, type Pen } from '$data/lib/drawtab-loader.js';
+	import { type PressureResponse, type Pen, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { penFullName } from '$lib/pen-helpers.js';
+	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
@@ -11,7 +12,12 @@
 	let {
 		data,
 	}: {
-		data: { session: PressureResponse; pen: Pen | undefined; defectInfo?: DefectInfo | null };
+		data: {
+			session: PressureResponse;
+			pen: Pen | undefined;
+			tablet: Tablet | undefined;
+			defectInfo?: DefectInfo | null;
+		};
 	} = $props();
 
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
@@ -21,8 +27,10 @@
 
 	let session = $derived(data.session);
 	let pen = $derived(data.pen);
+	let tablet = $derived(data.tablet);
 	let defectInfo = $derived(data.defectInfo ?? null);
 	let penLabel = $derived(pen ? penFullName(pen) : session.PenEntityId);
+	let tabletLabel = $derived(tablet ? tabletFullName(tablet) : session.TabletEntityId);
 
 	let p00 = $derived(estimateP00(session.Records));
 	let p100 = $derived(estimateP100(session.Records));
@@ -63,8 +71,8 @@
 		<dd class="mono">{session.Date}</dd>
 		<dt>Tablet</dt>
 		<dd>
-			<a href={resolve('/entity/[entityId]', { entityId: session.TabletEntityId })} class="mono">
-				{session.TabletEntityId}
+			<a href={resolve('/entity/[entityId]', { entityId: session.TabletEntityId })}>
+				{tabletLabel}
 			</a>
 		</dd>
 		<dt>Driver</dt>
