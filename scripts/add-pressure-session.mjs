@@ -79,9 +79,7 @@ const filename = path.basename(inputPath);
 // Match <YYYY-MM-DD>-<InventoryId>.json
 const m = /^(\d{4}-\d{2}-\d{2})-(.+)\.json$/i.exec(filename);
 if (!m) {
-	console.error(
-		`Filename "${filename}" doesn't match <YYYY-MM-DD>-<InventoryId>.json pattern.`,
-	);
+	console.error(`Filename "${filename}" doesn't match <YYYY-MM-DD>-<InventoryId>.json pattern.`);
 	process.exit(1);
 }
 const date = m[1];
@@ -179,24 +177,84 @@ const uuid = crypto.randomUUID();
 const isoNow = new Date(date + 'T00:00:00.000Z').toISOString();
 
 const block =
-	I29 + '{' + EOL +
-	I33 + '"Brand":  "' + brand + '",' + EOL +
-	I33 + '"PenFamily":  "' + penFamily + '",' + EOL +
-	I33 + '"InventoryId":  "' + inventoryId + '",' + EOL +
-	I33 + '"Date":  "' + date + '",' + EOL +
-	I33 + '"User":  "' + user + '",' + EOL +
-	I33 + '"Driver":  "' + driver + '",' + EOL +
-	I33 + '"OS":  "' + os + '",' + EOL +
-	I33 + '"Notes":  "' + notes.replace(/"/g, '\\"') + '",' + EOL +
-	I33 + '"Records":  [' + EOL +
-	recLines + EOL +
-	I45 + '],' + EOL +
-	I33 + '"_id":  "' + uuid + '",' + EOL +
-	I33 + '"_CreateDate":  "' + isoNow + '",' + EOL +
-	I33 + '"_ModifiedDate":  "' + isoNow + '",' + EOL +
-	I33 + '"PenEntityId":  "' + penEntityId + '",' + EOL +
-	I33 + '"TabletEntityId":  "' + tabletEntityId + '"' + EOL +
-	I29 + '}';
+	I29 +
+	'{' +
+	EOL +
+	I33 +
+	'"Brand":  "' +
+	brand +
+	'",' +
+	EOL +
+	I33 +
+	'"PenFamily":  "' +
+	penFamily +
+	'",' +
+	EOL +
+	I33 +
+	'"InventoryId":  "' +
+	inventoryId +
+	'",' +
+	EOL +
+	I33 +
+	'"Date":  "' +
+	date +
+	'",' +
+	EOL +
+	I33 +
+	'"User":  "' +
+	user +
+	'",' +
+	EOL +
+	I33 +
+	'"Driver":  "' +
+	driver +
+	'",' +
+	EOL +
+	I33 +
+	'"OS":  "' +
+	os +
+	'",' +
+	EOL +
+	I33 +
+	'"Notes":  "' +
+	notes.replace(/"/g, '\\"') +
+	'",' +
+	EOL +
+	I33 +
+	'"Records":  [' +
+	EOL +
+	recLines +
+	EOL +
+	I45 +
+	'],' +
+	EOL +
+	I33 +
+	'"_id":  "' +
+	uuid +
+	'",' +
+	EOL +
+	I33 +
+	'"_CreateDate":  "' +
+	isoNow +
+	'",' +
+	EOL +
+	I33 +
+	'"_ModifiedDate":  "' +
+	isoNow +
+	'",' +
+	EOL +
+	I33 +
+	'"PenEntityId":  "' +
+	penEntityId +
+	'",' +
+	EOL +
+	I33 +
+	'"TabletEntityId":  "' +
+	tabletEntityId +
+	'"' +
+	EOL +
+	I29 +
+	'}';
 
 // --- Inject before the closing `]\n}` of the PressureResponse array ---
 //

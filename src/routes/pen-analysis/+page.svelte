@@ -73,7 +73,7 @@
 			<section class="section">
 				<PressureMetricSection
 					title="IAF (P00) Distribution"
-					description={'Initial Activation Force across all non-defective measurement sessions. Lower is better — a lighter touch means more natural shading and less hand fatigue.'}
+					description="Initial Activation Force across all non-defective measurement sessions. Lower is better — a lighter touch means more natural shading and less hand fatigue."
 					bands={IAF_BANDS}
 					axisMax={10}
 					binSize={0.5}
@@ -94,7 +94,7 @@
 			<section class="section">
 				<PressureMetricSection
 					title="Max Pressure (P100) Distribution"
-					description={'Force needed to reach 100% logical pressure across all non-defective measurement sessions. Too low forces the user to push uncomfortably hard; too high reduces dynamic range.'}
+					description="Force needed to reach 100% logical pressure across all non-defective measurement sessions. Too low forces the user to push uncomfortably hard; too high reduces dynamic range."
 					bands={MAX_PRESSURE_BANDS}
 					axisMax={1000}
 					binSize={25}

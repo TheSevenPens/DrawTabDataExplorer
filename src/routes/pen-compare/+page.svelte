@@ -185,9 +185,7 @@
 	// sessions inherit the same `defective` flag they already had — the
 	// chart's "Show N defective" toggle still applies.
 	let combinedChartSessions = $derived(
-		perPenSections.flatMap((s) =>
-			s.chartSessions.map((cs) => ({ ...cs, color: s.penColor })),
-		),
+		perPenSections.flatMap((s) => s.chartSessions.map((cs) => ({ ...cs, color: s.penColor }))),
 	);
 
 	// Per-pen P100 stats for the small summary table under the combined chart.
@@ -234,9 +232,7 @@
 		});
 	});
 
-	let overlayColors = $derived(
-		new Map(matchedSessions.map((s, i) => [s._id, paletteColor(i)])),
-	);
+	let overlayColors = $derived(new Map(matchedSessions.map((s, i) => [s._id, paletteColor(i)])));
 
 	let penNameById = $derived(
 		new Map(
@@ -373,10 +369,7 @@
 		Pressure Response ({matchedSessions.length})
 	</button>
 	<button class:active={activeTab === 'iaf'} onclick={() => (activeTab = 'iaf')}> IAF </button>
-	<button
-		class:active={activeTab === 'maxpressure'}
-		onclick={() => (activeTab = 'maxpressure')}
-	>
+	<button class:active={activeTab === 'maxpressure'} onclick={() => (activeTab = 'maxpressure')}>
 		Max Pressure
 	</button>
 </div>
@@ -542,15 +535,13 @@
 						type="button"
 						class:active={combinedView === 'all'}
 						onclick={() => (combinedView = 'all')}
-						aria-pressed={combinedView === 'all'}
-						>All sessions ({combinedSessionCount})</button
+						aria-pressed={combinedView === 'all'}>All sessions ({combinedSessionCount})</button
 					>
 					<button
 						type="button"
 						class:active={combinedView === 'summary'}
 						onclick={() => (combinedView = 'summary')}
-						aria-pressed={combinedView === 'summary'}
-						>Summary (min / median / max)</button
+						aria-pressed={combinedView === 'summary'}>Summary (min / median / max)</button
 					>
 				</div>
 				<p class="ref-blurb view-blurb">
@@ -600,8 +591,8 @@
 				</table>
 				<p class="ref-blurb">
 					Per-session pressure-response curves near saturation, with each pen's sessions sharing one
-					color — clusters of like-colored curves let you compare pens against each other on the same
-					axis.
+					color — clusters of like-colored curves let you compare pens against each other on the
+					same axis.
 				</p>
 				<PressureChart
 					sessions={combinedChartSessions}

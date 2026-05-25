@@ -238,7 +238,7 @@
 			<section class="section">
 				<AspectRatioCategorySection
 					title="Pen Tablets — by Category ({penTablets.length})"
-					description={'Buckets each tablet’s digitizer aspect ratio into a popular ratio (16:9, 16:10, 3:2, 4:3, 5:4, 1:1) at one of three closeness tiers (EXACT ≤ 0.005, VERYCLOSE ≤ 0.02, CLOSE ≤ 0.05), or OTHER.'}
+					description="Buckets each tablet’s digitizer aspect ratio into a popular ratio (16:9, 16:10, 3:2, 4:3, 5:4, 1:1) at one of three closeness tiers (EXACT ≤ 0.005, VERYCLOSE ≤ 0.02, CLOSE ≤ 0.05), or OTHER."
 					rows={ptARCat}
 					onExport={() => {
 						const total = ptARCat.reduce((s, r) => s + r.count, 0);
@@ -271,7 +271,7 @@
 			<section class="section">
 				<AspectRatioCategorySection
 					title="Pen Displays & Standalones — by Category ({penDisplays.length})"
-					description={'Buckets each pen display’s (or standalone’s) aspect ratio into a popular ratio at one of three closeness tiers, or OTHER.'}
+					description="Buckets each pen display’s (or standalone’s) aspect ratio into a popular ratio at one of three closeness tiers, or OTHER."
 					rows={pdARCat}
 					onExport={() => {
 						const total = pdARCat.reduce((s, r) => s + r.count, 0);

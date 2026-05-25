@@ -237,7 +237,7 @@
 				values={bgValues}
 				currentValue={tc.currentValue ?? null}
 				ranges={tc.ranges ?? ranges}
-				unit={'"'}
+				unit="&quot;"
 				binSize={0.5}
 				bandwidthMultiplier={0.3}
 				markers={tc.markers}
