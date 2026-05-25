@@ -76,10 +76,14 @@ for (let i = 1; i < args.length; i += 2) {
 // --- Filename parse ---
 
 const filename = path.basename(inputPath);
-// Match <YYYY-MM-DD>-<InventoryId>.json
-const m = /^(\d{4}-\d{2}-\d{2})-(.+)\.json$/i.exec(filename);
+// Match <YYYY-MM-DD>{-or-.}<InventoryId>.json — the separator can be a
+// hyphen (e.g. 2026-05-25-WAP.0009.json) or a dot (2026-05-25.WAP.0009.json),
+// since real capture filenames have shown up with both.
+const m = /^(\d{4}-\d{2}-\d{2})[-.](.+)\.json$/i.exec(filename);
 if (!m) {
-	console.error(`Filename "${filename}" doesn't match <YYYY-MM-DD>-<InventoryId>.json pattern.`);
+	console.error(
+		`Filename "${filename}" doesn't match <YYYY-MM-DD>{-|.}<InventoryId>.json pattern.`,
+	);
 	process.exit(1);
 }
 const date = m[1];
