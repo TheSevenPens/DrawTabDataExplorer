@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import { IAF_BANDS } from '$lib/bands.js';
 	import type { PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import { estimateP00, fmtP } from '$data/lib/pressure/interpolate.js';
+	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 
 	// Mirrors MaxPressureTab. Sessions passed to the embedded IAF-zoom
 	// PressureChart so colors / hidden state stay in sync across tabs.
@@ -25,6 +27,7 @@
 		displayName,
 		chartTitlePrefix,
 		entityLabel,
+		tabletNameById = new Map<string, string>(),
 	}: {
 		pressureSessions: PressureResponse[];
 		defectsByInventoryId: ReadonlyMap<string, DefectInfo>;
@@ -33,12 +36,16 @@
 		displayName: string;
 		chartTitlePrefix: string;
 		entityLabel: string;
+		/** TabletEntityId → display label. When omitted the raw EntityId
+		 * is shown. */
+		tabletNameById?: ReadonlyMap<string, string>;
 	} = $props();
 
-	// IAF bands max out at 10 gf; values that high are already in the
-	// EXCESSIVE range. Hard-clamp markers to the axis so a freakishly stiff
-	// pen doesn't push them off the chart.
-	const AXIS_MAX = 10;
+	// IAF bands top out at AVOID (≥5 gf); statistical sampling shows real
+	// values can reach into the low 20s, so the axis runs to 22 gf and
+	// markers are hard-clamped so a freakishly stiff pen doesn't push
+	// them off the chart.
+	const AXIS_MAX = 22;
 	const AXIS_STEP = 1;
 
 	let nonDefectiveSessions = $derived(
@@ -66,9 +73,11 @@
 				}
 			}
 			return {
+				session: s,
 				id: s._id,
 				inventoryId: s.InventoryId,
 				date: s.Date,
+				sessionId: sessionEntityId(s),
 				lowForce,
 				lowLogical,
 				p00: estimateP00(s.Records),
@@ -167,6 +176,7 @@
 	axisMax={AXIS_MAX}
 	axisStep={AXIS_STEP}
 	unit="gf"
+	showUnitInAxis={false}
 	title={currentTitle}
 	heading={currentHeading}
 	subtitle={chartSubtitle}
@@ -202,6 +212,8 @@
 			<tr>
 				<th>Inventory ID</th>
 				<th>Date</th>
+				<th>Tablet</th>
+				<th>Driver</th>
 				<th class="num">
 					Lowest measured
 					<br /><span class="unit">(gf @ logical %)</span>
@@ -212,8 +224,20 @@
 		<tbody>
 			{#each perSessionRows as r (r.id)}
 				<tr>
-					<td class="mono">{r.inventoryId}</td>
-					<td class="mono">{r.date}</td>
+					<td class="mono">
+						<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.inventoryId}</a>
+					</td>
+					<td class="mono">
+						<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.date}</a>
+					</td>
+					<td>
+						{#if r.session.TabletEntityId}
+							<a href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}>
+								{tabletNameById.get(r.session.TabletEntityId) ?? r.session.TabletEntityId}
+							</a>
+						{/if}
+					</td>
+					<td class="mono">{r.session.Driver}</td>
 					<td class="num mono">
 						{r.lowForce !== null ? fmtP(r.lowForce) : '—'}
 						{#if r.lowLogical !== null}

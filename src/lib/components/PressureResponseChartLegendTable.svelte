@@ -16,6 +16,7 @@
 		hiddenIds,
 		onToggle,
 		penNameById = new Map<string, string>(),
+		tabletNameById = new Map<string, string>(),
 		defectsByInventoryId = new Map<string, DefectInfo>(),
 		showBrand = false,
 		showModel = false,
@@ -29,6 +30,9 @@
 		/** PenEntityId → display label (Pen Name / Pen ID). Used when
 		 * showModel is true. */
 		penNameById?: ReadonlyMap<string, string>;
+		/** TabletEntityId → display label. When omitted the raw EntityId
+		 * is shown. */
+		tabletNameById?: ReadonlyMap<string, string>;
 		defectsByInventoryId?: ReadonlyMap<string, DefectInfo>;
 		showBrand?: boolean;
 		showModel?: boolean;
@@ -73,6 +77,8 @@
 				{#if showModel}<th>Pen</th>{/if}
 				<th>Inv ID</th>
 				<th>Date</th>
+				<th>Tablet</th>
+				<th>Driver</th>
 				<th class="num">P00</th>
 				{#each PCT_COLS as p (p)}
 					<th class="num">P{String(p).padStart(2, '0')}</th>
@@ -116,7 +122,21 @@
 							{r.session.InventoryId}
 						</a>
 					</td>
-					<td class="mono">{r.session.Date}</td>
+					<td class="mono">
+						<a href={resolve('/entity/[entityId]', { entityId: sessionEntityId(r.session) })}>
+							{r.session.Date}
+						</a>
+					</td>
+					<td>
+						{#if r.session.TabletEntityId}
+							<a
+								href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}
+							>
+								{tabletNameById.get(r.session.TabletEntityId) ?? r.session.TabletEntityId}
+							</a>
+						{/if}
+					</td>
+					<td class="mono">{r.session.Driver}</td>
 					<td class="num mono">{fmtP(r.p00)}</td>
 					{#each r.mid as v, i (i)}
 						<td class="num mono">{fmtP(v)}</td>

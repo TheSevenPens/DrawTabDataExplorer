@@ -63,6 +63,7 @@ export async function load({ params, parent }) {
 				pen,
 				compatibleTablets,
 				includedWithTablets,
+				allTablets,
 				pressureSessions,
 				defectsByInventoryId,
 				inventoryUnits,

@@ -20,7 +20,11 @@
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
 	import IafTab from '$lib/components/IafTab.svelte';
-	import { tabletFullName, compareTabletByYearDesc } from '$lib/tablet-helpers.js';
+	import {
+		tabletFullName,
+		buildTabletNameMap,
+		compareTabletByYearDesc,
+	} from '$lib/tablet-helpers.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import {
 		buildSessionColorsBy,
@@ -38,6 +42,8 @@
 	let includedWithTablets: Tablet[] = $derived(
 		[...data.includedWithTablets].sort(compareTabletByYearDesc),
 	);
+	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
+	let tabletNameById = $derived(buildTabletNameMap(allTablets));
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
 	let inventoryUnits: InventoryPen[] = $derived(data.inventoryUnits ?? []);
 	let pressureSessionCount = $derived(pressureSessions.length);
@@ -225,6 +231,7 @@
 			displayName={penBrandAndName(pen)}
 			chartTitlePrefix={pen.PenName}
 			entityLabel="this pen model"
+			{tabletNameById}
 		/>
 	</div>
 {/if}
@@ -239,6 +246,7 @@
 			displayName={penBrandAndName(pen)}
 			chartTitlePrefix={pen.PenName}
 			entityLabel="this pen model"
+			{tabletNameById}
 		/>
 	</div>
 {/if}
@@ -269,6 +277,7 @@
 				colors={sessionColors}
 				hiddenIds={hiddenSessionIds}
 				onToggle={toggleSessionVisibility}
+				{tabletNameById}
 				{defectsByInventoryId}
 			/>
 			<SessionStats

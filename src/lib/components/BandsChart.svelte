@@ -35,6 +35,7 @@
 		axisMax,
 		axisStep = 1,
 		unit,
+		showUnitInAxis = true,
 		title,
 		heading,
 		subtitle,
@@ -47,6 +48,10 @@
 		axisMax: number;
 		axisStep?: number;
 		unit: string;
+		/** Append the unit to each x-axis tick label (e.g. "0 gf"). Default
+		 * true. Set false when the chart heading already names the unit and
+		 * adding it to every tick would just create visual noise. */
+		showUnitInAxis?: boolean;
 		/** Used as the chart's export filename slug. */
 		title?: string;
 		/** Visible chart title rendered inside the SVG (so it appears in exports). */
@@ -213,7 +218,7 @@
 				stroke-width="2"
 			/>
 			<text x={x(t)} y={axisY + 28} text-anchor="middle" class="axis-tick" font-size="14"
-				>{t} {unit}</text
+				>{t}{showUnitInAxis ? ` ${unit}` : ''}</text
 			>
 		{/each}
 

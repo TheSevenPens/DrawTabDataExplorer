@@ -27,24 +27,27 @@ export interface SpecBand {
 
 /** IAF (Initial Activation Force) ranking bands in gram-force. Lower is
  * better — a lighter touch means more natural shading and less hand
- * fatigue. */
+ * fatigue. Labelled S/A/B/C/D (tier-list style) so the single-letter
+ * names fit comfortably above the narrow lower bands on a 22 gf axis. */
 export const IAF_BANDS: Band[] = [
-	{ min: 0, max: 1, label: 'EXCELLENT' },
-	{ min: 1, max: 2, label: 'GREAT' },
-	{ min: 2, max: 3.5, label: 'GOOD' },
-	{ min: 3.5, max: 5, label: 'OK' },
-	{ min: 5, max: null, label: 'AVOID' },
+	{ min: 0, max: 1, label: 'S' },
+	{ min: 1, max: 2, label: 'A' },
+	{ min: 2, max: 3.5, label: 'B' },
+	{ min: 3.5, max: 5, label: 'C' },
+	{ min: 5, max: null, label: 'D' },
 ];
 
 /** Max Physical Pressure ranking bands in gram-force. Higher = more
  * dynamic range before the pen saturates; too high = excessive arm
- * fatigue to reach full pressure. */
+ * fatigue to reach full pressure. Labelled S/A/B/C/D/X (tier-list
+ * style, with X reserved for the EXCESSIVE upper tail). */
 export const MAX_PRESSURE_BANDS: Band[] = [
-	{ min: 100, max: 200, label: 'LIMITED' },
-	{ min: 200, max: 350, label: 'OK' },
-	{ min: 350, max: 500, label: 'GOOD' },
-	{ min: 500, max: 900, label: 'EXCELLENT' },
-	{ min: 900, max: null, label: 'EXCESSIVE' },
+	{ min: 100, max: 150, label: 'D' },
+	{ min: 150, max: 200, label: 'C' },
+	{ min: 200, max: 350, label: 'B' },
+	{ min: 350, max: 500, label: 'A' },
+	{ min: 500, max: 900, label: 'S' },
+	{ min: 900, max: null, label: 'X' },
 ];
 
 // --- Display ---
