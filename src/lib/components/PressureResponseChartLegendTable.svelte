@@ -129,9 +129,7 @@
 					</td>
 					<td>
 						{#if r.session.TabletEntityId}
-							<a
-								href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}
-							>
+							<a href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}>
 								{tabletNameById.get(r.session.TabletEntityId) ?? r.session.TabletEntityId}
 							</a>
 						{/if}

@@ -83,17 +83,13 @@
 	let highestIafRows = $derived(
 		[...iafByPenModel].sort((a, b) => b.median - a.median).slice(0, 10),
 	);
-	let lowestIafRows = $derived(
-		[...iafByPenModel].sort((a, b) => a.median - b.median).slice(0, 10),
-	);
+	let lowestIafRows = $derived([...iafByPenModel].sort((a, b) => a.median - b.median).slice(0, 10));
 
 	let maxByPenModel = $derived(aggregateByPenModel(maxRows));
 	let highestMaxRows = $derived(
 		[...maxByPenModel].sort((a, b) => b.median - a.median).slice(0, 10),
 	);
-	let lowestMaxRows = $derived(
-		[...maxByPenModel].sort((a, b) => a.median - b.median).slice(0, 10),
-	);
+	let lowestMaxRows = $derived([...maxByPenModel].sort((a, b) => a.median - b.median).slice(0, 10));
 
 	const sectionDefs: Section[] = [
 		{ id: 'iaf', category: 'Pressure', label: 'IAF (P00)' },
@@ -165,8 +161,8 @@
 				<h2>Highest IAF</h2>
 				<p class="description">
 					Top 10 pen models ranked by median IAF (P00) across non-defective measurement sessions —
-					the stiffest pens to activate. Higher values mean a heavier touch is needed before the
-					pen registers any pressure.
+					the stiffest pens to activate. Higher values mean a heavier touch is needed before the pen
+					registers any pressure.
 				</p>
 				{@render rankTable(highestIafRows)}
 			</section>

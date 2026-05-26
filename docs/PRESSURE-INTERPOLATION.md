@@ -12,11 +12,11 @@ Captured records are **sparse and noisy** — typical sessions land 20–80 mono
 
 ## Three functions
 
-| Function                | Range                | Method                                       | Returns `null` when                       |
-| ----------------------- | -------------------- | -------------------------------------------- | ----------------------------------------- |
-| `interpolatePhysical()` | inside record range  | linear between pairs                         | target ∉ `[y_first, y_last]`, or `n < 2`  |
-| `estimateP00()`         | below `y_first`      | bracket midpoint **or** spring-decay back    | no usable bracket and `n < 2` / degenerate slopes |
-| `estimateP100()`        | above `y_last`       | bracket midpoint **or** spring-decay forward | no usable bracket and `n < 2` / extrapolation exceeds `4 · xLast` |
+| Function                | Range               | Method                                       | Returns `null` when                                               |
+| ----------------------- | ------------------- | -------------------------------------------- | ----------------------------------------------------------------- |
+| `interpolatePhysical()` | inside record range | linear between pairs                         | target ∉ `[y_first, y_last]`, or `n < 2`                          |
+| `estimateP00()`         | below `y_first`     | bracket midpoint **or** spring-decay back    | no usable bracket and `n < 2` / degenerate slopes                 |
+| `estimateP100()`        | above `y_last`      | bracket midpoint **or** spring-decay forward | no usable bracket and `n < 2` / extrapolation exceeds `4 · xLast` |
 
 `interpolatePhysical` is also reused for every middle percentile (P01, P05, …, P99) the legend table renders — same linear walk, different target.
 
@@ -53,7 +53,7 @@ Sessions that explicitly captured the activation transition contain records on *
 
 1. Scan all records:
    - `A = max(x)` over records where `y ≤ 0` (highest force the pen still failed to register)
-   - `B = min(x)` over records where `y > 0` (lowest force where the pen *did* register)
+   - `B = min(x)` over records where `y > 0` (lowest force where the pen _did_ register)
 2. If both exist **and** `A < B`, return `(A + B) / 2`.
 
 This branch supersedes the old `records[0][1] ≤ 0 → return records[0][0]` short-circuit, which was buggy for sessions with multiple zero-pressure samples (it returned the first zero, not the last — see WAP.0037 on 2026-05-26 where 9 samples sat at 0 % up to 9.2 gf before activation around 9.4 gf).
@@ -70,7 +70,7 @@ Used when there's no clean 0 %→non-0 % bracket (e.g. the curve already starts 
 
 2. **Compute slopes** for every adjacent pair with `x1 > x0` (skips ties to avoid division by zero).
 
-3. **Weight the first `N_SLOPES = 4` slopes** by exponential recency. For P00 the *earliest* slopes are the *most recent* in the backward-rolling frame, so they're reversed before weighting:
+3. **Weight the first `N_SLOPES = 4` slopes** by exponential recency. For P00 the _earliest_ slopes are the _most recent_ in the backward-rolling frame, so they're reversed before weighting:
 
    ```
    weights = [2⁰, 2¹, 2², 2³]   // index 0 = oldest, N-1 = newest
@@ -90,7 +90,7 @@ Used when there's no clean 0 %→non-0 % bracket (e.g. the curve already starts 
 
 ### All-zero edge case
 
-When every record sits at `y ≤ 0` (the pen never activated within the tested force range), `B` doesn't exist, and the spring-decay branch sees only zero-slope data → returns `null`. This is intentional: we can say "P00 is above max(x)" but can't say *how* far above, so reporting `—` is more honest than picking an arbitrary point.
+When every record sits at `y ≤ 0` (the pen never activated within the tested force range), `B` doesn't exist, and the spring-decay branch sees only zero-slope data → returns `null`. This is intentional: we can say "P00 is above max(x)" but can't say _how_ far above, so reporting `—` is more honest than picking an arbitrary point.
 
 ## `estimateP100(records)` — Maximum Force
 
@@ -126,10 +126,10 @@ The `4 · xLast` ceiling is the only ad-hoc cap; it kicks in when the curve is n
 
 ## Constants
 
-| Constant    | Value | Where it bites                                                              |
-| ----------- | ----- | --------------------------------------------------------------------------- |
+| Constant    | Value | Where it bites                                                                             |
+| ----------- | ----- | ------------------------------------------------------------------------------------------ |
 | `N_SLOPES`  | `4`   | Number of slopes averaged when fitting `v_eff`. Smaller = noisier fits; larger = more lag. |
-| `THRESHOLD` | `0.5` | Logical-pressure cutoff (in %) used as the activation/saturation boundary. |
+| `THRESHOLD` | `0.5` | Logical-pressure cutoff (in %) used as the activation/saturation boundary.                 |
 
 Both are file-local constants — change them only with new tests demonstrating the effect on representative sessions.
 
@@ -142,13 +142,13 @@ Both are file-local constants — change them only with new tests demonstrating 
 
 ## Where it's called
 
-| Surface                            | Function           | File                                                          |
-| ---------------------------------- | ------------------ | ------------------------------------------------------------- |
-| Per-session **IAF tab** table      | `estimateP00`      | [`src/lib/components/IafTab.svelte`](../src/lib/components/IafTab.svelte) |
-| Per-session **Max Pressure** table | `estimateP100`     | [`src/lib/components/MaxPressureTab.svelte`](../src/lib/components/MaxPressureTab.svelte) |
-| Pressure-response legend (P-cols)  | all three          | [`src/lib/components/PressureResponseChartLegendTable.svelte`](../src/lib/components/PressureResponseChartLegendTable.svelte) |
-| **Pen Analysis** distributions     | `estimateP00`/`estimateP100` | [`src/routes/pen-analysis/+page.svelte`](../src/routes/pen-analysis/+page.svelte) |
-| Pressure-response field defs       | both extrapolators | [`data-repo/lib/entities/pressure-response-fields.ts`](../data-repo/lib/entities/pressure-response-fields.ts) (`IAF`, `MaxPressure` computed fields) |
+| Surface                            | Function                     | File                                                                                                                                                 |
+| ---------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Per-session **IAF tab** table      | `estimateP00`                | [`src/lib/components/IafTab.svelte`](../src/lib/components/IafTab.svelte)                                                                            |
+| Per-session **Max Pressure** table | `estimateP100`               | [`src/lib/components/MaxPressureTab.svelte`](../src/lib/components/MaxPressureTab.svelte)                                                            |
+| Pressure-response legend (P-cols)  | all three                    | [`src/lib/components/PressureResponseChartLegendTable.svelte`](../src/lib/components/PressureResponseChartLegendTable.svelte)                        |
+| **Pen Analysis** distributions     | `estimateP00`/`estimateP100` | [`src/routes/pen-analysis/+page.svelte`](../src/routes/pen-analysis/+page.svelte)                                                                    |
+| Pressure-response field defs       | both extrapolators           | [`data-repo/lib/entities/pressure-response-fields.ts`](../data-repo/lib/entities/pressure-response-fields.ts) (`IAF`, `MaxPressure` computed fields) |
 
 All these paths share the **same single source of truth** in `interpolate.ts`. Tweak math there, not at the call site.
 
@@ -157,6 +157,6 @@ All these paths share the **same single source of truth** in `interpolate.ts`. T
 Two real-world failure modes worth knowing:
 
 - **Missing low end** — a session that starts at `y_first = 30 %` extrapolates to a P00 that's still well above 0 gf, but with low confidence. The data-quality CLI (`findMissingLowEnd`) flags sessions whose first sample is far from 0 %.
-- **Non-monotonic curves** — a session where pressure briefly *drops* (noise, lifted pen) breaks the linear-walk assumption in `interpolatePhysical`. `findNonMonotonicSessions` reports these.
+- **Non-monotonic curves** — a session where pressure briefly _drops_ (noise, lifted pen) breaks the linear-walk assumption in `interpolatePhysical`. `findNonMonotonicSessions` reports these.
 
 Both checks live in [`data-repo/lib/pressure/data-quality.ts`](../data-repo/lib/pressure/data-quality.ts).
