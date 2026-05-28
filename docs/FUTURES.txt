@@ -18,6 +18,7 @@ open the issue for current scope, design notes, and status.
 - Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
 - Promote detail-page tabs to nested route segments (currently URL hash) — #211
+- Remove spring-decay extrapolation from estimateP00 / estimateP100 — #212
 
 ## Shipped
 
