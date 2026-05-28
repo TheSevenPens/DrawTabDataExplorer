@@ -400,12 +400,13 @@
 							openExport(
 								'Non-Monotonic Pressure Sessions',
 								'data-quality-pressure-non-monotonic',
-								['Brand', 'Pen', 'Inventory ID', 'Date', 'Drop Index', 'From %', 'To %'],
+								['Brand', 'Pen', 'Inventory ID', 'Date', 'Axis', 'Drop Index', 'From', 'To'],
 								nonMonotonicSessions.map((n) => [
 									n.session.Brand,
 									n.session.PenEntityId,
 									n.session.InventoryId,
 									n.session.Date,
+									n.firstDrop.axis,
 									n.firstDrop.index,
 									n.firstDrop.from.toFixed(2),
 									n.firstDrop.to.toFixed(2),
@@ -413,11 +414,13 @@
 							)}
 					/>
 					<p class="description">
-						Sessions where logical pressure drops at some point as physical force increases. A valid
-						session should be monotonically non-decreasing on the logical axis.
+						Sessions whose records go backwards on either axis as the array progresses — logical
+						pressure (y) drops below an earlier sample, or physical force (x) drops below an earlier
+						sample. Both indicate out-of-order records: the chart draws a backtracking line and
+						interpolation can return wrong results.
 					</p>
 					{#if nonMonotonicSessions.length === 0}
-						<p class="good">All sessions are monotonically non-decreasing.</p>
+						<p class="good">All sessions are monotonically non-decreasing on both axes.</p>
 					{:else}
 						<table class="compact">
 							<thead>
@@ -426,12 +429,14 @@
 									<th>Pen</th>
 									<th>Inventory ID</th>
 									<th>Date</th>
+									<th>Axis</th>
 									<th>Drop @</th>
 									<th>From → To</th>
 								</tr>
 							</thead>
 							<tbody>
 								{#each nonMonotonicSessions as n (n.session._id)}
+									{@const unit = n.firstDrop.axis === 'logical' ? '%' : ' gf'}
 									<tr>
 										<td>{n.session.Brand}</td>
 										<td class="mono">
@@ -449,9 +454,10 @@
 											</a>
 										</td>
 										<td class="mono">{n.session.Date}</td>
+										<td>{n.firstDrop.axis}</td>
 										<td class="num">{n.firstDrop.index}</td>
 										<td class="num mono">
-											{n.firstDrop.from.toFixed(2)} → {n.firstDrop.to.toFixed(2)}%
+											{n.firstDrop.from.toFixed(2)} → {n.firstDrop.to.toFixed(2)}{unit}
 										</td>
 									</tr>
 								{/each}

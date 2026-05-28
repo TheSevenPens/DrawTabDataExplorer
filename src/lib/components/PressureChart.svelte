@@ -205,10 +205,60 @@
 		const out: any[] = [];
 		sessionsToPlot.forEach((s, i) => {
 			const color = colorFor(i, s.color);
+			const N = s.records.length;
+
+			// Find the activation / saturation transitions inside this
+			// session's records.
+			//   firstActiveIdx — first index where y > 0
+			//   lastSubIdx    — last  index where y < 100
+			// Both are -1 if the session never crosses that boundary.
+			let firstActiveIdx = -1;
+			let lastSubIdx = -1;
+			for (let j = 0; j < N; j++) {
+				if (firstActiveIdx === -1 && s.records[j][1] > 0) firstActiveIdx = j;
+				if (s.records[j][1] < 100) lastSubIdx = j;
+			}
+
+			const p00 = viewMode === 'estimates' ? estimateP00(s.records) : null;
+			const p100 = viewMode === 'estimates' ? estimateP100(s.records) : null;
+			const showP00Dashed = p00 !== null && firstActiveIdx >= 0;
+			const showP100Dashed = p100 !== null && lastSubIdx >= 0;
+
+			// Determine where to split the solid line: the dashed estimate
+			// lines bridge the gaps via (P00, 0) and (P100, 100), so the
+			// solid line must NOT span those transitions. Chart.js is
+			// configured with `parsing: false`, which means `null` items
+			// in a single dataset's `data` array do not produce a gap
+			// reliably — so we emit a separate solid dataset per segment
+			// instead. Each segment shares the same label/color/style;
+			// they read as one continuous line wherever no break is needed.
+			const splits: number[] = [];
+			if (showP00Dashed && firstActiveIdx > 0) splits.push(firstActiveIdx);
+			if (showP100Dashed && lastSubIdx >= 0 && lastSubIdx + 1 < N) {
+				splits.push(lastSubIdx + 1);
+			}
+			const solidLabel = s.defective ? `⚠ ${s.label}` : s.label;
+			let segStart = 0;
+			for (const splitIdx of splits) {
+				out.push({
+					type: 'line',
+					label: solidLabel,
+					data: s.records.slice(segStart, splitIdx).map(([x, y]) => ({ x, y })),
+					borderColor: color,
+					backgroundColor: color,
+					borderDash: s.defective ? [3, 3] : undefined,
+					pointRadius: 0,
+					pointHoverRadius: 4,
+					borderWidth: 2,
+					tension: 0,
+					fill: false,
+				});
+				segStart = splitIdx;
+			}
 			out.push({
 				type: 'line',
-				label: s.defective ? `⚠ ${s.label}` : s.label,
-				data: s.records.map(([x, y]) => ({ x, y })),
+				label: solidLabel,
+				data: s.records.slice(segStart).map(([x, y]) => ({ x, y })),
 				borderColor: color,
 				backgroundColor: color,
 				borderDash: s.defective ? [3, 3] : undefined,
@@ -218,40 +268,51 @@
 				tension: 0,
 				fill: false,
 			});
-			if (viewMode === 'estimates') {
-				const p00 = estimateP00(s.records);
-				const p100 = estimateP100(s.records);
-				if (p00 !== null) {
-					out.push({
-						type: 'line',
-						label: `${s.label} (P00 est.)`,
-						data: [
-							{ x: p00, y: 0 },
-							{ x: s.records[0][0], y: s.records[0][1] },
-						],
-						borderColor: color,
-						borderDash: [6, 4],
-						borderWidth: 1.5,
-						pointRadius: 0,
-						fill: false,
-					});
+
+			// Dashed P00 estimate polyline:
+			//   [last y=0 sample] → (P00, 0) → [first y>0 sample]
+			// The first leg is omitted when no zero-lead samples exist
+			// (spring-decay case); the second leg is always drawn.
+			if (showP00Dashed) {
+				const pts: { x: number; y: number }[] = [];
+				if (firstActiveIdx > 0) {
+					pts.push({ x: s.records[firstActiveIdx - 1][0], y: 0 });
 				}
-				if (p100 !== null) {
-					const last = s.records[s.records.length - 1];
-					out.push({
-						type: 'line',
-						label: `${s.label} (P100 est.)`,
-						data: [
-							{ x: last[0], y: last[1] },
-							{ x: p100, y: 100 },
-						],
-						borderColor: color,
-						borderDash: [6, 4],
-						borderWidth: 1.5,
-						pointRadius: 0,
-						fill: false,
-					});
+				pts.push({ x: p00!, y: 0 });
+				pts.push({ x: s.records[firstActiveIdx][0], y: s.records[firstActiveIdx][1] });
+				out.push({
+					type: 'line',
+					label: `${s.label} (P00 est.)`,
+					data: pts,
+					borderColor: color,
+					borderDash: [6, 4],
+					borderWidth: 1.5,
+					pointRadius: 0,
+					fill: false,
+				});
+			}
+
+			// Dashed P100 estimate polyline:
+			//   [last y<100 sample] → (P100, 100) → [first y≥100 sample]
+			// The second leg is omitted when no saturated samples exist
+			// (spring-decay case); the first leg is always drawn.
+			if (showP100Dashed) {
+				const pts: { x: number; y: number }[] = [];
+				pts.push({ x: s.records[lastSubIdx][0], y: s.records[lastSubIdx][1] });
+				pts.push({ x: p100!, y: 100 });
+				if (lastSubIdx + 1 < N) {
+					pts.push({ x: s.records[lastSubIdx + 1][0], y: 100 });
 				}
+				out.push({
+					type: 'line',
+					label: `${s.label} (P100 est.)`,
+					data: pts,
+					borderColor: color,
+					borderDash: [6, 4],
+					borderWidth: 1.5,
+					pointRadius: 0,
+					fill: false,
+				});
 			}
 		});
 		return out;
