@@ -11,10 +11,7 @@ open the issue for current scope, design notes, and status.
 - Text-based KQL input — #54
 - Type-narrow .filter()/.sort() field parameter — #118
 - Investigate replacing custom Query API with Arquero — #119
-- Split FieldDef into core + UI display extension — #142
 - Publish queriton to npm (Option C of #139 Phase 4) — #143
-- Add Palmer Penguins fixture to queriton test suite — #144
-- User-facing tutorial doc for queriton — #146
 - Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
 - Promote detail-page tabs to nested route segments (currently URL hash) — #211
@@ -22,6 +19,9 @@ open the issue for current scope, design notes, and status.
 ## Shipped
 
 - Remove spring-decay extrapolation; backfill 0%/100% endpoints across 144 sessions — #212
+- Write a user-facing tutorial for queriton — #146
+- Add Palmer Penguins fixture to queriton test suite — #144
+- Split FieldDef into core + UI display extension — #142
 - Extract shared pressure chart session state — #172
 - Centralize SubNav tab definitions — #173
 - Add buildTabletNameMap and fix canonical naming bypasses — #174
