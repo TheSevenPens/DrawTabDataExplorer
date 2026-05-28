@@ -26,4 +26,4 @@
 | E2E smoke tests                     | `e2e/smoke.spec.ts`                                                                                           | See [TESTING.md](TESTING.md)                                                                                                             |
 | GitHub Pages base path              | `svelte.config.js`, `vite.config.ts`                                                                          | `base` / `paths`                                                                                                                         |
 
-See also [ARCHITECTURE.md](ARCHITECTURE.md) for component catalog and [AGENTS.md](../AGENTS.md) for read order.
+See also: [ARCHITECTURE.md](ARCHITECTURE.md) (runtime data flow), [UXCOMPONENTS.md](UXCOMPONENTS.md) (component catalog), [FIELDDEFS.md](FIELDDEFS.md) (how columns / filters are defined), [STORES.md](STORES.md) (Svelte stores), [SCRIPTS.md](SCRIPTS.md) (CLI tools), [GLOSSARY.md](GLOSSARY.md) (domain vocab), [AGENTS.md](../AGENTS.md) (read order).

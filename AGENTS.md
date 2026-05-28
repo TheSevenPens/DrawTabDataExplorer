@@ -17,17 +17,17 @@
 
 ## Read order by task
 
-| Task                     | Read first                                       | Then                                           |
-| ------------------------ | ------------------------------------------------ | ---------------------------------------------- |
-| Any change               | This file + `CLAUDE.md`                          | [`docs/WHERE.md`](docs/WHERE.md)               |
-| UI / routes / components | `CLAUDE.md` § Data loading, Svelte 5             | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
-| Step-by-step workflows   | [`docs/RECIPES.md`](docs/RECIPES.md)             | Files listed in recipe                         |
-| Data shape / validation  | `data-repo/docs/ARCHITECTURE.md`                 | `data-repo/lib/schemas.ts`, `FIELDS.txt`       |
-| Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`            | `CLAUDE.md` § Adding a brand                   |
-| Pressure / charts        | `CLAUDE.md` § Pressure response                  | `PressureChart.svelte`                         |
-| Tests / verify           | [`docs/TESTING.md`](docs/TESTING.md)             | Run commands below                             |
-| Planned work             | [`docs/FUTURES.txt`](docs/FUTURES.txt)           | GitHub issue bodies                            |
-| Don'ts (quick scan)      | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md) | `CLAUDE.md` for detail                         |
+| Task                     | Read first                                       | Then                                                                                                                    |
+| ------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Any change               | This file + `CLAUDE.md`                          | [`docs/WHERE.md`](docs/WHERE.md)                                                                                        |
+| UI / routes / components | `CLAUDE.md` § Data loading, Svelte 5             | [`docs/UXCOMPONENTS.md`](docs/UXCOMPONENTS.md) (catalog w/ screenshots), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Step-by-step workflows   | [`docs/RECIPES.md`](docs/RECIPES.md)             | Files listed in recipe                                                                                                  |
+| Data shape / validation  | `data-repo/docs/ARCHITECTURE.md`                 | `data-repo/lib/schemas.ts`, `FIELDS.txt`                                                                                |
+| Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`            | `CLAUDE.md` § Adding a brand                                                                                            |
+| Pressure / charts        | `CLAUDE.md` § Pressure response                  | `PressureChart.svelte`                                                                                                  |
+| Tests / verify           | [`docs/TESTING.md`](docs/TESTING.md)             | Run commands below                                                                                                      |
+| Planned work             | [`docs/FUTURES.txt`](docs/FUTURES.txt)           | GitHub issue bodies                                                                                                     |
+| Don'ts (quick scan)      | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md) | `CLAUDE.md` for detail                                                                                                  |
 
 ## Doc roles (what to load)
 
@@ -38,6 +38,11 @@
 | [`docs/WHERE.md`](docs/WHERE.md)                 | Agents        | Lookup “change X → files”                         |
 | [`docs/RECIPES.md`](docs/RECIPES.md)             | Agents        | Common workflows                                  |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)   | Devs          | Reference (components, routes)                    |
+| [`docs/GLOSSARY.md`](docs/GLOSSARY.md)           | All           | A–Z lookup for domain vocab                       |
+| [`docs/SCRIPTS.md`](docs/SCRIPTS.md)             | Agents        | Catalog of every CLI script                       |
+| [`docs/FIELDDEFS.md`](docs/FIELDDEFS.md)         | Agents / devs | How columns / filters / detail rows are defined   |
+| [`docs/STORES.md`](docs/STORES.md)               | Agents / devs | Map of the four Svelte stores                     |
+| [`docs/UXCOMPONENTS.md`](docs/UXCOMPONENTS.md)   | Agents / devs | Catalog of every Svelte component                 |
 | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md) | Agents        | Reject bad approaches fast                        |
 | [`docs/TESTING.md`](docs/TESTING.md)             | Agents / devs | Verification commands                             |
 | [`docs/DOC-STYLE.md`](docs/DOC-STYLE.md)         | Doc authors   | Format new/edited docs                            |
