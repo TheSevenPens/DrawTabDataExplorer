@@ -17,6 +17,7 @@ open the issue for current scope, design notes, and status.
 - User-facing tutorial doc for queriton — #146
 - Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
+- Promote detail-page tabs to nested route segments (currently URL hash) — #211
 
 ## Shipped
 

@@ -25,6 +25,7 @@
 	} from '$lib/flagged-store.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import PenPicker from '$lib/components/PenPicker.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
@@ -364,21 +365,16 @@
 <SubNav tabs={penTabs} />
 <h1>Compare Pens</h1>
 
-<div class="tabs">
-	<button class:active={activeTab === 'flagged'} onclick={() => (activeTab = 'flagged')}>
-		Flagged ({$flaggedPenModels.length})
-	</button>
-	<button class:active={activeTab === 'compare'} onclick={() => (activeTab = 'compare')}>
-		Compare
-	</button>
-	<button class:active={activeTab === 'pressure'} onclick={() => (activeTab = 'pressure')}>
-		Pressure Response ({matchedSessions.length})
-	</button>
-	<button class:active={activeTab === 'iaf'} onclick={() => (activeTab = 'iaf')}> IAF </button>
-	<button class:active={activeTab === 'maxpressure'} onclick={() => (activeTab = 'maxpressure')}>
-		Max Pressure
-	</button>
-</div>
+<Tabs
+	tabs={[
+		{ id: 'flagged', label: 'Flagged', badge: $flaggedPenModels.length },
+		{ id: 'compare', label: 'Compare' },
+		{ id: 'pressure', label: 'Pressure Response', badge: matchedSessions.length },
+		{ id: 'iaf', label: 'IAF' },
+		{ id: 'maxpressure', label: 'Max Pressure' },
+	] satisfies Tab[]}
+	bind:active={activeTab}
+/>
 
 {#if activeTab === 'flagged'}
 	<div class="flagged-actions">
@@ -664,39 +660,6 @@
 <style>
 	h1 {
 		margin-bottom: 16px;
-	}
-
-	.tabs {
-		display: flex;
-		gap: 0;
-		border-bottom: 2px solid var(--border);
-		margin-bottom: 20px;
-	}
-
-	.tabs button {
-		padding: 7px 18px;
-		font-size: 13px;
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
-		background: transparent;
-		color: var(--text-muted);
-		cursor: pointer;
-		position: relative;
-		bottom: -2px;
-	}
-
-	.tabs button:hover {
-		color: #2563eb;
-		background: var(--hover-bg);
-	}
-
-	.tabs button.active {
-		background: var(--bg-card);
-		color: var(--text);
-		font-weight: 600;
-		border-color: var(--border);
-		border-bottom-color: var(--bg-card);
 	}
 
 	.flagged-actions {
