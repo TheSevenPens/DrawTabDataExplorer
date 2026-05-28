@@ -1,0 +1,1423 @@
+[
+	{
+		"_id": "3b0eba6e-ad8d-4a25-8d3c-2591760b6775",
+		"brand": "HUION",
+		"inventoryId": "HUP.0001",
+		"date": "2024-09-23",
+		"entityId": "huion.session.hup.0001_2024-09-23",
+		"penLabel": "PW517",
+		"prependP00Force": 5.6,
+		"appendP100Force": 475.3
+	},
+	{
+		"_id": "6e192fa3-1b95-43fa-93ce-a3da86b42397",
+		"brand": "HUION",
+		"inventoryId": "HUP.0001",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0001_2025-09-26",
+		"penLabel": "PW517",
+		"prependP00Force": 7,
+		"appendP100Force": 497.8
+	},
+	{
+		"_id": "02de3e30-4b4d-4b1b-82f4-1a14ad93d623",
+		"brand": "HUION",
+		"inventoryId": "HUP.0002",
+		"date": "2024-09-23",
+		"entityId": "huion.session.hup.0002_2024-09-23",
+		"penLabel": "PW517",
+		"prependP00Force": 6.1,
+		"appendP100Force": 169.2
+	},
+	{
+		"_id": "9158aac3-f797-4f50-9f2a-d0c69d3cf829",
+		"brand": "HUION",
+		"inventoryId": "HUP.0002",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0002_2025-09-26",
+		"penLabel": "PW517",
+		"prependP00Force": 8.2,
+		"appendP100Force": 180.2
+	},
+	{
+		"_id": "654fd959-b475-4584-ae28-824c60dad5d6",
+		"brand": "HUION",
+		"inventoryId": "HUP.0003",
+		"date": "2024-09-23",
+		"entityId": "huion.session.hup.0003_2024-09-23",
+		"penLabel": "PW517",
+		"prependP00Force": 5.4,
+		"appendP100Force": 148.2
+	},
+	{
+		"_id": "68b031b4-08c0-45bb-8ee7-74b4780d5499",
+		"brand": "HUION",
+		"inventoryId": "HUP.0003",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0003_2025-09-26",
+		"penLabel": "PW517",
+		"prependP00Force": 6.3,
+		"appendP100Force": 147.7
+	},
+	{
+		"_id": "d2f8e2e8-63bb-4f32-bb1a-2623bd49b7c2",
+		"brand": "HUION",
+		"inventoryId": "HUP.0004",
+		"date": "2024-09-24",
+		"entityId": "huion.session.hup.0004_2024-09-24",
+		"penLabel": "PW517",
+		"prependP00Force": 7,
+		"appendP100Force": 212.1
+	},
+	{
+		"_id": "6b4caaff-b5e2-46b0-999d-fe2f49b5a0a2",
+		"brand": "HUION",
+		"inventoryId": "HUP.0004",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0004_2025-09-26",
+		"penLabel": "PW517",
+		"prependP00Force": 8.9,
+		"appendP100Force": 264.1
+	},
+	{
+		"_id": "981940f3-dab2-4057-824d-605632476734",
+		"brand": "HUION",
+		"inventoryId": "HUP.0005",
+		"date": "2024-09-24",
+		"entityId": "huion.session.hup.0005_2024-09-24",
+		"penLabel": "PW517",
+		"prependP00Force": 4.1,
+		"appendP100Force": 158.7
+	},
+	{
+		"_id": "d026c93c-596a-41b3-8238-9e219c288c09",
+		"brand": "HUION",
+		"inventoryId": "HUP.0005",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0005_2025-09-26",
+		"penLabel": "PW517",
+		"prependP00Force": 5.9,
+		"appendP100Force": 158.5
+	},
+	{
+		"_id": "1f585f8c-e000-4a7d-b868-33557052d340",
+		"brand": "HUION",
+		"inventoryId": "HUP.0006",
+		"date": "2024-09-01",
+		"entityId": "huion.session.hup.0006_2024-09-01",
+		"penLabel": "PW550",
+		"prependP00Force": 5.6,
+		"appendP100Force": 596.7
+	},
+	{
+		"_id": "693480b3-2cef-45d4-86d9-cb1fc97c801d",
+		"brand": "HUION",
+		"inventoryId": "HUP.0006",
+		"date": "2025-09-27",
+		"entityId": "huion.session.hup.0006_2025-09-27",
+		"penLabel": "PW550",
+		"prependP00Force": 7.3,
+		"appendP100Force": 589.9
+	},
+	{
+		"_id": "c194cbd5-ef4f-4760-9787-d5ff95155417",
+		"brand": "HUION",
+		"inventoryId": "HUP.0007",
+		"date": "2024-09-01",
+		"entityId": "huion.session.hup.0007_2024-09-01",
+		"penLabel": "PW550S",
+		"prependP00Force": 7.3,
+		"appendP100Force": 767.2
+	},
+	{
+		"_id": "0fec2dd4-c1e9-40ed-9bda-af77dde7b5bf",
+		"brand": "HUION",
+		"inventoryId": "HUP.0007",
+		"date": "2025-09-27",
+		"entityId": "huion.session.hup.0007_2025-09-27",
+		"penLabel": "PW550",
+		"prependP00Force": 7.7,
+		"appendP100Force": 564.6
+	},
+	{
+		"_id": "606a82a7-f440-4eab-a35f-81e4cd15169c",
+		"brand": "HUION",
+		"inventoryId": "HUP.0008",
+		"date": "2024-09-01",
+		"entityId": "huion.session.hup.0008_2024-09-01",
+		"penLabel": "PW550",
+		"prependP00Force": 5.5,
+		"appendP100Force": 225.9
+	},
+	{
+		"_id": "de7bd467-7595-460e-86f5-d7eb6a41a6ab",
+		"brand": "HUION",
+		"inventoryId": "HUP.0008",
+		"date": "2025-09-27",
+		"entityId": "huion.session.hup.0008_2025-09-27",
+		"penLabel": "PW550",
+		"prependP00Force": 6.9,
+		"appendP100Force": 289.5
+	},
+	{
+		"_id": "303076a4-6f0f-4555-9e24-f3c38592f1b1",
+		"brand": "HUION",
+		"inventoryId": "HUP.0009",
+		"date": "2024-09-01",
+		"entityId": "huion.session.hup.0009_2024-09-01",
+		"penLabel": "PW550",
+		"prependP00Force": 5.5
+	},
+	{
+		"_id": "c5fc89a5-b5e5-4fed-b734-988bf8611e45",
+		"brand": "HUION",
+		"inventoryId": "HUP.0009",
+		"date": "2025-09-27",
+		"entityId": "huion.session.hup.0009_2025-09-27",
+		"penLabel": "PW550",
+		"prependP00Force": 5.8,
+		"appendP100Force": 914.1
+	},
+	{
+		"_id": "edc31584-271f-4d63-b000-43cd186d3566",
+		"brand": "HUION",
+		"inventoryId": "HUP.0010",
+		"date": "2024-09-23",
+		"entityId": "huion.session.hup.0010_2024-09-23",
+		"penLabel": "PW600S",
+		"prependP00Force": 3.8,
+		"appendP100Force": 521.7
+	},
+	{
+		"_id": "8bf8bb8c-00be-4b70-8357-06656a12b5dd",
+		"brand": "HUION",
+		"inventoryId": "HUP.0010",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0010_2025-09-26",
+		"penLabel": "PW600S",
+		"prependP00Force": 3.5,
+		"appendP100Force": 497.1
+	},
+	{
+		"_id": "b9b31b12-36ca-4d3c-8abd-d23a68d15ec5",
+		"brand": "HUION",
+		"inventoryId": "HUP.0011",
+		"date": "2025-11-03",
+		"entityId": "huion.session.hup.0011_2025-11-03",
+		"penLabel": "PW110",
+		"prependP00Force": 6.7,
+		"appendP100Force": 176.8
+	},
+	{
+		"_id": "3938aafe-cbba-4f84-9f37-04d72f968393",
+		"brand": "HUION",
+		"inventoryId": "HUP.0013",
+		"date": "2024-09-24",
+		"entityId": "huion.session.hup.0013_2024-09-24",
+		"penLabel": "PW500",
+		"prependP00Force": 8.7,
+		"appendP100Force": 247
+	},
+	{
+		"_id": "74177bf9-cb44-4731-a5c4-15c41f245aa4",
+		"brand": "HUION",
+		"inventoryId": "HUP.0014",
+		"date": "2024-09-23",
+		"entityId": "huion.session.hup.0014_2024-09-23",
+		"penLabel": "PW600",
+		"prependP00Force": 5.2,
+		"appendP100Force": 557.2
+	},
+	{
+		"_id": "6b1f5d0e-e516-4e73-ae1e-0492fbda8d73",
+		"brand": "HUION",
+		"inventoryId": "HUP.0014",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0014_2025-09-26",
+		"penLabel": "PW600",
+		"prependP00Force": 5.2,
+		"appendP100Force": 493.3
+	},
+	{
+		"_id": "3de61e26-4386-458d-9ec5-fa6e29d6c56b",
+		"brand": "HUION",
+		"inventoryId": "HUP.0015",
+		"date": "2025-11-03",
+		"entityId": "huion.session.hup.0015_2025-11-03",
+		"penLabel": "PW110",
+		"prependP00Force": 7.8,
+		"appendP100Force": 475.7
+	},
+	{
+		"_id": "27f17e89-e352-4c2f-b057-1e3f9c13cb6e",
+		"brand": "HUION",
+		"inventoryId": "HUP.0016",
+		"date": "2024-09-23",
+		"entityId": "huion.session.hup.0016_2024-09-23",
+		"penLabel": "PW600",
+		"prependP00Force": 5.3,
+		"appendP100Force": 466.6
+	},
+	{
+		"_id": "5940c90f-558e-46eb-9753-9bed6ce176a0",
+		"brand": "HUION",
+		"inventoryId": "HUP.0016",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0016_2025-09-26",
+		"penLabel": "PW600",
+		"prependP00Force": 4.8,
+		"appendP100Force": 444.8
+	},
+	{
+		"_id": "3a50948a-e72a-4696-abee-d5cf1c7d6e6f",
+		"brand": "HUION",
+		"inventoryId": "HUP.0017",
+		"date": "2024-09-23",
+		"entityId": "huion.session.hup.0017_2024-09-23",
+		"penLabel": "PW600",
+		"prependP00Force": 0.8,
+		"appendP100Force": 502.5
+	},
+	{
+		"_id": "21f1ec30-5459-4321-94a8-6c9ee0863643",
+		"brand": "HUION",
+		"inventoryId": "HUP.0017",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0017_2025-09-26",
+		"penLabel": "PW600",
+		"prependP00Force": 3.7,
+		"appendP100Force": 447.9
+	},
+	{
+		"_id": "86f19e8c-afb2-4895-b5ac-373df9bb7489",
+		"brand": "HUION",
+		"inventoryId": "HUP.0018",
+		"date": "2024-09-23",
+		"entityId": "huion.session.hup.0018_2024-09-23",
+		"penLabel": "PW600L",
+		"prependP00Force": 3.1,
+		"appendP100Force": 567.2
+	},
+	{
+		"_id": "4ec5f50b-50ec-4bf4-b50e-8cc978d83766",
+		"brand": "HUION",
+		"inventoryId": "HUP.0018",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0018_2025-09-26",
+		"penLabel": "PW600",
+		"prependP00Force": 4.6,
+		"appendP100Force": 502.8
+	},
+	{
+		"_id": "5644a1e5-7257-484f-8311-598df674eec3",
+		"brand": "HUION",
+		"inventoryId": "HUP.0019",
+		"date": "2025-03-19",
+		"entityId": "huion.session.hup.0019_2025-03-19",
+		"penLabel": "PW517",
+		"prependP00Force": 6.2,
+		"appendP100Force": 241.7
+	},
+	{
+		"_id": "b68f03b1-474f-495a-a73a-1edeb67eab2b",
+		"brand": "HUION",
+		"inventoryId": "HUP.0019",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0019_2025-09-26",
+		"penLabel": "PW517",
+		"prependP00Force": 7.5,
+		"appendP100Force": 300.1
+	},
+	{
+		"_id": "634151e8-4a03-49d6-821b-525e7bbee154",
+		"brand": "HUION",
+		"inventoryId": "HUP.0020",
+		"date": "2025-03-21",
+		"entityId": "huion.session.hup.0020_2025-03-21",
+		"penLabel": "PW600L",
+		"prependP00Force": 1.3,
+		"appendP100Force": 545.2
+	},
+	{
+		"_id": "643d96b4-a0b0-48ff-a15a-7ff52262ac09",
+		"brand": "HUION",
+		"inventoryId": "HUP.0020",
+		"date": "2025-09-26",
+		"entityId": "huion.session.hup.0020_2025-09-26",
+		"penLabel": "PW600L",
+		"prependP00Force": 3.3,
+		"appendP100Force": 507.3
+	},
+	{
+		"_id": "0da4f1d8-525d-4b54-9e1a-43ae1e18d9af",
+		"brand": "HUION",
+		"inventoryId": "HUP.0024",
+		"date": "2025-11-01",
+		"entityId": "huion.session.hup.0024_2025-11-01",
+		"penLabel": "PW100",
+		"prependP00Force": 11.6,
+		"appendP100Force": 247.7
+	},
+	{
+		"_id": "bf39c94a-1065-4057-aa5c-60847942f5e2",
+		"brand": "HUION",
+		"inventoryId": "HUP.0024",
+		"date": "2025-11-02",
+		"entityId": "huion.session.hup.0024_2025-11-02",
+		"penLabel": "PW100",
+		"prependP00Force": 12.6,
+		"appendP100Force": 252.5
+	},
+	{
+		"_id": "6e66f2a9-0835-42b1-a849-5caa5a447cac",
+		"brand": "HUION",
+		"inventoryId": "HUP.0025",
+		"date": "2025-11-03",
+		"entityId": "huion.session.hup.0025_2025-11-03",
+		"penLabel": "PW517",
+		"prependP00Force": 5.6,
+		"appendP100Force": 219.5
+	},
+	{
+		"_id": "e56ae9d0-1404-4c55-9332-15b60272509d",
+		"brand": "SAMSUNG",
+		"inventoryId": "SAP.0001",
+		"date": "2024-09-30",
+		"entityId": "samsung.session.sap.0001_2024-09-30",
+		"penLabel": "S Pen (SPEN)",
+		"prependP00Force": 8.3,
+		"appendP100Force": 167.3
+	},
+	{
+		"_id": "b2930abb-d05f-4e38-a404-c0fea76e742d",
+		"brand": "SAMSUNG",
+		"inventoryId": "SAP.0002",
+		"date": "2024-09-30",
+		"entityId": "samsung.session.sap.0002_2024-09-30",
+		"penLabel": "S Pen (SPEN)",
+		"prependP00Force": 5.6,
+		"appendP100Force": 248
+	},
+	{
+		"_id": "09b3ade7-0798-490a-bf87-c30b664271d2",
+		"brand": "SAMSUNG",
+		"inventoryId": "SAP.0003",
+		"date": "2024-09-30",
+		"entityId": "samsung.session.sap.0003_2024-09-30",
+		"penLabel": "S Pen (SPEN)",
+		"appendP100Force": 289.1
+	},
+	{
+		"_id": "df41a5fb-13b9-4ebd-b1a7-8fdc3b1a4f14",
+		"brand": "SAMSUNG",
+		"inventoryId": "SAP.0004",
+		"date": "2024-09-30",
+		"entityId": "samsung.session.sap.0004_2024-09-30",
+		"penLabel": "S Pen Creator (SPENCREATOR)",
+		"prependP00Force": 4.7,
+		"appendP100Force": 191.3
+	},
+	{
+		"_id": "82fbecf1-12a7-437f-aa83-fbabf5487611",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0001",
+		"date": "2024-09-02",
+		"entityId": "wacom.session.wap.0001_2024-09-02",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 2.2
+	},
+	{
+		"_id": "da169a97-efd4-43f6-99d8-863a6c07abca",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0001",
+		"date": "2025-11-10",
+		"entityId": "wacom.session.wap.0001_2025-11-10",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 3.3,
+		"appendP100Force": 714
+	},
+	{
+		"_id": "3df18065-3ea2-466c-b77f-95293ea5e860",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0002",
+		"date": "2024-09-02",
+		"entityId": "wacom.session.wap.0002_2024-09-02",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 2.7
+	},
+	{
+		"_id": "876bd54f-e406-49a2-a8c7-fe179feb0b22",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0003",
+		"date": "2024-09-02",
+		"entityId": "wacom.session.wap.0003_2024-09-02",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 3.6
+	},
+	{
+		"_id": "79fe7a8c-7068-4c52-8a2e-566fbb79ed0f",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0003",
+		"date": "2025-11-10",
+		"entityId": "wacom.session.wap.0003_2025-11-10",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 2.5,
+		"appendP100Force": 733.1
+	},
+	{
+		"_id": "6dd2d6f2-e6f5-41ef-b365-fa53833ed4f3",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0004",
+		"date": "2024-09-02",
+		"entityId": "wacom.session.wap.0004_2024-09-02",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 0.4,
+		"appendP100Force": 4571.9
+	},
+	{
+		"_id": "5180fcfd-8062-43ae-aea0-3b1006efc40f",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0005",
+		"date": "2024-09-02",
+		"entityId": "wacom.session.wap.0005_2024-09-02",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 2.2
+	},
+	{
+		"_id": "0ed7be5f-4075-48f6-a30e-aa8c83e4a3c0",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0005",
+		"date": "2025-11-10",
+		"entityId": "wacom.session.wap.0005_2025-11-10",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 2.8,
+		"appendP100Force": 679.1
+	},
+	{
+		"_id": "c78ea491-bc58-46b3-90d9-f29ba172b69c",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0006",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0006_2024-09-30",
+		"penLabel": "4K Pen (LP-1100K)",
+		"prependP00Force": 3,
+		"appendP100Force": 436.5
+	},
+	{
+		"_id": "8e4a3bac-94a5-431d-8e4f-b5d9ab04b348",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0007",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0007_2024-09-30",
+		"penLabel": "4K Pen (LP-1100K)",
+		"prependP00Force": 6.2,
+		"appendP100Force": 408.8
+	},
+	{
+		"_id": "59bcc62f-b83d-4be0-8224-08e4f72b154c",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0008",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0008_2024-09-30",
+		"penLabel": "4K Pen (LP-1100K)",
+		"prependP00Force": 7.6,
+		"appendP100Force": 616
+	},
+	{
+		"_id": "f8ea3b6c-aeb3-457d-989e-6aa1940a4385",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0009",
+		"date": "2024-09-03",
+		"entityId": "wacom.session.wap.0009_2024-09-03",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"prependP00Force": 7,
+		"appendP100Force": 305.2
+	},
+	{
+		"_id": "411ec762-f0c9-4805-8683-b987fb0bdd7b",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0009",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0009_2026-05-24",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 497.5
+	},
+	{
+		"_id": "65e1d97f-1b22-4661-8b68-74f8df0f9d2d",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0009",
+		"date": "2026-05-25",
+		"entityId": "wacom.session.wap.0009_2026-05-25",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 299.9
+	},
+	{
+		"_id": "4fdd741a-c45a-4078-92ad-05ca0b0bb89c",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0009",
+		"date": "2026-05-25",
+		"entityId": "wacom.session.wap.0009_2026-05-25",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"prependP00Force": 6.9,
+		"appendP100Force": 323.9
+	},
+	{
+		"_id": "b2537cb1-c5b6-4506-80ba-2f469e49187d",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0010",
+		"date": "2024-09-03",
+		"entityId": "wacom.session.wap.0010_2024-09-03",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 223.5
+	},
+	{
+		"_id": "308c75f6-5993-41e1-80c1-07deb104f1dc",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0010",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0010_2026-05-24",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 393.3
+	},
+	{
+		"_id": "56cc951b-f26a-4448-b20f-a42aee8e0468",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0010",
+		"date": "2026-05-25",
+		"entityId": "wacom.session.wap.0010_2026-05-25",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"prependP00Force": 7.6,
+		"appendP100Force": 224.4
+	},
+	{
+		"_id": "b6a4f7ca-1214-4c8a-b38f-75aec9f9c2ac",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0010",
+		"date": "2026-05-25",
+		"entityId": "wacom.session.wap.0010_2026-05-25",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"prependP00Force": 6.4,
+		"appendP100Force": 203.8
+	},
+	{
+		"_id": "b5644ad3-e982-4628-98b8-8892bac811cf",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0011",
+		"date": "2024-09-03",
+		"entityId": "wacom.session.wap.0011_2024-09-03",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 276.1
+	},
+	{
+		"_id": "b984e8e9-f3e5-4385-b232-e8b99b8fed21",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0011",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0011_2026-05-24",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 368.5
+	},
+	{
+		"_id": "3643c99a-4a0c-4b43-8612-79f311108608",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0011",
+		"date": "2026-05-25",
+		"entityId": "wacom.session.wap.0011_2026-05-25",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 254.1
+	},
+	{
+		"_id": "b9394bb5-5eac-4294-bf3a-8a3eb8e5cba0",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0011",
+		"date": "2026-05-25",
+		"entityId": "wacom.session.wap.0011_2026-05-25",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"prependP00Force": 7.1,
+		"appendP100Force": 249.7
+	},
+	{
+		"_id": "811f9524-3fbf-4111-a781-c05a793d57a1",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0021",
+		"date": "2024-10-01",
+		"entityId": "wacom.session.wap.0021_2024-10-01",
+		"penLabel": "Grip Pen (KP-501E)",
+		"prependP00Force": 2,
+		"appendP100Force": 429.3
+	},
+	{
+		"_id": "1174b3dd-6af1-494d-a39a-758c83ca9c27",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0022",
+		"date": "2024-10-01",
+		"entityId": "wacom.session.wap.0022_2024-10-01",
+		"penLabel": "Grip Pen (KP-501E)",
+		"prependP00Force": 6.1,
+		"appendP100Force": 421.2
+	},
+	{
+		"_id": "5ca46c5b-4c20-4b4d-a9bb-e3cf57bc6733",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0023",
+		"date": "2024-10-01",
+		"entityId": "wacom.session.wap.0023_2024-10-01",
+		"penLabel": "Grip Pen (KP-501E)",
+		"prependP00Force": 4,
+		"appendP100Force": 411.9
+	},
+	{
+		"_id": "d2dfdab8-68be-419b-87cd-377d49da3130",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0024",
+		"date": "2024-09-02",
+		"entityId": "wacom.session.wap.0024_2024-09-02",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 1.4,
+		"appendP100Force": 702.4
+	},
+	{
+		"_id": "07c69921-4fc0-40ab-bc8f-9444e0c69cdd",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0025",
+		"date": "2025-04-05",
+		"entityId": "wacom.session.wap.0025_2025-04-05",
+		"penLabel": "Art Pen (KP-701E)",
+		"prependP00Force": 2.6,
+		"appendP100Force": 486.9
+	},
+	{
+		"_id": "d34aad94-f1ca-4786-98a3-d4387d3ef3b4",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0026",
+		"date": "2025-04-05",
+		"entityId": "wacom.session.wap.0026_2025-04-05",
+		"penLabel": "Art Pen (KP-701E)",
+		"prependP00Force": 2.9,
+		"appendP100Force": 281
+	},
+	{
+		"_id": "c3a4f65c-13eb-4b3d-8f2b-43dfeb214898",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0027",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0027_2024-09-30",
+		"penLabel": "2K Pen (LP-190K)",
+		"prependP00Force": 17.3,
+		"appendP100Force": 451.1
+	},
+	{
+		"_id": "2fc9b49d-2a04-4562-88f2-b9dfb8afbc8d",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0028",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0028_2024-09-30",
+		"penLabel": "2K Pen (LP-190K)",
+		"prependP00Force": 9.6,
+		"appendP100Force": 447.9
+	},
+	{
+		"_id": "5868df89-2c61-4dfe-8728-6d319233e516",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0029",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0029_2024-09-30",
+		"penLabel": "2K Pen (LP-190K)",
+		"prependP00Force": 7.9,
+		"appendP100Force": 417.2
+	},
+	{
+		"_id": "a00cddaa-ea7f-4ad1-a43f-22d737575aaa",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0030",
+		"date": "2025-03-25",
+		"entityId": "wacom.session.wap.0030_2025-03-25",
+		"penLabel": "Pro Pen 3 (ACP-500)",
+		"prependP00Force": 2.9,
+		"appendP100Force": 649.1
+	},
+	{
+		"_id": "e52836d2-c05f-4053-9371-b1ed1343e0dd",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0031",
+		"date": "2025-03-25",
+		"entityId": "wacom.session.wap.0031_2025-03-25",
+		"penLabel": "Pro Pen 3 (ACP-500)",
+		"prependP00Force": 5.2,
+		"appendP100Force": 634.9
+	},
+	{
+		"_id": "bb184286-7d43-40a1-98b6-e7cb61feb69f",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0032",
+		"date": "2025-04-10",
+		"entityId": "wacom.session.wap.0032_2025-04-10",
+		"penLabel": "Pro Pen 3 (ACP-500)",
+		"prependP00Force": 3,
+		"appendP100Force": 600.2
+	},
+	{
+		"_id": "b6d3483f-33ca-4677-a776-b9015b654ba9",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0033",
+		"date": "2025-03-25",
+		"entityId": "wacom.session.wap.0033_2025-03-25",
+		"penLabel": "Pro Pen 3 (ACP-500)",
+		"prependP00Force": 4.2,
+		"appendP100Force": 707.4
+	},
+	{
+		"_id": "9c4f6fb7-d39f-4635-91ad-ab3706532f49",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0034",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0034_2024-09-30",
+		"penLabel": "Wacom One Pen (CP-913)",
+		"prependP00Force": 9.5,
+		"appendP100Force": 336.1
+	},
+	{
+		"_id": "4c96b826-41f4-4837-baeb-75215ae34656",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0034",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0034_2026-05-24",
+		"penLabel": "Wacom One Pen (CP-913)",
+		"appendP100Force": 588.8
+	},
+	{
+		"_id": "7636f815-edc7-4afa-bcf4-4a955f5ae3f1",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0035",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0035_2024-09-30",
+		"penLabel": "Wacom One Pen (CP-913)",
+		"prependP00Force": 10.4,
+		"appendP100Force": 275.5
+	},
+	{
+		"_id": "cb62c4f1-f0b0-4e1a-8dda-a6d25cf3452f",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0035",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0035_2026-05-24",
+		"penLabel": "Wacom One Pen (CP-913)",
+		"appendP100Force": 495.4
+	},
+	{
+		"_id": "3c4a0e9a-118b-4b24-a19e-66adda5370c5",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0036",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0036_2024-09-30",
+		"penLabel": "Wacom One Pen (CP-913)",
+		"prependP00Force": 12.4,
+		"appendP100Force": 334.2
+	},
+	{
+		"_id": "5a49f113-3a20-41de-abc5-4b47c2c9b55a",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0036",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0036_2026-05-24",
+		"penLabel": "Wacom One Pen (CP-913)",
+		"appendP100Force": 520.7
+	},
+	{
+		"_id": "cb6e146d-93c8-4e59-bd6c-dc6c1b6351c7",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0037",
+		"date": "2024-09-30",
+		"entityId": "wacom.session.wap.0037_2024-09-30",
+		"penLabel": "Wacom One Pen (CP-913)",
+		"prependP00Force": 7.8,
+		"appendP100Force": 298.4
+	},
+	{
+		"_id": "f5e7e194-b575-4a4d-8251-a0dbc8da8639",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0037",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0037_2026-05-24",
+		"penLabel": "Wacom One Pen (CP-913)",
+		"appendP100Force": 531.7
+	},
+	{
+		"_id": "8dfbc078-0786-4717-a2c3-23d381abf3fa",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0038",
+		"date": "2025-03-21",
+		"entityId": "wacom.session.wap.0038_2025-03-21",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 4.3,
+		"appendP100Force": 733
+	},
+	{
+		"_id": "88b37356-09be-45bf-b2a0-6c44e83adf3f",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0038",
+		"date": "2025-11-10",
+		"entityId": "wacom.session.wap.0038_2025-11-10",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 3.1,
+		"appendP100Force": 696.9
+	},
+	{
+		"_id": "46bd7426-ca6a-4c13-aa45-9a372f32ec8c",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0039",
+		"date": "2025-03-25",
+		"entityId": "wacom.session.wap.0039_2025-03-25",
+		"penLabel": "Pro Pen 3 (ACP-500)",
+		"prependP00Force": 9.6,
+		"appendP100Force": 602.6
+	},
+	{
+		"_id": "a0e01c6d-df77-4436-975e-6378608d8790",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0040",
+		"date": "2025-04-10",
+		"entityId": "wacom.session.wap.0040_2025-04-10",
+		"penLabel": "Pro Pen 3 (ACP-500)",
+		"prependP00Force": 2.2,
+		"appendP100Force": 597.5
+	},
+	{
+		"_id": "22b268ec-59e2-4e49-8098-0595b450778a",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0041",
+		"date": "2025-04-04",
+		"entityId": "wacom.session.wap.0041_2025-04-04",
+		"penLabel": "Intuos4 Airbrush Pen (KP-403E)",
+		"prependP00Force": 2.6,
+		"appendP100Force": 463.7
+	},
+	{
+		"_id": "6fbf4422-fa56-46f6-8b9d-e51ebe724a3b",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0042",
+		"date": "2025-04-04",
+		"entityId": "wacom.session.wap.0042_2025-04-04",
+		"penLabel": "Intuos4 Airbrush Pen (KP-403E)",
+		"prependP00Force": 3.7,
+		"appendP100Force": 534.3
+	},
+	{
+		"_id": "0e033929-58d6-4ec2-86c6-3e57a61bd94f",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0047",
+		"date": "2025-11-10",
+		"entityId": "wacom.session.wap.0047_2025-11-10",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 3.5,
+		"appendP100Force": 795.8
+	},
+	{
+		"_id": "3937914e-6c1d-4c2f-882a-c0869ebfaea8",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0047",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0047_2026-05-24",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 3.2,
+		"appendP100Force": 802.8
+	},
+	{
+		"_id": "53e63f8c-cc82-4f70-8ec1-7fafa93cf514",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0050",
+		"date": "2025-11-10",
+		"entityId": "wacom.session.wap.0050_2025-11-10",
+		"penLabel": "Pro Pen 2 (KP-504E)",
+		"prependP00Force": 3,
+		"appendP100Force": 845
+	},
+	{
+		"_id": "deb1e2b6-ee5a-4c51-9b35-860b111d2dc9",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0073",
+		"date": "2026-05-24",
+		"entityId": "wacom.session.wap.0073_2026-05-24",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 349.5
+	},
+	{
+		"_id": "a62b87bf-e603-4a9c-8c04-7f0fa4c7b72d",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0073",
+		"date": "2026-05-25",
+		"entityId": "wacom.session.wap.0073_2026-05-25",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"appendP100Force": 202
+	},
+	{
+		"_id": "437eeb68-09dd-4c61-8d93-1eb88bc312e1",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0073",
+		"date": "2026-05-25",
+		"entityId": "wacom.session.wap.0073_2026-05-25",
+		"penLabel": "Wacom One Standard Pen (CP-923)",
+		"prependP00Force": 7.8,
+		"appendP100Force": 200.6
+	},
+	{
+		"_id": "e4a19ec6-782d-4518-8538-7e37b88fafc0",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0075",
+		"date": "2026-05-23",
+		"entityId": "wacom.session.wap.0075_2026-05-23",
+		"penLabel": "Art Pen 2 (ACP-700)",
+		"prependP00Force": 3.4,
+		"appendP100Force": 561.4
+	},
+	{
+		"_id": "e368bd81-d7f3-4a45-bf54-945365959b00",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0076",
+		"date": "2026-05-23",
+		"entityId": "wacom.session.wap.0076_2026-05-23",
+		"penLabel": "Art Pen 2 (ACP-700)",
+		"prependP00Force": 2.6,
+		"appendP100Force": 612
+	},
+	{
+		"_id": "e2e10fa2-718e-44f7-a144-c843e48de6f7",
+		"brand": "WACOM",
+		"inventoryId": "WAP.0077",
+		"date": "2026-05-23",
+		"entityId": "wacom.session.wap.0077_2026-05-23",
+		"penLabel": "Art Pen 2 (ACP-700)",
+		"prependP00Force": 3,
+		"appendP100Force": 577.6
+	},
+	{
+		"_id": "6358a6f2-5a65-4c35-8c52-f2796f3308f6",
+		"brand": "XENCELABS",
+		"inventoryId": "XEP.0001",
+		"date": "2024-09-04",
+		"entityId": "xencelabs.session.xep.0001_2024-09-04",
+		"penLabel": "3-Button Pen V1 (3BUTTONV1)",
+		"prependP00Force": 1.5,
+		"appendP100Force": 364.5
+	},
+	{
+		"_id": "52ddc005-7c97-44cc-a7dd-df21b0e992bd",
+		"brand": "XENCELABS",
+		"inventoryId": "XEP.0002",
+		"date": "2025-08-28",
+		"entityId": "xencelabs.session.xep.0002_2025-08-28",
+		"penLabel": "3-Button Pen V2 (3BUTTONV2)",
+		"prependP00Force": 2,
+		"appendP100Force": 356
+	},
+	{
+		"_id": "07a55848-2dd5-4b54-966a-a8c27a16cbac",
+		"brand": "XENCELABS",
+		"inventoryId": "XEP.0004",
+		"date": "2025-08-28",
+		"entityId": "xencelabs.session.xep.0004_2025-08-28",
+		"penLabel": "Thin Pen V2 (THINV2)",
+		"prependP00Force": 2,
+		"appendP100Force": 469.7
+	},
+	{
+		"_id": "a7fbedd6-3897-4ba3-a055-5a3594f3f829",
+		"brand": "XENCELABS",
+		"inventoryId": "XEP.0005",
+		"date": "2025-08-28",
+		"entityId": "xencelabs.session.xep.0005_2025-08-28",
+		"penLabel": "3-Button Pen V2 (3BUTTONV2)",
+		"prependP00Force": 1.8,
+		"appendP100Force": 356.4
+	},
+	{
+		"_id": "34557525-1841-4512-b603-740e9999faf0",
+		"brand": "XENCELABS",
+		"inventoryId": "XEP.0006",
+		"date": "2025-08-28",
+		"entityId": "xencelabs.session.xep.0006_2025-08-28",
+		"penLabel": "Thin Pen V2 (THINV2)",
+		"prependP00Force": 2,
+		"appendP100Force": 468.2
+	},
+	{
+		"_id": "e2f52fce-ca3f-445e-8c11-a9115b822bf1",
+		"brand": "XENCELABS",
+		"inventoryId": "XEP.0007",
+		"date": "2025-08-28",
+		"entityId": "xencelabs.session.xep.0007_2025-08-28",
+		"penLabel": "3-Button Pen V2 (3BUTTONV2)",
+		"prependP00Force": 2.6,
+		"appendP100Force": 470.3
+	},
+	{
+		"_id": "ddb530da-ca43-4a21-9c95-8b1886dff217",
+		"brand": "XENCELABS",
+		"inventoryId": "XEP.0008",
+		"date": "2025-08-28",
+		"entityId": "xencelabs.session.xep.0008_2025-08-28",
+		"penLabel": "Thin Pen V2 (THINV2)",
+		"prependP00Force": 2.4,
+		"appendP100Force": 508
+	},
+	{
+		"_id": "37541d9b-98a0-4218-8be3-43cedc0a292c",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0001",
+		"date": "2024-09-26",
+		"entityId": "xppen.session.xpp.0001_2024-09-26",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 3.4,
+		"appendP100Force": 441.3
+	},
+	{
+		"_id": "3bc704f8-9b3c-40c2-bc37-c4368379f5fc",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0001",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0001_2025-09-25",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 2.6,
+		"appendP100Force": 388.4
+	},
+	{
+		"_id": "5de855a4-1d9b-422f-b461-a8f82ccb7ff5",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0002",
+		"date": "2024-09-25",
+		"entityId": "xppen.session.xpp.0002_2024-09-25",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 2,
+		"appendP100Force": 274.2
+	},
+	{
+		"_id": "4787f99c-f127-4222-8991-ccc2fa5c1ce3",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0002",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0002_2025-09-25",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 2.3,
+		"appendP100Force": 268.1
+	},
+	{
+		"_id": "80798070-3793-4c55-ba9b-9e4e3db87662",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0003",
+		"date": "2024-09-26",
+		"entityId": "xppen.session.xpp.0003_2024-09-26",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 5.2,
+		"appendP100Force": 490.2
+	},
+	{
+		"_id": "adb4973a-7108-49f4-b0ba-f1106bc62c90",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0003",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0003_2025-09-25",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 4.9,
+		"appendP100Force": 427.1
+	},
+	{
+		"_id": "f68d33f4-48a7-4c08-ac83-58059befd9bb",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0004",
+		"date": "2024-10-01",
+		"entityId": "xppen.session.xpp.0004_2024-10-01",
+		"penLabel": "P05",
+		"prependP00Force": 6.4,
+		"appendP100Force": 208.7
+	},
+	{
+		"_id": "fa2d2967-7d7c-4ccc-8b2a-a2d09e399b8f",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0004",
+		"date": "2025-09-24",
+		"entityId": "xppen.session.xpp.0004_2025-09-24",
+		"penLabel": "P05",
+		"prependP00Force": 5.5,
+		"appendP100Force": 298
+	},
+	{
+		"_id": "b2c0f07e-5bfe-43a3-96c9-8d9b4743ab04",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0005",
+		"date": "2024-10-01",
+		"entityId": "xppen.session.xpp.0005_2024-10-01",
+		"penLabel": "P05",
+		"prependP00Force": 5.3,
+		"appendP100Force": 224.1
+	},
+	{
+		"_id": "a46912c3-cddb-40af-8ae0-bf1958a96e07",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0005",
+		"date": "2025-09-24",
+		"entityId": "xppen.session.xpp.0005_2025-09-24",
+		"penLabel": "P05",
+		"prependP00Force": 7.9,
+		"appendP100Force": 298.2
+	},
+	{
+		"_id": "94228538-6db9-4e08-96eb-df31b0965ce0",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0006",
+		"date": "2024-10-01",
+		"entityId": "xppen.session.xpp.0006_2024-10-01",
+		"penLabel": "P05",
+		"prependP00Force": 5.6,
+		"appendP100Force": 234.2
+	},
+	{
+		"_id": "fb7407a1-3021-4c0b-974c-2674353f8206",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0006",
+		"date": "2025-09-24",
+		"entityId": "xppen.session.xpp.0006_2025-09-24",
+		"penLabel": "P05",
+		"prependP00Force": 5.7,
+		"appendP100Force": 289.8
+	},
+	{
+		"_id": "3c5eddc0-c071-4399-b8e7-2cecde9f7b17",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0007",
+		"date": "2024-09-26",
+		"entityId": "xppen.session.xpp.0007_2024-09-26",
+		"penLabel": "X3 Pro Roller (PD22)",
+		"prependP00Force": 1.6,
+		"appendP100Force": 246.7
+	},
+	{
+		"_id": "829a2c9d-b248-4681-885f-cf6127eca165",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0007",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0007_2025-09-25",
+		"penLabel": "X3 Pro Roller (PD22)",
+		"prependP00Force": 1.9,
+		"appendP100Force": 250.9
+	},
+	{
+		"_id": "9cc72b09-8008-4784-ab70-7d70025fcd52",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0008",
+		"date": "2024-09-26",
+		"entityId": "xppen.session.xpp.0008_2024-09-26",
+		"penLabel": "X3 Pro Slim (PD51)",
+		"prependP00Force": 2.1,
+		"appendP100Force": 279.9
+	},
+	{
+		"_id": "12d6b75a-64a9-473a-b97f-32bde76e52db",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0008",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0008_2025-09-25",
+		"penLabel": "X3 Pro Slim (PD51)",
+		"prependP00Force": 2.1,
+		"appendP100Force": 249.6
+	},
+	{
+		"_id": "7e043896-562c-43aa-bb86-cd58d4dac71d",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0009",
+		"date": "2024-09-26",
+		"entityId": "xppen.session.xpp.0009_2024-09-26",
+		"penLabel": "X3 Elite (X3ELITE)",
+		"prependP00Force": 5.3,
+		"appendP100Force": 378.2
+	},
+	{
+		"_id": "cb101d00-64d5-4da8-acd7-61099b0e3a99",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0010",
+		"date": "2024-09-27",
+		"entityId": "xppen.session.xpp.0010_2024-09-27",
+		"penLabel": "X3 Elite (X3ELITE)",
+		"prependP00Force": 3.8,
+		"appendP100Force": 353.2
+	},
+	{
+		"_id": "c47d46de-8547-48d8-b08a-0d793f750c05",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0010",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0010_2025-09-25",
+		"penLabel": "X3 Elite (X3ELITE)",
+		"prependP00Force": 3.6,
+		"appendP100Force": 335.9
+	},
+	{
+		"_id": "7ed70be8-4457-4b6c-be52-bd81500477b5",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0011",
+		"date": "2024-09-27",
+		"entityId": "xppen.session.xpp.0011_2024-09-27",
+		"penLabel": "X3 Elite (X3ELITE)",
+		"prependP00Force": 5.2,
+		"appendP100Force": 380.4
+	},
+	{
+		"_id": "f585b6ce-6642-4c85-b0cf-783b78c739b7",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0011",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0011_2025-09-25",
+		"penLabel": "X3 Elite (X3ELITE)",
+		"prependP00Force": 5.7,
+		"appendP100Force": 404.7
+	},
+	{
+		"_id": "27ed9f08-0bb6-4439-90f4-86207e7163eb",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0012",
+		"date": "2024-11-01",
+		"entityId": "xppen.session.xpp.0012_2024-11-01",
+		"penLabel": "X3 Pro Slim (PD51)",
+		"prependP00Force": 2.7,
+		"appendP100Force": 415.7
+	},
+	{
+		"_id": "0f418380-cc34-4a84-913d-62d850197cf3",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0012",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0012_2025-09-25",
+		"penLabel": "X3 Pro Slim (PD51)",
+		"prependP00Force": 2.5,
+		"appendP100Force": 355.9
+	},
+	{
+		"_id": "6404c264-a9e9-4e7f-9fad-a34760c60ee0",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0013",
+		"date": "2024-11-01",
+		"entityId": "xppen.session.xpp.0013_2024-11-01",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 2,
+		"appendP100Force": 370.3
+	},
+	{
+		"_id": "f9552d0d-0842-4b64-a60c-bf9fc72e428a",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0013",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0013_2025-09-25",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 2.7,
+		"appendP100Force": 390.8
+	},
+	{
+		"_id": "bb2606ce-354b-49dd-a4a9-097d6909f51d",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0014",
+		"date": "2024-11-01",
+		"entityId": "xppen.session.xpp.0014_2024-11-01",
+		"penLabel": "X3 Pro Slim (PD51)",
+		"prependP00Force": 2,
+		"appendP100Force": 301.6
+	},
+	{
+		"_id": "8872470b-0c6c-4014-9b5f-5482b8c6ce54",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0014",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0014_2025-09-25",
+		"penLabel": "X3 Pro Slim (PD51)",
+		"prependP00Force": 1.8,
+		"appendP100Force": 253.2
+	},
+	{
+		"_id": "ce4ddb64-bd21-44e5-8a01-50c11c361ba8",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0015",
+		"date": "2025-03-25",
+		"entityId": "xppen.session.xpp.0015_2025-03-25",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 4.5,
+		"appendP100Force": 401.4
+	},
+	{
+		"_id": "7162c7a5-7d3d-48f3-8c02-0359ac558357",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0015",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0015_2025-09-25",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 3,
+		"appendP100Force": 349.7
+	},
+	{
+		"_id": "f4b68d81-bef3-4b4f-8cad-84ceebfe6f69",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0016",
+		"date": "2025-03-25",
+		"entityId": "xppen.session.xpp.0016_2025-03-25",
+		"penLabel": "X3 Note Pad Pen (PD04B)",
+		"prependP00Force": 1.4,
+		"appendP100Force": 368.5
+	},
+	{
+		"_id": "19198351-b73d-47bf-8400-bd908eeed917",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0016",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0016_2025-09-25",
+		"penLabel": "X3 Note Pad Pen (PD04B)",
+		"prependP00Force": 1.2,
+		"appendP100Force": 353.1
+	},
+	{
+		"_id": "3b3fbde2-a52d-4be7-a28d-36683c008e43",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0017",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0017_2025-09-25",
+		"penLabel": "X3 Pro (PD21)",
+		"prependP00Force": 4.4,
+		"appendP100Force": 328.7
+	},
+	{
+		"_id": "b12cf200-cdf4-4d9b-8d79-ef10d1e4c906",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0018",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0018_2025-09-25",
+		"penLabel": "X3 Elite (X3ELITE)",
+		"prependP00Force": 3.4,
+		"appendP100Force": 395.6
+	},
+	{
+		"_id": "b426b443-0c6e-4901-9f34-30089509588e",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0019",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0019_2025-09-25",
+		"penLabel": "X3 Pro Slim (PD51)",
+		"prependP00Force": 2.2,
+		"appendP100Force": 337.8
+	},
+	{
+		"_id": "04052dc6-b99e-4701-93c6-7fd8656123c3",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0020",
+		"date": "2025-09-24",
+		"entityId": "xppen.session.xpp.0020_2025-09-24",
+		"penLabel": "P05",
+		"prependP00Force": 5.4,
+		"appendP100Force": 339.2
+	},
+	{
+		"_id": "4d7a6c6b-7865-456f-b86c-224879b9d035",
+		"brand": "XPPEN",
+		"inventoryId": "XPP.0029",
+		"date": "2025-09-25",
+		"entityId": "xppen.session.xpp.0029_2025-09-25",
+		"penLabel": "X3 Elite (X3ELITE)",
+		"prependP00Force": 8.2,
+		"appendP100Force": 416.5
+	}
+]
