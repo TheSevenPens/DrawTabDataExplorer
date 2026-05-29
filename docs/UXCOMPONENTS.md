@@ -250,11 +250,11 @@ Universal "Export" dialog supporting PNG / CSV / TSV / JSON / HTML / Markdown ac
 
 _Used by:_ EntityExplorer, ResultsTable, DetailView's per-section copy buttons, multiple analysis pages.
 
-### `JsonDialog`
+### `JsonTab`
 
-Single-purpose dialog that pretty-prints the JSON of the current entity. Triggered by the `JSON` button next to entity names in detail pages.
+Inline pretty-printed JSON view of the current entity, rendered as a detail-page tab (not a modal). Includes a Copy-to-clipboard button. Used by `PenDetail` and `TabletDetail` — both pages expose a "JSON" entry in their tab strip.
 
-Triggered by the small `JSON` button next to entity names in detail-page headers.
+Replaced the older `JsonDialog` modal (deleted alongside this change) — agents looking at detail pages will find the JSON next to Specs / IAF / etc. instead of behind a floating dialog.
 
 ---
 

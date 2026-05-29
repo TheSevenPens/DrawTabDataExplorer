@@ -11,7 +11,7 @@
 	} from '$data/lib/entities/pen-fields.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
-	import JsonDialog from '$lib/components/JsonDialog.svelte';
+	import JsonTab from '$lib/components/JsonTab.svelte';
 	import CompatEntityTable, { type CompatRow } from '$lib/components/CompatEntityTable.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
@@ -25,7 +25,7 @@
 		buildTabletNameMap,
 		compareTabletByYearDesc,
 	} from '$lib/tablet-helpers.js';
-	import { penBrandAndName } from '$lib/pen-helpers.js';
+	import { penBrandAndName, penFullName } from '$lib/pen-helpers.js';
 	import {
 		buildSessionColorsBy,
 		buildChartSessions,
@@ -72,9 +72,8 @@
 		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
-	let showJson = $state(false);
 	let activeTab = $state<
-		'specs' | 'tablets' | 'included' | 'inventory' | 'pressure' | 'iaf' | 'maxpressure'
+		'specs' | 'tablets' | 'included' | 'inventory' | 'pressure' | 'iaf' | 'maxpressure' | 'json'
 	>('specs');
 
 	function tabletExportRows(tablets: Tablet[]): (string | number)[][] {
@@ -97,18 +96,13 @@
 <Nav />
 
 <div class="title-row">
-	<h1>{penBrandAndName(pen)}</h1>
+	<h1>{penFullName(pen)}</h1>
 	<FlagButton
 		flagged={$flaggedPenModels.includes(pen.EntityId.toLowerCase())}
 		onclick={() => toggleFlaggedPenModel(pen.EntityId)}
 		label="Flag this pen model"
 	/>
-	<button class="json-btn" onclick={() => (showJson = true)}>JSON</button>
 </div>
-
-{#if showJson}
-	<JsonDialog entity={pen} onclose={() => (showJson = false)} />
-{/if}
 
 <section class="basics">
 	<dl class="basics-grid">
@@ -121,7 +115,11 @@
 			</dd>
 		</div>
 		<div class="basics-item">
-			<dt>Pen ID</dt>
+			<dt>Name</dt>
+			<dd>{pen.PenName}</dd>
+		</div>
+		<div class="basics-item">
+			<dt>Model ID</dt>
 			<dd>{pen.PenId}</dd>
 		</div>
 		{#if pen.PenYear}
@@ -140,6 +138,10 @@
 				</dd>
 			</div>
 		{/if}
+		<div class="basics-item">
+			<dt>Units in Inventory</dt>
+			<dd>{inventoryUnits.length}</dd>
+		</div>
 	</dl>
 </section>
 
@@ -152,6 +154,7 @@
 		{ id: 'pressure', label: 'Pressure Response' },
 		{ id: 'iaf', label: 'IAF' },
 		{ id: 'maxpressure', label: 'Max Pressure' },
+		{ id: 'json', label: 'JSON' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
 />
@@ -291,6 +294,12 @@
 	</div>
 {/if}
 
+{#if activeTab === 'json'}
+	<div class="tab-content">
+		<JsonTab entity={pen} />
+	</div>
+{/if}
+
 <style>
 	.title-row {
 		display: flex;
@@ -300,21 +309,6 @@
 	}
 	.title-row h1 {
 		margin: 0;
-	}
-
-	.json-btn {
-		padding: 4px 10px;
-		font-size: 13px;
-		border: 1px solid #6b7280;
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: #6b7280;
-		cursor: pointer;
-		font-weight: 600;
-	}
-	.json-btn:hover {
-		background: #6b7280;
-		color: #fff;
 	}
 
 	.basics {

@@ -8,10 +8,10 @@
 	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
 	import ForceProportionsView from '$lib/components/ForceProportionsView.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
-	import { tabletBrandAndName } from '$lib/tablet-helpers.js';
+	import { tabletBrandAndName, tabletFullName } from '$lib/tablet-helpers.js';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import { buildPenNameMap } from '$lib/pen-helpers.js';
-	import JsonDialog from '$lib/components/JsonDialog.svelte';
+	import JsonTab from '$lib/components/JsonTab.svelte';
 	import TabletModelTab from '$lib/components/tablet-detail/TabletModelTab.svelte';
 	import TabletSpecsTab from '$lib/components/tablet-detail/TabletSpecsTab.svelte';
 	import TabletCompatiblePensTab from '$lib/components/tablet-detail/TabletCompatiblePensTab.svelte';
@@ -27,10 +27,9 @@
 	let family: TabletFamily | null = $derived(data.family);
 	let inventoryUnits: InventoryTablet[] = $derived(data.inventoryUnits ?? []);
 
-	let showJson = $state(false);
-	let activeTab = $state<'model' | 'specs' | 'size' | 'force' | 'pens' | 'inventory' | 'similar'>(
-		'model',
-	);
+	let activeTab = $state<
+		'model' | 'specs' | 'size' | 'force' | 'pens' | 'inventory' | 'similar' | 'json'
+	>('model');
 
 	let isPenTablet = $derived(tablet.Model.Type === 'PENTABLET');
 	let activeAreaW = $derived(tablet.Digitizer?.Dimensions?.Width ?? 0);
@@ -50,7 +49,7 @@
 <Nav />
 
 <div class="title-row">
-	<h1>{tabletBrandAndName(tablet)}</h1>
+	<h1>{tabletFullName(tablet)}</h1>
 	<button
 		class="flag-toggle"
 		class:flagged={$flaggedTablets.includes(tablet.Meta.EntityId)}
@@ -58,12 +57,7 @@
 	>
 		{$flaggedTablets.includes(tablet.Meta.EntityId) ? 'Unflag' : 'Flag'}
 	</button>
-	<button class="json-btn" onclick={() => (showJson = true)}>JSON</button>
 </div>
-
-{#if showJson}
-	<JsonDialog entity={tablet} onclose={() => (showJson = false)} />
-{/if}
 
 <section class="basics">
 	<dl class="basics-grid">
@@ -135,6 +129,7 @@
 		{ id: 'pens', label: 'Compatible Pens' },
 		{ id: 'inventory', label: 'Inventory', badge: inventoryUnits.length },
 		{ id: 'similar', label: 'Similar Tablets' },
+		{ id: 'json', label: 'JSON' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
 />
@@ -154,6 +149,8 @@
 		<TabletInventoryTab {inventoryUnits} />
 	{:else if activeTab === 'similar'}
 		<TabletSimilarTab {tablet} {allTablets} />
+	{:else if activeTab === 'json'}
+		<JsonTab entity={tablet} />
 	{/if}
 </section>
 
@@ -187,22 +184,6 @@
 
 	.flag-toggle.flagged {
 		background: #d97706;
-		color: #fff;
-	}
-
-	.json-btn {
-		padding: 4px 10px;
-		font-size: 13px;
-		border: 1px solid #6b7280;
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: #6b7280;
-		cursor: pointer;
-		font-weight: 600;
-	}
-
-	.json-btn:hover {
-		background: #6b7280;
 		color: #fff;
 	}
 
