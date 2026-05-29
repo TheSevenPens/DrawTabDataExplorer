@@ -3,12 +3,7 @@
 	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
-	import {
-		type Pen,
-		PEN_FIELDS,
-		PEN_FIELD_GROUPS,
-		getPenFamilyName,
-	} from '$data/lib/entities/pen-fields.js';
+	import { type Pen, PEN_FIELDS, getPenFamilyName } from '$data/lib/entities/pen-fields.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonTab from '$lib/components/JsonTab.svelte';
@@ -73,8 +68,16 @@
 	}
 
 	let activeTab = $state<
-		'specs' | 'tablets' | 'included' | 'inventory' | 'pressure' | 'iaf' | 'maxpressure' | 'json'
-	>('specs');
+		| 'model'
+		| 'specs'
+		| 'tablets'
+		| 'included'
+		| 'inventory'
+		| 'pressure'
+		| 'iaf'
+		| 'maxpressure'
+		| 'json'
+	>('model');
 
 	function tabletExportRows(tablets: Tablet[]): (string | number)[][] {
 		return tablets.map((t) => [
@@ -147,6 +150,7 @@
 
 <Tabs
 	tabs={[
+		{ id: 'model', label: 'Model' },
 		{ id: 'specs', label: 'Specs' },
 		{ id: 'tablets', label: 'Compatible Tablets' },
 		{ id: 'included', label: 'Included With' },
@@ -159,9 +163,15 @@
 	bind:active={activeTab}
 />
 
+{#if activeTab === 'model'}
+	<div class="tab-content">
+		<DetailView item={pen} fields={PEN_FIELDS} fieldGroups={['Model', 'Physical']} />
+	</div>
+{/if}
+
 {#if activeTab === 'specs'}
 	<div class="tab-content">
-		<DetailView item={pen} fields={PEN_FIELDS} fieldGroups={PEN_FIELD_GROUPS} />
+		<DetailView item={pen} fields={PEN_FIELDS} fieldGroups={['Sensors', 'Controls']} />
 	</div>
 {/if}
 
