@@ -9,6 +9,7 @@ import {
 	setPressureSessionCountByPenEntityId,
 	setInventoryUnitCountByPenEntityId,
 } from '$data/lib/entities/pen-fields.js';
+import { setInventoryUnitCountByTabletEntityId } from '$data/lib/entities/tablet-fields.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 
 export const prerender = true;
@@ -27,9 +28,10 @@ export const ssr = false;
 // to wire them page-by-page.
 export async function load(): Promise<{ ds: DrawTabDataSet; version: VersionInfo | null }> {
 	const ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
-	const [version, inventoryPens, sessions, penFamilies] = await Promise.all([
+	const [version, inventoryPens, inventoryTablets, sessions, penFamilies] = await Promise.all([
 		ds.getVersion(),
 		ds.InventoryPens.toArray(),
+		ds.InventoryTablets.toArray(),
 		ds.PressureResponse.toArray(),
 		ds.PenFamilies.toArray(),
 	]);
@@ -59,6 +61,14 @@ export async function load(): Promise<{ ds: DrawTabDataSet; version: VersionInfo
 		unitsByPen.set(u.PenEntityId, (unitsByPen.get(u.PenEntityId) ?? 0) + 1);
 	}
 	setInventoryUnitCountByPenEntityId(unitsByPen);
+
+	// Same for tablets — mirrors the pen pattern above so the tablets list
+	// shows how many physical units we own of each model.
+	const unitsByTablet = new Map<string, number>();
+	for (const u of inventoryTablets) {
+		unitsByTablet.set(u.TabletEntityId, (unitsByTablet.get(u.TabletEntityId) ?? 0) + 1);
+	}
+	setInventoryUnitCountByTabletEntityId(unitsByTablet);
 
 	return { ds, version };
 }

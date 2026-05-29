@@ -61,6 +61,7 @@
 	{cellLinks}
 	defaultFilterField="PenFamily"
 	quickFilterFields={['Brand']}
+	ownedOnlyFilter={{ field: 'UnitsInInventory', label: 'In inventory only' }}
 	flaggedIds={flaggedSet}
 	onToggleFlag={toggleFlaggedPenModel}
 />

@@ -10,17 +10,30 @@
 		searchText = $bindable(),
 		quickFilters = $bindable(),
 		quickFilterOptions,
+		ownedOnly = $bindable(false),
+		ownedOnlyLabel,
 	}: {
 		searchText: string;
 		quickFilters: Record<string, string>;
 		quickFilterOptions: QuickFilterOption[];
+		/** Two-way bound boolean. Only rendered as a checkbox when
+		 * `ownedOnlyLabel` is set. EntityExplorer reads it and filters to
+		 * rows whose configured numeric field is > 0. */
+		ownedOnly?: boolean;
+		/** When set, render an "owned only" checkbox after the quick-filter
+		 * dropdowns. The label is shown next to the checkbox (e.g. "In
+		 * inventory only"). */
+		ownedOnlyLabel?: string;
 	} = $props();
 
-	let isDirty = $derived(searchText !== '' || Object.values(quickFilters).some((v) => v !== ''));
+	let isDirty = $derived(
+		searchText !== '' || Object.values(quickFilters).some((v) => v !== '') || ownedOnly,
+	);
 
 	function clear() {
 		searchText = '';
 		quickFilters = {};
+		ownedOnly = false;
 	}
 </script>
 
@@ -41,6 +54,12 @@
 			{/each}
 		</select>
 	{/each}
+	{#if ownedOnlyLabel}
+		<label class="owned-toggle">
+			<input type="checkbox" bind:checked={ownedOnly} />
+			{ownedOnlyLabel}
+		</label>
+	{/if}
 	{#if isDirty}
 		<button class="clear-btn" onclick={clear}>Clear</button>
 	{/if}
@@ -59,7 +78,7 @@
 		align-items: center;
 	}
 
-	.search-bar input {
+	.search-bar input[type='text'] {
 		padding: 5px 26px 5px 10px;
 		font-size: 13px;
 		border: 1px solid var(--border);
@@ -94,6 +113,20 @@
 		border-radius: 4px;
 		background: var(--bg-card);
 		color: var(--text);
+	}
+
+	.owned-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 13px;
+		color: var(--text);
+		white-space: nowrap;
+		user-select: none;
+		cursor: pointer;
+	}
+	.owned-toggle input {
+		margin: 0;
 	}
 
 	.clear-btn {

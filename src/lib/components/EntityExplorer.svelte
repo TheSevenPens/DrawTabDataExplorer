@@ -31,6 +31,7 @@
 		quickFilterFields = [],
 		defaultFilterField,
 		alwaysSearchFields = [],
+		ownedOnlyFilter,
 		flaggedIds,
 		onToggleFlag,
 		titleTag,
@@ -51,6 +52,11 @@
 		/** Field keys to always include in text search even when not in
 		 * the user's visible columns (e.g. AlternateNames on tablets). */
 		alwaysSearchFields?: string[];
+		/** When provided, renders an "owned only" checkbox in the SearchBar
+		 * that hides rows where the named field's numeric value is 0 or
+		 * empty. Used on /tablets and /pens to scope the list to models
+		 * we own at least one unit of. */
+		ownedOnlyFilter?: { field: string; label: string };
 		flaggedIds?: Set<string>;
 		onToggleFlag?: (entityId: string) => void;
 		titleTag?: 'h1' | 'h2';
@@ -111,6 +117,7 @@
 	let tick = $state(0);
 	let searchText = $state('');
 	let quickFilters: Record<string, string> = $state({});
+	let ownedOnly = $state(false);
 	let showExport = $state(false);
 
 	interface QuickFilterOption {
@@ -175,6 +182,20 @@
 					return String(fd.getValue(row) ?? '') === val;
 				}),
 			);
+		}
+
+		// Apply the optional "owned only" toggle — keeps rows whose
+		// configured field's numeric value parses to > 0. The field is
+		// expected to be a counter ("UnitsInInventory") so a "0" / "" /
+		// non-numeric value all read as "not owned".
+		if (ownedOnly && ownedOnlyFilter) {
+			const fd = fields.find((f) => f.key === ownedOnlyFilter.field);
+			if (fd) {
+				filtered = filtered.filter((row) => {
+					const n = Number(fd.getValue(row));
+					return Number.isFinite(n) && n > 0;
+				});
+			}
 		}
 
 		// Apply search — check visible fields plus any fields the parent
@@ -261,7 +282,13 @@
 {/if}
 
 <div class="top-bar">
-	<SearchBar bind:searchText bind:quickFilters {quickFilterOptions} />
+	<SearchBar
+		bind:searchText
+		bind:quickFilters
+		{quickFilterOptions}
+		bind:ownedOnly
+		ownedOnlyLabel={ownedOnlyFilter?.label}
+	/>
 	<QueryPipelineBar
 		bind:filters
 		bind:sorts

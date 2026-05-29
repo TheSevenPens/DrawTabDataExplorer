@@ -47,6 +47,7 @@
 	defaultFilterField="Brand"
 	quickFilterFields={['Brand', 'ModelType', 'DigitizerSizeCategory']}
 	alwaysSearchFields={['AlternateNames']}
+	ownedOnlyFilter={{ field: 'UnitsInInventory', label: 'In inventory only' }}
 	flaggedIds={flaggedSet}
 	onToggleFlag={toggleFlag}
 />
