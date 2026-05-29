@@ -177,6 +177,7 @@
 	axisStep={AXIS_STEP}
 	unit="gf"
 	showUnitInAxis={false}
+	showBandRanges={false}
 	title={currentTitle}
 	heading={currentHeading}
 	subtitle={chartSubtitle}

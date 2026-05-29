@@ -172,6 +172,7 @@
 	axisMax={1000}
 	axisStep={100}
 	unit="gf"
+	showBandRanges={false}
 	title={currentTitle}
 	heading={currentHeading}
 	subtitle={chartSubtitle}

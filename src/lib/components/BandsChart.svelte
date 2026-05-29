@@ -36,6 +36,7 @@
 		axisStep = 1,
 		unit,
 		showUnitInAxis = true,
+		showBandRanges = true,
 		title,
 		heading,
 		subtitle,
@@ -52,6 +53,12 @@
 		 * true. Set false when the chart heading already names the unit and
 		 * adding it to every tick would just create visual noise. */
 		showUnitInAxis?: boolean;
+		/** Render the "min ↔ max" numeric range under each band title
+		 * (e.g. "0 ↔ 1" under "S"). Default true. Set false on detail-page
+		 * embeds (PenDetail / PenFamilyDetail IAF + Max Pressure tabs) where
+		 * the band tiers are the takeaway and the exact cutoffs are just
+		 * noise — they're still discoverable on the Reference page. */
+		showBandRanges?: boolean;
 		/** Used as the chart's export filename slug. */
 		title?: string;
 		/** Visible chart title rendered inside the SVG (so it appears in exports). */
@@ -180,7 +187,7 @@
 			{/if}
 		{/each}
 
-		<!-- Band labels (title + range) -->
+		<!-- Band labels (title + optional numeric range under it) -->
 		{#each bands as b, i (i)}
 			{@const cx = (x(b.min) + x(bandRight(b))) / 2}
 			{@const rangeText = b.max === null ? `${b.min} ↔ ∞` : `${b.min} ↔ ${b.max}`}
@@ -192,9 +199,11 @@
 				font-weight="700"
 				font-size="18">{b.label}</text
 			>
-			<text x={cx} y={PAD_TOP} text-anchor="middle" class="band-range" font-size="14"
-				>{rangeText}</text
-			>
+			{#if showBandRanges}
+				<text x={cx} y={PAD_TOP} text-anchor="middle" class="band-range" font-size="14"
+					>{rangeText}</text
+				>
+			{/if}
 		{/each}
 
 		<!-- Main axis line -->
