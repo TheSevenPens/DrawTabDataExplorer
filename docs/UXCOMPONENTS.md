@@ -22,7 +22,7 @@ _Used by:_ every list and detail page · _Props:_ none (reads `$page.url` for ac
 Generic sub-tab row rendered beneath `Nav` on every page that shares a top-level entry. Highlights the entry whose href matches the current pathname.
 
 _Props:_ `tabs: { href, label, badge? }[]`.
-_Used by:_ Tablets ▸ {Models, Families, Analysis, Inventory, Compare}, Pens ▸ {Models, Families, Inventory, Flagged, Compare, Pressure Response}, Data ▸ {Reference, Data Quality, Pen Compat}.
+_Used by:_ Tablets ▸ {Models, Families, Analysis, Inventory, Compare}, Pens ▸ {Models, Families, Analysis, Inventory, Flagged, Compare, Pressure Response}, Data ▸ {Reference, Data Dictionary, API Explorer, Data Quality, Pen Compat, Driver Compat}.
 
 Sub-tab definitions are centralised in [src/lib/nav/subnav-tabs.ts](../src/lib/nav/subnav-tabs.ts).
 
@@ -283,6 +283,10 @@ _Used by:_ every `PressureChart`, `BandsChart`, `ValueHistogram`.
 ### `/pressure-backfill` route
 
 Per-session navigator that lets a contributor add `(force, 0)` / `(force, 100)` endpoint records to pressure sessions that don't capture them. Reuses `PressureChart` twice (IAF zoom + Max zoom). Not linked from `Nav`.
+
+### `/marker-debug` route
+
+Visual test harness for `ValueHistogram` marker / range rendering — a grid of synthetic-data test cases used to eyeball label collisions and range backgrounds. Not linked from `Nav`.
 
 ---
 

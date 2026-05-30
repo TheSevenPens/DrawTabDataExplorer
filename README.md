@@ -42,7 +42,9 @@ out yet, run `git submodule update --init --recursive` followed by
 | `npm run test:unit:watch` | Run Vitest in watch mode                                |
 | `npm run test:e2e`        | Run Playwright E2E smoke tests (auto-builds + serves)   |
 | `npm run data-quality`    | Run the data-repo data-quality validator                |
+| `npm run verify-docs`     | Check `docs/FUTURES.txt` Open issues are still open     |
 | `npm run setup-static`    | Recreate `static/` → `data-repo/data/` symlinks         |
+| `npm run update-data`     | Fast-forward the `data-repo` submodule (`git pull`)     |
 
 CI runs `lint` and `check` before building. `eslint.config.js` is
 intentionally conservative — recommended rules only, with several

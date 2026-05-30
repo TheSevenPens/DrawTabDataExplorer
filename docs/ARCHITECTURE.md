@@ -14,25 +14,35 @@ DrawTabDataExplorer/
 ├── src/
 │   ├── app.html                  # HTML shell
 │   ├── routes/                   # SvelteKit pages
-│   │   ├── +layout.ts            # load() fetches version info for layout
+│   │   ├── +layout.ts            # Builds the session DrawTabDataSet (ds) + loads version
 │   │   ├── +layout.svelte        # Nav + version banner
 │   │   ├── +page.ts              # Redirects / -> /tablets
 │   │   ├── about/                # About page (links to related tools)
-│   │   ├── tablets/              # Tablets list (+page.svelte) +
-│   │   │                         # detail [entityId] (+page.ts redirect)
-│   │   ├── pens/                 # Pens list + detail (+page.ts)
-│   │   ├── pen-families/         # Pen families list + detail (+page.ts)
-│   │   ├── tablet-families/      # Tablet families list + detail (+page.ts)
-│   │   ├── pen-compat/           # Pen compatibility list
-│   │   ├── drivers/              # Drivers list + detail (+page.ts)
-│   │   ├── brands/               # Brands list + detail (+page.ts)
-│   │   ├── pressure-response/    # Sessions list (sub-tab of Pens);
+│   │   ├── entity/[entityId]/    # CANONICAL detail route (prerender = false)
+│   │   ├── brands/               # Brands list + detail redirect
+│   │   ├── tablets/              # Tablets list + detail redirect
+│   │   ├── pens/                 # Pens list + detail redirect
+│   │   ├── pen-families/         # Pen families list + detail redirect
+│   │   ├── tablet-families/      # Tablet families list + detail redirect
+│   │   ├── drivers/              # Drivers list + detail redirect
+│   │   ├── pen-compat/           # Pen compatibility list (Data sub-tab)
+│   │   ├── pressure-response/    # Sessions list (Pens sub-tab);
 │   │   │                         # detail at /entity/<brand>.session.<id>
-│   │   ├── pen-inventory/        # Personal pen inventory (sub-tab of Pens)
-│   │   ├── tablet-inventory/     # Personal tablet inventory (sub-tab of Tablets)
+│   │   ├── pen-inventory/        # Personal pen inventory (Pens sub-tab)
+│   │   ├── tablet-inventory/     # Personal tablet inventory (Tablets sub-tab)
+│   │   ├── tablet-analysis/      # Tablet distributions (Tablets sub-tab)
+│   │   ├── pen-analysis/         # Pen / pressure distributions (Pens sub-tab)
+│   │   ├── tablet-compare/       # Flagged-tablet compare (Tablets sub-tab)
+│   │   ├── pen-compare/          # Flagged-pen compare (Pens sub-tab)
+│   │   ├── pen-flagged/          # Flagged-pen pressure overlay (Pens sub-tab)
 │   │   ├── timeline/             # Timeline of releases by year
 │   │   ├── reference/            # Reference (tablet sizes, ISO paper sizes)
-│   │   └── data-quality/         # Data quality dashboard
+│   │   ├── data-dictionary/      # Field dictionary (Data sub-tab)
+│   │   ├── api-explorer/         # queriton query playground (Data sub-tab)
+│   │   ├── data-quality/         # Data quality dashboard (Data sub-tab)
+│   │   ├── wacom-driver-compat/  # Wacom product<->driver-range table (Data sub-tab)
+│   │   ├── pressure-backfill/    # Dev-only: add 0%/100% endpoint records (not in Nav)
+│   │   └── marker-debug/         # Dev-only: ValueHistogram marker test harness (not in Nav)
 │   └── lib/
 │       ├── components/           # Reusable Svelte components
 │       │   ├── EntityExplorer.svelte       # Generic entity list page
@@ -56,7 +66,7 @@ DrawTabDataExplorer/
 │       │   ├── SavedViews.svelte
 │       │   ├── SubNav.svelte                # Sub-tab row under main nav
 │       │   └── Nav.svelte
-│       ├── load-all-data.ts      # loadAllData() — fetches all 9 datasets in parallel
+│       ├── bands.ts              # Reference bands (IAF, max pressure)
 │       ├── storage.ts            # localStorage helpers (getItem/setItem with JSON)
 │       ├── unit-store.ts         # Svelte store for unit preference
 │       ├── pen-helpers.ts        # buildPenNameMap(), formatPenIds()
@@ -155,9 +165,10 @@ lists additional pathnames that should also mark the link as active:
 - **Tablets** (`/tablets`) — also active on `/tablet-families`,
   `/tablet-analysis`, `/tablet-inventory`, `/tablet-compare` (the bare
   `/` redirects to `/tablets`)
-- **Pens** (`/pens`) — also active on `/pen-families`, `/pen-inventory`,
-  `/pressure-response`
-- **Data** (`/reference`) — also active on `/data-quality`, `/pen-compat`
+- **Pens** (`/pens`) — also active on `/pen-families`, `/pen-analysis`,
+  `/pen-inventory`, `/pen-flagged`, `/pen-compare`, `/pressure-response`
+- **Data** (`/reference`) — also active on `/data-dictionary`,
+  `/api-explorer`, `/data-quality`, `/pen-compat`, `/wacom-driver-compat`
 
 The settings dropdown (gear icon) holds the metric/imperial toggle,
 the alt-units toggle, and the theme toggle.
@@ -171,8 +182,12 @@ the flagged-tablets count on the Tablets ▸ Compare sub-tab).
 The sub-tab sets per parent:
 
 - **Tablets** (5 tabs): _Tablet models_ / _Tablet families_ / _Analysis_ / _Inventory_ / _Compare_
-- **Pens** (4 tabs): _Pen models_ / _Pen families_ / _Inventory_ / _Pressure Response_
-- **Data** (3 tabs): _Reference_ / _Data Quality_ / _Pen Compat_
+- **Pens** (7 tabs): _Pen models_ / _Pen families_ / _Analysis_ / _Inventory_ / _Flagged_ / _Compare_ / _Pressure Response_
+- **Data** (6 tabs): _Reference_ / _Data Dictionary_ / _API Explorer_ / _Data Quality_ / _Pen Compat_ / _Driver Compat_
+
+Tablets / Pens sub-tabs are centralised in
+[`src/lib/nav/subnav-tabs.ts`](../src/lib/nav/subnav-tabs.ts); the Data
+sub-tabs are declared inline on each Data page.
 
 ## Pressure response charts
 
@@ -239,10 +254,12 @@ several files:
 
 ## Shared modules
 
-- **`src/lib/load-all-data.ts`** — `loadAllData(base)` fetches all 9
-  datasets in parallel (tablets, pens, penCompat, drivers, brands,
-  penFamilies, tabletFamilies, isoSizes, pressureResponse) and returns a
-  typed `AllData` object. Use this in pages that need multiple datasets.
+- **`src/lib/bands.ts`** — Reference band definitions (IAF ranking, max
+  physical pressure) shared by the Reference page and the `IafTab` /
+  `MaxPressureTab` components. (Pages that need multiple datasets read
+  them from the session `DrawTabDataSet` exposed as `ds` via
+  `await parent()` — see "One DataSet per session" in
+  [CLAUDE.md](../CLAUDE.md) — not a load-all helper.)
 
 - **`src/lib/storage.ts`** — `getItem<T>(key)` / `setItem(key, value)`
   helpers wrapping `localStorage` with JSON parse/stringify and
@@ -300,7 +317,7 @@ To update the data submodule:
 
 ```bash
 cd data-repo
-git pull origin master
+git pull origin master   # or: npm run update-data (wraps these two lines)
 cd ..
 git add data-repo
 git commit -m "Update data submodule"
@@ -331,11 +348,22 @@ behaviour).
 
 ## npm scripts
 
-| Script    | Command        | Purpose            |
-| --------- | -------------- | ------------------ |
-| `dev`     | `vite dev`     | Start dev server   |
-| `build`   | `vite build`   | Build static site  |
-| `preview` | `vite preview` | Preview built site |
+| Script         | Command                                  | Purpose                            |
+| -------------- | ---------------------------------------- | ---------------------------------- |
+| `dev`          | `vite dev`                               | Start dev server                   |
+| `build`        | `vite build`                             | Build static site                  |
+| `preview`      | `vite preview`                           | Preview built site                 |
+| `check`        | `svelte-check`                           | Type-check                         |
+| `lint`         | `eslint . && prettier --check .`         | Lint + format check (CI parity)    |
+| `format`       | `prettier --write . && eslint --fix .`   | Auto-format + lint-fix             |
+| `test:unit`    | `vitest run`                             | Unit tests (queriton, helpers)     |
+| `test:e2e`     | `playwright test`                        | E2E smoke tests (builds first)     |
+| `data-quality` | `tsx data-repo/lib/run-data-quality.ts`  | Data validator                     |
+| `verify-docs`  | `node scripts/verify-docs.mjs`           | Check FUTURES.txt Open issue state |
+| `setup-static` | `node scripts/setup-static.mjs`          | Recreate `static/` symlinks        |
+| `update-data`  | `cd data-repo && git pull origin master` | Fast-forward the data submodule    |
+
+See [README.md](../README.md) and [TESTING.md](TESTING.md) for when to run which.
 
 ## Local data quality checks
 
@@ -381,8 +409,19 @@ Quality page.
 
 ## Dependencies
 
-All dev-only:
+Runtime (`dependencies` in `package.json`):
 
-- **svelte** (v5), **@sveltejs/kit**, **@sveltejs/vite-plugin-svelte**
-- **@sveltejs/adapter-static** — static site adapter
-- **typescript**, **vite**, **@types/node**
+- **valibot** — schema validation (shared with data-repo's CLI checks)
+- **pptxgenjs** — PowerPoint export (pinned to its own Vite chunk)
+
+Also bundled into the client build:
+
+- **chart.js** — pressure-response scatter charts (listed under
+  `devDependencies`; the static `ssr = false` build inlines it client-side)
+- **@thesevenpens/queriton** — query/pipeline engine, resolved via the
+  npm `workspaces` field from `packages/queriton/`
+
+Tooling (`devDependencies`): **svelte** (v5), **@sveltejs/kit**,
+**@sveltejs/vite-plugin-svelte**, **@sveltejs/adapter-static** (static
+site adapter), **typescript**, **vite**, **vitest**,
+**@playwright/test**, **eslint**, **prettier**, **@types/node**.
