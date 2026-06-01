@@ -71,6 +71,7 @@
 				'Join: PenCompat × Pens (inner) for a tablet',
 				'Semijoin: pens compatible with a tablet (no col merge)',
 				'antijoin: pens with no compatible tablet (data-quality)',
+				'Wacom pen tablets not in inventory (antijoin)',
 				'leftjoin: every pen + its compat tablets (if any)',
 				'concat: combine two filtered queries',
 			],
@@ -293,6 +294,19 @@ return await ds.Tablets
 return await ds.Pens
   .antijoin(ds.PenCompat, 'PenId', 'PenId')
   .select(['Brand', 'PenId', 'PenName'])
+  .toArray();`,
+		},
+		{
+			label: 'Wacom pen tablets not in inventory (antijoin)',
+			body: `// Wacom PENTABLET models whose EntityId isn't referenced by any
+// InventoryTablet — i.e. the pen tablets we don't physically own.
+// antijoin keeps left rows with NO match on the right side.
+return await ds.Tablets
+  .filter('Brand', '==', 'WACOM')
+  .filter('ModelType', '==', 'PENTABLET')
+  .antijoin(ds.InventoryTablets, 'EntityId', 'TabletEntityId')
+  .select(['Brand', 'ModelId', 'ModelName', 'ModelLaunchYear'])
+  .sort('ModelLaunchYear', 'desc')
   .toArray();`,
 		},
 		{
