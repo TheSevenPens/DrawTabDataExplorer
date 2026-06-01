@@ -140,12 +140,6 @@
 	});
 </script>
 
-<p class="ref-blurb">
-	Initial Activation Force (IAF) is the minimum force needed for the pen to register any pressure.
-	Lower is better — a lighter touch means more natural shading and less hand fatigue. Each red line
-	marks the estimated <strong>P00</strong> (activation force) for {entityLabel}.
-</p>
-
 {#if p00Stats}
 	<div class="view-toggle" role="group" aria-label="View">
 		<button
@@ -161,14 +155,6 @@
 			aria-pressed={view === 'summary'}>Summary (min / median / max)</button
 		>
 	</div>
-	<p class="ref-blurb view-blurb">
-		{#if view === 'all'}
-			One red line per measurement session.
-		{:else}
-			Outer lines mark <strong>min</strong> and <strong>max</strong>; the thick line marks the
-			<strong>median</strong>; the shaded band spans the full range.
-		{/if}
-	</p>
 {/if}
 
 <BandsChart
@@ -271,9 +257,6 @@
 		color: var(--text-muted);
 		max-width: 800px;
 		margin: 0 0 12px;
-	}
-	.view-blurb {
-		margin-top: 4px;
 	}
 	.summary-blurb {
 		margin-top: 16px;

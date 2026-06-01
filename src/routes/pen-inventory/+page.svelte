@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {
-		type InventoryPen,
 		INVENTORY_PEN_FIELDS,
 		INVENTORY_PEN_FIELD_GROUPS,
 		INVENTORY_PEN_DEFAULT_COLUMNS,

@@ -8,7 +8,7 @@
 	import TabletSizeComparison from '$lib/components/TabletSizeComparison.svelte';
 	import ForceProportionsView from '$lib/components/ForceProportionsView.svelte';
 	import { flaggedTablets, toggleFlag } from '$lib/flagged-store.js';
-	import { tabletBrandAndName, tabletFullName } from '$lib/tablet-helpers.js';
+	import { tabletFullName } from '$lib/tablet-helpers.js';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import { buildPenNameMap } from '$lib/pen-helpers.js';
 	import JsonTab from '$lib/components/JsonTab.svelte';

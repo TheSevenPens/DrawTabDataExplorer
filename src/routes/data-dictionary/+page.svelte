@@ -120,12 +120,6 @@
 <SubNav tabs={dataTabs} />
 <h1>Data Dictionary</h1>
 
-<p class="page-blurb">
-	Every field defined for every entity type in the dataset, sourced directly from the field
-	definitions in <code>data-repo/lib/entities/</code>. The same metadata drives column pickers,
-	filter editors, and sort menus throughout the app.
-</p>
-
 <div class="dict-layout">
 	<nav class="dict-tree" aria-label="Entity types">
 		{#each groupedEntities as [category, items] (category)}
@@ -197,22 +191,6 @@
 <style>
 	h1 {
 		margin-bottom: 8px;
-	}
-
-	.page-blurb {
-		font-size: 13px;
-		color: var(--text-muted);
-		max-width: 800px;
-		margin: 0 0 16px;
-		line-height: 1.5;
-	}
-
-	.page-blurb code {
-		background: rgba(0, 0, 0, 0.06);
-		padding: 1px 5px;
-		border-radius: 3px;
-		font-size: 12px;
-		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 	}
 
 	.dict-layout {

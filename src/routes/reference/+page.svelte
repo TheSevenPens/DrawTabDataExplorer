@@ -653,11 +653,6 @@
 				<div class="section-header">
 					<h2>Max Physical Pressure</h2>
 				</div>
-				<p class="ref-blurb">
-					Maximum physical pressure is the force at which the digitizer saturates (reports its
-					maximum pressure value). More headroom gives a wider dynamic range; too much forces the
-					user to push harder than is comfortable to reach full pressure.
-				</p>
 				<BandsChart
 					bands={maxPressureBands}
 					axisMax={1000}

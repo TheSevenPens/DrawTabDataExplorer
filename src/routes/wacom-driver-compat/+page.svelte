@@ -34,8 +34,7 @@
 <div class="header">
 	<h1>Wacom Driver Compatibility</h1>
 	<p class="meta">
-		Driver-version range supported by each tablet, derived from Wacom's
-		<code>update.xml</code> manifest. Sourced from
+		Sourced from
 		<a href="https://link.wacom.com/wdc/update.xml" target="_blank" rel="noopener">
 			link.wacom.com/wdc/update.xml
 		</a>; cached at <code>data-repo/data/wacom-update/source.xml</code> and re-extracted via

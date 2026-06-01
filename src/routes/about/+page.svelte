@@ -8,11 +8,6 @@
 
 <section class="about-section">
 	<h2>DrawTab Data Explorer</h2>
-	<p>
-		DrawTab Data Explorer is a searchable, filterable reference tool for graphics tablet and pen
-		specifications. It lets you browse, compare, and explore detailed hardware data for tablets and
-		pens from brands like Wacom, Huion, XP-Pen, Xencelabs, and others.
-	</p>
 </section>
 
 <section class="about-section">
@@ -25,9 +20,8 @@
 		>
 		repository — an open dataset of graphics tablet and pen specifications maintained by
 		<a href="https://www.youtube.com/@SevenPens" target="_blank" rel="noopener noreferrer"
-			>TheSevenPens</a
-		>. The data covers digitizer dimensions, pressure levels, tilt support, pen compatibility,
-		driver information, and more.
+			>Seven Pens</a
+		>.
 	</p>
 	<ul class="link-list">
 		<li>
@@ -38,7 +32,7 @@
 			>
 				DrawTabData on GitHub
 			</a>
-			— the source dataset powering this site
+			— the source data
 		</li>
 		<li>
 			<a
@@ -48,13 +42,13 @@
 			>
 				DrawTabDataExplorer on GitHub
 			</a>
-			— the source code for this site
+			— the source code
 		</li>
 	</ul>
 </section>
 
 <section class="about-section">
-	<h2>Other Tools Using This Data</h2>
+	<h2>Other Tools consuming the same data</h2>
 	<ul class="link-list">
 		<li>
 			<a
@@ -64,7 +58,7 @@
 			>
 				Pen Pressure Data
 			</a>
-			— pen pressure response measurements and visualizations
+			— pen pressure response measurements and visualizations (Deprecated)
 		</li>
 		<li>
 			<a
@@ -74,7 +68,7 @@
 			>
 				DrawTab Inventory
 			</a>
-			— personal tablet and pen inventory tracker
+			— personal tablet and pen inventory tracker (Deprecated)
 		</li>
 		<li>
 			<a
@@ -84,7 +78,7 @@
 			>
 				DrawTab Pen Compat
 			</a>
-			— pen and tablet compatibility reference
+			— pen and tablet compatibility reference (Deprecated)
 		</li>
 	</ul>
 </section>

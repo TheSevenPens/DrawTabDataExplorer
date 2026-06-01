@@ -10,8 +10,6 @@
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
-	const PEN_PRESSURE_DATA_URL = 'https://thesevenpens.github.io/PenPressureData/';
-
 	let { data } = $props();
 
 	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
@@ -86,9 +84,6 @@
 	<h1>Pressure Response</h1>
 	<p class="meta">
 		{sessions.length} measurement sessions across {allBrands.length} brands and {allPens.length} pens.
-		A more featureful viewer lives at
-		<a href={PEN_PRESSURE_DATA_URL} target="_blank" rel="noopener">PenPressureData</a> while that project's
-		UX is being folded back into the Explorer.
 	</p>
 </div>
 
