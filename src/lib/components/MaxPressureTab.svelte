@@ -184,12 +184,6 @@
 			</tr>
 		</tbody>
 	</table>
-
-	<p class="ref-blurb summary-blurb">
-		Per-session comparison: the highest force actually recorded vs. the
-		<strong>P100</strong> estimate (extrapolated to logical 100%). When the highest measured logical pressure
-		is well below 100%, P100 is an extrapolation above the data.
-	</p>
 	<table class="per-session-table">
 		<thead>
 			<tr>
@@ -232,10 +226,6 @@
 			{/each}
 		</tbody>
 	</table>
-	<p class="ref-blurb summary-blurb">
-		Pressure response near saturation — the same chart from the Pressure Response tab, zoomed to the
-		95–100% region so you can compare each session's approach to P100.
-	</p>
 	<PressureChart
 		sessions={chartSessions}
 		title={`${chartTitlePrefix} pressure response (max)`}
