@@ -3,15 +3,18 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import AnalysisExportRow from '$lib/tablet-analysis/AnalysisExportRow.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
-	import { IAF_BANDS, MAX_PRESSURE_BANDS } from '$lib/bands.js';
+	import { IAF_BANDS, MAX_PRESSURE_BANDS, type Band } from '$lib/bands.js';
+	import BandsChart from '$lib/components/BandsChart.svelte';
 	import type { Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
+	import { brandName } from '$data/lib/drawtab-loader.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
-	import { penFullName } from '$lib/pen-helpers.js';
+	import { penFullName, penBrandAndName } from '$lib/pen-helpers.js';
 	import PressureMetricSection, {
 		type MetricRow,
 	} from '$lib/pen-analysis/PressureMetricSection.svelte';
@@ -50,46 +53,150 @@
 		return s.length % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
 	}
 
-	// Per-pen-model aggregates — used to rank both the highest and lowest
-	// pen models on each metric. Aggregated across non-defective sessions
-	// so a single noisy unit doesn't tip the ranking.
-	let penNameById = $derived(new Map(pens.map((p) => [p.EntityId, penFullName(p)])));
+	// Aggregate sessions into ranked rows — either per pen model (default) or
+	// per physical pen unit (InventoryId). Each section's "View" dropdown
+	// picks which. Aggregated across non-defective sessions so a single noisy
+	// session doesn't tip the ranking.
+	let penById = $derived(new Map(pens.map((p) => [p.EntityId, p])));
+	let invPenByInventoryId = $derived(new Map(inventoryPens.map((u) => [u.InventoryId, u])));
 
-	type PenModelStats = {
-		penEntityId: string;
+	type RankMode = 'models' | 'units';
+
+	type RankRow = {
+		key: string; // penEntityId (models) or inventoryId (units)
+		label: string; // display name
+		href: string; // detail-page link
 		min: number;
 		median: number;
 		max: number;
 		sessionCount: number;
 	};
 
-	function aggregateByPenModel(rows: MetricRow[]): PenModelStats[] {
+	function statsOf(values: number[]): Pick<RankRow, 'min' | 'median' | 'max' | 'sessionCount'> {
+		return {
+			min: Math.min(...values),
+			median: median(values),
+			max: Math.max(...values),
+			sessionCount: values.length,
+		};
+	}
+
+	function aggregateByPenModel(rows: MetricRow[]): RankRow[] {
 		const byPen = new Map<string, number[]>();
 		for (const r of rows) {
 			const arr = byPen.get(r.penEntityId);
 			if (arr) arr.push(r.value);
 			else byPen.set(r.penEntityId, [r.value]);
 		}
-		return [...byPen.entries()].map(([penEntityId, values]) => ({
-			penEntityId,
-			min: Math.min(...values),
-			median: median(values),
-			max: Math.max(...values),
-			sessionCount: values.length,
-		}));
+		return [...byPen.entries()].map(([penEntityId, values]) => {
+			const pen = penById.get(penEntityId);
+			return {
+				key: penEntityId,
+				label: pen ? penFullName(pen) : penEntityId,
+				href: resolve('/entity/[entityId]', { entityId: penEntityId }),
+				...statsOf(values),
+			};
+		});
 	}
 
-	let iafByPenModel = $derived(aggregateByPenModel(iafRows));
-	let highestIafRows = $derived(
-		[...iafByPenModel].sort((a, b) => b.median - a.median).slice(0, 10),
-	);
-	let lowestIafRows = $derived([...iafByPenModel].sort((a, b) => a.median - b.median).slice(0, 10));
+	function aggregateByPenUnit(rows: MetricRow[]): RankRow[] {
+		const byUnit = new Map<string, { values: number[]; penEntityId: string }>();
+		for (const r of rows) {
+			const g = byUnit.get(r.inventoryId);
+			if (g) g.values.push(r.value);
+			else byUnit.set(r.inventoryId, { values: [r.value], penEntityId: r.penEntityId });
+		}
+		return [...byUnit.entries()].map(([inventoryId, { values, penEntityId }]) => {
+			const pen = penById.get(penEntityId);
+			const unit = invPenByInventoryId.get(inventoryId);
+			const name = pen ? penBrandAndName(pen) : penEntityId;
+			return {
+				key: inventoryId,
+				label: `${name} (${inventoryId})`,
+				href: unit
+					? resolve('/pen-inventory/[id]', { id: unit._id })
+					: resolve('/entity/[entityId]', { entityId: penEntityId }),
+				...statsOf(values),
+			};
+		});
+	}
 
-	let maxByPenModel = $derived(aggregateByPenModel(maxRows));
-	let highestMaxRows = $derived(
-		[...maxByPenModel].sort((a, b) => b.median - a.median).slice(0, 10),
+	// Full per-section pipeline: optional brand filter → aggregate by the
+	// chosen mode → sort by median → take the top `count`. Brand is filtered
+	// before aggregating so the ranking reflects only the selected brand.
+	function sectionRows(
+		metricRows: MetricRow[],
+		brand: string,
+		mode: RankMode,
+		dir: 'asc' | 'desc',
+		count: number,
+	): RankRow[] {
+		const filtered = brand
+			? metricRows.filter((r) => penById.get(r.penEntityId)?.Brand === brand)
+			: metricRows;
+		const agg = mode === 'units' ? aggregateByPenUnit(filtered) : aggregateByPenModel(filtered);
+		return agg
+			.sort((a, b) => (dir === 'asc' ? a.median - b.median : b.median - a.median))
+			.slice(0, count);
+	}
+
+	// Props bundle for the rankTable snippet — one object per section keeps the
+	// (now several) per-section controls readable instead of a long positional
+	// argument list.
+	type RankTableProps = {
+		rows: RankRow[];
+		title: string;
+		filename: string;
+		count: number;
+		onCountChange: (n: number) => void;
+		mode: RankMode;
+		onModeChange: (m: RankMode) => void;
+		brand: string;
+		onBrandChange: (b: string) => void;
+		brands: string[];
+		/** When set, render the standard band-segment chart below the table
+		 * with one marker line per row's median value. */
+		chart?: { bands: Band[]; axisMax: number; axisStep: number; showUnitInAxis: boolean };
+	};
+
+	// Brands present in the measured (non-defective) sessions, sorted by
+	// display name. Drives every section's brand-filter dropdown.
+	let availableBrands = $derived.by(() => {
+		const set = new Set<string>();
+		for (const s of nonDefectiveSessions) {
+			const b = penById.get(s.PenEntityId)?.Brand;
+			if (b) set.add(b);
+		}
+		return [...set].sort((a, b) => brandName(a).localeCompare(brandName(b)));
+	});
+
+	// Per-section display state — each section's dropdowns control only itself.
+	const ROW_COUNT_OPTIONS = [10, 20, 30];
+	let lowestIafCount = $state(10);
+	let highestIafCount = $state(10);
+	let lowestMaxCount = $state(10);
+	let highestMaxCount = $state(10);
+	let lowestIafMode = $state<RankMode>('models');
+	let highestIafMode = $state<RankMode>('models');
+	let lowestMaxMode = $state<RankMode>('models');
+	let highestMaxMode = $state<RankMode>('models');
+	let lowestIafBrand = $state('');
+	let highestIafBrand = $state('');
+	let lowestMaxBrand = $state('');
+	let highestMaxBrand = $state('');
+
+	let lowestIafRows = $derived(
+		sectionRows(iafRows, lowestIafBrand, lowestIafMode, 'asc', lowestIafCount),
 	);
-	let lowestMaxRows = $derived([...maxByPenModel].sort((a, b) => a.median - b.median).slice(0, 10));
+	let highestIafRows = $derived(
+		sectionRows(iafRows, highestIafBrand, highestIafMode, 'desc', highestIafCount),
+	);
+	let lowestMaxRows = $derived(
+		sectionRows(maxRows, lowestMaxBrand, lowestMaxMode, 'asc', lowestMaxCount),
+	);
+	let highestMaxRows = $derived(
+		sectionRows(maxRows, highestMaxBrand, highestMaxMode, 'desc', highestMaxCount),
+	);
 
 	const sectionDefs: Section[] = [
 		{ id: 'iaf', category: 'Pressure', label: 'IAF (P00)' },
@@ -147,24 +254,38 @@
 		{#if activeSection === 'lowest-iaf'}
 			<section class="section">
 				<h2>Lowest IAF</h2>
-				<p class="description">
-					Top 10 pen models ranked by lowest median IAF (P00) across non-defective measurement
-					sessions — the lightest pens to activate. Lower values mean less force is needed before
-					the pen starts registering pressure.
-				</p>
-				{@render rankTable(lowestIafRows)}
+				{@render rankTable({
+					rows: lowestIafRows,
+					title: 'Lowest IAF (P00)',
+					filename: 'pen-analysis-lowest-iaf',
+					count: lowestIafCount,
+					onCountChange: (n) => (lowestIafCount = n),
+					mode: lowestIafMode,
+					onModeChange: (m) => (lowestIafMode = m),
+					brand: lowestIafBrand,
+					onBrandChange: (b) => (lowestIafBrand = b),
+					brands: availableBrands,
+					chart: { bands: IAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
+				})}
 			</section>
 		{/if}
 
 		{#if activeSection === 'highest-iaf'}
 			<section class="section">
 				<h2>Highest IAF</h2>
-				<p class="description">
-					Top 10 pen models ranked by median IAF (P00) across non-defective measurement sessions —
-					the stiffest pens to activate. Higher values mean a heavier touch is needed before the pen
-					registers any pressure.
-				</p>
-				{@render rankTable(highestIafRows)}
+				{@render rankTable({
+					rows: highestIafRows,
+					title: 'Highest IAF (P00)',
+					filename: 'pen-analysis-highest-iaf',
+					count: highestIafCount,
+					onCountChange: (n) => (highestIafCount = n),
+					mode: highestIafMode,
+					onModeChange: (m) => (highestIafMode = m),
+					brand: highestIafBrand,
+					onBrandChange: (b) => (highestIafBrand = b),
+					brands: availableBrands,
+					chart: { bands: IAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
+				})}
 			</section>
 		{/if}
 
@@ -192,38 +313,103 @@
 		{#if activeSection === 'lowest-max'}
 			<section class="section">
 				<h2>Lowest MAX</h2>
-				<p class="description">
-					Top 10 pen models ranked by lowest median Max Pressure (P100) across non-defective
-					measurement sessions — the pens that saturate at the lightest force. Lower values mean
-					less dynamic range before the pen reads 100%.
-				</p>
-				{@render rankTable(lowestMaxRows)}
+				{@render rankTable({
+					rows: lowestMaxRows,
+					title: 'Lowest Max Pressure (P100)',
+					filename: 'pen-analysis-lowest-max',
+					count: lowestMaxCount,
+					onCountChange: (n) => (lowestMaxCount = n),
+					mode: lowestMaxMode,
+					onModeChange: (m) => (lowestMaxMode = m),
+					brand: lowestMaxBrand,
+					onBrandChange: (b) => (lowestMaxBrand = b),
+					brands: availableBrands,
+					chart: { bands: MAX_PRESSURE_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
+				})}
 			</section>
 		{/if}
 
 		{#if activeSection === 'highest-max'}
 			<section class="section">
 				<h2>Highest MAX</h2>
-				<p class="description">
-					Top 10 pen models ranked by highest median Max Pressure (P100) across non-defective
-					measurement sessions — the pens that take the most force to saturate. Higher values mean
-					more dynamic range but a heavier press to reach full pressure.
-				</p>
-				{@render rankTable(highestMaxRows)}
+				{@render rankTable({
+					rows: highestMaxRows,
+					title: 'Highest Max Pressure (P100)',
+					filename: 'pen-analysis-highest-max',
+					count: highestMaxCount,
+					onCountChange: (n) => (highestMaxCount = n),
+					mode: highestMaxMode,
+					onModeChange: (m) => (highestMaxMode = m),
+					brand: highestMaxBrand,
+					onBrandChange: (b) => (highestMaxBrand = b),
+					brands: availableBrands,
+					chart: { bands: MAX_PRESSURE_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
+				})}
 			</section>
 		{/if}
 	{/snippet}
 </SectionedPage>
 
-{#snippet rankTable(rows: PenModelStats[])}
-	{#if rows.length === 0}
+{#snippet rankTable(p: RankTableProps)}
+	{#if p.rows.length === 0}
 		<p class="no-data">No measurements available.</p>
 	{:else}
+		<div class="rank-controls">
+			<div class="controls-left">
+				<label class="show-count">
+					Brand
+					<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
+						<option value="" selected={p.brand === ''}>All brands</option>
+						{#each p.brands as b (b)}
+							<option value={b} selected={p.brand === b}>{brandName(b)}</option>
+						{/each}
+					</select>
+				</label>
+				<label class="show-count">
+					View
+					<select onchange={(e) => p.onModeChange(e.currentTarget.value as RankMode)}>
+						<option value="models" selected={p.mode === 'models'}>Pen models</option>
+						<option value="units" selected={p.mode === 'units'}>Pen units</option>
+					</select>
+				</label>
+				<label class="show-count">
+					Show
+					<select onchange={(e) => p.onCountChange(Number(e.currentTarget.value))}>
+						{#each ROW_COUNT_OPTIONS as n (n)}
+							<option value={n} selected={p.count === n}>{n}</option>
+						{/each}
+					</select>
+				</label>
+			</div>
+			<AnalysisExportRow
+				onclick={() =>
+					openExport(
+						p.title,
+						p.filename,
+						[
+							'Rank',
+							p.mode === 'units' ? 'Pen unit' : 'Pen',
+							'Min (gf)',
+							'Median (gf)',
+							'Max (gf)',
+							'Sessions',
+						],
+						p.rows.map((r, i) => [
+							i + 1,
+							r.label,
+							fmtP(r.min),
+							fmtP(r.median),
+							fmtP(r.max),
+							r.sessionCount,
+						]),
+					)}
+			/>
+		</div>
 		<table class="rank-table">
 			<thead>
 				<tr>
 					<th class="num">#</th>
-					<th>Pen</th>
+					<th>{p.mode === 'units' ? 'Pen unit' : 'Pen'}</th>
 					<th class="num">Min <span class="unit">(gf)</span></th>
 					<th class="num">Median <span class="unit">(gf)</span></th>
 					<th class="num">Max <span class="unit">(gf)</span></th>
@@ -231,14 +417,10 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each rows as r, i (r.penEntityId)}
+				{#each p.rows as r, i (r.key)}
 					<tr>
 						<td class="num mono">{i + 1}</td>
-						<td
-							><a href={resolve('/entity/[entityId]', { entityId: r.penEntityId })}
-								>{penNameById.get(r.penEntityId) ?? r.penEntityId}</a
-							></td
-						>
+						<td><a href={r.href}>{r.label}</a></td>
 						<td class="num mono">{fmtP(r.min)}</td>
 						<td class="num mono">{fmtP(r.median)}</td>
 						<td class="num mono">{fmtP(r.max)}</td>
@@ -247,6 +429,22 @@
 				{/each}
 			</tbody>
 		</table>
+		{#if p.chart}
+			{@const chart = p.chart}
+			<div class="rank-chart">
+				<BandsChart
+					bands={chart.bands}
+					axisMax={chart.axisMax}
+					axisStep={chart.axisStep}
+					unit="gf"
+					showUnitInAxis={chart.showUnitInAxis}
+					showBandRanges={false}
+					title={p.filename}
+					heading={p.title}
+					markers={p.rows.map((r) => ({ value: Math.min(r.median, chart.axisMax), dashed: false }))}
+				/>
+			</div>
+		{/if}
 	{/if}
 {/snippet}
 
@@ -285,6 +483,39 @@
 		font-size: 13px;
 		color: var(--text-muted);
 		font-style: italic;
+	}
+	.rank-controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 4px;
+	}
+	.rank-controls :global(.table-export) {
+		margin-bottom: 0;
+	}
+	.controls-left {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+	.rank-chart {
+		margin-top: 20px;
+	}
+	.show-count {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+		color: var(--text-muted);
+	}
+	.show-count select {
+		font-size: 12px;
+		padding: 3px 6px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 	.rank-table {
 		border-collapse: collapse;
