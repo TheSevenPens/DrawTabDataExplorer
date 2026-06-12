@@ -11,6 +11,7 @@
 		Legend,
 		Title,
 		Filler,
+		type Plugin,
 	} from 'chart.js';
 	import type { PressureRecord } from '$data/lib/pressure/interpolate.js';
 	import {
@@ -43,7 +44,7 @@
 	}
 
 	type ViewMode = 'raw' | 'estimates' | 'standardized' | 'envelope';
-	type ZoomMode = 'normal' | 'iaf' | 'max';
+	type ZoomMode = 'normal' | 'iaf' | 'iaftransition' | 'max';
 	type EnvelopeRange = 'minmax' | 'p05p95' | 'p25p75';
 
 	let {
@@ -330,8 +331,54 @@
 		return m === -Infinity ? null : m;
 	});
 
+	// Activation bracket behind the IAF (P00) estimate, across visible sessions:
+	//   lo — lowest physical force still reading ≤ 0% logical ("off" samples)
+	//   hi — highest physical force reading > 0% logical at first activation
+	//   by — largest logical % among those first "on" samples
+	// estimateP00 returns the midpoint (a + b) / 2 per session; the
+	// 'iaftransition' zoom frames lo, the midpoint(s), and hi so the
+	// bracket-midpoint construction is visible.
+	let iafTransition = $derived.by(() => {
+		let lo = Infinity;
+		let hi = -Infinity;
+		let by = 0;
+		let any = false;
+		for (const s of visibleSessions) {
+			let a = -Infinity; // highest force at y ≤ 0
+			let b = Infinity; // lowest force at y > 0
+			let bYAtB = 0;
+			for (const [x, y] of s.records) {
+				if (y <= 0) {
+					if (x > a) a = x;
+				} else if (x < b) {
+					b = x;
+					bYAtB = y;
+				}
+			}
+			if (a === -Infinity || b === Infinity) continue; // no bracket in this session
+			any = true;
+			if (a < lo) lo = a;
+			if (b > hi) hi = b;
+			if (bYAtB > by) by = bYAtB;
+		}
+		return any ? { lo, hi, by } : null;
+	});
+
 	function axisRange(): { x: { min?: number; max?: number }; y: { min: number; max: number } } {
 		if (zoomMode === 'iaf') return { x: { min: 0, max: 20 }, y: { min: 0, max: 30 } };
+		if (zoomMode === 'iaftransition') {
+			if (iafTransition) {
+				const { lo, hi, by } = iafTransition;
+				const padX = Math.max((hi - lo) * 0.5, 0.3);
+				const yMax = Math.max(by * 1.6, 3);
+				return {
+					x: { min: Math.max(0, lo - padX), max: hi + padX },
+					y: { min: -yMax * 0.2, max: yMax },
+				};
+			}
+			// No activation transition captured — fall back to IAF detail.
+			return { x: { min: 0, max: 20 }, y: { min: 0, max: 30 } };
+		}
 		if (zoomMode === 'max') {
 			// At least 50 gf of headroom past the largest P100 so the
 			// upper-right corner of the envelope isn't clipped. Falls back
@@ -342,6 +389,47 @@
 		return { x: { min: 0, max: 1000 }, y: { min: 0, max: 100 } };
 	}
 
+	// In 'iaftransition' zoom, overlay the points that define the IAF estimate:
+	// solid dots for the measured records in view (the activation-bracket
+	// endpoints among them) and a dotted circle for the estimated IAF — the
+	// P00 bracket midpoint — so it reads as derived, not measured. Drawn via a
+	// plugin because Chart.js has no dashed point outline.
+	const iafTransitionPlugin: Plugin = {
+		id: 'iafTransition',
+		afterDatasetsDraw(c) {
+			if (zoomMode !== 'iaftransition') return;
+			const ctx = c.ctx;
+			const xs = c.scales.x;
+			const ys = c.scales.y;
+			const inRange = (v: number) => v >= (xs.min as number) && v <= (xs.max as number);
+			visibleSessions.forEach((s, i) => {
+				const color = colorFor(i, s.color);
+				// Solid dots: the actual measured records in view.
+				ctx.save();
+				ctx.fillStyle = color;
+				for (const [x, y] of s.records) {
+					if (!inRange(x)) continue;
+					ctx.beginPath();
+					ctx.arc(xs.getPixelForValue(x), ys.getPixelForValue(y), 3, 0, Math.PI * 2);
+					ctx.fill();
+				}
+				ctx.restore();
+				// Dotted circle: the estimated IAF (P00 bracket midpoint), at 0%.
+				const est = estimateP00(s.records);
+				if (est !== null && isFinite(est) && inRange(est)) {
+					ctx.save();
+					ctx.strokeStyle = color;
+					ctx.lineWidth = 2;
+					ctx.setLineDash([2, 2]);
+					ctx.beginPath();
+					ctx.arc(xs.getPixelForValue(est), ys.getPixelForValue(0), 6, 0, Math.PI * 2);
+					ctx.stroke();
+					ctx.restore();
+				}
+			});
+		},
+	};
+
 	$effect(() => {
 		// Re-read reactive deps so $effect picks up changes.
 		void sessions;
@@ -351,6 +439,7 @@
 		void showDefective;
 		void hiddenIds;
 		void maxP100;
+		void iafTransition;
 		if (!canvas) return;
 		const datasets = buildDatasets();
 		const { x: xRange, y: yRange } = axisRange();
@@ -372,6 +461,7 @@
 		chart = new Chart(canvas, {
 			type: 'line',
 			data: { datasets },
+			plugins: [iafTransitionPlugin],
 			options: {
 				responsive: true,
 				maintainAspectRatio: false,
@@ -451,6 +541,7 @@
 			<select bind:value={userZoom}>
 				<option value="normal">Normal</option>
 				<option value="iaf">IAF detail (0-20 gf)</option>
+				<option value="iaftransition">IAF transition</option>
 				<option value="max">Max pressure (95-100%)</option>
 			</select>
 		</label>

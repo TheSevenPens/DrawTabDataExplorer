@@ -6,6 +6,7 @@
 	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
 
@@ -34,6 +35,37 @@
 
 	let p00 = $derived(estimateP00(session.Records));
 	let p100 = $derived(estimateP100(session.Records));
+
+	// Combined raw records + estimated P00/P100 endpoints, ordered by physical
+	// force so each estimate sits at its true position in the curve rather than
+	// just bracketing the list. Estimate rows are tagged so the template styles
+	// them distinctly; raw rows keep their original capture index (`n`).
+	type TableRow =
+		| { kind: 'raw'; n: number; force: number; pct: number }
+		| { kind: 'est'; label: string; force: number; pct: number };
+
+	let tableRows = $derived.by<TableRow[]>(() => {
+		const rows: TableRow[] = session.Records.map(([force, pct], i) => ({
+			kind: 'raw',
+			n: i + 1,
+			force,
+			pct,
+		}));
+		if (p00 !== null) rows.push({ kind: 'est', label: 'P00', force: p00, pct: 0 });
+		if (p100 !== null) rows.push({ kind: 'est', label: 'P100', force: p100, pct: 100 });
+		return rows.sort((a, b) => a.force - b.force);
+	});
+
+	// Export mirrors what the table shows: raw rows plus the marked P00/P100
+	// estimate rows, in force order.
+	const recordExportHeaders = ['#', 'Force (gf)', 'Pressure (%)'];
+	let recordExportRows: (string | number)[][] = $derived(
+		tableRows.map((row) =>
+			row.kind === 'est'
+				? [`${row.label} (est.)`, fmtP(row.force), row.pct.toFixed(2)]
+				: [row.n, row.force.toFixed(2), row.pct.toFixed(2)],
+		),
+	);
 
 	// On a single-session detail page, the user explicitly navigated to this
 	// session — the chart must render even if the pen unit is flagged
@@ -101,7 +133,16 @@
 </section>
 
 <section class="raw">
-	<h2>Raw Records</h2>
+	<div class="raw-head">
+		<h2>Raw Records</h2>
+		<ExportTableButton
+			entityType="pressure-response"
+			title={`Pressure records — ${session.InventoryId} ${session.Date}`}
+			filename={`pressure-records-${session.InventoryId}-${session.Date}`}
+			headers={recordExportHeaders}
+			rows={recordExportRows}
+		/>
+	</div>
 	<table>
 		<thead>
 			<tr>
@@ -111,12 +152,20 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each session.Records as [x, y], i (i)}
-				<tr>
-					<td class="num">{i + 1}</td>
-					<td class="num mono">{x.toFixed(2)}</td>
-					<td class="num mono">{y.toFixed(2)}</td>
-				</tr>
+			{#each tableRows as row (row.kind === 'raw' ? `r${row.n}` : `e${row.label}`)}
+				{#if row.kind === 'est'}
+					<tr class="est-row">
+						<td class="est-label">{row.label} <span class="est-tag">est.</span></td>
+						<td class="num mono">{fmtP(row.force)}</td>
+						<td class="num mono">{row.pct.toFixed(2)}</td>
+					</tr>
+				{:else}
+					<tr>
+						<td class="num">{row.n}</td>
+						<td class="num mono">{row.force.toFixed(2)}</td>
+						<td class="num mono">{row.pct.toFixed(2)}</td>
+					</tr>
+				{/if}
 			{/each}
 		</tbody>
 	</table>
@@ -180,6 +229,16 @@
 	.raw {
 		margin-top: 24px;
 	}
+	.raw-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		max-width: 480px;
+		margin-bottom: 8px;
+	}
+	.raw-head h2 {
+		margin: 0;
+	}
 	.raw table {
 		width: 100%;
 		max-width: 480px;
@@ -187,7 +246,7 @@
 		font-size: 13px;
 	}
 	.raw thead th {
-		text-align: left;
+		text-align: right;
 		padding: 4px 10px;
 		border-bottom: 2px solid var(--border);
 		background: var(--bg-card);
@@ -201,5 +260,26 @@
 	}
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+	}
+	.raw .est-row td {
+		background: rgba(245, 158, 11, 0.13);
+		font-style: italic;
+	}
+	.est-label {
+		text-align: right;
+		white-space: nowrap;
+	}
+	.est-tag {
+		display: inline-block;
+		font-style: normal;
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.3px;
+		color: #92400e;
+		background: #fde68a;
+		padding: 0 5px;
+		border-radius: 3px;
+		margin-left: 6px;
 	}
 </style>
