@@ -56,14 +56,24 @@
 		return rows.sort((a, b) => a.force - b.force);
 	});
 
+	// Format a logical-pressure % for the records table. Two decimals for
+	// normal values, but never round a genuinely non-zero reading down to
+	// "0.00" — a tiny activation like 0.003% must stay visible, since the IAF
+	// estimate correctly counts it as non-zero (its bracket sits below it).
+	function fmtPct(y: number): string {
+		const rounded = y.toFixed(2);
+		if (y !== 0 && parseFloat(rounded) === 0) return String(y);
+		return rounded;
+	}
+
 	// Export mirrors what the table shows: raw rows plus the marked P00/P100
 	// estimate rows, in force order.
 	const recordExportHeaders = ['#', 'Force (gf)', 'Pressure (%)'];
 	let recordExportRows: (string | number)[][] = $derived(
 		tableRows.map((row) =>
 			row.kind === 'est'
-				? [`${row.label} (est.)`, fmtP(row.force), row.pct.toFixed(2)]
-				: [row.n, row.force.toFixed(2), row.pct.toFixed(2)],
+				? [`${row.label} (est.)`, fmtP(row.force), fmtPct(row.pct)]
+				: [row.n, row.force.toFixed(2), fmtPct(row.pct)],
 		),
 	);
 
@@ -157,13 +167,13 @@
 					<tr class="est-row">
 						<td class="est-label">{row.label} <span class="est-tag">est.</span></td>
 						<td class="num mono">{fmtP(row.force)}</td>
-						<td class="num mono">{row.pct.toFixed(2)}</td>
+						<td class="num mono">{fmtPct(row.pct)}</td>
 					</tr>
 				{:else}
 					<tr>
 						<td class="num">{row.n}</td>
 						<td class="num mono">{row.force.toFixed(2)}</td>
-						<td class="num mono">{row.pct.toFixed(2)}</td>
+						<td class="num mono">{fmtPct(row.pct)}</td>
 					</tr>
 				{/if}
 			{/each}
