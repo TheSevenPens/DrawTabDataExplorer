@@ -206,8 +206,8 @@ dataset via `loadAllData()` — it just doesn't visualize it.
 What PenPressureData has that the Explorer doesn't:
 
 - `PressureChart.svelte` — Chart.js scatter of force (gf) vs.
-  pressure (%); zoom modes (normal / IAF detail 0-20gf / max
-  pressure 95-100%); data view modes (raw / raw+estimates /
+  pressure (%); zoom modes (normal / Piaf detail 0-20gf / Pmax
+  detail 95-100%); data view modes (raw / raw+estimates /
   standardized / envelope); envelope range options (Min/Max /
   P05/P95 / P25/P75); PNG + HTML export
 - `interpolate.js` — 17-percentile P-value computation with
@@ -299,7 +299,7 @@ stays live (not archived).
 
 5. ✅ **Chart toolbar.** (2026-05-01) `PressureChart.svelte` gained
    View (raw / raw+estimates / standardized / envelope), Zoom
-   (normal / IAF detail / max-pressure detail), Range (envelope
+   (normal / Piaf detail / Pmax detail), Range (envelope
    Min/Max / P05-P95 / P25-P75), and 4 export buttons (copy PNG,
    download PNG, copy data HTML, download HTML doc).
 6. ✅ **`PressureResponseChartLegendTable.svelte` ported in full.** (2026-05-01)

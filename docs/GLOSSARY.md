@@ -6,11 +6,11 @@ Domain vocabulary used across this repo. Alphabetised. Each entry: short definit
 
 ---
 
-**Activation transition** — The point on a pressure-response curve where logical pressure first rises above 0 %. The force value at that point is the **IAF** / **P00**. See [PRESSURE-INTERPOLATION.md](PRESSURE-INTERPOLATION.md).
+**Activation transition** — The point on a pressure-response curve where logical pressure first rises above 0 %. The force value at that point is the **Piaf** (formerly IAF / P00). See [PRESSURE-INTERPOLATION.md](PRESSURE-INTERPOLATION.md).
 
 **Audience** — Field on tablets, one of `Consumer` / `Professional` / `Pro` / etc. Used for filtering and sorting on `/tablets`.
 
-**Bracket midpoint** — Algorithm used by `estimateP00` / `estimateP100`: when the session has records on both sides of a transition (e.g. a `y ≤ 0` sample AND a `y > 0` sample), return the average of those two force values. The only branch surviving issue [#212](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/212).
+**Bracket midpoint** — Algorithm used by `estimatePiaf` / `estimatePmax`: when the session has records on both sides of a transition (e.g. a `y ≤ 0` sample AND a `y > 0` sample), return the average of those two force values. The only branch surviving issue [#212](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/212).
 
 **Brand** — Top-level entity. Singular noun form ("Wacom", "XP-Pen"). All-uppercase `BrandId` in code (`"WACOM"`, `"XPPEN"`). See `BRANDS` in [data-repo/lib/loader-shared.ts](../data-repo/lib/loader-shared.ts).
 
@@ -60,7 +60,7 @@ See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/se
 
 **HUP / WAP / XPP / SAP / XEP / LAP** — Inventory-ID prefixes by brand (Huion / Wacom / XP-Pen / Samsung / Xencelabs / Lamy pens). Followed by a 4-digit serial: `WAP.0001`, `HUP.0024`.
 
-**IAF** — Initial Activation Force. Physical force (gf) at which the pen first registers logical pressure above 0 %. Synonymous with **P00**. See [PRESSURE-INTERPOLATION.md](PRESSURE-INTERPOLATION.md).
+**IAF** — Stored **manufacturer-quoted** Initial Activation Force spec on a pen model (`Pen.IAF`, gram-force). A real published value, **not** an estimate — distinct from **Piaf**, the per-session activation force the explorer estimates from pressure-response records. See [pen-fields.ts](../data-repo/lib/entities/pen-fields.ts).
 
 **`InventoryId`** — Identifier for a specific physical pen unit (or tablet unit) that the project owns, e.g. `WAP.0001`. Distinct from `EntityId` (which identifies a **model**). Stored in `data-repo/data/inventory/sevenpens-pens.json` and `sevenpens-tablets.json`.
 
@@ -74,8 +74,6 @@ See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/se
 
 **`makeShardedLoader`** — Factory function that builds a per-entity loader (URL or disk) given a shard list and root key. The reason `BRANDS` is the single source of truth for which files to try. See [data-repo/lib/dataset.ts](../data-repo/lib/dataset.ts).
 
-**`MaxP100` / `Max Pressure`** — Synonyms for **P100**.
-
 **Model** — The product (e.g. "Wacom Intuos Small"). Distinct from a unit (an instance owned). Tablets and Pens are "model" entities.
 
 **Model family** — Group of related models sharing a generation or tech (e.g. "Wacom Intuos 2018 tablet series"). Stored in `data-repo/data/tablet-families/` and `pen-families/`. The convention for `Model.Family` is the family's **EntityId** (e.g. `wacom.tabletfamily.wacomintuos2018`), not the human-readable `FamilyName`.
@@ -88,7 +86,11 @@ See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/se
 
 **Pressure session** / **PressureResponse session** — One capture event of a pen ↔ tablet pair under specific driver / OS conditions. Has `Records: [force, pct][]`, `Date`, `User`, `Notes`. Identified by `<brand>.session.<inventoryid>_<date>`. Stored in `data-repo/data/pressure-response/`.
 
-**P00, P25, P50, P75, P100** — Standard percentile force values on a pressure-response curve. P00 = activation, P25/P50/P75 = quartiles (computed via `interpolatePhysical`), P100 = saturation.
+**Piaf, P25, P50, P75, Pmax** — Standard force values on a pressure-response curve. Piaf = activation (formerly P00), P25/P50/P75 = quartiles (computed via `interpolatePhysical`), Pmax = saturation (formerly P100).
+
+**Piaf** — The **estimated** Initial Activation Force (formerly P00). Physical force (gf) at which the pen first registers logical pressure above 0 %, estimated per session by `estimatePiaf` from pressure-response records. Distinct from the stored manufacturer-spec **IAF** field. See [PRESSURE-INTERPOLATION.md](PRESSURE-INTERPOLATION.md).
+
+**Pmax** — Maximum Force (formerly P100 / Max Pressure / MaxP100). Physical force (gf) at which the pen's logical pressure reaches 100 % (digitizer saturation). Computed by `estimatePmax`. See [PRESSURE-INTERPOLATION.md](PRESSURE-INTERPOLATION.md).
 
 **P50** / **Median** — The force at logical 50 %. Used as the "middle" marker on `BandsChart`.
 
@@ -102,15 +104,15 @@ See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/se
 
 **`Records`** — The `[force, pct][]` array on a pressure session. First record (typically) has `pct = 0`; last record (typically) has `pct = 100`. Records should be **monotonic on both axes** — `findNonMonotonicSessions` catches drops.
 
-**Saturation transition** — The point on a pressure-response curve where logical pressure reaches 100 %. The force at that point is the **Max Pressure** / **P100**.
+**Saturation transition** — The point on a pressure-response curve where logical pressure reaches 100 %. The force at that point is the **Pmax** (formerly Max Pressure / P100).
 
-**Saturated-only session** — A session where every record has `y ≥ 100`. `estimateP100` returns the lowest-force record's x as a fallback estimate (pre-bracket-logic behaviour).
+**Saturated-only session** — A session where every record has `y ≥ 100`. `estimatePmax` returns the lowest-force record's x as a fallback estimate (pre-bracket-logic behaviour).
 
 **Saved view** — A user-saved query pipeline (filters + sorts + visible columns). Persisted to localStorage, scoped per entity type. See [SavedViews.svelte](../src/lib/components/SavedViews.svelte) and [src/lib/views.ts](../src/lib/views.ts).
 
 **`sevenpens`** — The username string under which all owned inventory and sessions are stored. Single-user inventory project — there's no multi-user system. Hardcoded in `+layout.ts` and [data-repo/data/inventory/sevenpens-pens.json](../data-repo/data/inventory/sevenpens-pens.json).
 
-**Spring decay** — Removed-in-#212 extrapolation method that fit an exponential to the last few slopes of a curve to project a P00 / P100 estimate when the session didn't capture activation / saturation. Replaced by the simpler **bracket midpoint** approach + the new `/pressure-backfill` dev tool for adding explicit endpoint records.
+**Spring decay** — Removed-in-#212 extrapolation method that fit an exponential to the last few slopes of a curve to project a Piaf / Pmax estimate when the session didn't capture activation / saturation. Replaced by the simpler **bracket midpoint** approach + the new `/pressure-backfill` dev tool for adding explicit endpoint records.
 
 **SPA fallback** — The static `404.html` page that serves the SvelteKit app shell for any path the static adapter didn't prerender (e.g. `/entity/<id>` for entity IDs not known at build time).
 

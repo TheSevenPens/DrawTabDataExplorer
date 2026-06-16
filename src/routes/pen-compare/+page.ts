@@ -4,11 +4,13 @@ export const prerender = false;
 
 export async function load({ parent }) {
 	const { ds } = await parent();
-	const [allPens, allSessions, allInventory] = await Promise.all([
+	const [allPens, allSessions, allInventory, allRange] = await Promise.all([
 		ds.Pens.toArray(),
 		ds.PressureResponse.toArray(),
 		ds.InventoryPens.toArray(),
+		ds.PressureRange.toArray(),
 	]);
 	const defectsByInventoryId = buildInventoryDefects(allInventory);
-	return { allPens, allSessions, defectsByInventoryId };
+	const iafMeasurements = allRange.filter((m) => m.Metric === 'IAF');
+	return { allPens, allSessions, defectsByInventoryId, iafMeasurements };
 }

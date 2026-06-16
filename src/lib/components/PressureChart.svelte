@@ -15,8 +15,8 @@
 	} from 'chart.js';
 	import type { PressureRecord } from '$data/lib/pressure/interpolate.js';
 	import {
-		estimateP00,
-		estimateP100,
+		estimatePiaf,
+		estimatePmax,
 		interpolatePhysical,
 	} from '$data/lib/pressure/interpolate.js';
 	import { paletteColor } from '$lib/chart-palette.js';
@@ -44,7 +44,7 @@
 	}
 
 	type ViewMode = 'raw' | 'estimates' | 'standardized' | 'envelope';
-	type ZoomMode = 'normal' | 'iaf' | 'iaftransition' | 'max';
+	type ZoomMode = 'normal' | 'piaf' | 'piaftransition' | 'pmax';
 	type EnvelopeRange = 'minmax' | 'p05p95' | 'p25p75';
 
 	let {
@@ -62,8 +62,8 @@
 		 * table or other UI. */
 		hiddenIds?: ReadonlySet<string>;
 		/** When set, the Zoom dropdown is hidden and zoom is forced to
-		 * this value. Use for context-specific embeds (e.g. the Max
-		 * Pressure tab) that should always show a particular zoom. */
+		 * this value. Use for context-specific embeds (e.g. the Pmax
+		 * tab) that should always show a particular zoom. */
 		lockedZoom?: ZoomMode;
 	} = $props();
 
@@ -110,8 +110,8 @@
 		const out: { x: number; y: number }[] = [];
 		for (const p of STANDARD_PCTS) {
 			let x: number | null;
-			if (p === 0) x = estimateP00(s.records);
-			else if (p === 100) x = estimateP100(s.records);
+			if (p === 0) x = estimatePiaf(s.records);
+			else if (p === 100) x = estimatePmax(s.records);
 			else x = interpolatePhysical(s.records, p);
 			if (x !== null && isFinite(x)) out.push({ x, y: p });
 		}
@@ -135,8 +135,8 @@
 			const vals: number[] = [];
 			for (const s of sessions) {
 				let x: number | null;
-				if (p === 0) x = estimateP00(s.records);
-				else if (p === 100) x = estimateP100(s.records);
+				if (p === 0) x = estimatePiaf(s.records);
+				else if (p === 100) x = estimatePmax(s.records);
 				else x = interpolatePhysical(s.records, p);
 				if (x !== null && isFinite(x)) vals.push(x);
 			}
@@ -220,13 +220,13 @@
 				if (s.records[j][1] < 100) lastSubIdx = j;
 			}
 
-			const p00 = viewMode === 'estimates' ? estimateP00(s.records) : null;
-			const p100 = viewMode === 'estimates' ? estimateP100(s.records) : null;
-			const showP00Dashed = p00 !== null && firstActiveIdx >= 0;
-			const showP100Dashed = p100 !== null && lastSubIdx >= 0;
+			const piaf = viewMode === 'estimates' ? estimatePiaf(s.records) : null;
+			const pmax = viewMode === 'estimates' ? estimatePmax(s.records) : null;
+			const showPiafDashed = piaf !== null && firstActiveIdx >= 0;
+			const showPmaxDashed = pmax !== null && lastSubIdx >= 0;
 
 			// Determine where to split the solid line: the dashed estimate
-			// lines bridge the gaps via (P00, 0) and (P100, 100), so the
+			// lines bridge the gaps via (Piaf, 0) and (Pmax, 100), so the
 			// solid line must NOT span those transitions. Chart.js is
 			// configured with `parsing: false`, which means `null` items
 			// in a single dataset's `data` array do not produce a gap
@@ -234,8 +234,8 @@
 			// instead. Each segment shares the same label/color/style;
 			// they read as one continuous line wherever no break is needed.
 			const splits: number[] = [];
-			if (showP00Dashed && firstActiveIdx > 0) splits.push(firstActiveIdx);
-			if (showP100Dashed && lastSubIdx >= 0 && lastSubIdx + 1 < N) {
+			if (showPiafDashed && firstActiveIdx > 0) splits.push(firstActiveIdx);
+			if (showPmaxDashed && lastSubIdx >= 0 && lastSubIdx + 1 < N) {
 				splits.push(lastSubIdx + 1);
 			}
 			const solidLabel = s.defective ? `⚠ ${s.label}` : s.label;
@@ -270,20 +270,20 @@
 				fill: false,
 			});
 
-			// Dashed P00 estimate polyline:
-			//   [last y=0 sample] → (P00, 0) → [first y>0 sample]
+			// Dashed Piaf estimate polyline:
+			//   [last y=0 sample] → (Piaf, 0) → [first y>0 sample]
 			// The first leg is omitted when no zero-lead samples exist
 			// (spring-decay case); the second leg is always drawn.
-			if (showP00Dashed) {
+			if (showPiafDashed) {
 				const pts: { x: number; y: number }[] = [];
 				if (firstActiveIdx > 0) {
 					pts.push({ x: s.records[firstActiveIdx - 1][0], y: 0 });
 				}
-				pts.push({ x: p00!, y: 0 });
+				pts.push({ x: piaf!, y: 0 });
 				pts.push({ x: s.records[firstActiveIdx][0], y: s.records[firstActiveIdx][1] });
 				out.push({
 					type: 'line',
-					label: `${s.label} (P00 est.)`,
+					label: `${s.label} (Piaf est.)`,
 					data: pts,
 					borderColor: color,
 					borderDash: [6, 4],
@@ -293,20 +293,20 @@
 				});
 			}
 
-			// Dashed P100 estimate polyline:
-			//   [last y<100 sample] → (P100, 100) → [first y≥100 sample]
+			// Dashed Pmax estimate polyline:
+			//   [last y<100 sample] → (Pmax, 100) → [first y≥100 sample]
 			// The second leg is omitted when no saturated samples exist
 			// (spring-decay case); the first leg is always drawn.
-			if (showP100Dashed) {
+			if (showPmaxDashed) {
 				const pts: { x: number; y: number }[] = [];
 				pts.push({ x: s.records[lastSubIdx][0], y: s.records[lastSubIdx][1] });
-				pts.push({ x: p100!, y: 100 });
+				pts.push({ x: pmax!, y: 100 });
 				if (lastSubIdx + 1 < N) {
 					pts.push({ x: s.records[lastSubIdx + 1][0], y: 100 });
 				}
 				out.push({
 					type: 'line',
-					label: `${s.label} (P100 est.)`,
+					label: `${s.label} (Pmax est.)`,
 					data: pts,
 					borderColor: color,
 					borderDash: [6, 4],
@@ -319,26 +319,26 @@
 		return out;
 	}
 
-	// Largest estimated P100 across the currently-visible sessions.
-	// Drives the x-axis right edge in 'max' zoom so the envelope's full
+	// Largest estimated Pmax across the currently-visible sessions.
+	// Drives the x-axis right edge in 'pmax' zoom so the envelope's full
 	// extent at y=100 stays in view, regardless of how strong the pen is.
-	let maxP100 = $derived.by(() => {
+	let maxPmax = $derived.by(() => {
 		let m = -Infinity;
 		for (const s of visibleSessions) {
-			const v = estimateP100(s.records);
+			const v = estimatePmax(s.records);
 			if (v !== null && isFinite(v) && v > m) m = v;
 		}
 		return m === -Infinity ? null : m;
 	});
 
-	// Activation bracket behind the IAF (P00) estimate, across visible sessions:
+	// Activation bracket behind the Piaf estimate, across visible sessions:
 	//   lo — lowest physical force still reading ≤ 0% logical ("off" samples)
 	//   hi — highest physical force reading > 0% logical at first activation
 	//   by — largest logical % among those first "on" samples
-	// estimateP00 returns the midpoint (a + b) / 2 per session; the
-	// 'iaftransition' zoom frames lo, the midpoint(s), and hi so the
+	// estimatePiaf returns the midpoint (a + b) / 2 per session; the
+	// 'piaftransition' zoom frames lo, the midpoint(s), and hi so the
 	// bracket-midpoint construction is visible.
-	let iafTransition = $derived.by(() => {
+	let piafTransition = $derived.by(() => {
 		let lo = Infinity;
 		let hi = -Infinity;
 		let by = 0;
@@ -365,10 +365,10 @@
 	});
 
 	function axisRange(): { x: { min?: number; max?: number }; y: { min: number; max: number } } {
-		if (zoomMode === 'iaf') return { x: { min: 0, max: 20 }, y: { min: 0, max: 30 } };
-		if (zoomMode === 'iaftransition') {
-			if (iafTransition) {
-				const { lo, hi, by } = iafTransition;
+		if (zoomMode === 'piaf') return { x: { min: 0, max: 20 }, y: { min: 0, max: 30 } };
+		if (zoomMode === 'piaftransition') {
+			if (piafTransition) {
+				const { lo, hi, by } = piafTransition;
 				const padX = Math.max((hi - lo) * 0.5, 0.3);
 				const yMax = Math.max(by * 1.6, 3);
 				return {
@@ -376,28 +376,28 @@
 					y: { min: -yMax * 0.2, max: yMax },
 				};
 			}
-			// No activation transition captured — fall back to IAF detail.
+			// No activation transition captured — fall back to Piaf detail.
 			return { x: { min: 0, max: 20 }, y: { min: 0, max: 30 } };
 		}
-		if (zoomMode === 'max') {
-			// At least 50 gf of headroom past the largest P100 so the
+		if (zoomMode === 'pmax') {
+			// At least 50 gf of headroom past the largest Pmax so the
 			// upper-right corner of the envelope isn't clipped. Falls back
-			// to 1000 gf when no session has a finite P100.
-			const maxX = maxP100 !== null ? maxP100 + 50 : 1000;
+			// to 1000 gf when no session has a finite Pmax.
+			const maxX = maxPmax !== null ? maxPmax + 50 : 1000;
 			return { x: { max: maxX }, y: { min: 95, max: 100 } };
 		}
 		return { x: { min: 0, max: 1000 }, y: { min: 0, max: 100 } };
 	}
 
-	// In 'iaftransition' zoom, overlay the points that define the IAF estimate:
+	// In 'piaftransition' zoom, overlay the points that define the Piaf estimate:
 	// solid dots for the measured records in view (the activation-bracket
-	// endpoints among them) and a dotted circle for the estimated IAF — the
-	// P00 bracket midpoint — so it reads as derived, not measured. Drawn via a
+	// endpoints among them) and a dotted circle for the estimated Piaf — the
+	// bracket midpoint — so it reads as derived, not measured. Drawn via a
 	// plugin because Chart.js has no dashed point outline.
-	const iafTransitionPlugin: Plugin = {
-		id: 'iafTransition',
+	const piafTransitionPlugin: Plugin = {
+		id: 'piafTransition',
 		afterDatasetsDraw(c) {
-			if (zoomMode !== 'iaftransition') return;
+			if (zoomMode !== 'piaftransition') return;
 			const ctx = c.ctx;
 			const xs = c.scales.x;
 			const ys = c.scales.y;
@@ -414,8 +414,8 @@
 					ctx.fill();
 				}
 				ctx.restore();
-				// Dotted circle: the estimated IAF (P00 bracket midpoint), at 0%.
-				const est = estimateP00(s.records);
+				// Dotted circle: the estimated Piaf (bracket midpoint), at 0%.
+				const est = estimatePiaf(s.records);
 				if (est !== null && isFinite(est) && inRange(est)) {
 					ctx.save();
 					ctx.strokeStyle = color;
@@ -438,8 +438,8 @@
 		void envelopeRange;
 		void showDefective;
 		void hiddenIds;
-		void maxP100;
-		void iafTransition;
+		void maxPmax;
+		void piafTransition;
 		if (!canvas) return;
 		const datasets = buildDatasets();
 		const { x: xRange, y: yRange } = axisRange();
@@ -461,7 +461,7 @@
 		chart = new Chart(canvas, {
 			type: 'line',
 			data: { datasets },
-			plugins: [iafTransitionPlugin],
+			plugins: [piafTransitionPlugin],
 			options: {
 				responsive: true,
 				maintainAspectRatio: false,
@@ -540,9 +540,9 @@
 			Zoom
 			<select bind:value={userZoom}>
 				<option value="normal">Normal</option>
-				<option value="iaf">IAF detail (0-20 gf)</option>
-				<option value="iaftransition">IAF transition</option>
-				<option value="max">Max pressure (95-100%)</option>
+				<option value="piaf">Piaf detail (0-20 gf)</option>
+				<option value="piaftransition">Piaf transition</option>
+				<option value="pmax">Pmax detail (95-100%)</option>
 			</select>
 		</label>
 	{/if}

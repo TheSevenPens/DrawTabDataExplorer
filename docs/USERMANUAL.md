@@ -124,11 +124,11 @@ collect measurement vocabularies other pages rely on:
   and inches.
 - **Display Resolutions** — Full HD / 2.5K / 3K / 4K categories with
   counts of how many tablets in the dataset fall into each.
-- **IAF Ranking** — Initial Activation Force bands (gram-force) for pen
-  pressure, from EXCELLENT (≤ 1 gf) to AVOID (> 5 gf). Shown as a
+- **Piaf Ranking** — Piaf (Initial Activation Force) bands (gram-force)
+  for pen pressure, from EXCELLENT (≤ 1 gf) to AVOID (> 5 gf). Shown as a
   number-line band chart and table.
-- **Max Physical Pressure** — digitizer saturation pressure bands
-  (gram-force), from LIMITED (100–200 gf) to EXCESSIVE (> 900 gf).
+- **Pmax Ranking** — Pmax (Maximum Force) digitizer saturation pressure
+  bands (gram-force), from LIMITED (100–200 gf) to EXCESSIVE (> 900 gf).
 
 Every section has an **Export** button that produces a CSV / TSV / HTML
 copy of the table.
@@ -142,8 +142,8 @@ digitizer reports (0–100%). Filter by brand or pen, then click into
 any row for a detail page with:
 
 - A scatter chart of the raw force-vs-pressure measurements
-- Dashed extrapolation lines showing the estimated **IAF** (Initial
-  Activation Force, P00) and **Max Force** (P100) endpoints when
+- Dashed extrapolation lines showing the estimated **Piaf** (Initial
+  Activation Force) and **Pmax** (Maximum Force) endpoints when
   the raw data doesn't reach 0% / 100% exactly
 - A raw-records table
 
@@ -152,22 +152,22 @@ named-group comparison still lives at
 <https://thesevenpens.github.io/PenPressureData/>; those features
 are being incrementally folded back into the Explorer.
 
-## Max Pressure
+## Pmax
 
-Every pen and pen-family detail page has a **Max Pressure** tab that
-contextualises the pen's saturation force against the same band ranges
-used on the Reference page (LIMITED / OK / GOOD / EXCELLENT / EXCESSIVE,
-in gram-force):
+Every pen and pen-family detail page has a **Pmax** (Maximum Force) tab
+that contextualises the pen's saturation force against the same band
+ranges used on the Reference page (LIMITED / OK / GOOD / EXCELLENT /
+EXCESSIVE, in gram-force):
 
-- _All max pressures_ — one solid red marker per non-defective
+- _All Pmax values_ — one solid red marker per non-defective
   measurement session, plotted against the bands so you can see at a
   glance where the pen typically lands.
-- _Max pressure range_ — a summary chart that shades the min↔max
+- _Pmax range_ — a summary chart that shades the min↔max
   span and marks the median with a thicker line, plus a Min / Median /
   Max table beneath.
 - _Pressure response (max-zoom)_ — the same chart from the Pressure
   Response tab, locked to the 95–100% region and with the x-axis
-  auto-sized to the largest P100 estimate (+50 gf headroom) so you can
+  auto-sized to the largest Pmax estimate (+50 gf headroom) so you can
   compare each session's approach to saturation.
 
 Defective sessions are excluded from these aggregates by the same

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PressureResponse } from '$data/lib/drawtab-loader.js';
 	import {
-		estimateP00,
-		estimateP100,
+		estimatePiaf,
+		estimatePmax,
 		interpolatePhysical,
 		fmtP,
 	} from '$data/lib/pressure/interpolate.js';
@@ -23,16 +23,16 @@
 	let excludedSummary = $derived(excludedPensSummary(excluded, defectsByInventoryId));
 
 	const MARKS = [
-		{ label: 'P00 (IAF)', kind: 'p00' as const },
+		{ label: 'Piaf', kind: 'piaf' as const },
 		{ label: 'P25', pct: 25 },
 		{ label: 'P50 (median)', pct: 50 },
 		{ label: 'P75', pct: 75 },
-		{ label: 'P100 (Max)', kind: 'p100' as const },
+		{ label: 'Pmax', kind: 'pmax' as const },
 	];
 
-	function valueFor(s: PressureResponse, m: { kind?: 'p00' | 'p100'; pct?: number }) {
-		if (m.kind === 'p00') return estimateP00(s.Records);
-		if (m.kind === 'p100') return estimateP100(s.Records);
+	function valueFor(s: PressureResponse, m: { kind?: 'piaf' | 'pmax'; pct?: number }) {
+		if (m.kind === 'piaf') return estimatePiaf(s.Records);
+		if (m.kind === 'pmax') return estimatePmax(s.Records);
 		return interpolatePhysical(s.Records, m.pct!);
 	}
 

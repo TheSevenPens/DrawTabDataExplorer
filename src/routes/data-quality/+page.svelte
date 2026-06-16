@@ -489,7 +489,7 @@
 					/>
 					<p class="description">
 						Pens whose lowest measured logical pressure across all sessions is still above 0.5%. The
-						IAF (P00) estimate may be unreliable for these.
+						Piaf estimate may be unreliable for these.
 					</p>
 					{#if missingLowEndPens.length === 0}
 						<p class="good">All pens have low-end measurements covering the activation point.</p>

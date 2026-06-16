@@ -46,18 +46,23 @@ export async function load({ params, parent }) {
 		case 'pen': {
 			const pen = await ds.Pens.find((p) => p.EntityId === entityId);
 			if (!pen) error(404, 'Pen not found');
-			const [compatibleTablets, allTablets, allPressure, allInventory] = await Promise.all([
-				pen.getCompatibleTablets(),
-				ds.Tablets.toArray(),
-				ds.PressureResponse.toArray(),
-				ds.InventoryPens.toArray(),
-			]);
+			const [compatibleTablets, allTablets, allPressure, allInventory, allRange] =
+				await Promise.all([
+					pen.getCompatibleTablets(),
+					ds.Tablets.toArray(),
+					ds.PressureResponse.toArray(),
+					ds.InventoryPens.toArray(),
+					ds.PressureRange.toArray(),
+				]);
 			const includedWithTablets = allTablets.filter((t) =>
 				(t.Model.IncludedPen ?? []).some((p) => p === entityId),
 			);
 			const pressureSessions = allPressure.filter((s) => s.PenEntityId === entityId);
 			const defectsByInventoryId = buildInventoryDefects(allInventory);
 			const inventoryUnits = allInventory.filter((u) => u.PenEntityId === entityId);
+			const iafMeasurements = allRange.filter(
+				(m) => m.Metric === 'IAF' && m.PenEntityId === entityId,
+			);
 			return {
 				entityType,
 				pen,
@@ -67,6 +72,7 @@ export async function load({ params, parent }) {
 				pressureSessions,
 				defectsByInventoryId,
 				inventoryUnits,
+				iafMeasurements,
 			};
 		}
 
@@ -79,16 +85,27 @@ export async function load({ params, parent }) {
 		case 'penfamily': {
 			const family = await ds.PenFamilies.find((f) => f.EntityId === entityId);
 			if (!family) error(404, 'Pen family not found');
-			const [memberPensUnsorted, allPressure, allInventory] = await Promise.all([
+			const [memberPensUnsorted, allPressure, allInventory, allRange] = await Promise.all([
 				family.getPens(),
 				ds.PressureResponse.toArray(),
 				ds.InventoryPens.toArray(),
+				ds.PressureRange.toArray(),
 			]);
 			const memberPens = [...memberPensUnsorted].sort((a, b) => a.PenId.localeCompare(b.PenId));
 			const memberPenIds = new Set(memberPens.map((p) => p.EntityId));
 			const pressureSessions = allPressure.filter((s) => memberPenIds.has(s.PenEntityId));
 			const defectsByInventoryId = buildInventoryDefects(allInventory);
-			return { entityType, family, memberPens, pressureSessions, defectsByInventoryId };
+			const iafMeasurements = allRange.filter(
+				(m) => m.Metric === 'IAF' && memberPenIds.has(m.PenEntityId),
+			);
+			return {
+				entityType,
+				family,
+				memberPens,
+				pressureSessions,
+				defectsByInventoryId,
+				iafMeasurements,
+			};
 		}
 
 		case 'tabletfamily': {

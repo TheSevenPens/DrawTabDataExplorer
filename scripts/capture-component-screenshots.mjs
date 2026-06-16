@@ -169,14 +169,14 @@ const SPECS = [
 
 	// --- Detail-page tabs --------------------------------------------------
 	{
-		name: 'IafTab',
+		name: 'PiafTab',
 		route: '/entity/wacom.pen.kp503e#iaf',
 		viewport: { width: 1280, height: 1400 },
 		waitAfter: 2500,
 	},
 	{
-		name: 'MaxPressureTab',
-		route: '/entity/wacom.pen.kp503e#max-pressure',
+		name: 'PmaxTab',
+		route: '/entity/wacom.pen.kp503e#max',
 		viewport: { width: 1280, height: 1400 },
 		waitAfter: 2500,
 	},
@@ -201,7 +201,7 @@ const SPECS = [
 	},
 	{
 		name: 'BandsChart',
-		route: '/reference#iaf-ranking',
+		route: '/reference#piaf-ranking',
 		selector: '.bands-chart, svg.bands-chart',
 		waitAfter: 1500,
 	},

@@ -7,12 +7,13 @@
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
-	import { IAF_BANDS, MAX_PRESSURE_BANDS, type Band } from '$lib/bands.js';
+	import { PIAF_BANDS, PMAX_BANDS, type Band } from '$lib/bands.js';
 	import BandsChart from '$lib/components/BandsChart.svelte';
 	import type { Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
 	import { brandName } from '$data/lib/drawtab-loader.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
-	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import { estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
+	import { resolveIafByUnit } from '$data/lib/pressure/iaf-resolve.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import { penFullName, penBrandAndName } from '$lib/pen-helpers.js';
 	import PressureMetricSection, {
@@ -44,8 +45,20 @@
 			.filter((r): r is MetricRow => r !== null);
 	}
 
-	let iafRows = $derived(buildMetricRows(estimateP00));
-	let maxRows = $derived(buildMetricRows(estimateP100));
+	// IAF resolves per pen unit — direct measurement wins, else the median
+	// estimated Piaf of that unit's sessions. (MAX stays per-session estimate
+	// until direct MAX measurements exist.)
+	let iafMeasurements = $derived(data.iafMeasurements ?? []);
+	let resolvedIaf = $derived(resolveIafByUnit(nonDefectiveSessions, iafMeasurements));
+	let iafMeasuredCount = $derived(resolvedIaf.filter((r) => r.source === 'measured').length);
+	let piafRows = $derived(
+		resolvedIaf.map((r) => ({
+			value: r.value,
+			penEntityId: r.penEntityId,
+			inventoryId: r.inventoryId,
+		})),
+	);
+	let maxRows = $derived(buildMetricRows(estimatePmax));
 
 	function median(xs: number[]): number {
 		const s = [...xs].sort((a, b) => a - b);
@@ -172,24 +185,24 @@
 
 	// Per-section display state — each section's dropdowns control only itself.
 	const ROW_COUNT_OPTIONS = [10, 20, 30];
-	let lowestIafCount = $state(10);
-	let highestIafCount = $state(10);
+	let lowestPiafCount = $state(10);
+	let highestPiafCount = $state(10);
 	let lowestMaxCount = $state(10);
 	let highestMaxCount = $state(10);
-	let lowestIafMode = $state<RankMode>('models');
-	let highestIafMode = $state<RankMode>('models');
+	let lowestPiafMode = $state<RankMode>('models');
+	let highestPiafMode = $state<RankMode>('models');
 	let lowestMaxMode = $state<RankMode>('models');
 	let highestMaxMode = $state<RankMode>('models');
-	let lowestIafBrand = $state('');
-	let highestIafBrand = $state('');
+	let lowestPiafBrand = $state('');
+	let highestPiafBrand = $state('');
 	let lowestMaxBrand = $state('');
 	let highestMaxBrand = $state('');
 
-	let lowestIafRows = $derived(
-		sectionRows(iafRows, lowestIafBrand, lowestIafMode, 'asc', lowestIafCount),
+	let lowestPiafRows = $derived(
+		sectionRows(piafRows, lowestPiafBrand, lowestPiafMode, 'asc', lowestPiafCount),
 	);
-	let highestIafRows = $derived(
-		sectionRows(iafRows, highestIafBrand, highestIafMode, 'desc', highestIafCount),
+	let highestPiafRows = $derived(
+		sectionRows(piafRows, highestPiafBrand, highestPiafMode, 'desc', highestPiafCount),
 	);
 	let lowestMaxRows = $derived(
 		sectionRows(maxRows, lowestMaxBrand, lowestMaxMode, 'asc', lowestMaxCount),
@@ -199,10 +212,10 @@
 	);
 
 	const sectionDefs: Section[] = [
-		{ id: 'iaf', category: 'Pressure', label: 'IAF (P00)' },
+		{ id: 'iaf', category: 'Pressure', label: 'IAF' },
 		{ id: 'lowest-iaf', category: 'Pressure', label: 'Lowest IAF' },
 		{ id: 'highest-iaf', category: 'Pressure', label: 'Highest IAF' },
-		{ id: 'max-pressure', category: 'Pressure', label: 'Max Pressure (P100)' },
+		{ id: 'max', category: 'Pressure', label: 'MAX' },
 		{ id: 'lowest-max', category: 'Pressure', label: 'Lowest MAX' },
 		{ id: 'highest-max', category: 'Pressure', label: 'Highest MAX' },
 	];
@@ -233,19 +246,19 @@
 		{#if activeSection === 'iaf'}
 			<section class="section">
 				<PressureMetricSection
-					title="IAF (P00) Distribution"
-					description="Initial Activation Force across all non-defective measurement sessions. Lower is better — a lighter touch means more natural shading and less hand fatigue."
-					bands={IAF_BANDS}
+					title="IAF Distribution"
+					description={`Initial Activation Force per pen unit — direct measurement where available, otherwise estimated from pressure sessions. Lower is better — a lighter touch means more natural shading and less hand fatigue. ${iafMeasuredCount} of ${resolvedIaf.length} units measured directly.`}
+					bands={PIAF_BANDS}
 					axisMax={22}
 					binSize={0.5}
 					tickStep={1}
-					rows={iafRows}
+					rows={piafRows}
 					onExport={() =>
 						openExport(
-							'IAF (P00) per session',
-							'pen-analysis-iaf-p00',
-							['Inventory ID', 'Pen', 'P00 (gf)'],
-							iafRows.map((r) => [r.inventoryId, r.penEntityId, fmtP(r.value)]),
+							'IAF per session',
+							'pen-analysis-iaf',
+							['Inventory ID', 'Pen', 'IAF (gf)'],
+							piafRows.map((r) => [r.inventoryId, r.penEntityId, fmtP(r.value)]),
 						)}
 				/>
 			</section>
@@ -255,17 +268,17 @@
 			<section class="section">
 				<h2>Lowest IAF</h2>
 				{@render rankTable({
-					rows: lowestIafRows,
-					title: 'Lowest IAF (P00)',
+					rows: lowestPiafRows,
+					title: 'Lowest IAF',
 					filename: 'pen-analysis-lowest-iaf',
-					count: lowestIafCount,
-					onCountChange: (n) => (lowestIafCount = n),
-					mode: lowestIafMode,
-					onModeChange: (m) => (lowestIafMode = m),
-					brand: lowestIafBrand,
-					onBrandChange: (b) => (lowestIafBrand = b),
+					count: lowestPiafCount,
+					onCountChange: (n) => (lowestPiafCount = n),
+					mode: lowestPiafMode,
+					onModeChange: (m) => (lowestPiafMode = m),
+					brand: lowestPiafBrand,
+					onBrandChange: (b) => (lowestPiafBrand = b),
 					brands: availableBrands,
-					chart: { bands: IAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
+					chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
 				})}
 			</section>
 		{/if}
@@ -274,36 +287,36 @@
 			<section class="section">
 				<h2>Highest IAF</h2>
 				{@render rankTable({
-					rows: highestIafRows,
-					title: 'Highest IAF (P00)',
+					rows: highestPiafRows,
+					title: 'Highest IAF',
 					filename: 'pen-analysis-highest-iaf',
-					count: highestIafCount,
-					onCountChange: (n) => (highestIafCount = n),
-					mode: highestIafMode,
-					onModeChange: (m) => (highestIafMode = m),
-					brand: highestIafBrand,
-					onBrandChange: (b) => (highestIafBrand = b),
+					count: highestPiafCount,
+					onCountChange: (n) => (highestPiafCount = n),
+					mode: highestPiafMode,
+					onModeChange: (m) => (highestPiafMode = m),
+					brand: highestPiafBrand,
+					onBrandChange: (b) => (highestPiafBrand = b),
 					brands: availableBrands,
-					chart: { bands: IAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
+					chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
 				})}
 			</section>
 		{/if}
 
-		{#if activeSection === 'max-pressure'}
+		{#if activeSection === 'max'}
 			<section class="section">
 				<PressureMetricSection
-					title="Max Pressure (P100) Distribution"
+					title="MAX Distribution"
 					description="Force needed to reach 100% logical pressure across all non-defective measurement sessions. Too low forces the user to push uncomfortably hard; too high reduces dynamic range."
-					bands={MAX_PRESSURE_BANDS}
+					bands={PMAX_BANDS}
 					axisMax={1000}
 					binSize={25}
 					tickStep={100}
 					rows={maxRows}
 					onExport={() =>
 						openExport(
-							'Max Pressure (P100) per session',
-							'pen-analysis-max-pressure-p100',
-							['Inventory ID', 'Pen', 'P100 (gf)'],
+							'MAX per session',
+							'pen-analysis-max',
+							['Inventory ID', 'Pen', 'MAX (gf)'],
 							maxRows.map((r) => [r.inventoryId, r.penEntityId, fmtP(r.value)]),
 						)}
 				/>
@@ -315,7 +328,7 @@
 				<h2>Lowest MAX</h2>
 				{@render rankTable({
 					rows: lowestMaxRows,
-					title: 'Lowest Max Pressure (P100)',
+					title: 'Lowest MAX',
 					filename: 'pen-analysis-lowest-max',
 					count: lowestMaxCount,
 					onCountChange: (n) => (lowestMaxCount = n),
@@ -324,7 +337,7 @@
 					brand: lowestMaxBrand,
 					onBrandChange: (b) => (lowestMaxBrand = b),
 					brands: availableBrands,
-					chart: { bands: MAX_PRESSURE_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
+					chart: { bands: PMAX_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
 				})}
 			</section>
 		{/if}
@@ -334,7 +347,7 @@
 				<h2>Highest MAX</h2>
 				{@render rankTable({
 					rows: highestMaxRows,
-					title: 'Highest Max Pressure (P100)',
+					title: 'Highest MAX',
 					filename: 'pen-analysis-highest-max',
 					count: highestMaxCount,
 					onCountChange: (n) => (highestMaxCount = n),
@@ -343,7 +356,7 @@
 					brand: highestMaxBrand,
 					onBrandChange: (b) => (highestMaxBrand = b),
 					brands: availableBrands,
-					chart: { bands: MAX_PRESSURE_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
+					chart: { bands: PMAX_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
 				})}
 			</section>
 		{/if}

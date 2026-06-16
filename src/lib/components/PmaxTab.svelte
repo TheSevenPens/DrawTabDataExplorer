@@ -2,13 +2,13 @@
 	import { resolve } from '$app/paths';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
-	import { MAX_PRESSURE_BANDS } from '$lib/bands.js';
+	import { PMAX_BANDS } from '$lib/bands.js';
 	import type { PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
-	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import { estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 
-	// Sessions passed to the embedded max-zoom PressureChart. The parent
+	// Sessions passed to the embedded Pmax-zoom PressureChart. The parent
 	// computes these alongside the other pressure tabs to keep colors and
 	// hidden-state in sync across tabs.
 	interface ChartSession {
@@ -48,23 +48,23 @@
 		tabletNameById?: ReadonlyMap<string, string>;
 	} = $props();
 
-	// Per-session P100 estimates (max-force). Defective sessions are
+	// Per-session Pmax estimates (max-force). Defective sessions are
 	// excluded — they reflect a broken digitizer, not the pen's true
 	// saturation force.
 	let nonDefectiveSessions = $derived(
 		pressureSessions.filter((s) => !defectsByInventoryId.has(s.InventoryId)),
 	);
 
-	let p100Values = $derived(
+	let pmaxValues = $derived(
 		nonDefectiveSessions
-			.map((s) => estimateP100(s.Records))
+			.map((s) => estimatePmax(s.Records))
 			.filter((v): v is number => v !== null && isFinite(v)),
 	);
 
 	// Per-session table rows: highest physically measured force and the
-	// extrapolated P100 (force at logical 100%). When `topLogical` is
-	// noticeably below 100, P100 is an extrapolation above the data; when
-	// it's at 100, P100 collapses to the measured value.
+	// extrapolated Pmax (force at logical 100%). When `topLogical` is
+	// noticeably below 100, Pmax is an extrapolation above the data; when
+	// it's at 100, Pmax collapses to the measured value.
 	let perSessionRows = $derived(
 		nonDefectiveSessions.map((s) => {
 			let topForce = -Infinity;
@@ -81,13 +81,13 @@
 				sessionId: sessionEntityId(s),
 				topForce: Number.isFinite(topForce) ? topForce : null,
 				topLogical: Number.isFinite(topLogical) ? topLogical : null,
-				p100: estimateP100(s.Records),
+				pmax: estimatePmax(s.Records),
 			};
 		}),
 	);
 
-	let p100Stats = $derived.by(() => {
-		const xs = [...p100Values].sort((a, b) => a - b);
+	let pmaxStats = $derived.by(() => {
+		const xs = [...pmaxValues].sort((a, b) => a - b);
 		if (xs.length === 0) return null;
 		const min = xs[0];
 		const max = xs[xs.length - 1];
@@ -99,29 +99,27 @@
 	type View = 'all' | 'summary';
 	let view = $state<View>('all');
 
-	let allMarkers: BandMarker[] = $derived(p100Values.map((v) => ({ value: v, dashed: false })));
+	let allMarkers: BandMarker[] = $derived(pmaxValues.map((v) => ({ value: v, dashed: false })));
 
 	let summaryMarkers: BandMarker[] = $derived(
-		p100Stats
+		pmaxStats
 			? [
-					{ value: p100Stats.min, dashed: false },
-					{ value: p100Stats.max, dashed: false },
-					{ value: p100Stats.median, label: 'Median', dashed: false, strokeWidth: 4 },
+					{ value: pmaxStats.min, dashed: false },
+					{ value: pmaxStats.max, dashed: false },
+					{ value: pmaxStats.median, label: 'Median', dashed: false, strokeWidth: 4 },
 				]
 			: [],
 	);
 
 	let currentMarkers = $derived(view === 'all' ? allMarkers : summaryMarkers);
 	let currentShadedRange = $derived(
-		view === 'summary' && p100Stats ? { min: p100Stats.min, max: p100Stats.max } : undefined,
+		view === 'summary' && pmaxStats ? { min: pmaxStats.min, max: pmaxStats.max } : undefined,
 	);
 	let currentHeading = $derived(
-		view === 'all' ? `${displayName} — All max pressures` : `${displayName} — Max pressure range`,
+		view === 'all' ? `${displayName} — All Pmax values` : `${displayName} — Pmax range`,
 	);
 	let currentTitle = $derived(
-		view === 'all'
-			? `${chartTitlePrefix} max pressure`
-			: `${chartTitlePrefix} max pressure summary`,
+		view === 'all' ? `${chartTitlePrefix} Pmax` : `${chartTitlePrefix} Pmax summary`,
 	);
 
 	// Subtitle counts the distinct pen models / pen units / sessions
@@ -137,13 +135,13 @@
 	});
 </script>
 
-{#if p100Stats}
+{#if pmaxStats}
 	<div class="view-toggle" role="group" aria-label="View">
 		<button
 			type="button"
 			class:active={view === 'all'}
 			onclick={() => (view = 'all')}
-			aria-pressed={view === 'all'}>All sessions ({p100Values.length})</button
+			aria-pressed={view === 'all'}>All sessions ({pmaxValues.length})</button
 		>
 		<button
 			type="button"
@@ -155,7 +153,7 @@
 {/if}
 
 <BandsChart
-	bands={MAX_PRESSURE_BANDS}
+	bands={PMAX_BANDS}
 	axisMax={1000}
 	axisStep={100}
 	unit="gf"
@@ -167,20 +165,20 @@
 	shadedRange={currentShadedRange}
 />
 
-{#if p100Stats}
-	<table class="p100-summary-table">
+{#if pmaxStats}
+	<table class="pmax-summary-table">
 		<tbody>
 			<tr>
 				<th>Min <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(p100Stats.min)}</td>
+				<td class="mono">{fmtP(pmaxStats.min)}</td>
 			</tr>
 			<tr>
 				<th>Median <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(p100Stats.median)}</td>
+				<td class="mono">{fmtP(pmaxStats.median)}</td>
 			</tr>
 			<tr>
 				<th>Max <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(p100Stats.max)}</td>
+				<td class="mono">{fmtP(pmaxStats.max)}</td>
 			</tr>
 		</tbody>
 	</table>
@@ -195,7 +193,7 @@
 					Highest measured
 					<br /><span class="unit">(gf @ logical %)</span>
 				</th>
-				<th class="num">P100 estimate<br /><span class="unit">(gf)</span></th>
+				<th class="num">Pmax estimate<br /><span class="unit">(gf)</span></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -221,16 +219,16 @@
 							<span class="logical-pct">@ {r.topLogical.toFixed(1)}%</span>
 						{/if}
 					</td>
-					<td class="num mono">{r.p100 !== null ? fmtP(r.p100) : '—'}</td>
+					<td class="num mono">{r.pmax !== null ? fmtP(r.pmax) : '—'}</td>
 				</tr>
 			{/each}
 		</tbody>
 	</table>
 	<PressureChart
 		sessions={chartSessions}
-		title={`${chartTitlePrefix} pressure response (max)`}
+		title={`${chartTitlePrefix} pressure response (Pmax)`}
 		{hiddenIds}
-		lockedZoom="max"
+		lockedZoom="pmax"
 	/>
 {:else}
 	<p class="no-data">No pressure response measurements available for {entityLabel}.</p>
@@ -282,30 +280,30 @@
 		font-weight: 600;
 	}
 
-	.p100-summary-table {
+	.pmax-summary-table {
 		border-collapse: collapse;
 		font-size: 13px;
 		margin: 12px 0;
 		width: fit-content;
 	}
-	.p100-summary-table th {
+	.pmax-summary-table th {
 		text-align: left;
 		padding: 6px 14px;
 		font-weight: 600;
 		color: var(--text-muted);
 	}
-	.p100-summary-table th .unit {
+	.pmax-summary-table th .unit {
 		font-size: 11px;
 		font-weight: 400;
 	}
-	.p100-summary-table td {
+	.pmax-summary-table td {
 		padding: 6px 14px;
 		font-variant-numeric: tabular-nums;
 	}
-	.p100-summary-table tr {
+	.pmax-summary-table tr {
 		border-bottom: 1px solid var(--border);
 	}
-	.p100-summary-table tr:last-child {
+	.pmax-summary-table tr:last-child {
 		border-bottom: none;
 	}
 

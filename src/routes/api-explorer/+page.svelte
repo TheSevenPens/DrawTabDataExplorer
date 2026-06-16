@@ -90,8 +90,8 @@
 			group: 'Pressure response',
 			labels: [
 				'Pressure-response session lookup',
-				'Top 10 IAF measurements (worst single sessions)',
-				'Top 10 pens with highest IAF (worst activation force)',
+				'Top 10 Piaf measurements (worst single sessions)',
+				'Top 10 pens with highest Piaf (worst activation force)',
 			],
 		},
 	];
@@ -390,33 +390,33 @@ const tablet = await session.getTablet();
 return { session: session.InventoryId, pen: pen?.PenId, tablet: tablet?.Model.Id };`,
 		},
 		{
-			label: 'Top 10 IAF measurements (worst single sessions)',
-			body: `// Per-session ranking sorted by the computed IAF (P00) column.
-// IAF is the smallest force at which the pen first registers any
+			label: 'Top 10 Piaf measurements (worst single sessions)',
+			body: `// Per-session ranking sorted by the computed Piaf column.
+// Piaf is the smallest force at which the pen first registers any
 // pressure — lower is better, so 'desc' surfaces the worst sessions.
 
 return await ds.PressureResponse
-  .dropEmpty('IAF')
-  .select(['PenEntityId', 'InventoryId', 'Date', 'IAF'])
-  .sort('IAF', 'desc')
+  .dropEmpty('Piaf')
+  .select(['PenEntityId', 'InventoryId', 'Date', 'Piaf'])
+  .sort('Piaf', 'desc')
   .take(10)
   .toArray();`,
 		},
 		{
-			label: 'Top 10 pens with highest IAF (worst activation force)',
-			body: `// Pen-model aggregate: median IAF (P00) per pen, ranked worst-first.
+			label: 'Top 10 pens with highest Piaf (worst activation force)',
+			body: `// Pen-model aggregate: median Piaf per pen, ranked worst-first.
 // Defective-unit sessions are filtered via the computed IsDefective
 // field instead of building a Set from InventoryPens at call-site.
 
 return await ds.PressureResponse
   .filter('IsDefective', '==', 'NO')
-  .dropEmpty('IAF')
+  .dropEmpty('Piaf')
   .summarize({
     by: 'PenEntityId',
-    median: { medianIaf: 'IAF' },
+    median: { medianPiaf: 'Piaf' },
     count: 'sessions',
   })
-  .sort('medianIaf', 'desc')
+  .sort('medianPiaf', 'desc')
   .take(10)
   .toArray();`,
 		},

@@ -2,13 +2,13 @@
 	import { resolve } from '$app/paths';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
-	import { IAF_BANDS } from '$lib/bands.js';
-	import type { PressureResponse } from '$data/lib/drawtab-loader.js';
+	import { PIAF_BANDS } from '$lib/bands.js';
+	import type { PressureResponse, PressureRange } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
-	import { estimateP00, fmtP } from '$data/lib/pressure/interpolate.js';
-	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
+	import { fmtP } from '$data/lib/pressure/interpolate.js';
+	import { resolveIafByUnit } from '$data/lib/pressure/iaf-resolve.js';
 
-	// Mirrors MaxPressureTab. Sessions passed to the embedded IAF-zoom
+	// Mirrors PmaxTab. Sessions passed to the embedded Piaf-zoom
 	// PressureChart so colors / hidden state stay in sync across tabs.
 	interface ChartSession {
 		id: string;
@@ -27,7 +27,8 @@
 		displayName,
 		chartTitlePrefix,
 		entityLabel,
-		tabletNameById = new Map<string, string>(),
+		iafMeasurements = [],
+		penNameById = new Map<string, string>(),
 	}: {
 		pressureSessions: PressureResponse[];
 		defectsByInventoryId: ReadonlyMap<string, DefectInfo>;
@@ -36,12 +37,15 @@
 		displayName: string;
 		chartTitlePrefix: string;
 		entityLabel: string;
-		/** TabletEntityId → display label. When omitted the raw EntityId
-		 * is shown. */
-		tabletNameById?: ReadonlyMap<string, string>;
+		/** Direct IAF measurements scoped to this entity. A measured value
+		 * for a unit wins over its estimated Piaf. */
+		iafMeasurements?: PressureRange[];
+		/** PenEntityId → display label, used for the Pen column when the
+		 * resolved units span more than one pen model (e.g. a pen family). */
+		penNameById?: ReadonlyMap<string, string>;
 	} = $props();
 
-	// IAF bands top out at AVOID (≥5 gf); statistical sampling shows real
+	// Piaf bands top out at AVOID (≥5 gf); statistical sampling shows real
 	// values can reach into the low 20s, so the axis runs to 22 gf and
 	// markers are hard-clamped so a freakishly stiff pen doesn't push
 	// them off the chart.
@@ -52,41 +56,19 @@
 		pressureSessions.filter((s) => !defectsByInventoryId.has(s.InventoryId)),
 	);
 
-	let p00Values = $derived(
-		nonDefectiveSessions
-			.map((s) => estimateP00(s.Records))
-			.filter((v): v is number => v !== null && isFinite(v)),
+	// One resolved IAF per pen unit: the direct measurement wins, otherwise
+	// the median estimated Piaf across that unit's sessions. Sorted low→high
+	// (lower IAF is better).
+	let resolved = $derived(
+		[...resolveIafByUnit(nonDefectiveSessions, iafMeasurements)].sort((a, b) => a.value - b.value),
 	);
 
-	// Per-session table rows: lowest force at which the pen actually
-	// registered any pressure (logical > 0) vs. the extrapolated P00.
-	// When `lowLogical` is at/near 0, P00 ≈ measured; when it's well above
-	// 0, P00 is an extrapolation below the data.
-	let perSessionRows = $derived(
-		nonDefectiveSessions.map((s) => {
-			let lowForce: number | null = null;
-			let lowLogical: number | null = null;
-			for (const [force, logical] of s.Records) {
-				if (logical > 0 && (lowLogical === null || logical < lowLogical)) {
-					lowLogical = logical;
-					lowForce = force;
-				}
-			}
-			return {
-				session: s,
-				id: s._id,
-				inventoryId: s.InventoryId,
-				date: s.Date,
-				sessionId: sessionEntityId(s),
-				lowForce,
-				lowLogical,
-				p00: estimateP00(s.Records),
-			};
-		}),
-	);
+	let measuredCount = $derived(resolved.filter((r) => r.source === 'measured').length);
+	let estimatedCount = $derived(resolved.length - measuredCount);
+	let multiPen = $derived(new Set(resolved.map((r) => r.penEntityId)).size > 1);
 
-	let p00Stats = $derived.by(() => {
-		const xs = [...p00Values].sort((a, b) => a - b);
+	let stats = $derived.by(() => {
+		const xs = resolved.map((r) => r.value).sort((a, b) => a - b);
 		if (xs.length === 0) return null;
 		const min = xs[0];
 		const max = xs[xs.length - 1];
@@ -98,17 +80,19 @@
 	type View = 'all' | 'summary';
 	let view = $state<View>('all');
 
+	// "All" view: one marker per unit — solid for measured, dashed for the
+	// estimated fallback, so trustworthy values read distinctly.
 	let allMarkers: BandMarker[] = $derived(
-		p00Values.map((v) => ({ value: Math.min(v, AXIS_MAX), dashed: false })),
+		resolved.map((r) => ({ value: Math.min(r.value, AXIS_MAX), dashed: r.source === 'estimated' })),
 	);
 
 	let summaryMarkers: BandMarker[] = $derived(
-		p00Stats
+		stats
 			? [
-					{ value: Math.min(p00Stats.min, AXIS_MAX), dashed: false },
-					{ value: Math.min(p00Stats.max, AXIS_MAX), dashed: false },
+					{ value: Math.min(stats.min, AXIS_MAX), dashed: false },
+					{ value: Math.min(stats.max, AXIS_MAX), dashed: false },
 					{
-						value: Math.min(p00Stats.median, AXIS_MAX),
+						value: Math.min(stats.median, AXIS_MAX),
 						label: 'Median',
 						dashed: false,
 						strokeWidth: 4,
@@ -119,34 +103,31 @@
 
 	let currentMarkers = $derived(view === 'all' ? allMarkers : summaryMarkers);
 	let currentShadedRange = $derived(
-		view === 'summary' && p00Stats
-			? { min: Math.min(p00Stats.min, AXIS_MAX), max: Math.min(p00Stats.max, AXIS_MAX) }
+		view === 'summary' && stats
+			? { min: Math.min(stats.min, AXIS_MAX), max: Math.min(stats.max, AXIS_MAX) }
 			: undefined,
 	);
 	let currentHeading = $derived(
-		view === 'all' ? `${displayName} — All IAF values` : `${displayName} — IAF range`,
+		view === 'all' ? `${displayName} — IAF by unit` : `${displayName} — IAF range`,
 	);
 	let currentTitle = $derived(
 		view === 'all' ? `${chartTitlePrefix} IAF` : `${chartTitlePrefix} IAF summary`,
 	);
 
 	let chartSubtitle = $derived.by(() => {
-		if (nonDefectiveSessions.length === 0) return undefined;
-		const models = new Set(nonDefectiveSessions.map((s) => s.PenEntityId)).size;
-		const units = new Set(nonDefectiveSessions.map((s) => s.InventoryId)).size;
-		const sessions = nonDefectiveSessions.length;
+		if (resolved.length === 0) return undefined;
 		const fmt = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-		return `${fmt(models, 'pen model', 'pen models')} · ${fmt(units, 'pen unit', 'pen units')} · ${fmt(sessions, 'session', 'sessions')}`;
+		return `${fmt(resolved.length, 'pen unit', 'pen units')} · ${measuredCount} measured · ${estimatedCount} estimated`;
 	});
 </script>
 
-{#if p00Stats}
+{#if stats}
 	<div class="view-toggle" role="group" aria-label="View">
 		<button
 			type="button"
 			class:active={view === 'all'}
 			onclick={() => (view = 'all')}
-			aria-pressed={view === 'all'}>All sessions ({p00Values.length})</button
+			aria-pressed={view === 'all'}>By unit ({resolved.length})</button
 		>
 		<button
 			type="button"
@@ -158,7 +139,7 @@
 {/if}
 
 <BandsChart
-	bands={IAF_BANDS}
+	bands={PIAF_BANDS}
 	axisMax={AXIS_MAX}
 	axisStep={AXIS_STEP}
 	unit="gf"
@@ -171,85 +152,77 @@
 	shadedRange={currentShadedRange}
 />
 
-{#if p00Stats}
-	<table class="p00-summary-table">
+{#if view === 'all' && estimatedCount > 0 && measuredCount > 0}
+	<p class="source-legend">
+		<span class="swatch solid"></span> measured &nbsp;·&nbsp;
+		<span class="swatch dashed"></span> estimated (fallback)
+	</p>
+{/if}
+
+{#if stats}
+	<table class="piaf-summary-table">
 		<tbody>
 			<tr>
 				<th>Min <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(p00Stats.min)}</td>
+				<td class="mono">{fmtP(stats.min)}</td>
 			</tr>
 			<tr>
 				<th>Median <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(p00Stats.median)}</td>
+				<td class="mono">{fmtP(stats.median)}</td>
 			</tr>
 			<tr>
 				<th>Max <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(p00Stats.max)}</td>
+				<td class="mono">{fmtP(stats.max)}</td>
 			</tr>
 		</tbody>
 	</table>
-	<table class="per-session-table">
+	<table class="per-unit-table">
 		<thead>
 			<tr>
 				<th>Inventory ID</th>
-				<th>Date</th>
-				<th>Tablet</th>
-				<th>Driver</th>
-				<th class="num">
-					Lowest measured
-					<br /><span class="unit">(gf @ logical %)</span>
-				</th>
-				<th class="num">P00 estimate<br /><span class="unit">(gf)</span></th>
+				{#if multiPen}<th>Pen</th>{/if}
+				<th class="num">IAF<br /><span class="unit">(gf)</span></th>
+				<th>Source</th>
 			</tr>
 		</thead>
 		<tbody>
-			{#each perSessionRows as r (r.id)}
+			{#each resolved as r (r.inventoryId)}
 				<tr>
-					<td class="mono">
-						<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.inventoryId}</a>
-					</td>
-					<td class="mono">
-						<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.date}</a>
-					</td>
-					<td>
-						{#if r.session.TabletEntityId}
-							<a href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}>
-								{tabletNameById.get(r.session.TabletEntityId) ?? r.session.TabletEntityId}
+					<td class="mono">{r.inventoryId}</td>
+					{#if multiPen}
+						<td>
+							<a href={resolve('/entity/[entityId]', { entityId: r.penEntityId })}>
+								{penNameById.get(r.penEntityId) ?? r.penEntityId}
 							</a>
+						</td>
+					{/if}
+					<td class="num mono">{fmtP(r.value)}</td>
+					<td>
+						{#if r.source === 'measured'}
+							<span class="tag measured" title="Direct measurement ({r.count})">measured</span>
+						{:else}
+							<span
+								class="tag estimated"
+								title="Estimated from {r.count} pressure session{r.count === 1 ? '' : 's'}"
+								>est.</span
+							>
 						{/if}
 					</td>
-					<td class="mono">{r.session.Driver}</td>
-					<td class="num mono">
-						{r.lowForce !== null ? fmtP(r.lowForce) : '—'}
-						{#if r.lowLogical !== null}
-							<span class="logical-pct">@ {r.lowLogical.toFixed(1)}%</span>
-						{/if}
-					</td>
-					<td class="num mono">{r.p00 !== null ? fmtP(r.p00) : '—'}</td>
 				</tr>
 			{/each}
 		</tbody>
 	</table>
 	<PressureChart
 		sessions={chartSessions}
-		title={`${chartTitlePrefix} pressure response (IAF)`}
+		title={`${chartTitlePrefix} pressure response (Piaf)`}
 		{hiddenIds}
-		lockedZoom="iaf"
+		lockedZoom="piaf"
 	/>
 {:else}
-	<p class="no-data">No pressure response measurements available for {entityLabel}.</p>
+	<p class="no-data">No IAF data available for {entityLabel}.</p>
 {/if}
 
 <style>
-	.ref-blurb {
-		font-size: 13px;
-		color: var(--text-muted);
-		max-width: 800px;
-		margin: 0 0 12px;
-	}
-	.summary-blurb {
-		margin-top: 16px;
-	}
 	.no-data {
 		font-size: 13px;
 		color: var(--text-muted);
@@ -286,40 +259,59 @@
 		font-weight: 600;
 	}
 
-	.p00-summary-table {
+	.source-legend {
+		font-size: 12px;
+		color: var(--text-muted);
+		margin: 6px 0 0;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+	.swatch {
+		display: inline-block;
+		width: 18px;
+		height: 0;
+		border-top: 2px solid #dc2626;
+		vertical-align: middle;
+	}
+	.swatch.dashed {
+		border-top-style: dashed;
+	}
+
+	.piaf-summary-table {
 		border-collapse: collapse;
 		font-size: 13px;
 		margin: 12px 0;
 		width: fit-content;
 	}
-	.p00-summary-table th {
+	.piaf-summary-table th {
 		text-align: left;
 		padding: 6px 14px;
 		font-weight: 600;
 		color: var(--text-muted);
 	}
-	.p00-summary-table th .unit {
+	.piaf-summary-table th .unit {
 		font-size: 11px;
 		font-weight: 400;
 	}
-	.p00-summary-table td {
+	.piaf-summary-table td {
 		padding: 6px 14px;
 		font-variant-numeric: tabular-nums;
 	}
-	.p00-summary-table tr {
+	.piaf-summary-table tr {
 		border-bottom: 1px solid var(--border);
 	}
-	.p00-summary-table tr:last-child {
+	.piaf-summary-table tr:last-child {
 		border-bottom: none;
 	}
 
-	.per-session-table {
+	.per-unit-table {
 		border-collapse: collapse;
 		font-size: 13px;
 		margin: 8px 0 16px;
 		width: fit-content;
 	}
-	.per-session-table th {
+	.per-unit-table th {
 		text-align: left;
 		padding: 6px 14px;
 		font-weight: 600;
@@ -327,33 +319,45 @@
 		border-bottom: 2px solid var(--border);
 		vertical-align: bottom;
 	}
-	.per-session-table th.num {
+	.per-unit-table th.num {
 		text-align: right;
 	}
-	.per-session-table th .unit {
+	.per-unit-table th .unit {
 		font-size: 11px;
 		font-weight: 400;
 	}
-	.per-session-table td {
+	.per-unit-table td {
 		padding: 5px 14px;
 		border-bottom: 1px solid var(--border);
 		font-variant-numeric: tabular-nums;
 	}
-	.per-session-table td.num {
+	.per-unit-table td.num {
 		text-align: right;
 	}
-	.per-session-table tr:last-child td {
+	.per-unit-table tr:last-child td {
 		border-bottom: none;
 	}
-	.per-session-table tr:hover td {
+	.per-unit-table tr:hover td {
 		background: var(--hover-bg);
-	}
-	.logical-pct {
-		color: var(--text-dim);
-		font-weight: normal;
-		margin-left: 4px;
 	}
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+	}
+	.tag {
+		display: inline-block;
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.3px;
+		padding: 1px 6px;
+		border-radius: 3px;
+	}
+	.tag.measured {
+		color: #166534;
+		background: #dcfce7;
+	}
+	.tag.estimated {
+		color: #92400e;
+		background: #fde68a;
 	}
 </style>

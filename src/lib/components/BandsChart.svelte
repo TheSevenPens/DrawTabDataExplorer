@@ -23,7 +23,7 @@
 		 * Use sparingly: this trades the chart's "shared-axis reading" (every
 		 * marker spans the full height so values across pens are visually
 		 * comparable) for stripe-affinity (each pen's markers stay in their
-		 * own slice). Tried on /pen-compare's Max Pressure summary view and
+		 * own slice). Tried on /pen-compare's Pmax summary view and
 		 * rolled back there — the shared-axis reading was the point. Kept as
 		 * an API because it's the right choice when the per-series slice
 		 * association matters more than cross-series value comparison. */
@@ -55,7 +55,7 @@
 		showUnitInAxis?: boolean;
 		/** Render the "min ↔ max" numeric range under each band title
 		 * (e.g. "0 ↔ 1" under "S"). Default true. Set false on detail-page
-		 * embeds (PenDetail / PenFamilyDetail IAF + Max Pressure tabs) where
+		 * embeds (PenDetail / PenFamilyDetail Piaf + Pmax tabs) where
 		 * the band tiers are the takeaway and the exact cutoffs are just
 		 * noise — they're still discoverable on the Reference page. */
 		showBandRanges?: boolean;
@@ -172,7 +172,7 @@
 
 		<!-- Vertical band-divider dashed lines. Drawn between adjacent bands,
 			 and also at the leftmost band's lower bound when that bound is > 0
-			 (e.g. Max Physical Pressure starts at 100 gf, not 0). -->
+			 (e.g. Pmax ranking starts at 100 gf, not 0). -->
 		{#each bands as b, i (i)}
 			{#if i > 0 || b.min > 0}
 				<line
@@ -266,7 +266,7 @@
 			{/each}
 		{/if}
 
-		<!-- Red marker lines (e.g. measured P100 values). When the marker
+		<!-- Red marker lines (e.g. measured Pmax values). When the marker
 			 declares a seriesIndex AND shadedRanges is present, the line is
 			 bounded to that pen's vertical slice (same slicing scheme as
 			 the stripes above) so per-pen min/median/max stay aligned with

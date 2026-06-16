@@ -13,8 +13,8 @@
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
-	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
-	import IafTab from '$lib/components/IafTab.svelte';
+	import PmaxTab from '$lib/components/PmaxTab.svelte';
+	import PiafTab from '$lib/components/PiafTab.svelte';
 	import {
 		tabletFullName,
 		buildTabletNameMap,
@@ -49,7 +49,7 @@
 	// Coloring axis for the pressure-response overlay. On a single-model
 	// page "model" is degenerate (all sessions share PenEntityId) so we
 	// only offer Session / Unit / Tablet in the dropdown. The same color
-	// map feeds the embedded IAF and Max Pressure charts below so the
+	// map feeds the embedded Piaf and Pmax charts below so the
 	// visual reading stays consistent across all three tabs.
 	let colorBy = $state<ColorBy>('session');
 	let sessionColors = $derived(buildSessionColorsBy(pressureSessions, colorBy));
@@ -68,15 +68,7 @@
 	}
 
 	let activeTab = $state<
-		| 'model'
-		| 'specs'
-		| 'tablets'
-		| 'included'
-		| 'inventory'
-		| 'pressure'
-		| 'iaf'
-		| 'maxpressure'
-		| 'json'
+		'model' | 'specs' | 'tablets' | 'included' | 'inventory' | 'pressure' | 'iaf' | 'max' | 'json'
 	>('model');
 
 	function tabletExportRows(tablets: Tablet[]): (string | number)[][] {
@@ -157,7 +149,7 @@
 		{ id: 'inventory', label: 'Inventory', badge: inventoryUnits.length },
 		{ id: 'pressure', label: 'Pressure Response' },
 		{ id: 'iaf', label: 'IAF' },
-		{ id: 'maxpressure', label: 'Max Pressure' },
+		{ id: 'max', label: 'MAX' },
 		{ id: 'json', label: 'JSON' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
@@ -236,7 +228,7 @@
 
 {#if activeTab === 'iaf'}
 	<div class="tab-content">
-		<IafTab
+		<PiafTab
 			{pressureSessions}
 			{defectsByInventoryId}
 			{chartSessions}
@@ -244,14 +236,14 @@
 			displayName={penBrandAndName(pen)}
 			chartTitlePrefix={pen.PenName}
 			entityLabel="this pen model"
-			{tabletNameById}
+			iafMeasurements={data.iafMeasurements ?? []}
 		/>
 	</div>
 {/if}
 
-{#if activeTab === 'maxpressure'}
+{#if activeTab === 'max'}
 	<div class="tab-content">
-		<MaxPressureTab
+		<PmaxTab
 			{pressureSessions}
 			{defectsByInventoryId}
 			{chartSessions}

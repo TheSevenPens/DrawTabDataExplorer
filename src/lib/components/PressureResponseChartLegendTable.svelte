@@ -2,8 +2,8 @@
 	import { resolve } from '$app/paths';
 	import { brandName, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import {
-		estimateP00,
-		estimateP100,
+		estimatePiaf,
+		estimatePmax,
 		interpolatePhysical,
 		fmtP,
 	} from '$data/lib/pressure/interpolate.js';
@@ -38,7 +38,7 @@
 		showModel?: boolean;
 	} = $props();
 
-	// 17 standard percentile marks plus P00 / P100 estimate columns.
+	// Standard percentile marks plus Piaf / Pmax estimate columns.
 	const PCT_COLS = [1, 5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95, 99] as const;
 
 	type Row = {
@@ -46,8 +46,8 @@
 		id: string;
 		color: string;
 		defect: DefectInfo | undefined;
-		p00: number | null;
-		p100: number | null;
+		piaf: number | null;
+		pmax: number | null;
 		mid: (number | null)[];
 	};
 
@@ -57,8 +57,8 @@
 			id: s._id,
 			color: colors.get(s._id) ?? '#888',
 			defect: defectsByInventoryId.get(s.InventoryId),
-			p00: estimateP00(s.Records),
-			p100: estimateP100(s.Records),
+			piaf: estimatePiaf(s.Records),
+			pmax: estimatePmax(s.Records),
 			mid: PCT_COLS.map((p) => interpolatePhysical(s.Records, p)),
 		})),
 	);
@@ -79,11 +79,11 @@
 				<th>Date</th>
 				<th>Tablet</th>
 				<th>Driver</th>
-				<th class="num">P00</th>
+				<th class="num">Piaf</th>
 				{#each PCT_COLS as p (p)}
 					<th class="num">P{String(p).padStart(2, '0')}</th>
 				{/each}
-				<th class="num">P100</th>
+				<th class="num">Pmax</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -135,11 +135,11 @@
 						{/if}
 					</td>
 					<td class="mono">{r.session.Driver}</td>
-					<td class="num mono">{fmtP(r.p00)}</td>
+					<td class="num mono">{fmtP(r.piaf)}</td>
 					{#each r.mid as v, i (i)}
 						<td class="num mono">{fmtP(v)}</td>
 					{/each}
-					<td class="num mono">{fmtP(r.p100)}</td>
+					<td class="num mono">{fmtP(r.pmax)}</td>
 				</tr>
 			{/each}
 		</tbody>

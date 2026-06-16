@@ -9,6 +9,7 @@ export async function load({ parent }) {
 		tabletFamilies,
 		drivers,
 		pressureResponse,
+		pressureRange,
 		invPens,
 		invTablets,
 	] = await Promise.all([
@@ -20,6 +21,7 @@ export async function load({ parent }) {
 		ds.TabletFamilies.toArray(),
 		ds.Drivers.toArray(),
 		ds.PressureResponse.toArray(),
+		ds.PressureRange.toArray(),
 		ds.InventoryPens.toArray(),
 		ds.InventoryTablets.toArray(),
 	]);
@@ -32,6 +34,7 @@ export async function load({ parent }) {
 		tabletFamilies,
 		drivers,
 		pressureResponse,
+		pressureRange,
 		invPens,
 		invTablets,
 	};

@@ -248,17 +248,17 @@ will surprise contributors:
   separate low/high lines with `fill: '-1'`. The between-datasets fill
   in Chart.js is x-axis-parametric, so it terminates at the smaller
   line's max x and leaves a triangular gap at the upper-right (around
-  p=99→100, where `min(P100) ≪ max(P100)`). Don't "simplify" this back
+  p=99→100, where `min(Pmax) ≪ max(Pmax)`). Don't "simplify" this back
   to two datasets without re-introducing the bug.
-- **Max-pressure zoom** computes `x.max` dynamically as
-  `max(estimateP100 across visible sessions) + 50` so the upper-right
+- **Pmax zoom** computes `x.max` dynamically as
+  `max(estimatePmax across visible sessions) + 50` so the upper-right
   corner of the envelope always stays on-canvas. This depends on
   `visibleSessions` (which honours `hiddenIds` and the defective
-  filter), so the `$effect` block explicitly reads `maxP100` to track
+  filter), so the `$effect` block explicitly reads `maxPmax` to track
   it.
 
 The `lockedZoom` prop on `PressureChart` hides the Zoom dropdown and
-forces a preset — used by the Max Pressure tab to embed a max-zoomed
+forces a preset — used by the Pmax tab to embed a max-zoomed
 chart alongside the bands charts.
 
 ## Type aliases

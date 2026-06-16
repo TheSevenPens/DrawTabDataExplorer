@@ -49,7 +49,7 @@ open the issue for current scope, design notes, and status.
 - Extract <SectionedPage> for sidebar-tree pages — #164
 - Extract <DistributionTable> for bar-fill count tables — #165
 - Merge pressure-bands.ts and spec-bands.ts into one band module — #166
-- Extract shared <MaxPressureTab> (PenDetail + PenFamilyDetail dedup) — #167
+- Extract shared <PmaxTab> (PenDetail + PenFamilyDetail dedup) — #167
 - Factor inventory cellLinks boilerplate into makeInventoryCellLinks() — #168
 - Unify withinYears() and filterByYears() in tablet-analysis — #169
 - Compact numericSections via per-metric factory functions — #170

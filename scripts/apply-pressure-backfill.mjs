@@ -16,8 +16,8 @@
  *     "date":             "2024-09-02",    // for the log line only
  *     "entityId":         "wacom.session.wap.0001_2024-09-02",
  *     "penLabel":         "Pro Pen 2 (KP-504E)",
- *     "prependP00Force":  2.2,             // optional — gets prepended as [force, 0.0]
- *     "appendP100Force":  714              // optional — gets appended as [force, 100.0]
+ *     "prependPiafForce":  2.2,             // optional — gets prepended as [force, 0.0]
+ *     "appendPmaxForce":  714              // optional — gets appended as [force, 100.0]
  *   }
  *
  * Usage:
@@ -119,13 +119,13 @@ function applyEditToText(text, edit) {
 	// the array close (which scopes us to THIS session's Records block —
 	// indexing from the start of the file would hit the first session's
 	// Records on every iteration).
-	if (typeof edit.appendP100Force === 'number') {
+	if (typeof edit.appendPmaxForce === 'number') {
 		const lastCloser = EOL + I49 + ']' + EOL;
 		const lastCloserIdx = out.lastIndexOf(lastCloser, recordsCloseIdx);
 		if (lastCloserIdx < 0 || lastCloserIdx < recordsOpenerIdx) {
 			throw new Error(`Last-record closer not found for ${edit._id}`);
 		}
-		const newSection = EOL + I49 + '],' + EOL + recordBlock(edit.appendP100Force, 100, ']') + EOL;
+		const newSection = EOL + I49 + '],' + EOL + recordBlock(edit.appendPmaxForce, 100, ']') + EOL;
 		out = out.slice(0, lastCloserIdx) + newSection + out.slice(lastCloserIdx + lastCloser.length);
 	}
 
@@ -135,7 +135,7 @@ function applyEditToText(text, edit) {
 	// inject into the first session's Records on every iteration. Use the
 	// opener idx we already located (it's still valid: any append above ran
 	// AFTER it and extended the file later than recordsOpenerIdx).
-	if (typeof edit.prependP00Force === 'number') {
+	if (typeof edit.prependPiafForce === 'number') {
 		const openerWithEol = recordsOpener + EOL;
 		// Re-verify the opener is still at recordsOpenerIdx after any append;
 		// the append only modifies bytes after this position so the offset
@@ -144,7 +144,7 @@ function applyEditToText(text, edit) {
 			throw new Error(`Records opener shifted unexpectedly for ${edit._id}`);
 		}
 		const insertAt = recordsOpenerIdx + openerWithEol.length;
-		const newSection = recordBlock(edit.prependP00Force, 0, '],') + EOL;
+		const newSection = recordBlock(edit.prependPiafForce, 0, '],') + EOL;
 		out = out.slice(0, insertAt) + newSection + out.slice(insertAt);
 	}
 
@@ -159,7 +159,7 @@ for (const e of edits) {
 		console.error('Edit missing _id or brand:', e);
 		process.exit(1);
 	}
-	if (e.prependP00Force === undefined && e.appendP100Force === undefined) {
+	if (e.prependPiafForce === undefined && e.appendPmaxForce === undefined) {
 		console.warn(`Skipping ${e._id} (${e.inventoryId} ${e.date}): no force values`);
 		continue;
 	}
@@ -187,12 +187,12 @@ for (const [brand, brandEdits] of byBrand) {
 		try {
 			text = applyEditToText(text, e);
 			const parts = [];
-			if (typeof e.prependP00Force === 'number') {
-				parts.push(`P00=${fmt(e.prependP00Force, 1)}`);
+			if (typeof e.prependPiafForce === 'number') {
+				parts.push(`Piaf=${fmt(e.prependPiafForce, 1)}`);
 				totalPrepend++;
 			}
-			if (typeof e.appendP100Force === 'number') {
-				parts.push(`P100=${fmt(e.appendP100Force, 1)}`);
+			if (typeof e.appendPmaxForce === 'number') {
+				parts.push(`Pmax=${fmt(e.appendPmaxForce, 1)}`);
 				totalAppend++;
 			}
 			console.log(`  ✓ ${tag.padEnd(22)} ${parts.join(' ')}`);
@@ -211,7 +211,7 @@ for (const [brand, brandEdits] of byBrand) {
 }
 
 console.log(
-	`\nApplied ${totalApplied} edits (${totalPrepend} P00 prepends, ${totalAppend} P100 appends).`,
+	`\nApplied ${totalApplied} edits (${totalPrepend} Piaf prepends, ${totalAppend} Pmax appends).`,
 );
 if (dryRun) console.log('Dry-run only — no files written.');
 else console.log(`Now run \`npm run data-quality\` to validate.`);

@@ -6,10 +6,11 @@ export const prerender = false;
 
 export async function load({ params, parent }) {
 	const { ds } = await parent();
-	const [pens, allPens, pressureSessions] = await Promise.all([
+	const [pens, allPens, pressureSessions, allRange] = await Promise.all([
 		ds.InventoryPens.toArray(),
 		ds.Pens.toArray(),
 		ds.PressureResponse.toArray(),
+		ds.PressureRange.toArray(),
 	]);
 
 	const item = pens.find((p) => p._id === params.id);
@@ -23,9 +24,15 @@ export async function load({ params, parent }) {
 			? pressureSessions.filter((s) => s.InventoryId === item.InventoryId)
 			: [];
 
-	// Only this unit's defects matter for IAF/Max Pressure exclusion on this
+	// Direct IAF measurements for this physical unit (win over the estimate).
+	const iafMeasurements =
+		item.InventoryId && item.InventoryId !== 'UNASSIGNED'
+			? allRange.filter((m) => m.Metric === 'IAF' && m.PenInventoryId === item.InventoryId)
+			: [];
+
+	// Only this unit's defects matter for Piaf/Pmax exclusion on this
 	// page — sessions are pre-filtered to one InventoryId.
 	const defectsByInventoryId = buildInventoryDefects([item]);
 
-	return { item, modelName, pressureSessions: sessions, defectsByInventoryId };
+	return { item, modelName, pressureSessions: sessions, defectsByInventoryId, iafMeasurements };
 }

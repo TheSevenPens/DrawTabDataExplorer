@@ -8,7 +8,7 @@
 	// flagged pens, because the same store also feeds the /pen-flagged
 	// pressure-overlay chart which benefits from many flags.
 	import { resolve } from '$app/paths';
-	import { type Pen, type PressureResponse } from '$data/lib/drawtab-loader.js';
+	import { type Pen, type PressureResponse, type PressureRange } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import { PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
@@ -28,11 +28,11 @@
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import PenPicker from '$lib/components/PenPicker.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
-	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
-	import IafTab from '$lib/components/IafTab.svelte';
+	import PmaxTab from '$lib/components/PmaxTab.svelte';
+	import PiafTab from '$lib/components/PiafTab.svelte';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
-	import { MAX_PRESSURE_BANDS } from '$lib/bands.js';
-	import { estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import { PMAX_BANDS } from '$lib/bands.js';
+	import { estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
@@ -56,13 +56,14 @@
 		}),
 	);
 
-	let activeTab: 'flagged' | 'compare' | 'pressure' | 'iaf' | 'maxpressure' = $state('flagged');
+	let activeTab: 'flagged' | 'compare' | 'pressure' | 'iaf' | 'max' = $state('flagged');
 	let showPicker = $state(false);
 	let allPens: Pen[] = $derived(data.allPens ?? []);
 	let allSessions: PressureResponse[] = $derived(data.allSessions ?? []);
 	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
 		data.defectsByInventoryId ?? new Map(),
 	);
+	let iafMeasurements: PressureRange[] = $derived(data.iafMeasurements ?? []);
 
 	// flaggedPenModels stores lowercase EntityIds; match the same casing when
 	// looking up the full pen record.
@@ -73,7 +74,7 @@
 	);
 
 	// Group all pressure sessions by PenEntityId once so per-pen lookups in
-	// the Max Pressure tab are O(1) and don't re-scan the full session list
+	// the Pmax tab are O(1) and don't re-scan the full session list
 	// for each flagged pen.
 	let sessionsByPenEntityId = $derived.by(() => {
 		const out = new Map<string, PressureResponse[]>();
@@ -85,24 +86,25 @@
 		return out;
 	});
 
-	// Per-pen bundles shared by the IAF and Max Pressure tabs. Each pen gets
+	// Per-pen bundles shared by the Piaf and Pmax tabs. Each pen gets
 	// its own color set + chart sessions so colors are stable within a section
 	// but independent across sections. `penColor` is shared with the combined
-	// view at the top of the Max Pressure tab so a pen's marker color in the
+	// view at the top of the Pmax tab so a pen's marker color in the
 	// merged BandsChart matches its session curves in the merged PressureChart.
 	let perPenSections = $derived(
 		flaggedItems.map((p, i) => {
 			const sessions = sessionsByPenEntityId.get(p.EntityId) ?? [];
 			const colors = buildSessionColors(sessions);
 			const chartSessions = buildChartSessions(sessions, { colors, defectsByInventoryId });
-			return { pen: p, sessions, chartSessions, penColor: paletteColor(i) };
+			const iaf = iafMeasurements.filter((m) => m.PenEntityId === p.EntityId);
+			return { pen: p, sessions, chartSessions, penColor: paletteColor(i), iaf };
 		}),
 	);
 
-	// --- Combined Max Pressure comparison ---
+	// --- Combined Pmax comparison ---
 	//
 	// Aggregates every flagged pen's non-defective sessions onto one
-	// BandsChart (P100 markers colored per pen) plus one zoomed
+	// BandsChart (Pmax markers colored per pen) plus one zoomed
 	// PressureChart (curves recolored per pen, so a pen's sessions cluster
 	// visually even when its individual sessions are still distinct lines).
 	let nonDefectiveByPen = $derived(
@@ -114,13 +116,13 @@
 		})),
 	);
 
-	// Per-pen P100 lists — computed once and reused by both the "all" and
+	// Per-pen Pmax lists — computed once and reused by both the "all" and
 	// "summary" combined-view markers as well as the summary table below.
-	let p100sByPen = $derived(
+	let pmaxByPen = $derived(
 		nonDefectiveByPen.map((s) => ({
 			...s,
-			p100Values: s.nonDefectiveSessions
-				.map((sess) => estimateP100(sess.Records))
+			pmaxValues: s.nonDefectiveSessions
+				.map((sess) => estimatePmax(sess.Records))
 				.filter((v): v is number => v !== null && isFinite(v))
 				.sort((a, b) => a - b),
 		})),
@@ -129,8 +131,8 @@
 	// "All" view: one marker per session per pen, colored by pen.
 	let combinedMaxMarkersAll: BandMarker[] = $derived.by(() => {
 		const out: BandMarker[] = [];
-		for (const s of p100sByPen) {
-			for (const v of s.p100Values) {
+		for (const s of pmaxByPen) {
+			for (const v of s.pmaxValues) {
 				out.push({ value: v, color: s.penColor, dashed: false });
 			}
 		}
@@ -138,7 +140,7 @@
 	});
 
 	// "Summary" view: three markers per pen (min / median / max) in the
-	// pen's color, median thicker — mirrors the per-pen MaxPressureTab's
+	// pen's color, median thicker — mirrors the per-pen PmaxTab's
 	// summary style but with pen-color discrimination. Labels are
 	// suppressed: with multiple pens, repeating "Median" would clutter the
 	// chart, and the colored legend below already conveys pen identity.
@@ -146,12 +148,12 @@
 	// Note: BandMarker.seriesIndex would let us bound each marker to its
 	// pen's horizontal stripe (matching `combinedShadedRanges`). It was
 	// tried and rolled back here — full-height markers read better as
-	// "P100 estimates on a shared axis," which is the point of the chart.
+	// "Pmax estimates on a shared axis," which is the point of the chart.
 	// The slicing capability is left intact in BandsChart for future use.
 	let combinedMaxMarkersSummary: BandMarker[] = $derived.by(() => {
 		const out: BandMarker[] = [];
-		for (const s of p100sByPen) {
-			const xs = s.p100Values;
+		for (const s of pmaxByPen) {
+			const xs = s.pmaxValues;
 			if (xs.length === 0) continue;
 			const min = xs[0];
 			const max = xs[xs.length - 1];
@@ -172,15 +174,15 @@
 	);
 
 	// In summary view, draw a horizontal stripe per pen spanning that pen's
-	// min..max P100. Pens with a single session collapse to min === max and
+	// min..max Pmax. Pens with a single session collapse to min === max and
 	// are omitted (no band to draw).
 	let combinedShadedRanges = $derived(
 		combinedView === 'summary'
-			? p100sByPen
-					.filter((s) => s.p100Values.length > 0)
+			? pmaxByPen
+					.filter((s) => s.pmaxValues.length > 0)
 					.map((s) => ({
-						min: s.p100Values[0],
-						max: s.p100Values[s.p100Values.length - 1],
+						min: s.pmaxValues[0],
+						max: s.pmaxValues[s.pmaxValues.length - 1],
 						color: s.penColor,
 					}))
 			: undefined,
@@ -194,10 +196,10 @@
 		perPenSections.flatMap((s) => s.chartSessions.map((cs) => ({ ...cs, color: s.penColor }))),
 	);
 
-	// Per-pen P100 stats for the small summary table under the combined chart.
+	// Per-pen Pmax stats for the small summary table under the combined chart.
 	let combinedSummary = $derived(
-		p100sByPen.map((s) => {
-			const xs = s.p100Values;
+		pmaxByPen.map((s) => {
+			const xs = s.pmaxValues;
 			if (xs.length === 0) return { ...s, count: 0, min: null, median: null, max: null };
 			const mid = Math.floor(xs.length / 2);
 			const median = xs.length % 2 === 0 ? (xs[mid - 1] + xs[mid]) / 2 : xs[mid];
@@ -206,10 +208,10 @@
 	);
 
 	let combinedSessionCount = $derived(combinedMaxMarkersAll.length);
-	let combinedPenWithDataCount = $derived(p100sByPen.filter((s) => s.p100Values.length > 0).length);
+	let combinedPenWithDataCount = $derived(pmaxByPen.filter((s) => s.pmaxValues.length > 0).length);
 	let anyCombinedData = $derived(combinedSessionCount > 0);
 
-	// The embedded MaxPressureTab takes a `hiddenIds` set; we don't expose
+	// The embedded PmaxTab takes a `hiddenIds` set; we don't expose
 	// toggle UI here, so it stays empty. Shared reference avoids unnecessary
 	// re-renders from new empty-set identities.
 	const EMPTY_HIDDEN: ReadonlySet<string> = new Set();
@@ -219,8 +221,8 @@
 	// Aggregates sessions matching ANY of the three pen flag scopes
 	// (unit / model / family). This mirrors the behavior previously hosted
 	// on /pen-flagged so users who flag from inventory or family pages
-	// still see those sessions overlaid here. (The Compare and Max Pressure
-	// tabs only consider flagged pen models, since spec / per-pen-max-pressure
+	// still see those sessions overlaid here. (The Compare and Pmax
+	// tabs only consider flagged pen models, since spec / per-pen-pmax
 	// only make sense at the model level.)
 	let matchedSessions = $derived.by(() => {
 		const flaggedFamilyPenIds = new Set(
@@ -371,7 +373,7 @@
 		{ id: 'compare', label: 'Compare' },
 		{ id: 'pressure', label: 'Pressure Response', badge: matchedSessions.length },
 		{ id: 'iaf', label: 'IAF' },
-		{ id: 'maxpressure', label: 'Max Pressure' },
+		{ id: 'max', label: 'MAX' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
 />
@@ -498,7 +500,7 @@
 {:else if activeTab === 'iaf'}
 	{#if flaggedItems.length === 0}
 		<p class="no-data">
-			Flag at least one pen to see its IAF chart. Currently {flaggedItems.length} flagged.
+			Flag at least one pen to see its Piaf chart. Currently {flaggedItems.length} flagged.
 		</p>
 	{:else}
 		{#each perPenSections as section (section.pen.EntityId)}
@@ -511,7 +513,7 @@
 				{#if section.sessions.length === 0}
 					<p class="no-data">No pressure response measurements for this pen model.</p>
 				{:else}
-					<IafTab
+					<PiafTab
 						pressureSessions={section.sessions}
 						{defectsByInventoryId}
 						chartSessions={section.chartSessions}
@@ -519,15 +521,16 @@
 						displayName={penBrandAndName(section.pen)}
 						chartTitlePrefix={section.pen.PenName}
 						entityLabel="this pen model"
+						iafMeasurements={section.iaf}
 					/>
 				{/if}
 			</section>
 		{/each}
 	{/if}
-{:else if activeTab === 'maxpressure'}
+{:else if activeTab === 'max'}
 	{#if flaggedItems.length === 0}
 		<p class="no-data">
-			Flag at least one pen to see its Max Pressure chart. Currently {flaggedItems.length} flagged.
+			Flag at least one pen to see its Pmax chart. Currently {flaggedItems.length} flagged.
 		</p>
 	{:else}
 		{#if anyCombinedData}
@@ -569,11 +572,11 @@
 					{/if}
 				</p>
 				<BandsChart
-					bands={MAX_PRESSURE_BANDS}
+					bands={PMAX_BANDS}
 					axisMax={1000}
 					axisStep={100}
 					unit="gf"
-					heading="P100 across flagged pens"
+					heading="Pmax across flagged pens"
 					markers={combinedMaxMarkers}
 					shadedRanges={combinedShadedRanges}
 				/>
@@ -611,7 +614,7 @@
 					sessions={combinedChartSessions}
 					title="Flagged pens — max pressure"
 					hiddenIds={EMPTY_HIDDEN}
-					lockedZoom="max"
+					lockedZoom="pmax"
 				/>
 			</section>
 		{/if}
@@ -627,7 +630,7 @@
 				{#if section.sessions.length === 0}
 					<p class="no-data">No pressure response measurements for this pen model.</p>
 				{:else}
-					<MaxPressureTab
+					<PmaxTab
 						pressureSessions={section.sessions}
 						{defectsByInventoryId}
 						chartSessions={section.chartSessions}

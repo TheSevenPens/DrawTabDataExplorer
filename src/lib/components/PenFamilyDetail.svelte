@@ -15,8 +15,8 @@
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
-	import MaxPressureTab from '$lib/components/MaxPressureTab.svelte';
-	import IafTab from '$lib/components/IafTab.svelte';
+	import PmaxTab from '$lib/components/PmaxTab.svelte';
+	import PiafTab from '$lib/components/PiafTab.svelte';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { penBrandAndName, penNameAndId } from '$lib/pen-helpers.js';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
@@ -56,7 +56,7 @@
 		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
-	let activeTab = $state<'specs' | 'members' | 'pressure' | 'iaf' | 'maxpressure'>('specs');
+	let activeTab = $state<'specs' | 'members' | 'pressure' | 'iaf' | 'max'>('specs');
 
 	let sortedMemberPens: Pen[] = $derived([...memberPens].sort(comparePenByYearDesc));
 </script>
@@ -78,7 +78,7 @@
 		{ id: 'members', label: 'Pens', badge: memberPens.length },
 		{ id: 'pressure', label: 'Pressure Response', badge: pressureSessions.length },
 		{ id: 'iaf', label: 'IAF' },
-		{ id: 'maxpressure', label: 'Max Pressure' },
+		{ id: 'max', label: 'MAX' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
 />
@@ -160,7 +160,7 @@
 
 {#if activeTab === 'iaf'}
 	<div class="tab-content">
-		<IafTab
+		<PiafTab
 			{pressureSessions}
 			{defectsByInventoryId}
 			{chartSessions}
@@ -168,13 +168,15 @@
 			displayName={family.FamilyName}
 			chartTitlePrefix={family.FamilyName}
 			entityLabel="this family"
+			iafMeasurements={data.iafMeasurements ?? []}
+			penNameById={penLabelById}
 		/>
 	</div>
 {/if}
 
-{#if activeTab === 'maxpressure'}
+{#if activeTab === 'max'}
 	<div class="tab-content">
-		<MaxPressureTab
+		<PmaxTab
 			{pressureSessions}
 			{defectsByInventoryId}
 			{chartSessions}

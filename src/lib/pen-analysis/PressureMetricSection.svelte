@@ -7,7 +7,7 @@
 	import { fmtP } from '$data/lib/pressure/interpolate.js';
 
 	export type MetricRow = {
-		/** Estimated metric value (P00 or P100) in gf. */
+		/** Estimated metric value (Piaf or Pmax) in gf. */
 		value: number;
 		/** Pen-model EntityId for the session. */
 		penEntityId: string;
@@ -25,7 +25,7 @@
 		rows,
 		onExport,
 	}: {
-		/** Section heading, e.g. "IAF (P00) Distribution". */
+		/** Section heading, e.g. "Piaf Distribution". */
 		title: string;
 		description: string;
 		bands: Band[];

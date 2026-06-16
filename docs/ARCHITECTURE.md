@@ -66,7 +66,7 @@ DrawTabDataExplorer/
 │       │   ├── SavedViews.svelte
 │       │   ├── SubNav.svelte                # Sub-tab row under main nav
 │       │   └── Nav.svelte
-│       ├── bands.ts              # Reference bands (IAF, max pressure)
+│       ├── bands.ts              # Reference bands (Piaf, Pmax)
 │       ├── storage.ts            # localStorage helpers (getItem/setItem with JSON)
 │       ├── unit-store.ts         # Svelte store for unit preference
 │       ├── pen-helpers.ts        # buildPenNameMap(), formatPenIds()
@@ -142,14 +142,14 @@ dataset by release year. Used on the tablet detail page, the Reference
 page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 
 **BandsChart** — Pure-SVG horizontal range-bands chart used on the
-Reference page (IAF Ranking, Max Physical Pressure) and the Max Pressure
+Reference page (Piaf Ranking, Pmax Ranking) and the Pmax
 tabs on pen / pen-family detail pages. Optional props:
 
 - `markers: BandMarker[]` — red vertical lines at given x values; each
   marker can be `dashed`, customise its `strokeWidth`, and carry a
   `label` rendered above the line.
 - `shadedRange: { min, max }` — semi-transparent red rectangle drawn
-  behind markers (used to highlight the min↔max P100 span).
+  behind markers (used to highlight the min↔max Pmax span).
 - `heading: string` — visible title rendered _inside_ the SVG (so it's
   captured by PNG/SVG exports). Distinct from `title`, which only sets
   the export filename slug.
@@ -192,26 +192,26 @@ sub-tabs are declared inline on each Data page.
 ## Pressure response charts
 
 `PressureChart.svelte` — Chart.js scatter for force (gf) vs pressure (%).
-Used on Pressure Response, pen/pen-family detail tabs, and Max Pressure.
+Used on Pressure Response, pen/pen-family detail tabs, and Pmax.
 
 **Must-read before editing:** [CLAUDE.md](../CLAUDE.md) § Pressure response charts
-(envelope `fill: 'shape'` polygon, dynamic max-pressure x-axis, `lockedZoom`).
+(envelope `fill: 'shape'` polygon, dynamic Pmax x-axis, `lockedZoom`).
 
-## Max Pressure tab
+## Pmax tab
 
-Both `PenDetail.svelte` and `PenFamilyDetail.svelte` expose a Max
-Pressure tab with the same structure:
+Both `PenDetail.svelte` and `PenFamilyDetail.svelte` expose a Pmax
+tab with the same structure:
 
-1. _All max pressures_ — `<BandsChart>` with one solid red marker per
-   non-defective session's `estimateP100(records)`.
-2. _Max pressure range_ — a second `<BandsChart>` with `shadedRange`
+1. _All Pmax values_ — `<BandsChart>` with one solid red marker per
+   non-defective session's `estimatePmax(records)`.
+2. _Pmax range_ — a second `<BandsChart>` with `shadedRange`
    spanning min↔max and three markers (Min, Median labelled and bold,
    Max), plus a small Min/Median/Max table beneath.
 3. _Pressure response (max-zoom)_ — a `<PressureChart>` with
-   `lockedZoom="max"` so the user can switch view modes but stays
+   `lockedZoom="pmax"` so the user can switch view modes but stays
    focused on the saturation region.
 
-Both pages duplicate the `maxPressureBands` constant inline with a
+Both pages duplicate the `pmaxBands` constant inline with a
 "keep in sync" comment pointing back to
 `src/routes/reference/+page.svelte`. Defective sessions are excluded
 via `defectsByInventoryId` (same rule used by `<SessionStats>`).
@@ -254,9 +254,9 @@ several files:
 
 ## Shared modules
 
-- **`src/lib/bands.ts`** — Reference band definitions (IAF ranking, max
-  physical pressure) shared by the Reference page and the `IafTab` /
-  `MaxPressureTab` components. (Pages that need multiple datasets read
+- **`src/lib/bands.ts`** — Reference band definitions (Piaf ranking, Pmax
+  ranking) shared by the Reference page and the `PiafTab` /
+  `PmaxTab` components. (Pages that need multiple datasets read
   them from the session `DrawTabDataSet` exposed as `ds` via
   `await parent()` — see "One DataSet per session" in
   [CLAUDE.md](../CLAUDE.md) — not a load-all helper.)

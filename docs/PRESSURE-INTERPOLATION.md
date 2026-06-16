@@ -1,6 +1,6 @@
-# Pressure interpolation (P00, P100, intermediate Pₙₙ)
+# Pressure interpolation (Piaf, Pmax, intermediate Pₙₙ)
 
-**Audience:** contributors. How the IAF / Max-Pressure estimates that power every pressure-response chart are computed from raw `[physicalGf, logicalPct]` records.
+**Audience:** contributors. How the Piaf (Initial Activation Force, formerly P00/IAF) / Pmax (Maximum Force, formerly P100/Max Pressure) estimates that power every pressure-response chart are computed from raw `[physicalGf, logicalPct]` records.
 
 All logic lives in [`data-repo/lib/pressure/interpolate.ts`](../data-repo/lib/pressure/interpolate.ts); tests pin every edge case in [`data-repo/lib/pressure/pressure.test.ts`](../data-repo/lib/pressure/pressure.test.ts).
 
@@ -15,8 +15,8 @@ Captured records are **sparse and noisy** — typical sessions land 20–80 mono
 | Function                | Range               | Method                        | Returns `null` when                                                |
 | ----------------------- | ------------------- | ----------------------------- | ------------------------------------------------------------------ |
 | `interpolatePhysical()` | inside record range | linear between pairs          | target ∉ `[y_first, y_last]`, or `n < 2`                           |
-| `estimateP00()`         | activation boundary | bracket midpoint              | no record at `y ≤ 0` (the activation transition wasn't captured)   |
-| `estimateP100()`        | saturation boundary | bracket midpoint (+ fallback) | no record at `y ≥ 100` (the saturation transition wasn't captured) |
+| `estimatePiaf()`        | activation boundary | bracket midpoint              | no record at `y ≤ 0` (the activation transition wasn't captured)   |
+| `estimatePmax()`        | saturation boundary | bracket midpoint (+ fallback) | no record at `y ≥ 100` (the saturation transition wasn't captured) |
 
 `interpolatePhysical` is also reused for every middle percentile (P01, P05, …, P99) the legend table renders — same linear walk, different target.
 
@@ -30,7 +30,7 @@ x = x0 + (target − y0) · (x1 − x0) / (y1 − y0)
 
 If `y1 === y0` (flat segment), returns `x0`. If no segment brackets the target, returns `null` — callers (the chart, the legend table) render this as `—`.
 
-## `estimateP00(records)` — Initial Activation Force
+## `estimatePiaf(records)` — Piaf (Initial Activation Force)
 
 **Bracket midpoint.** Sessions that explicitly captured the activation transition contain records on **both sides of activation**: some samples at 0 % logical pressure, some non-zero. The midpoint of the bracket is the best honest estimate without finer sampling.
 
@@ -46,9 +46,9 @@ Inputs are **not assumed sorted**; the scan finds max-A / min-B across all recor
 
 Prior to [#212](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/212) this function had a spring-decay extrapolation branch that fit an exponential to the first few slopes and projected backward to the activation boundary. It was the chosen path for ~83 % of sessions, but the math was not trusted enough to claim an estimate where the session never captured the transition. The branch was removed once the dataset was backfilled with explicit `(force, 0)` samples on every session where the activation force could plausibly be inferred (see [`scripts/apply-pressure-backfill.mjs`](../scripts/apply-pressure-backfill.mjs)). Sessions that genuinely can't be backfilled now report `—`.
 
-## `estimateP100(records)` — Maximum Force
+## `estimatePmax(records)` — Pmax (Maximum Force)
 
-Mirror of P00.
+Mirror of Piaf.
 
 **Bracket midpoint.** A session whose pen reached saturation contains records on **both sides**: some below 100 % and some at ≥ 100 %.
 
@@ -59,7 +59,7 @@ Mirror of P00.
 
 **Saturated-only fallback.** If `C` doesn't exist (every record is already at `y ≥ 100`), return `D` — the lowest-force record. Preserves the pre-bracket-logic behaviour for sessions whose first sample is already saturated.
 
-Otherwise returns `null`. (Like P00, the spring-decay forward-extrapolation that previously filled the gap was removed in [#212](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/212).)
+Otherwise returns `null`. (Like Piaf, the spring-decay forward-extrapolation that previously filled the gap was removed in [#212](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/212).)
 
 Inputs are **not assumed sorted** — the scan finds max-C / min-D across all records.
 
@@ -72,14 +72,14 @@ Inputs are **not assumed sorted** — the scan finds max-C / min-D across all re
 
 ## Where it's called
 
-| Surface                            | Function                     | File                                                                                                                                                                                 |
-| ---------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Per-session **IAF tab** table      | `estimateP00`                | [`src/lib/components/IafTab.svelte`](../src/lib/components/IafTab.svelte)                                                                                                            |
-| Per-session **Max Pressure** table | `estimateP100`               | [`src/lib/components/MaxPressureTab.svelte`](../src/lib/components/MaxPressureTab.svelte)                                                                                            |
-| Pressure-response legend (P-cols)  | all three                    | [`src/lib/components/PressureResponseChartLegendTable.svelte`](../src/lib/components/PressureResponseChartLegendTable.svelte)                                                        |
-| **Pen Analysis** distributions     | `estimateP00`/`estimateP100` | [`src/routes/pen-analysis/+page.svelte`](../src/routes/pen-analysis/+page.svelte)                                                                                                    |
-| Pressure-response field defs       | both estimators              | [`data-repo/lib/entities/pressure-response-fields.ts`](../data-repo/lib/entities/pressure-response-fields.ts) (`IAF`, `MaxPressure` computed fields)                                 |
-| Backfill dev tool                  | bracket math inline          | [`src/routes/pressure-backfill/+page.svelte`](../src/routes/pressure-backfill/+page.svelte) (lets contributors add `(force, 0)` / `(force, 100)` samples to sessions that lack them) |
+| Surface                           | Function                      | File                                                                                                                                                                                 |
+| --------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Per-session **Piaf tab** table    | `estimatePiaf`                | [`src/lib/components/PiafTab.svelte`](../src/lib/components/PiafTab.svelte)                                                                                                          |
+| Per-session **Pmax** table        | `estimatePmax`                | [`src/lib/components/PmaxTab.svelte`](../src/lib/components/PmaxTab.svelte)                                                                                                          |
+| Pressure-response legend (P-cols) | all three                     | [`src/lib/components/PressureResponseChartLegendTable.svelte`](../src/lib/components/PressureResponseChartLegendTable.svelte)                                                        |
+| **Pen Analysis** distributions    | `estimatePiaf`/`estimatePmax` | [`src/routes/pen-analysis/+page.svelte`](../src/routes/pen-analysis/+page.svelte)                                                                                                    |
+| Pressure-response field defs      | both estimators               | [`data-repo/lib/entities/pressure-response-fields.ts`](../data-repo/lib/entities/pressure-response-fields.ts) (`Piaf`, `Pmax` computed fields)                                       |
+| Backfill dev tool                 | bracket math inline           | [`src/routes/pressure-backfill/+page.svelte`](../src/routes/pressure-backfill/+page.svelte) (lets contributors add `(force, 0)` / `(force, 100)` samples to sessions that lack them) |
 
 All these paths share the **same single source of truth** in `interpolate.ts`. Tweak math there, not at the call site.
 

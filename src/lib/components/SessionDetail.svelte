@@ -3,7 +3,7 @@
 	import { type PressureResponse, type Pen, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { penFullName } from '$lib/pen-helpers.js';
 	import { tabletFullName } from '$lib/tablet-helpers.js';
-	import { estimateP00, estimateP100, fmtP } from '$data/lib/pressure/interpolate.js';
+	import { estimatePiaf, estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
@@ -33,10 +33,10 @@
 	let penLabel = $derived(pen ? penFullName(pen) : session.PenEntityId);
 	let tabletLabel = $derived(tablet ? tabletFullName(tablet) : session.TabletEntityId);
 
-	let p00 = $derived(estimateP00(session.Records));
-	let p100 = $derived(estimateP100(session.Records));
+	let piaf = $derived(estimatePiaf(session.Records));
+	let pmax = $derived(estimatePmax(session.Records));
 
-	// Combined raw records + estimated P00/P100 endpoints, ordered by physical
+	// Combined raw records + estimated Piaf/Pmax endpoints, ordered by physical
 	// force so each estimate sits at its true position in the curve rather than
 	// just bracketing the list. Estimate rows are tagged so the template styles
 	// them distinctly; raw rows keep their original capture index (`n`).
@@ -51,14 +51,14 @@
 			force,
 			pct,
 		}));
-		if (p00 !== null) rows.push({ kind: 'est', label: 'P00', force: p00, pct: 0 });
-		if (p100 !== null) rows.push({ kind: 'est', label: 'P100', force: p100, pct: 100 });
+		if (piaf !== null) rows.push({ kind: 'est', label: 'Piaf', force: piaf, pct: 0 });
+		if (pmax !== null) rows.push({ kind: 'est', label: 'Pmax', force: pmax, pct: 100 });
 		return rows.sort((a, b) => a.force - b.force);
 	});
 
 	// Format a logical-pressure % for the records table. Two decimals for
 	// normal values, but never round a genuinely non-zero reading down to
-	// "0.00" — a tiny activation like 0.003% must stay visible, since the IAF
+	// "0.00" — a tiny activation like 0.003% must stay visible, since the Piaf
 	// estimate correctly counts it as non-zero (its bracket sits below it).
 	function fmtPct(y: number): string {
 		const rounded = y.toFixed(2);
@@ -66,7 +66,7 @@
 		return rounded;
 	}
 
-	// Export mirrors what the table shows: raw rows plus the marked P00/P100
+	// Export mirrors what the table shows: raw rows plus the marked Piaf/Pmax
 	// estimate rows, in force order.
 	const recordExportHeaders = ['#', 'Force (gf)', 'Pressure (%)'];
 	let recordExportRows: (string | number)[][] = $derived(
@@ -133,10 +133,10 @@
 <section class="stats">
 	<h2>Estimates</h2>
 	<dl>
-		<dt>IAF (P00 est.)</dt>
-		<dd>{fmtP(p00)} gf</dd>
-		<dt>Max Force (P100 est.)</dt>
-		<dd>{fmtP(p100)} gf</dd>
+		<dt>Piaf (est.)</dt>
+		<dd>{fmtP(piaf)} gf</dd>
+		<dt>Pmax (est.)</dt>
+		<dd>{fmtP(pmax)} gf</dd>
 		<dt>Records</dt>
 		<dd>{session.Records.length}</dd>
 	</dl>

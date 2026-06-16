@@ -33,6 +33,7 @@ const LINKS = [
 	{ name: 'pen-compat', target: '../data-repo/data/pen-compat', kind: 'junction' },
 	{ name: 'drivers', target: '../data-repo/data/drivers', kind: 'junction' },
 	{ name: 'pressure-response', target: '../data-repo/data/pressure-response', kind: 'junction' },
+	{ name: 'pressure-range', target: '../data-repo/data/pressure-range', kind: 'junction' },
 	{ name: 'inventory', target: '../data-repo/data/inventory', kind: 'junction' },
 	{ name: 'brands', target: '../data-repo/data/brands', kind: 'junction' },
 	{ name: 'reference', target: '../data-repo/data/reference', kind: 'junction' },

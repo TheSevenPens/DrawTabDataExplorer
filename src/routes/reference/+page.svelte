@@ -12,8 +12,8 @@
 	import BandsChart from '$lib/components/BandsChart.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import {
-		IAF_BANDS,
-		MAX_PRESSURE_BANDS,
+		PIAF_BANDS,
+		PMAX_BANDS,
 		BRIGHTNESS_BANDS,
 		CONTRAST_BANDS,
 		RESPONSE_TIME_BANDS,
@@ -39,8 +39,8 @@
 		{ id: 'iso-paper-a', category: 'Paper Sizes', label: 'ISO A Paper Sizes' },
 		{ id: 'iso-paper-b', category: 'Paper Sizes', label: 'ISO B Paper Sizes' },
 		{ id: 'us-paper', category: 'Paper Sizes', label: 'US Paper Sizes' },
-		{ id: 'iaf-ranking', category: 'Pen Pressure', label: 'IAF Ranking' },
-		{ id: 'max-pressure', category: 'Pen Pressure', label: 'Max Physical Pressure' },
+		{ id: 'piaf-ranking', category: 'Pen Pressure', label: 'Piaf Ranking' },
+		{ id: 'pmax-ranking', category: 'Pen Pressure', label: 'Pmax Ranking' },
 		{ id: 'bands-brightness', category: 'Display Bands', label: 'Brightness' },
 		{ id: 'bands-contrast', category: 'Display Bands', label: 'Contrast' },
 		{ id: 'bands-response-time', category: 'Display Bands', label: 'Response Time' },
@@ -130,8 +130,8 @@
 
 	let { data } = $props();
 
-	const iafBands = IAF_BANDS;
-	const maxPressureBands = MAX_PRESSURE_BANDS;
+	const piafBands = PIAF_BANDS;
+	const pmaxBands = PMAX_BANDS;
 	let paperSizes = $derived(data.paperSizes);
 	let usPaperSizes = $derived(data.usPaperSizes);
 	let allTablets = $derived(data.allTablets);
@@ -610,26 +610,27 @@
 					</tbody>
 				</table>
 			</section>
-		{:else if activeSection === 'iaf-ranking'}
+		{:else if activeSection === 'piaf-ranking'}
 			<section>
 				<div class="section-header">
-					<h2>IAF Ranking</h2>
+					<h2>Piaf Ranking</h2>
 				</div>
 				<p class="ref-blurb">
-					Initial Activation Force is the minimum force required for a pen tip to register pressure.
-					Lower is better — a lighter touch means more natural shading and less hand fatigue.
+					Piaf (Initial Activation Force) is the minimum force required for a pen tip to register
+					pressure. Lower is better — a lighter touch means more natural shading and less hand
+					fatigue.
 				</p>
-				<BandsChart bands={iafBands} axisMax={10} axisStep={1} unit="gf" title="IAF Ranking" />
+				<BandsChart bands={piafBands} axisMax={10} axisStep={1} unit="gf" title="Piaf Ranking" />
 				<div class="subsection-header">
 					<h3>Ranking Bands</h3>
 					<button
 						class="copy-btn"
 						onclick={() =>
 							openExport(
-								'IAF Ranking',
-								'iaf-ranking',
+								'Piaf Ranking',
+								'piaf-ranking',
 								['Rank', 'Range (gf)'],
-								iafBands.map((b) => [
+								piafBands.map((b) => [
 									b.label,
 									b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
 								]),
@@ -639,7 +640,7 @@
 				<table class="ref-table">
 					<thead><tr><th>Rank</th><th>Range</th></tr></thead>
 					<tbody>
-						{#each iafBands as b (b.label)}
+						{#each piafBands as b (b.label)}
 							<tr>
 								<td>{b.label}</td>
 								<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
@@ -648,17 +649,17 @@
 					</tbody>
 				</table>
 			</section>
-		{:else if activeSection === 'max-pressure'}
+		{:else if activeSection === 'pmax-ranking'}
 			<section>
 				<div class="section-header">
-					<h2>Max Physical Pressure</h2>
+					<h2>Pmax Ranking</h2>
 				</div>
 				<BandsChart
-					bands={maxPressureBands}
+					bands={pmaxBands}
 					axisMax={1000}
 					axisStep={100}
 					unit="gf"
-					title="Max Physical Pressure"
+					title="Pmax Ranking"
 				/>
 				<div class="subsection-header">
 					<h3>Ranking Bands</h3>
@@ -666,10 +667,10 @@
 						class="copy-btn"
 						onclick={() =>
 							openExport(
-								'Max Physical Pressure',
-								'max-physical-pressure',
+								'Pmax Ranking',
+								'pmax-ranking',
 								['Rank', 'Range (gf)'],
-								maxPressureBands.map((b) => [
+								pmaxBands.map((b) => [
 									b.label,
 									b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
 								]),
@@ -679,7 +680,7 @@
 				<table class="ref-table">
 					<thead><tr><th>Rank</th><th>Range</th></tr></thead>
 					<tbody>
-						{#each maxPressureBands as b (b.label)}
+						{#each pmaxBands as b (b.label)}
 							<tr>
 								<td>{b.label}</td>
 								<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>

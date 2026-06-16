@@ -1,5 +1,5 @@
 // Unified band definitions used by:
-//   - BandsChart (IAF and Max Pressure horizontal ranking visualisations)
+//   - BandsChart (Piaf and Pmax horizontal ranking visualisations)
 //   - ValueHistogram (the spec band overlays on Brightness, Contrast, etc.)
 //   - The Reference page documentation tables
 //
@@ -7,7 +7,7 @@
 // open-ended right edge ("and above") — currently only used by the
 // pressure bands.
 
-/** Open-ended right edge allowed (used by BandsChart for IAF / Max Pressure
+/** Open-ended right edge allowed (used by BandsChart for Piaf / Pmax
  * where the trailing band is "AVOID" or "EXCESSIVE", i.e. ≥ N). */
 export interface Band {
 	label: string;
@@ -25,11 +25,11 @@ export interface SpecBand {
 
 // --- Pen Pressure (used by BandsChart) ---
 
-/** IAF (Initial Activation Force) ranking bands in gram-force. Lower is
+/** Piaf (Initial Activation Force) ranking bands in gram-force. Lower is
  * better — a lighter touch means more natural shading and less hand
  * fatigue. Labelled S/A/B/C/D (tier-list style) so the single-letter
  * names fit comfortably above the narrow lower bands on a 22 gf axis. */
-export const IAF_BANDS: Band[] = [
+export const PIAF_BANDS: Band[] = [
 	{ min: 0, max: 1, label: 'S' },
 	{ min: 1, max: 2, label: 'A' },
 	{ min: 2, max: 3.5, label: 'B' },
@@ -37,11 +37,11 @@ export const IAF_BANDS: Band[] = [
 	{ min: 5, max: null, label: 'D' },
 ];
 
-/** Max Physical Pressure ranking bands in gram-force. Higher = more
+/** Pmax (Maximum Force) ranking bands in gram-force. Higher = more
  * dynamic range before the pen saturates; too high = excessive arm
  * fatigue to reach full pressure. Labelled S/A/B/C/D/X (tier-list
  * style, with X reserved for the EXCESSIVE upper tail). */
-export const MAX_PRESSURE_BANDS: Band[] = [
+export const PMAX_BANDS: Band[] = [
 	{ min: 100, max: 150, label: 'D' },
 	{ min: 150, max: 200, label: 'C' },
 	{ min: 200, max: 350, label: 'B' },
