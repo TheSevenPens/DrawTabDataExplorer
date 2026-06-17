@@ -6,6 +6,7 @@
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import { fmtP } from '$data/lib/pressure/interpolate.js';
 	import { resolveIafByUnit } from '$data/lib/pressure/iaf-resolve.js';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 
 	let {
 		pressureSessions,
@@ -49,7 +50,18 @@
 
 	let measuredCount = $derived(resolved.filter((r) => r.source === 'measured').length);
 	let estimatedCount = $derived(resolved.length - measuredCount);
-	let multiPen = $derived(new Set(resolved.map((r) => r.penEntityId)).size > 1);
+
+	// Pen display name for the leading column / exports. Falls back to the raw
+	// EntityId when no label was supplied for that pen.
+	function penName(penEntityId: string): string {
+		return penNameById.get(penEntityId) ?? penEntityId;
+	}
+	let nameSlug = $derived(
+		chartTitlePrefix
+			.replace(/[^a-z0-9]+/gi, '-')
+			.replace(/^-+|-+$/g, '')
+			.toLowerCase() || 'pen',
+	);
 
 	let stats = $derived.by(() => {
 		const xs = resolved.map((r) => r.value).sort((a, b) => a - b);
@@ -103,6 +115,24 @@
 		const fmt = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 		return `${fmt(resolved.length, 'pen unit', 'pen units')} · ${measuredCount} measured · ${estimatedCount} estimated`;
 	});
+
+	let summaryExportRows = $derived<(string | number)[][]>(
+		stats
+			? [
+					['Min', fmtP(stats.min)],
+					['Median', fmtP(stats.median)],
+					['Max', fmtP(stats.max)],
+				]
+			: [],
+	);
+	let perUnitExportRows = $derived<(string | number)[][]>(
+		resolved.map((r) => [
+			penName(r.penEntityId),
+			r.inventoryId,
+			fmtP(r.value),
+			r.source === 'measured' ? 'measured' : 'estimated',
+		]),
+	);
 </script>
 
 {#if stats}
@@ -144,58 +174,81 @@
 {/if}
 
 {#if stats}
-	<table class="piaf-summary-table">
-		<tbody>
-			<tr>
-				<th>Min <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(stats.min)}</td>
-			</tr>
-			<tr>
-				<th>Median <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(stats.median)}</td>
-			</tr>
-			<tr>
-				<th>Max <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(stats.max)}</td>
-			</tr>
-		</tbody>
-	</table>
-	<table class="per-unit-table">
-		<thead>
-			<tr>
-				<th>Inventory ID</th>
-				{#if multiPen}<th>Pen</th>{/if}
-				<th class="num">IAF<br /><span class="unit">(gf)</span></th>
-				<th>Source</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each resolved as r (r.inventoryId)}
+	<div class="table-block">
+		<div class="table-toolbar">
+			<span class="table-label">IAF — min / median / max</span>
+			<ExportTableButton
+				entityType="pressure-range"
+				title={`${displayName} — IAF summary`}
+				filename={`iaf-summary-${nameSlug}`}
+				headers={['Statistic', 'IAF (gf)']}
+				rows={summaryExportRows}
+			/>
+		</div>
+		<table class="piaf-summary-table">
+			<tbody>
 				<tr>
-					<td class="mono">{r.inventoryId}</td>
-					{#if multiPen}
+					<th>Min <span class="unit">(gf)</span></th>
+					<td class="mono">{fmtP(stats.min)}</td>
+				</tr>
+				<tr>
+					<th>Median <span class="unit">(gf)</span></th>
+					<td class="mono">{fmtP(stats.median)}</td>
+				</tr>
+				<tr>
+					<th>Max <span class="unit">(gf)</span></th>
+					<td class="mono">{fmtP(stats.max)}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="table-block">
+		<div class="table-toolbar">
+			<span class="table-label">IAF by unit</span>
+			<ExportTableButton
+				entityType="pressure-range"
+				title={`${displayName} — IAF by unit`}
+				filename={`iaf-by-unit-${nameSlug}`}
+				headers={['Pen', 'Inventory ID', 'IAF (gf)', 'Source']}
+				rows={perUnitExportRows}
+			/>
+		</div>
+		<table class="per-unit-table">
+			<thead>
+				<tr>
+					<th>Pen</th>
+					<th>Inventory ID</th>
+					<th class="num">IAF<br /><span class="unit">(gf)</span></th>
+					<th>Source</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each resolved as r (r.inventoryId)}
+					<tr>
 						<td>
 							<a href={resolve('/entity/[entityId]', { entityId: r.penEntityId })}>
-								{penNameById.get(r.penEntityId) ?? r.penEntityId}
+								{penName(r.penEntityId)}
 							</a>
 						</td>
-					{/if}
-					<td class="num mono">{fmtP(r.value)}</td>
-					<td>
-						{#if r.source === 'measured'}
-							<span class="tag measured" title="Direct measurement ({r.count})">measured</span>
-						{:else}
-							<span
-								class="tag estimated"
-								title="Estimated from {r.count} pressure session{r.count === 1 ? '' : 's'}"
-								>est.</span
-							>
-						{/if}
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+						<td class="mono">{r.inventoryId}</td>
+						<td class="num mono">{fmtP(r.value)}</td>
+						<td>
+							{#if r.source === 'measured'}
+								<span class="tag measured" title="Direct measurement ({r.count})">measured</span>
+							{:else}
+								<span
+									class="tag estimated"
+									title="Estimated from {r.count} pressure session{r.count === 1 ? '' : 's'}"
+									>est.</span
+								>
+							{/if}
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 {:else}
 	<p class="no-data">No IAF data available for {entityLabel}.</p>
 {/if}
@@ -256,10 +309,27 @@
 		border-top-style: dashed;
 	}
 
+	.table-block {
+		margin: 16px 0;
+	}
+	.table-toolbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		max-width: 520px;
+		margin-bottom: 6px;
+	}
+	.table-label {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-muted);
+	}
+
 	.piaf-summary-table {
 		border-collapse: collapse;
 		font-size: 13px;
-		margin: 12px 0;
+		margin: 0;
 		width: fit-content;
 	}
 	.piaf-summary-table th {
@@ -286,7 +356,7 @@
 	.per-unit-table {
 		border-collapse: collapse;
 		font-size: 13px;
-		margin: 8px 0 16px;
+		margin: 0;
 		width: fit-content;
 	}
 	.per-unit-table th {

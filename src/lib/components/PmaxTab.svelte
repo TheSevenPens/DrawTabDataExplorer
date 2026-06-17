@@ -7,6 +7,7 @@
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import { estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 
 	// Sessions passed to the embedded Pmax-zoom PressureChart. The parent
 	// computes these alongside the other pressure tabs to keep colors and
@@ -133,6 +134,36 @@
 		const fmt = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 		return `${fmt(models, 'pen model', 'pen models')} · ${fmt(units, 'pen unit', 'pen units')} · ${fmt(sessions, 'session', 'sessions')}`;
 	});
+
+	function tabletName(id: string): string {
+		return id ? (tabletNameById.get(id) ?? id) : '';
+	}
+	let nameSlug = $derived(
+		chartTitlePrefix
+			.replace(/[^a-z0-9]+/gi, '-')
+			.replace(/^-+|-+$/g, '')
+			.toLowerCase() || 'pen',
+	);
+	let summaryExportRows = $derived<(string | number)[][]>(
+		pmaxStats
+			? [
+					['Min', fmtP(pmaxStats.min)],
+					['Median', fmtP(pmaxStats.median)],
+					['Max', fmtP(pmaxStats.max)],
+				]
+			: [],
+	);
+	let perSessionExportRows = $derived<(string | number)[][]>(
+		perSessionRows.map((r) => [
+			r.inventoryId,
+			r.date,
+			tabletName(r.session.TabletEntityId),
+			r.session.Driver,
+			r.topForce !== null ? fmtP(r.topForce) : '—',
+			r.topLogical !== null ? r.topLogical.toFixed(1) : '—',
+			r.pmax !== null ? fmtP(r.pmax) : '—',
+		]),
+	);
 </script>
 
 {#if pmaxStats}
@@ -166,64 +197,97 @@
 />
 
 {#if pmaxStats}
-	<table class="pmax-summary-table">
-		<tbody>
-			<tr>
-				<th>Min <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(pmaxStats.min)}</td>
-			</tr>
-			<tr>
-				<th>Median <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(pmaxStats.median)}</td>
-			</tr>
-			<tr>
-				<th>Max <span class="unit">(gf)</span></th>
-				<td class="mono">{fmtP(pmaxStats.max)}</td>
-			</tr>
-		</tbody>
-	</table>
-	<table class="per-session-table">
-		<thead>
-			<tr>
-				<th>Inventory ID</th>
-				<th>Date</th>
-				<th>Tablet</th>
-				<th>Driver</th>
-				<th class="num">
-					Highest measured
-					<br /><span class="unit">(gf @ logical %)</span>
-				</th>
-				<th class="num">Pmax estimate<br /><span class="unit">(gf)</span></th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each perSessionRows as r (r.id)}
+	<div class="table-block">
+		<div class="table-toolbar">
+			<span class="table-label">Pmax — min / median / max</span>
+			<ExportTableButton
+				entityType="pressure-response"
+				title={`${displayName} — Pmax summary`}
+				filename={`pmax-summary-${nameSlug}`}
+				headers={['Statistic', 'Pmax (gf)']}
+				rows={summaryExportRows}
+			/>
+		</div>
+		<table class="pmax-summary-table">
+			<tbody>
 				<tr>
-					<td class="mono">
-						<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.inventoryId}</a>
-					</td>
-					<td class="mono">
-						<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.date}</a>
-					</td>
-					<td>
-						{#if r.session.TabletEntityId}
-							<a href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}>
-								{tabletNameById.get(r.session.TabletEntityId) ?? r.session.TabletEntityId}
-							</a>
-						{/if}
-					</td>
-					<td class="mono">{r.session.Driver}</td>
-					<td class="num mono">
-						{r.topForce !== null ? fmtP(r.topForce) : '—'}
-						{#if r.topLogical !== null}
-							<span class="logical-pct">@ {r.topLogical.toFixed(1)}%</span>
-						{/if}
-					</td>
-					<td class="num mono">{r.pmax !== null ? fmtP(r.pmax) : '—'}</td>
+					<th>Min <span class="unit">(gf)</span></th>
+					<td class="mono">{fmtP(pmaxStats.min)}</td>
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+				<tr>
+					<th>Median <span class="unit">(gf)</span></th>
+					<td class="mono">{fmtP(pmaxStats.median)}</td>
+				</tr>
+				<tr>
+					<th>Max <span class="unit">(gf)</span></th>
+					<td class="mono">{fmtP(pmaxStats.max)}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="table-block">
+		<div class="table-toolbar">
+			<span class="table-label">Pmax by session</span>
+			<ExportTableButton
+				entityType="pressure-response"
+				title={`${displayName} — Pmax by session`}
+				filename={`pmax-by-session-${nameSlug}`}
+				headers={[
+					'Inventory ID',
+					'Date',
+					'Tablet',
+					'Driver',
+					'Highest measured (gf)',
+					'Highest logical (%)',
+					'Pmax estimate (gf)',
+				]}
+				rows={perSessionExportRows}
+			/>
+		</div>
+		<table class="per-session-table">
+			<thead>
+				<tr>
+					<th>Inventory ID</th>
+					<th>Date</th>
+					<th>Tablet</th>
+					<th>Driver</th>
+					<th class="num">
+						Highest measured
+						<br /><span class="unit">(gf @ logical %)</span>
+					</th>
+					<th class="num">Pmax estimate<br /><span class="unit">(gf)</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each perSessionRows as r (r.id)}
+					<tr>
+						<td class="mono">
+							<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.inventoryId}</a>
+						</td>
+						<td class="mono">
+							<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.date}</a>
+						</td>
+						<td>
+							{#if r.session.TabletEntityId}
+								<a href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}>
+									{tabletNameById.get(r.session.TabletEntityId) ?? r.session.TabletEntityId}
+								</a>
+							{/if}
+						</td>
+						<td class="mono">{r.session.Driver}</td>
+						<td class="num mono">
+							{r.topForce !== null ? fmtP(r.topForce) : '—'}
+							{#if r.topLogical !== null}
+								<span class="logical-pct">@ {r.topLogical.toFixed(1)}%</span>
+							{/if}
+						</td>
+						<td class="num mono">{r.pmax !== null ? fmtP(r.pmax) : '—'}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
 	<PressureChart
 		sessions={chartSessions}
 		title={`${chartTitlePrefix} pressure response (Pmax)`}
@@ -280,10 +344,27 @@
 		font-weight: 600;
 	}
 
+	.table-block {
+		margin: 16px 0;
+	}
+	.table-toolbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		max-width: 520px;
+		margin-bottom: 6px;
+	}
+	.table-label {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-muted);
+	}
+
 	.pmax-summary-table {
 		border-collapse: collapse;
 		font-size: 13px;
-		margin: 12px 0;
+		margin: 0;
 		width: fit-content;
 	}
 	.pmax-summary-table th {
@@ -310,7 +391,7 @@
 	.per-session-table {
 		border-collapse: collapse;
 		font-size: 13px;
-		margin: 8px 0 16px;
+		margin: 0;
 		width: fit-content;
 	}
 	.per-session-table th {

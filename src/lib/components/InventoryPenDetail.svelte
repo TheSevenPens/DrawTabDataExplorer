@@ -111,6 +111,7 @@
 			chartTitlePrefix={item.InventoryId}
 			entityLabel="this pen unit"
 			iafMeasurements={data.iafMeasurements ?? []}
+			penNameById={new Map([[item.PenEntityId, modelName]])}
 		/>
 	</div>
 {/if}

@@ -520,6 +520,7 @@
 						chartTitlePrefix={section.pen.PenName}
 						entityLabel="this pen model"
 						iafMeasurements={section.iaf}
+						penNameById={new Map([[section.pen.EntityId, penBrandAndName(section.pen)]])}
 					/>
 				{/if}
 			</section>
