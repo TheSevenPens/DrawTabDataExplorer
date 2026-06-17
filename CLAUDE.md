@@ -258,8 +258,21 @@ will surprise contributors:
   it.
 
 The `lockedZoom` prop on `PressureChart` hides the Zoom dropdown and
-forces a preset — used by the Pmax tab to embed a max-zoomed
-chart alongside the bands charts.
+forces a preset — used by the `/pen-compare` combined Pmax comparison to
+embed a max-zoomed overlay chart.
+
+## IAF / MAX tabs
+
+The pen, pen-family, inventory-unit, and pen-compare detail views share
+one `PressureRangeTab.svelte` (prop `metric: "IAF" | "MAX"`) — it
+replaced the old `PiafTab` / `PmaxTab`. Three modes (Summary default / By
+unit / By sample) all derive from
+`resolveRangeByUnit(metric, sessions, measurements)` in
+`data-repo/lib/pressure/range-resolve.ts` (was `iaf-resolve.ts`), which
+applies **measured-wins-per-unit**: a pen unit with any direct
+`PressureRange` measurement uses those, else the per-session estimate.
+The `/pen-compare` IAF tab also shows one combined `PressureRangeTab`
+over all flagged pens at the top.
 
 ## Type aliases
 

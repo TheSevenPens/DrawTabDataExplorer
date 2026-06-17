@@ -121,11 +121,11 @@ Detail page for a single tablet model. Tabs: _Model_ / _Specs_ / _Size Compariso
 
 ### `PenDetail`
 
-Detail page for a single pen model. Tabs: _Model_ / _Specs_ / _Inventory_ / _Compatible Tablets_ / _Pressure Response_ / _IAF_ / _MAX_ / _Included With_. (The _IAF_ and _MAX_ tabs embed `PiafTab` / `PmaxTab`, which show the estimated Piaf / Pmax; the broader tab labels also leave room for a future direct IAF / max measurement.)
+Detail page for a single pen model. Tabs: _Model_ / _Specs_ / _Inventory_ / _Compatible Tablets_ / _Pressure Response_ / _IAF_ / _MAX_ / _Included With_. (The _IAF_ and _MAX_ tabs each embed a `PressureRangeTab` with the matching `metric`; it resolves each pen unit to a direct measurement where available, else the per-session estimate.)
 
 ### `PenFamilyDetail`
 
-Detail page for a pen family (e.g. _Wacom Pro Pen Gen 3_). Tabs include the same pressure-tab trio (`PressureChart`, `PiafTab`, `PmaxTab`) aggregated across the family's members.
+Detail page for a pen family (e.g. _Wacom Pro Pen Gen 3_). Tabs include the same pressure views (`PressureChart`, plus `PressureRangeTab` for IAF and MAX) aggregated across the family's members.
 
 ### `TabletFamilyDetail`
 
@@ -161,13 +161,9 @@ Generic key-value renderer shared by every `*Detail` page. Walks the entity's `F
 
 These are reusable sub-views referenced by the `Tabs` strip on pen / pen-family / tablet detail pages.
 
-### `PiafTab`
+### `PressureRangeTab`
 
-Piaf (Initial Activation Force) tab. Embeds a `PressureChart` locked to `piaf` zoom and renders the per-session Piaf ranking with min/median/max bands via `BandsChart`.
-
-### `PmaxTab`
-
-Mirror of `PiafTab` for Pmax. Two `BandsChart`s ("All Pmax values" + "Pmax range" with `shadedRange`) and a `PressureChart` locked to `pmax` zoom.
+Shared IAF / MAX tab, parameterised by a `metric` prop (`"IAF" | "MAX"`); replaced the former `PiafTab` / `PmaxTab`. A toggle selects three modes — _Summary_ (min/median/max, default), _By unit_ (one row per pen unit), _By sample_ (every datapoint) — all rendered as a `BandsChart` + table. Values come from `resolveRangeByUnit` (measured-wins-per-unit: a direct `PressureRange` measurement beats the per-session estimate); measured markers are solid, estimated dashed. Used by the pen / pen-family / inventory-unit detail tabs and `/pen-compare` (per-pen and one combined-across-flagged-pens instance on the IAF tab).
 
 ---
 
@@ -177,7 +173,7 @@ Pure presentation components. Each has clear inputs and produces an SVG or canva
 
 ### `PressureChart`
 
-Chart.js scatter of physical force (gf) vs logical pressure (%). View modes: _Raw_ / _Raw + estimates_ / _Standardized_ / _Envelope_. Zoom modes: _Normal_ / _Piaf detail (0-20 gf)_ / _Pmax detail (95-100%)_. Optional `lockedZoom` hides the dropdown and forces a preset (used by `PmaxTab` and `PiafTab`).
+Chart.js scatter of physical force (gf) vs logical pressure (%). View modes: _Raw_ / _Raw + estimates_ / _Standardized_ / _Envelope_. Zoom modes: _Normal_ / _Piaf detail (0-20 gf)_ / _Pmax detail (95-100%)_. Optional `lockedZoom` hides the dropdown and forces a preset (used by the `/pen-compare` combined Pmax comparison).
 
 **Must-read before editing:** [CLAUDE.md § Pressure response charts](../CLAUDE.md) (envelope `fill: 'shape'` polygon and dynamic Pmax x-axis are non-obvious).
 
@@ -189,7 +185,7 @@ Per-session legend table that sits below a `PressureChart` when multiple session
 
 Pure-SVG horizontal range-bands chart. One band per record; optional `markers` (red vertical lines, dashed or solid, with labels), `shadedRange` (semi-transparent red rectangle for highlighting a min↔max span), and `heading` (rendered _inside_ the SVG so it survives PNG/SVG export).
 
-_Used by:_ Reference page (Piaf Ranking, Pmax Ranking), Pen / Pen-family Pmax tabs.
+_Used by:_ Reference page (IAF Ranking, MAX Ranking), `PressureRangeTab` (IAF / MAX tabs), and the pen-analysis distribution sections.
 
 ### `ValueHistogram`
 

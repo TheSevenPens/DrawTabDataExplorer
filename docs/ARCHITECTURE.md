@@ -192,29 +192,39 @@ sub-tabs are declared inline on each Data page.
 ## Pressure response charts
 
 `PressureChart.svelte` — Chart.js scatter for force (gf) vs pressure (%).
-Used on Pressure Response, pen/pen-family detail tabs, and Pmax.
+Used on the Pressure Response tabs and the `/pen-compare` combined Pmax
+comparison (`lockedZoom="pmax"`).
 
 **Must-read before editing:** [CLAUDE.md](../CLAUDE.md) § Pressure response charts
 (envelope `fill: 'shape'` polygon, dynamic Pmax x-axis, `lockedZoom`).
 
-## Pmax tab
+## IAF & MAX tabs (`PressureRangeTab`)
 
-Both `PenDetail.svelte` and `PenFamilyDetail.svelte` expose a Pmax
-tab with the same structure:
+The pen, pen-family, inventory-unit, and pen-compare views all embed one
+shared [`PressureRangeTab.svelte`](../src/lib/components/PressureRangeTab.svelte),
+parameterised by a `metric` prop (`"IAF"` | `"MAX"`). It replaces the
+former separate `PiafTab` / `PmaxTab`. A toggle at the top switches three
+view modes (Summary is the default):
 
-1. _All Pmax values_ — `<BandsChart>` with one solid red marker per
-   non-defective session's `estimatePmax(records)`.
-2. _Pmax range_ — a second `<BandsChart>` with `shadedRange`
-   spanning min↔max and three markers (Min, Median labelled and bold,
-   Max), plus a small Min/Median/Max table beneath.
-3. _Pressure response (max-zoom)_ — a `<PressureChart>` with
-   `lockedZoom="pmax"` so the user can switch view modes but stays
-   focused on the saturation region.
+1. _Summary_ — `<BandsChart>` with Min / Max markers, a bold labelled
+   Median, and a `shadedRange` across min↔max, plus a Min/Median/Max table.
+2. _By unit_ — one marker / table row per pen unit (the median of that
+   unit's datapoints); solid marker = measured, dashed = estimated.
+3. _By sample_ — every resolved datapoint individually (date, tablet,
+   driver), no aggregation.
 
-Both pages duplicate the `pmaxBands` constant inline with a
-"keep in sync" comment pointing back to
-`src/routes/reference/+page.svelte`. Defective sessions are excluded
-via `defectsByInventoryId` (same rule used by `<SessionStats>`).
+Values come from `resolveRangeByUnit(metric, sessions, measurements)`
+([`data-repo/lib/pressure/range-resolve.ts`](../data-repo/lib/pressure/range-resolve.ts))
+— **measured wins per unit**: a unit with any direct `PressureRange`
+measurement resolves from those, otherwise from the per-session
+bracket-midpoint estimate. Defective sessions are excluded via
+`defectsByInventoryId`. Bands (`PIAF_BANDS` / `PMAX_BANDS`) and axis are
+chosen from the metric.
+
+On `/pen-compare`, the IAF tab additionally renders one combined
+`PressureRangeTab` over the union of every flagged pen (a Pen column
+distinguishes models) above the per-pen sections; the MAX tab keeps its
+multi-colour combined overlay comparison.
 
 ## Label formatting (model id suppression)
 
@@ -254,9 +264,10 @@ several files:
 
 ## Shared modules
 
-- **`src/lib/bands.ts`** — Reference band definitions (Piaf ranking, Pmax
-  ranking) shared by the Reference page and the `PiafTab` /
-  `PmaxTab` components. (Pages that need multiple datasets read
+- **`src/lib/bands.ts`** — Reference band definitions (IAF / MAX ranking,
+  each band carrying an optional `name` rating like "EXCELLENT", plus pen
+  dimension bands) shared by the Reference page, `PressureRangeTab`, and
+  the pen-analysis distribution sections. (Pages that need multiple datasets read
   them from the session `DrawTabDataSet` exposed as `ds` via
   `await parent()` — see "One DataSet per session" in
   [CLAUDE.md](../CLAUDE.md) — not a load-all helper.)

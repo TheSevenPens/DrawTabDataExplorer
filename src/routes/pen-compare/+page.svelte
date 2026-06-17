@@ -102,6 +102,16 @@
 		}),
 	);
 
+	// Combined pool across every flagged pen — feeds the "all flagged pens as a
+	// group" analysis at the top of the IAF / MAX tabs. PressureRangeTab
+	// resolves per unit across all the models, and the per-pen labels let its
+	// by-unit / by-sample tables show which pen each unit belongs to.
+	let combinedSessions = $derived(perPenSections.flatMap((s) => s.sessions));
+	let combinedIaf = $derived(perPenSections.flatMap((s) => s.iaf));
+	let flaggedPenNameById = $derived(
+		new Map(flaggedItems.map((p) => [p.EntityId, penBrandAndName(p)])),
+	);
+
 	// --- Combined Pmax comparison ---
 	//
 	// Aggregates every flagged pen's non-defective sessions onto one
@@ -504,6 +514,21 @@
 			Flag at least one pen to see its Piaf chart. Currently {flaggedItems.length} flagged.
 		</p>
 	{:else}
+		<section class="group-section">
+			<h2 class="group-heading">All flagged pens — combined</h2>
+			<PressureRangeTab
+				metric="IAF"
+				pressureSessions={combinedSessions}
+				{defectsByInventoryId}
+				displayName="All flagged pens"
+				chartTitlePrefix="Flagged pens"
+				entityLabel="any flagged pen"
+				measurements={combinedIaf}
+				penNameById={flaggedPenNameById}
+				tabletNameById={data.tabletNameById ?? new Map()}
+			/>
+		</section>
+		<h3 class="group-divider">By pen</h3>
 		{#each perPenSections as section (section.pen.EntityId)}
 			<section class="per-pen-section">
 				<h2 class="per-pen-heading">
@@ -864,6 +889,28 @@
 		border-radius: 4px;
 		background: var(--bg-card);
 		color: var(--text);
+	}
+
+	.group-section {
+		margin-bottom: 32px;
+		padding-bottom: 24px;
+		border-bottom: 1px solid var(--border);
+	}
+	.group-heading {
+		font-size: 16px;
+		font-weight: 600;
+		color: #6b21a8;
+		margin: 0 0 12px;
+		padding-bottom: 4px;
+		border-bottom: 2px solid var(--border);
+	}
+	.group-divider {
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-muted);
+		margin: 0 0 16px;
 	}
 
 	.per-pen-section {
