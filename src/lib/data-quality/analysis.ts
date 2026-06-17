@@ -133,8 +133,9 @@ export function analyzeData(data: AnalysisInput) {
 
 	// Direct pressure-range measurement integrity: the PenInventoryId must
 	// resolve to an owned inventory pen, the (optional) TabletEntityId to a
-	// known tablet, and exact repeats (same unit / metric / date / tablet /
-	// driver / OS) are flagged as likely duplicate entries.
+	// known tablet, and exact-identical rows (same unit / metric / date /
+	// tablet / driver / OS / value) are flagged as likely accidental
+	// re-imports. Same-day repeat trials with different values are allowed.
 	const rangeInvIds = new Set(invPens.map((p) => p.InventoryId));
 	const rangeTabletIds = new Set(tablets.map((t) => t.Meta.EntityId));
 	const seenRange = new Set<string>();
@@ -157,13 +158,25 @@ export function analyzeData(data: AnalysisInput) {
 				value: m.TabletEntityId,
 			});
 		}
-		const dupKey = [m.PenInventoryId, m.Metric, m.Date, m.TabletEntityId, m.Driver, m.OS].join('|');
+		// Value is part of the key: two same-context readings with *different*
+		// values are an intentional same-day repeat trial (allowed), not a
+		// duplicate — only an exact-identical row (likely an accidental
+		// re-import) is flagged.
+		const dupKey = [
+			m.PenInventoryId,
+			m.Metric,
+			m.Date,
+			m.TabletEntityId,
+			m.Driver,
+			m.OS,
+			m.Value,
+		].join('|');
 		if (seenRange.has(dupKey)) {
 			allIssues.push({
 				entity: 'PressureRange',
 				entityId: m._id,
 				field: 'Metric',
-				issue: 'duplicate measurement (same unit / metric / date / tablet / driver / OS)',
+				issue: 'identical measurement (same unit / metric / date / tablet / driver / OS / value)',
 				value: dupKey,
 			});
 		}
