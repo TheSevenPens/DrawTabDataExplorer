@@ -1,29 +1,15 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
-	import PressureChart from '$lib/components/PressureChart.svelte';
 	import { PIAF_BANDS } from '$lib/bands.js';
 	import type { PressureResponse, PressureRange } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import { fmtP } from '$data/lib/pressure/interpolate.js';
 	import { resolveIafByUnit } from '$data/lib/pressure/iaf-resolve.js';
 
-	// Mirrors PmaxTab. Sessions passed to the embedded Piaf-zoom
-	// PressureChart so colors / hidden state stay in sync across tabs.
-	interface ChartSession {
-		id: string;
-		label: string;
-		records: PressureResponse['Records'];
-		color: string | undefined;
-		defective: boolean;
-		defectInfo?: string;
-	}
-
 	let {
 		pressureSessions,
 		defectsByInventoryId,
-		chartSessions,
-		hiddenIds,
 		displayName,
 		chartTitlePrefix,
 		entityLabel,
@@ -32,8 +18,6 @@
 	}: {
 		pressureSessions: PressureResponse[];
 		defectsByInventoryId: ReadonlyMap<string, DefectInfo>;
-		chartSessions: ChartSession[];
-		hiddenIds: ReadonlySet<string>;
 		displayName: string;
 		chartTitlePrefix: string;
 		entityLabel: string;
@@ -212,12 +196,6 @@
 			{/each}
 		</tbody>
 	</table>
-	<PressureChart
-		sessions={chartSessions}
-		title={`${chartTitlePrefix} pressure response (Piaf)`}
-		{hiddenIds}
-		lockedZoom="piaf"
-	/>
 {:else}
 	<p class="no-data">No IAF data available for {entityLabel}.</p>
 {/if}

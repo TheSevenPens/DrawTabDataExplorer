@@ -3,7 +3,12 @@
 	import { type PressureResponse, type Pen, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { penFullName } from '$lib/pen-helpers.js';
 	import { tabletFullName } from '$lib/tablet-helpers.js';
-	import { estimatePiaf, estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
+	import {
+		estimatePiaf,
+		estimatePmax,
+		fmtP,
+		IAF_LOGICAL_PCT,
+	} from '$data/lib/pressure/interpolate.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
@@ -51,7 +56,7 @@
 			force,
 			pct,
 		}));
-		if (piaf !== null) rows.push({ kind: 'est', label: 'Piaf', force: piaf, pct: 0 });
+		if (piaf !== null) rows.push({ kind: 'est', label: 'Piaf', force: piaf, pct: IAF_LOGICAL_PCT });
 		if (pmax !== null) rows.push({ kind: 'est', label: 'Pmax', force: pmax, pct: 100 });
 		return rows.sort((a, b) => a.force - b.force);
 	});

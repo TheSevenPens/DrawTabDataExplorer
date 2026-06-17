@@ -107,8 +107,6 @@
 		<PiafTab
 			{pressureSessions}
 			{defectsByInventoryId}
-			{chartSessions}
-			hiddenIds={hiddenSessionIds}
 			displayName={`${modelName} ${item.InventoryId}`}
 			chartTitlePrefix={item.InventoryId}
 			entityLabel="this pen unit"

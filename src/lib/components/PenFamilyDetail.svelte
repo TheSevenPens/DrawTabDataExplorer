@@ -163,8 +163,6 @@
 		<PiafTab
 			{pressureSessions}
 			{defectsByInventoryId}
-			{chartSessions}
-			hiddenIds={hiddenSessionIds}
 			displayName={family.FamilyName}
 			chartTitlePrefix={family.FamilyName}
 			entityLabel="this family"

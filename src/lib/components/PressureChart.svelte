@@ -18,6 +18,7 @@
 		estimatePiaf,
 		estimatePmax,
 		interpolatePhysical,
+		IAF_LOGICAL_PCT,
 	} from '$data/lib/pressure/interpolate.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
@@ -113,7 +114,7 @@
 			if (p === 0) x = estimatePiaf(s.records);
 			else if (p === 100) x = estimatePmax(s.records);
 			else x = interpolatePhysical(s.records, p);
-			if (x !== null && isFinite(x)) out.push({ x, y: p });
+			if (x !== null && isFinite(x)) out.push({ x, y: p === 0 ? IAF_LOGICAL_PCT : p });
 		}
 		return out;
 	}
@@ -142,9 +143,10 @@
 			}
 			if (vals.length === 0) continue;
 			vals.sort((a, b) => a - b);
-			low.push({ x: pctValue(vals, loP), y: p });
-			mid.push({ x: pctValue(vals, 50), y: p });
-			high.push({ x: pctValue(vals, hiP), y: p });
+			const yVal = p === 0 ? IAF_LOGICAL_PCT : p;
+			low.push({ x: pctValue(vals, loP), y: yVal });
+			mid.push({ x: pctValue(vals, 50), y: yVal });
+			high.push({ x: pctValue(vals, hiP), y: yVal });
 		}
 		return { low, mid, high };
 	}
@@ -271,15 +273,17 @@
 			});
 
 			// Dashed Piaf estimate polyline:
-			//   [last y=0 sample] → (Piaf, 0) → [first y>0 sample]
-			// The first leg is omitted when no zero-lead samples exist
-			// (spring-decay case); the second leg is always drawn.
+			//   [last y=0 sample] → (Piaf, IAF_LOGICAL_PCT) → [first y>0 sample]
+			// IAF is the force at the first non-zero level, so the activation
+			// vertex sits at the smallest non-zero logical %, not 0. The first
+			// leg is omitted when no zero-lead samples exist; the second is always
+			// drawn.
 			if (showPiafDashed) {
 				const pts: { x: number; y: number }[] = [];
 				if (firstActiveIdx > 0) {
 					pts.push({ x: s.records[firstActiveIdx - 1][0], y: 0 });
 				}
-				pts.push({ x: piaf!, y: 0 });
+				pts.push({ x: piaf!, y: IAF_LOGICAL_PCT });
 				pts.push({ x: s.records[firstActiveIdx][0], y: s.records[firstActiveIdx][1] });
 				out.push({
 					type: 'line',
@@ -414,7 +418,8 @@
 					ctx.fill();
 				}
 				ctx.restore();
-				// Dotted circle: the estimated Piaf (bracket midpoint), at 0%.
+				// Dotted circle: the estimated Piaf (bracket midpoint), at the
+				// first non-zero level (IAF_LOGICAL_PCT), not 0%.
 				const est = estimatePiaf(s.records);
 				if (est !== null && isFinite(est) && inRange(est)) {
 					ctx.save();
@@ -422,7 +427,13 @@
 					ctx.lineWidth = 2;
 					ctx.setLineDash([2, 2]);
 					ctx.beginPath();
-					ctx.arc(xs.getPixelForValue(est), ys.getPixelForValue(0), 6, 0, Math.PI * 2);
+					ctx.arc(
+						xs.getPixelForValue(est),
+						ys.getPixelForValue(IAF_LOGICAL_PCT),
+						6,
+						0,
+						Math.PI * 2,
+					);
 					ctx.stroke();
 					ctx.restore();
 				}

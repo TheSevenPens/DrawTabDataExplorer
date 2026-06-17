@@ -42,6 +42,14 @@ If `y1 === y0` (flat segment), returns `x0`. If no segment brackets the target, 
 
 Inputs are **not assumed sorted**; the scan finds max-A / min-B across all records.
 
+`estimatePiaf` returns only the **force** (x). Where the activation point is
+_plotted_ (the dashed estimate vertex / dotted circle in `PressureChart`, the
+`SessionDetail` records row), its **logical-pressure (y)** is `IAF_LOGICAL_PCT`,
+**not 0 %**: IAF is the force that produces the _first non-zero_ level, so the
+point sits at the smallest non-zero pressure a typical 8192-level pen reports —
+`100 / 8192 ≈ 0.0122 %`. A fixed heuristic (sub-8192 pens are mostly old and
+this is an estimate regardless). The force value is unaffected.
+
 ### Why no extrapolation
 
 Prior to [#212](https://github.com/TheSevenPens/DrawTabDataExplorer/issues/212) this function had a spring-decay extrapolation branch that fit an exponential to the first few slopes and projected backward to the activation boundary. It was the chosen path for ~83 % of sessions, but the math was not trusted enough to claim an estimate where the session never captured the transition. The branch was removed once the dataset was backfilled with explicit `(force, 0)` samples on every session where the activation force could plausibly be inferred (see [`scripts/apply-pressure-backfill.mjs`](../scripts/apply-pressure-backfill.mjs)). Sessions that genuinely can't be backfilled now report `—`.
