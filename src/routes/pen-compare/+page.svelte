@@ -511,8 +511,8 @@
 						>{penBrandAndName(section.pen)}</a
 					>
 				</h2>
-				{#if section.sessions.length === 0}
-					<p class="no-data">No pressure response measurements for this pen model.</p>
+				{#if section.sessions.length === 0 && section.iaf.length === 0}
+					<p class="no-data">No IAF data for this pen model.</p>
 				{:else}
 					<PressureRangeTab
 						metric="IAF"
@@ -629,8 +629,8 @@
 						>{penBrandAndName(section.pen)}</a
 					>
 				</h2>
-				{#if section.sessions.length === 0}
-					<p class="no-data">No pressure response measurements for this pen model.</p>
+				{#if section.sessions.length === 0 && section.max.length === 0}
+					<p class="no-data">No MAX data for this pen model.</p>
 				{:else}
 					<PressureRangeTab
 						metric="MAX"

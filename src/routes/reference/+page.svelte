@@ -132,6 +132,12 @@
 
 	const piafBands = PIAF_BANDS;
 	const pmaxBands = PMAX_BANDS;
+	// PMAX_BANDS is defined low→high force (for the chart axis); the table
+	// reads better tier-first (best → excessive).
+	const MAX_RANK_ORDER = ['S', 'A', 'B', 'C', 'D', 'X'];
+	const pmaxBandsByRank = [...PMAX_BANDS].sort(
+		(a, b) => MAX_RANK_ORDER.indexOf(a.label) - MAX_RANK_ORDER.indexOf(b.label),
+	);
 	let paperSizes = $derived(data.paperSizes);
 	let usPaperSizes = $derived(data.usPaperSizes);
 	let allTablets = $derived(data.allTablets);
@@ -620,7 +626,14 @@
 					pressure. Lower is better — a lighter touch means more natural shading and less hand
 					fatigue.
 				</p>
-				<BandsChart bands={piafBands} axisMax={10} axisStep={1} unit="gf" title="IAF Ranking" />
+				<BandsChart
+					bands={piafBands}
+					axisMax={10}
+					axisStep={1}
+					unit="gf"
+					title="IAF Ranking"
+					showBandRanges={false}
+				/>
 				<div class="subsection-header">
 					<h3>Ranking Bands</h3>
 					<button
@@ -629,20 +642,22 @@
 							openExport(
 								'IAF Ranking',
 								'iaf-ranking',
-								['Rank', 'Range (gf)'],
+								['Rank', 'Rating', 'Range (gf)'],
 								piafBands.map((b) => [
 									b.label,
+									b.name ?? '',
 									b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
 								]),
 							)}>Export</button
 					>
 				</div>
 				<table class="ref-table">
-					<thead><tr><th>Rank</th><th>Range</th></tr></thead>
+					<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
 					<tbody>
 						{#each piafBands as b (b.label)}
 							<tr>
 								<td>{b.label}</td>
+								<td>{b.name ?? ''}</td>
 								<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
 							</tr>
 						{/each}
@@ -654,7 +669,14 @@
 				<div class="section-header">
 					<h2>MAX Ranking</h2>
 				</div>
-				<BandsChart bands={pmaxBands} axisMax={1000} axisStep={100} unit="gf" title="MAX Ranking" />
+				<BandsChart
+					bands={pmaxBands}
+					axisMax={1000}
+					axisStep={100}
+					unit="gf"
+					title="MAX Ranking"
+					showBandRanges={false}
+				/>
 				<div class="subsection-header">
 					<h3>Ranking Bands</h3>
 					<button
@@ -663,20 +685,22 @@
 							openExport(
 								'MAX Ranking',
 								'max-ranking',
-								['Rank', 'Range (gf)'],
-								pmaxBands.map((b) => [
+								['Rank', 'Rating', 'Range (gf)'],
+								pmaxBandsByRank.map((b) => [
 									b.label,
+									b.name ?? '',
 									b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
 								]),
 							)}>Export</button
 					>
 				</div>
 				<table class="ref-table">
-					<thead><tr><th>Rank</th><th>Range</th></tr></thead>
+					<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
 					<tbody>
-						{#each pmaxBands as b (b.label)}
+						{#each pmaxBandsByRank as b (b.label)}
 							<tr>
 								<td>{b.label}</td>
+								<td>{b.name ?? ''}</td>
 								<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
 							</tr>
 						{/each}
@@ -707,7 +731,7 @@
 							from the same source.
 						</p>
 						<table class="ref-table">
-							<thead><tr><th>Rank</th><th>Range</th></tr></thead>
+							<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
 							<tbody>
 								{#each s.bands as b (b.label)}
 									<tr>

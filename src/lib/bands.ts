@@ -13,6 +13,9 @@ export interface Band {
 	label: string;
 	min: number;
 	max: number | null;
+	/** Optional human-readable rating for the band (e.g. "EXCELLENT"),
+	 * shown alongside the short `label` in the Reference ranking tables. */
+	name?: string;
 }
 
 /** Closed interval, suitable for histograms. All spec bands satisfy this
@@ -30,11 +33,11 @@ export interface SpecBand {
  * fatigue. Labelled S/A/B/C/D (tier-list style) so the single-letter
  * names fit comfortably above the narrow lower bands on a 22 gf axis. */
 export const PIAF_BANDS: Band[] = [
-	{ min: 0, max: 1, label: 'S' },
-	{ min: 1, max: 2, label: 'A' },
-	{ min: 2, max: 3.5, label: 'B' },
-	{ min: 3.5, max: 5, label: 'C' },
-	{ min: 5, max: null, label: 'D' },
+	{ min: 0, max: 1, label: 'S', name: 'EXCELLENT' },
+	{ min: 1, max: 2, label: 'A', name: 'GREAT' },
+	{ min: 2, max: 3.5, label: 'B', name: 'GOOD' },
+	{ min: 3.5, max: 5, label: 'C', name: 'OK' },
+	{ min: 5, max: null, label: 'D', name: 'AVOID' },
 ];
 
 /** Pmax (Maximum Force) ranking bands in gram-force. Higher = more
@@ -42,12 +45,45 @@ export const PIAF_BANDS: Band[] = [
  * fatigue to reach full pressure. Labelled S/A/B/C/D/X (tier-list
  * style, with X reserved for the EXCESSIVE upper tail). */
 export const PMAX_BANDS: Band[] = [
-	{ min: 100, max: 150, label: 'D' },
-	{ min: 150, max: 200, label: 'C' },
-	{ min: 200, max: 350, label: 'B' },
-	{ min: 350, max: 500, label: 'A' },
-	{ min: 500, max: 900, label: 'S' },
-	{ min: 900, max: null, label: 'X' },
+	{ min: 100, max: 150, label: 'D', name: 'AVOID' },
+	{ min: 150, max: 200, label: 'C', name: 'OK' },
+	{ min: 200, max: 350, label: 'B', name: 'GOOD' },
+	{ min: 350, max: 500, label: 'A', name: 'GREAT' },
+	{ min: 500, max: 900, label: 'S', name: 'EXCELLENT' },
+	{ min: 900, max: null, label: 'X', name: 'EXCESSIVE' },
+];
+
+// --- Pen Dimensions (used by BandsChart / ValueHistogram) ---
+//
+// Descriptive size tiers for the pen-analysis Dimensions histograms. These
+// are not quality judgements — they're just readable buckets for the
+// distribution background and the per-band count table. Thresholds chosen
+// around the observed dataset (diameter/weight median ≈ 12, length ≈ 150);
+// the trailing band is open-ended so outliers (e.g. grip add-ons) still land
+// somewhere. Tune freely.
+
+/** Barrel diameter (mm). */
+export const PEN_DIAMETER_BANDS: Band[] = [
+	{ min: 8, max: 10, label: 'Thin' },
+	{ min: 10, max: 12, label: 'Standard' },
+	{ min: 12, max: 16, label: 'Thick' },
+	{ min: 16, max: null, label: 'Wide' },
+];
+
+/** Pen weight (g). */
+export const PEN_WEIGHT_BANDS: Band[] = [
+	{ min: 6, max: 10, label: 'Light' },
+	{ min: 10, max: 14, label: 'Medium' },
+	{ min: 14, max: 20, label: 'Heavy' },
+	{ min: 20, max: null, label: 'Very Heavy' },
+];
+
+/** Pen length (mm). */
+export const PEN_LENGTH_BANDS: Band[] = [
+	{ min: 130, max: 145, label: 'Short' },
+	{ min: 145, max: 155, label: 'Standard' },
+	{ min: 155, max: 170, label: 'Long' },
+	{ min: 170, max: null, label: 'Very Long' },
 ];
 
 // --- Display ---

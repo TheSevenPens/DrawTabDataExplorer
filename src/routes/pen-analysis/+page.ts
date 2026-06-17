@@ -7,5 +7,6 @@ export async function load({ parent }) {
 		ds.PressureRange.toArray(),
 	]);
 	const iafMeasurements = allRange.filter((m) => m.Metric === 'IAF');
-	return { pressureSessions, inventoryPens, pens, iafMeasurements };
+	const maxMeasurements = allRange.filter((m) => m.Metric === 'MAX');
+	return { pressureSessions, inventoryPens, pens, iafMeasurements, maxMeasurements };
 }
