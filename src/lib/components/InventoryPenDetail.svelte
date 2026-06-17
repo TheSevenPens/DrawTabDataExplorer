@@ -5,8 +5,7 @@
 	import PressureChart from '$lib/components/PressureChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
-	import PiafTab from '$lib/components/PiafTab.svelte';
-	import PmaxTab from '$lib/components/PmaxTab.svelte';
+	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import {
 		type InventoryPen,
@@ -104,26 +103,31 @@
 
 {#if activeTab === 'iaf'}
 	<div class="tab-content">
-		<PiafTab
+		<PressureRangeTab
+			metric="IAF"
 			{pressureSessions}
 			{defectsByInventoryId}
 			displayName={`${modelName} ${item.InventoryId}`}
 			chartTitlePrefix={item.InventoryId}
 			entityLabel="this pen unit"
-			iafMeasurements={data.iafMeasurements ?? []}
+			measurements={data.iafMeasurements ?? []}
 			penNameById={new Map([[item.PenEntityId, modelName]])}
+			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>
 {/if}
 
 {#if activeTab === 'max'}
 	<div class="tab-content">
-		<PmaxTab
+		<PressureRangeTab
+			metric="MAX"
 			{pressureSessions}
 			{defectsByInventoryId}
 			displayName={`${modelName} ${item.InventoryId}`}
 			chartTitlePrefix={item.InventoryId}
 			entityLabel="this pen unit"
+			measurements={data.maxMeasurements ?? []}
+			penNameById={new Map([[item.PenEntityId, modelName]])}
 			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>

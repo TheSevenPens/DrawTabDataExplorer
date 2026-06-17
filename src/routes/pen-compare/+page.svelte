@@ -28,8 +28,7 @@
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import PenPicker from '$lib/components/PenPicker.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
-	import PmaxTab from '$lib/components/PmaxTab.svelte';
-	import PiafTab from '$lib/components/PiafTab.svelte';
+	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
 	import { PMAX_BANDS } from '$lib/bands.js';
 	import { estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
@@ -64,6 +63,7 @@
 		data.defectsByInventoryId ?? new Map(),
 	);
 	let iafMeasurements: PressureRange[] = $derived(data.iafMeasurements ?? []);
+	let maxMeasurements: PressureRange[] = $derived(data.maxMeasurements ?? []);
 
 	// flaggedPenModels stores lowercase EntityIds; match the same casing when
 	// looking up the full pen record.
@@ -97,7 +97,8 @@
 			const colors = buildSessionColors(sessions);
 			const chartSessions = buildChartSessions(sessions, { colors, defectsByInventoryId });
 			const iaf = iafMeasurements.filter((m) => m.PenEntityId === p.EntityId);
-			return { pen: p, sessions, chartSessions, penColor: paletteColor(i), iaf };
+			const max = maxMeasurements.filter((m) => m.PenEntityId === p.EntityId);
+			return { pen: p, sessions, chartSessions, penColor: paletteColor(i), iaf, max };
 		}),
 	);
 
@@ -140,7 +141,7 @@
 	});
 
 	// "Summary" view: three markers per pen (min / median / max) in the
-	// pen's color, median thicker — mirrors the per-pen PmaxTab's
+	// pen's color, median thicker — mirrors the per-pen MAX tab's
 	// summary style but with pen-color discrimination. Labels are
 	// suppressed: with multiple pens, repeating "Median" would clutter the
 	// chart, and the colored legend below already conveys pen identity.
@@ -211,7 +212,7 @@
 	let combinedPenWithDataCount = $derived(pmaxByPen.filter((s) => s.pmaxValues.length > 0).length);
 	let anyCombinedData = $derived(combinedSessionCount > 0);
 
-	// The embedded PmaxTab takes a `hiddenIds` set; we don't expose
+	// The combined PressureChart takes a `hiddenIds` set; we don't expose
 	// toggle UI here, so it stays empty. Shared reference avoids unnecessary
 	// re-renders from new empty-set identities.
 	const EMPTY_HIDDEN: ReadonlySet<string> = new Set();
@@ -513,14 +514,16 @@
 				{#if section.sessions.length === 0}
 					<p class="no-data">No pressure response measurements for this pen model.</p>
 				{:else}
-					<PiafTab
+					<PressureRangeTab
+						metric="IAF"
 						pressureSessions={section.sessions}
 						{defectsByInventoryId}
 						displayName={penFullName(section.pen)}
 						chartTitlePrefix={section.pen.PenName}
 						entityLabel="this pen model"
-						iafMeasurements={section.iaf}
+						measurements={section.iaf}
 						penNameById={new Map([[section.pen.EntityId, penBrandAndName(section.pen)]])}
+						tabletNameById={data.tabletNameById ?? new Map()}
 					/>
 				{/if}
 			</section>
@@ -629,12 +632,15 @@
 				{#if section.sessions.length === 0}
 					<p class="no-data">No pressure response measurements for this pen model.</p>
 				{:else}
-					<PmaxTab
+					<PressureRangeTab
+						metric="MAX"
 						pressureSessions={section.sessions}
 						{defectsByInventoryId}
-						displayName={penBrandAndName(section.pen)}
+						displayName={penFullName(section.pen)}
 						chartTitlePrefix={section.pen.PenName}
 						entityLabel="this pen model"
+						measurements={section.max}
+						penNameById={new Map([[section.pen.EntityId, penBrandAndName(section.pen)]])}
 						tabletNameById={data.tabletNameById ?? new Map()}
 					/>
 				{/if}

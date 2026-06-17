@@ -64,6 +64,9 @@ export async function load({ params, parent }) {
 			const iafMeasurements = allRange.filter(
 				(m) => m.Metric === 'IAF' && m.PenEntityId === entityId,
 			);
+			const maxMeasurements = allRange.filter(
+				(m) => m.Metric === 'MAX' && m.PenEntityId === entityId,
+			);
 			return {
 				entityType,
 				pen,
@@ -74,6 +77,7 @@ export async function load({ params, parent }) {
 				defectsByInventoryId,
 				inventoryUnits,
 				iafMeasurements,
+				maxMeasurements,
 			};
 		}
 
@@ -101,6 +105,9 @@ export async function load({ params, parent }) {
 			const iafMeasurements = allRange.filter(
 				(m) => m.Metric === 'IAF' && memberPenIds.has(m.PenEntityId),
 			);
+			const maxMeasurements = allRange.filter(
+				(m) => m.Metric === 'MAX' && memberPenIds.has(m.PenEntityId),
+			);
 			return {
 				entityType,
 				family,
@@ -108,6 +115,7 @@ export async function load({ params, parent }) {
 				pressureSessions,
 				defectsByInventoryId,
 				iafMeasurements,
+				maxMeasurements,
 				tabletNameById: buildTabletNameMap(allTablets),
 			};
 		}

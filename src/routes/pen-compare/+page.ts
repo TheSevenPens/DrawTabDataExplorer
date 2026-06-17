@@ -14,11 +14,13 @@ export async function load({ parent }) {
 	]);
 	const defectsByInventoryId = buildInventoryDefects(allInventory);
 	const iafMeasurements = allRange.filter((m) => m.Metric === 'IAF');
+	const maxMeasurements = allRange.filter((m) => m.Metric === 'MAX');
 	return {
 		allPens,
 		allSessions,
 		defectsByInventoryId,
 		iafMeasurements,
+		maxMeasurements,
 		tabletNameById: buildTabletNameMap(allTablets),
 	};
 }

@@ -3,7 +3,7 @@
 // renders a PressureChart + PressureResponseChartLegendTable + SessionStats
 // trio and needs identical inputs: per-session color, per-session label,
 // defect flags, and a hidden-set toggle. The Svelte state ($state Set)
-// stays in the parent component so it can be shared with PmaxTab.
+// stays in the parent component so it can be shared with PressureRangeTab.
 
 import type { PressureResponse } from '$data/lib/drawtab-loader.js';
 import type { DefectInfo } from '$data/lib/pressure/defects.js';

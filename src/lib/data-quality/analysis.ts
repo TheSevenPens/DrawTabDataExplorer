@@ -19,7 +19,7 @@ import {
 	findStaleMeasurements,
 	findRecommendedForRemeasurement,
 } from '$data/lib/pressure/data-quality.js';
-import { resolveIafByUnit } from '$data/lib/pressure/iaf-resolve.js';
+import { resolveIafByUnit } from '$data/lib/pressure/range-resolve.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 import {
 	checkRequired,

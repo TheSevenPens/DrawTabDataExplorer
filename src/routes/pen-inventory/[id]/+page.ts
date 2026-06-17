@@ -26,11 +26,13 @@ export async function load({ params, parent }) {
 			? pressureSessions.filter((s) => s.InventoryId === item.InventoryId)
 			: [];
 
-	// Direct IAF measurements for this physical unit (win over the estimate).
-	const iafMeasurements =
+	// Direct measurements for this physical unit (win over the estimate).
+	const forUnit = (metric: 'IAF' | 'MAX') =>
 		item.InventoryId && item.InventoryId !== 'UNASSIGNED'
-			? allRange.filter((m) => m.Metric === 'IAF' && m.PenInventoryId === item.InventoryId)
+			? allRange.filter((m) => m.Metric === metric && m.PenInventoryId === item.InventoryId)
 			: [];
+	const iafMeasurements = forUnit('IAF');
+	const maxMeasurements = forUnit('MAX');
 
 	// Only this unit's defects matter for Piaf/Pmax exclusion on this
 	// page — sessions are pre-filtered to one InventoryId.
@@ -42,6 +44,7 @@ export async function load({ params, parent }) {
 		pressureSessions: sessions,
 		defectsByInventoryId,
 		iafMeasurements,
+		maxMeasurements,
 		tabletNameById: buildTabletNameMap(allTablets),
 	};
 }

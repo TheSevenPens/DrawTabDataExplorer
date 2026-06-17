@@ -15,8 +15,7 @@
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
-	import PmaxTab from '$lib/components/PmaxTab.svelte';
-	import PiafTab from '$lib/components/PiafTab.svelte';
+	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { penBrandAndName, penNameAndId } from '$lib/pen-helpers.js';
 	import { flaggedPenFamilies, toggleFlaggedPenFamily } from '$lib/flagged-store.js';
@@ -160,26 +159,31 @@
 
 {#if activeTab === 'iaf'}
 	<div class="tab-content">
-		<PiafTab
+		<PressureRangeTab
+			metric="IAF"
 			{pressureSessions}
 			{defectsByInventoryId}
 			displayName={family.FamilyName}
 			chartTitlePrefix={family.FamilyName}
 			entityLabel="this family"
-			iafMeasurements={data.iafMeasurements ?? []}
+			measurements={data.iafMeasurements ?? []}
 			penNameById={penLabelById}
+			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>
 {/if}
 
 {#if activeTab === 'max'}
 	<div class="tab-content">
-		<PmaxTab
+		<PressureRangeTab
+			metric="MAX"
 			{pressureSessions}
 			{defectsByInventoryId}
 			displayName={family.FamilyName}
 			chartTitlePrefix={family.FamilyName}
 			entityLabel="this family"
+			measurements={data.maxMeasurements ?? []}
+			penNameById={penLabelById}
 			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>

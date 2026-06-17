@@ -13,7 +13,7 @@
 	import { brandName } from '$data/lib/drawtab-loader.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import { estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
-	import { resolveIafByUnit } from '$data/lib/pressure/iaf-resolve.js';
+	import { resolveIafByUnit } from '$data/lib/pressure/range-resolve.js';
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import { penFullName, penBrandAndName } from '$lib/pen-helpers.js';
 	import PressureMetricSection, {
