@@ -177,11 +177,10 @@
 		<PmaxTab
 			{pressureSessions}
 			{defectsByInventoryId}
-			{chartSessions}
-			hiddenIds={hiddenSessionIds}
 			displayName={family.FamilyName}
 			chartTitlePrefix={family.FamilyName}
 			entityLabel="this family"
+			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>
 {/if}

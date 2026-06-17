@@ -516,7 +516,7 @@
 					<PiafTab
 						pressureSessions={section.sessions}
 						{defectsByInventoryId}
-						displayName={penBrandAndName(section.pen)}
+						displayName={penFullName(section.pen)}
 						chartTitlePrefix={section.pen.PenName}
 						entityLabel="this pen model"
 						iafMeasurements={section.iaf}
@@ -632,11 +632,10 @@
 					<PmaxTab
 						pressureSessions={section.sessions}
 						{defectsByInventoryId}
-						chartSessions={section.chartSessions}
-						hiddenIds={EMPTY_HIDDEN}
 						displayName={penBrandAndName(section.pen)}
 						chartTitlePrefix={section.pen.PenName}
 						entityLabel="this pen model"
+						tabletNameById={data.tabletNameById ?? new Map()}
 					/>
 				{/if}
 			</section>

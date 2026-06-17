@@ -231,7 +231,7 @@
 		<PiafTab
 			{pressureSessions}
 			{defectsByInventoryId}
-			displayName={penBrandAndName(pen)}
+			displayName={penFullName(pen)}
 			chartTitlePrefix={pen.PenName}
 			entityLabel="this pen model"
 			iafMeasurements={data.iafMeasurements ?? []}
@@ -245,8 +245,6 @@
 		<PmaxTab
 			{pressureSessions}
 			{defectsByInventoryId}
-			{chartSessions}
-			hiddenIds={hiddenSessionIds}
 			displayName={penBrandAndName(pen)}
 			chartTitlePrefix={pen.PenName}
 			entityLabel="this pen model"

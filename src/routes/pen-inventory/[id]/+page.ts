@@ -1,14 +1,16 @@
 import { error } from '@sveltejs/kit';
 import { penFullName } from '$lib/pen-helpers.js';
+import { buildTabletNameMap } from '$lib/tablet-helpers.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 
 export const prerender = false;
 
 export async function load({ params, parent }) {
 	const { ds } = await parent();
-	const [pens, allPens, pressureSessions, allRange] = await Promise.all([
+	const [pens, allPens, allTablets, pressureSessions, allRange] = await Promise.all([
 		ds.InventoryPens.toArray(),
 		ds.Pens.toArray(),
+		ds.Tablets.toArray(),
 		ds.PressureResponse.toArray(),
 		ds.PressureRange.toArray(),
 	]);
@@ -34,5 +36,12 @@ export async function load({ params, parent }) {
 	// page — sessions are pre-filtered to one InventoryId.
 	const defectsByInventoryId = buildInventoryDefects([item]);
 
-	return { item, modelName, pressureSessions: sessions, defectsByInventoryId, iafMeasurements };
+	return {
+		item,
+		modelName,
+		pressureSessions: sessions,
+		defectsByInventoryId,
+		iafMeasurements,
+		tabletNameById: buildTabletNameMap(allTablets),
+	};
 }

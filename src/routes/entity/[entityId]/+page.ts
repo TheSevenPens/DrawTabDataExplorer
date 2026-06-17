@@ -9,6 +9,7 @@ export const prerender = false;
 import { error } from '@sveltejs/kit';
 import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
+import { buildTabletNameMap } from '$lib/tablet-helpers.js';
 
 export async function load({ params, parent }) {
 	const entityId = decodeURIComponent(params.entityId);
@@ -85,12 +86,14 @@ export async function load({ params, parent }) {
 		case 'penfamily': {
 			const family = await ds.PenFamilies.find((f) => f.EntityId === entityId);
 			if (!family) error(404, 'Pen family not found');
-			const [memberPensUnsorted, allPressure, allInventory, allRange] = await Promise.all([
-				family.getPens(),
-				ds.PressureResponse.toArray(),
-				ds.InventoryPens.toArray(),
-				ds.PressureRange.toArray(),
-			]);
+			const [memberPensUnsorted, allTablets, allPressure, allInventory, allRange] =
+				await Promise.all([
+					family.getPens(),
+					ds.Tablets.toArray(),
+					ds.PressureResponse.toArray(),
+					ds.InventoryPens.toArray(),
+					ds.PressureRange.toArray(),
+				]);
 			const memberPens = [...memberPensUnsorted].sort((a, b) => a.PenId.localeCompare(b.PenId));
 			const memberPenIds = new Set(memberPens.map((p) => p.EntityId));
 			const pressureSessions = allPressure.filter((s) => memberPenIds.has(s.PenEntityId));
@@ -105,6 +108,7 @@ export async function load({ params, parent }) {
 				pressureSessions,
 				defectsByInventoryId,
 				iafMeasurements,
+				tabletNameById: buildTabletNameMap(allTablets),
 			};
 		}
 

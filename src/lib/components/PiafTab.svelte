@@ -104,7 +104,7 @@
 			: undefined,
 	);
 	let currentHeading = $derived(
-		view === 'all' ? `${displayName} — IAF by unit` : `${displayName} — IAF range`,
+		view === 'all' ? `${displayName} — IAF measurement` : `${displayName} — IAF range`,
 	);
 	let currentTitle = $derived(
 		view === 'all' ? `${chartTitlePrefix} IAF` : `${chartTitlePrefix} IAF summary`,

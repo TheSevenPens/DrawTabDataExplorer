@@ -19,6 +19,8 @@ import {
 	findStaleMeasurements,
 	findRecommendedForRemeasurement,
 } from '$data/lib/pressure/data-quality.js';
+import { resolveIafByUnit } from '$data/lib/pressure/iaf-resolve.js';
+import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 import {
 	checkRequired,
 	checkWhitespace,
@@ -236,6 +238,28 @@ export function analyzeData(data: AnalysisInput) {
 		}
 	}
 
+	// Pen units with an estimated IAF (from pressure-response sessions) but no
+	// direct IAF measurement yet — candidates for direct measurement. Mirrors
+	// the IAF tab: defective units are excluded, and `source === 'estimated'`
+	// means the resolver found an estimate but no measurement for that unit.
+	const iafDefects = buildInventoryDefects(invPens);
+	const nonDefectiveForIaf = pressureResponse.filter((s) => !iafDefects.has(s.InventoryId));
+	const iafEstimatedNoMeasurement = resolveIafByUnit(nonDefectiveForIaf, pressureRange)
+		.filter((r) => r.source === 'estimated')
+		.map((r) => {
+			const pen = penByEntityId.get(r.penEntityId);
+			return {
+				brand: pen?.Brand ?? '',
+				penEntityId: r.penEntityId,
+				penName: pen ? `${pen.PenName} (${pen.PenId})` : r.penEntityId,
+				inventoryId: r.inventoryId,
+				estimate: r.value,
+			};
+		})
+		.sort(
+			(a, b) => a.penName.localeCompare(b.penName) || a.inventoryId.localeCompare(b.inventoryId),
+		);
+
 	return {
 		ds,
 		inventoryPenCount: invPens.length,
@@ -246,6 +270,7 @@ export function analyzeData(data: AnalysisInput) {
 		singleSessionPens: findSingleSessionPens(ds.pressureResponse),
 		staleMeasurements: findStaleMeasurements(ds.pressureResponse),
 		remeasureRecommendations: findRecommendedForRemeasurement(ds.pressureResponse),
+		iafEstimatedNoMeasurement,
 		tabletCompletion: computeCompletion(ds.tablets, [
 			'Model.LaunchYear',
 			'Model.Audience',

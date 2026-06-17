@@ -85,8 +85,8 @@ test.describe('Reference left-nav sections', () => {
 	const REFERENCE_SECTIONS = [
 		{ id: 'tablet-sizes', heading: /Tablet/i },
 		{ id: 'iso-paper-a', heading: /ISO A/i },
-		{ id: 'piaf-ranking', heading: /Piaf Ranking/i },
-		{ id: 'pmax-ranking', heading: /Pmax Ranking/i },
+		{ id: 'piaf-ranking', heading: /IAF Ranking/i },
+		{ id: 'pmax-ranking', heading: /MAX Ranking/i },
 	];
 
 	for (const { id, heading } of REFERENCE_SECTIONS) {

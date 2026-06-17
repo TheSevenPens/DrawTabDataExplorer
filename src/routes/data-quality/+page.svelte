@@ -64,6 +64,7 @@
 	let singleSessionPens = $derived(analysis.singleSessionPens);
 	let staleMeasurements = $derived(analysis.staleMeasurements);
 	let remeasureRecommendations = $derived(analysis.remeasureRecommendations);
+	let iafEstimatedNoMeasurement = $derived(analysis.iafEstimatedNoMeasurement);
 
 	// Source of truth for the navigation tree. `count` (optional) is
 	// re-read every render so the badge stays in sync with the derived
@@ -130,6 +131,12 @@
 			category: 'Pressure Response',
 			label: 'Remeasure',
 			count: remeasureRecommendations.length,
+		},
+		{
+			id: 'iaf-not-measured',
+			category: 'Pressure Response',
+			label: 'IAF — Not Measured',
+			count: iafEstimatedNoMeasurement.length,
 		},
 		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
 		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
@@ -563,6 +570,60 @@
 											</a>
 										</td>
 										<td class="mono">{p.date}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
+
+			{#if activeSection === 'iaf-not-measured'}
+				<section class="section">
+					<SectionHeader
+						title="IAF — Estimated, Not Measured"
+						count={iafEstimatedNoMeasurement.length}
+						disabled={iafEstimatedNoMeasurement.length === 0}
+						onExport={() =>
+							openExport(
+								'Pen Units with an Estimated IAF but No Direct Measurement',
+								'data-quality-iaf-not-measured',
+								['Brand', 'Pen', 'Inventory ID', 'Estimated IAF (gf)'],
+								iafEstimatedNoMeasurement.map((p) => [
+									p.brand,
+									p.penName,
+									p.inventoryId,
+									p.estimate.toFixed(1),
+								]),
+							)}
+					/>
+					<p class="description">
+						Pen units with an estimated IAF (from pressure-response sessions) but no direct IAF
+						measurement yet — prime candidates for measuring directly.
+					</p>
+					{#if iafEstimatedNoMeasurement.length === 0}
+						<p class="good">Every unit with an IAF estimate also has a direct measurement.</p>
+					{:else}
+						<table class="compact">
+							<thead>
+								<tr>
+									<th>Brand</th>
+									<th>Pen</th>
+									<th>Inventory ID</th>
+									<th>Estimated IAF (gf)</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each iafEstimatedNoMeasurement as p (p.inventoryId)}
+									<tr>
+										<td>{p.brand}</td>
+										<td>
+											<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
+												{p.penName}
+											</a>
+										</td>
+										<td class="mono">{p.inventoryId}</td>
+										<td class="mono">{p.estimate.toFixed(1)}</td>
 									</tr>
 								{/each}
 							</tbody>

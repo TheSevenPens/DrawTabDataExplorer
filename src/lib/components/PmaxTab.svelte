@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
-	import PressureChart from '$lib/components/PressureChart.svelte';
 	import { PMAX_BANDS } from '$lib/bands.js';
 	import type { PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
@@ -9,23 +8,9 @@
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 
-	// Sessions passed to the embedded Pmax-zoom PressureChart. The parent
-	// computes these alongside the other pressure tabs to keep colors and
-	// hidden-state in sync across tabs.
-	interface ChartSession {
-		id: string;
-		label: string;
-		records: PressureResponse['Records'];
-		color: string | undefined;
-		defective: boolean;
-		defectInfo?: string;
-	}
-
 	let {
 		pressureSessions,
 		defectsByInventoryId,
-		chartSessions,
-		hiddenIds,
 		displayName,
 		chartTitlePrefix,
 		entityLabel,
@@ -33,8 +18,6 @@
 	}: {
 		pressureSessions: PressureResponse[];
 		defectsByInventoryId: ReadonlyMap<string, DefectInfo>;
-		chartSessions: ChartSession[];
-		hiddenIds: ReadonlySet<string>;
 		/** Used in BandsChart `heading` overlays, e.g. "Wacom Pro Pen" or
 		 * "WacomKPGen1". */
 		displayName: string;
@@ -44,8 +27,8 @@
 		/** Inserted into the empty-state message: "No pressure response
 		 * measurements available for {entityLabel}". */
 		entityLabel: string;
-		/** TabletEntityId → display label. When omitted the raw EntityId
-		 * is shown. */
+		/** TabletEntityId → display label for the leading Tablet column.
+		 * When omitted the raw EntityId is shown. */
 		tabletNameById?: ReadonlyMap<string, string>;
 	} = $props();
 
@@ -62,29 +45,17 @@
 			.filter((v): v is number => v !== null && isFinite(v)),
 	);
 
-	// Per-session table rows: highest physically measured force and the
-	// extrapolated Pmax (force at logical 100%). When `topLogical` is
-	// noticeably below 100, Pmax is an extrapolation above the data; when
-	// it's at 100, Pmax collapses to the measured value.
+	// Per-session table rows: the estimated MAX (force at logical 100%) per
+	// non-defective session.
 	let perSessionRows = $derived(
-		nonDefectiveSessions.map((s) => {
-			let topForce = -Infinity;
-			let topLogical = -Infinity;
-			for (const [force, logical] of s.Records) {
-				if (force > topForce) topForce = force;
-				if (logical > topLogical) topLogical = logical;
-			}
-			return {
-				session: s,
-				id: s._id,
-				inventoryId: s.InventoryId,
-				date: s.Date,
-				sessionId: sessionEntityId(s),
-				topForce: Number.isFinite(topForce) ? topForce : null,
-				topLogical: Number.isFinite(topLogical) ? topLogical : null,
-				pmax: estimatePmax(s.Records),
-			};
-		}),
+		nonDefectiveSessions.map((s) => ({
+			session: s,
+			id: s._id,
+			inventoryId: s.InventoryId,
+			date: s.Date,
+			sessionId: sessionEntityId(s),
+			pmax: estimatePmax(s.Records),
+		})),
 	);
 
 	let pmaxStats = $derived.by(() => {
@@ -117,10 +88,10 @@
 		view === 'summary' && pmaxStats ? { min: pmaxStats.min, max: pmaxStats.max } : undefined,
 	);
 	let currentHeading = $derived(
-		view === 'all' ? `${displayName} — All Pmax values` : `${displayName} — Pmax range`,
+		view === 'all' ? `${displayName} — All MAX values` : `${displayName} — MAX range`,
 	);
 	let currentTitle = $derived(
-		view === 'all' ? `${chartTitlePrefix} Pmax` : `${chartTitlePrefix} Pmax summary`,
+		view === 'all' ? `${chartTitlePrefix} MAX` : `${chartTitlePrefix} MAX summary`,
 	);
 
 	// Subtitle counts the distinct pen models / pen units / sessions
@@ -155,13 +126,12 @@
 	);
 	let perSessionExportRows = $derived<(string | number)[][]>(
 		perSessionRows.map((r) => [
+			tabletName(r.session.TabletEntityId),
 			r.inventoryId,
 			r.date,
-			tabletName(r.session.TabletEntityId),
 			r.session.Driver,
-			r.topForce !== null ? fmtP(r.topForce) : '—',
-			r.topLogical !== null ? r.topLogical.toFixed(1) : '—',
 			r.pmax !== null ? fmtP(r.pmax) : '—',
+			r.pmax !== null ? 'estimated' : '',
 		]),
 	);
 </script>
@@ -199,12 +169,12 @@
 {#if pmaxStats}
 	<div class="table-block">
 		<div class="table-toolbar">
-			<span class="table-label">Pmax — min / median / max</span>
+			<span class="table-label">MAX — min / median / max</span>
 			<ExportTableButton
 				entityType="pressure-response"
-				title={`${displayName} — Pmax summary`}
-				filename={`pmax-summary-${nameSlug}`}
-				headers={['Statistic', 'Pmax (gf)']}
+				title={`${displayName} — MAX summary`}
+				filename={`max-summary-${nameSlug}`}
+				headers={['Statistic', 'MAX (gf)']}
 				rows={summaryExportRows}
 			/>
 		</div>
@@ -228,86 +198,62 @@
 
 	<div class="table-block">
 		<div class="table-toolbar">
-			<span class="table-label">Pmax by session</span>
+			<span class="table-label">MAX by session</span>
 			<ExportTableButton
 				entityType="pressure-response"
-				title={`${displayName} — Pmax by session`}
-				filename={`pmax-by-session-${nameSlug}`}
-				headers={[
-					'Inventory ID',
-					'Date',
-					'Tablet',
-					'Driver',
-					'Highest measured (gf)',
-					'Highest logical (%)',
-					'Pmax estimate (gf)',
-				]}
+				title={`${displayName} — MAX by session`}
+				filename={`max-by-session-${nameSlug}`}
+				headers={['Tablet', 'Inventory ID', 'Date', 'Driver', 'MAX (gf)', 'Source']}
 				rows={perSessionExportRows}
 			/>
 		</div>
 		<table class="per-session-table">
 			<thead>
 				<tr>
+					<th>Tablet</th>
 					<th>Inventory ID</th>
 					<th>Date</th>
-					<th>Tablet</th>
 					<th>Driver</th>
-					<th class="num">
-						Highest measured
-						<br /><span class="unit">(gf @ logical %)</span>
-					</th>
-					<th class="num">Pmax estimate<br /><span class="unit">(gf)</span></th>
+					<th class="num">MAX<br /><span class="unit">(gf)</span></th>
+					<th>Source</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each perSessionRows as r (r.id)}
 					<tr>
+						<td>
+							{#if r.session.TabletEntityId}
+								<a href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}>
+									{tabletName(r.session.TabletEntityId)}
+								</a>
+							{/if}
+						</td>
 						<td class="mono">
 							<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.inventoryId}</a>
 						</td>
 						<td class="mono">
 							<a href={resolve('/entity/[entityId]', { entityId: r.sessionId })}>{r.date}</a>
 						</td>
-						<td>
-							{#if r.session.TabletEntityId}
-								<a href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}>
-									{tabletNameById.get(r.session.TabletEntityId) ?? r.session.TabletEntityId}
-								</a>
-							{/if}
-						</td>
 						<td class="mono">{r.session.Driver}</td>
-						<td class="num mono">
-							{r.topForce !== null ? fmtP(r.topForce) : '—'}
-							{#if r.topLogical !== null}
-								<span class="logical-pct">@ {r.topLogical.toFixed(1)}%</span>
+						<td class="num mono">{r.pmax !== null ? fmtP(r.pmax) : '—'}</td>
+						<td>
+							{#if r.pmax !== null}
+								<span
+									class="tag estimated"
+									title="Estimated from this session's pressure-response curve">est.</span
+								>
 							{/if}
 						</td>
-						<td class="num mono">{r.pmax !== null ? fmtP(r.pmax) : '—'}</td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
 	</div>
-	<PressureChart
-		sessions={chartSessions}
-		title={`${chartTitlePrefix} pressure response (Pmax)`}
-		{hiddenIds}
-		lockedZoom="pmax"
-	/>
 {:else}
 	<p class="no-data">No pressure response measurements available for {entityLabel}.</p>
 {/if}
 
 <style>
-	.ref-blurb {
-		font-size: 13px;
-		color: var(--text-muted);
-		max-width: 800px;
-		margin: 0 0 12px;
-	}
-	.summary-blurb {
-		margin-top: 16px;
-	}
 	.no-data {
 		font-size: 13px;
 		color: var(--text-muted);
@@ -422,11 +368,6 @@
 	}
 	.per-session-table tr:hover td {
 		background: var(--hover-bg);
-	}
-	.logical-pct {
-		color: var(--text-dim);
-		font-weight: normal;
-		margin-left: 4px;
 	}
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;

@@ -39,8 +39,8 @@
 		{ id: 'iso-paper-a', category: 'Paper Sizes', label: 'ISO A Paper Sizes' },
 		{ id: 'iso-paper-b', category: 'Paper Sizes', label: 'ISO B Paper Sizes' },
 		{ id: 'us-paper', category: 'Paper Sizes', label: 'US Paper Sizes' },
-		{ id: 'piaf-ranking', category: 'Pen Pressure', label: 'Piaf Ranking' },
-		{ id: 'pmax-ranking', category: 'Pen Pressure', label: 'Pmax Ranking' },
+		{ id: 'piaf-ranking', category: 'Pen Pressure', label: 'IAF Ranking' },
+		{ id: 'pmax-ranking', category: 'Pen Pressure', label: 'MAX Ranking' },
 		{ id: 'bands-brightness', category: 'Display Bands', label: 'Brightness' },
 		{ id: 'bands-contrast', category: 'Display Bands', label: 'Contrast' },
 		{ id: 'bands-response-time', category: 'Display Bands', label: 'Response Time' },
@@ -613,22 +613,22 @@
 		{:else if activeSection === 'piaf-ranking'}
 			<section>
 				<div class="section-header">
-					<h2>Piaf Ranking</h2>
+					<h2>IAF Ranking</h2>
 				</div>
 				<p class="ref-blurb">
-					Piaf (Initial Activation Force) is the minimum force required for a pen tip to register
+					IAF (Initial Activation Force) is the minimum force required for a pen tip to register
 					pressure. Lower is better — a lighter touch means more natural shading and less hand
 					fatigue.
 				</p>
-				<BandsChart bands={piafBands} axisMax={10} axisStep={1} unit="gf" title="Piaf Ranking" />
+				<BandsChart bands={piafBands} axisMax={10} axisStep={1} unit="gf" title="IAF Ranking" />
 				<div class="subsection-header">
 					<h3>Ranking Bands</h3>
 					<button
 						class="copy-btn"
 						onclick={() =>
 							openExport(
-								'Piaf Ranking',
-								'piaf-ranking',
+								'IAF Ranking',
+								'iaf-ranking',
 								['Rank', 'Range (gf)'],
 								piafBands.map((b) => [
 									b.label,
@@ -652,23 +652,17 @@
 		{:else if activeSection === 'pmax-ranking'}
 			<section>
 				<div class="section-header">
-					<h2>Pmax Ranking</h2>
+					<h2>MAX Ranking</h2>
 				</div>
-				<BandsChart
-					bands={pmaxBands}
-					axisMax={1000}
-					axisStep={100}
-					unit="gf"
-					title="Pmax Ranking"
-				/>
+				<BandsChart bands={pmaxBands} axisMax={1000} axisStep={100} unit="gf" title="MAX Ranking" />
 				<div class="subsection-header">
 					<h3>Ranking Bands</h3>
 					<button
 						class="copy-btn"
 						onclick={() =>
 							openExport(
-								'Pmax Ranking',
-								'pmax-ranking',
+								'MAX Ranking',
+								'max-ranking',
 								['Rank', 'Range (gf)'],
 								pmaxBands.map((b) => [
 									b.label,
