@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createExportDialogHost } from '$lib/export-dialog-host.svelte.js';
 	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
@@ -144,21 +145,8 @@
 
 	// --- Export dialog (shared) ---
 
-	let exportDialog: {
-		title: string;
-		filename: string;
-		headers: string[];
-		rows: (string | number)[][];
-	} | null = $state(null);
-
-	function openExport(
-		title: string,
-		filename: string,
-		headers: string[],
-		rows: (string | number)[][],
-	): void {
-		exportDialog = { title, filename, headers, rows };
-	}
+	const exportHost = createExportDialogHost();
+	const openExport = exportHost.open;
 
 	// --- Sizes ---
 
@@ -393,14 +381,14 @@
 		{/snippet}
 	</SectionedPage>
 
-	{#if exportDialog}
+	{#if exportHost.config}
 		<ExportDialog
 			entityType="analysis"
-			title={exportDialog.title}
-			filename={exportDialog.filename}
-			headers={exportDialog.headers}
-			rows={exportDialog.rows}
-			onclose={() => (exportDialog = null)}
+			title={exportHost.config.title}
+			filename={exportHost.config.filename}
+			headers={exportHost.config.headers}
+			rows={exportHost.config.rows}
+			onclose={exportHost.close}
 		/>
 	{/if}
 </ChromeLayout>
