@@ -413,17 +413,17 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="no-data">
+		<EmptyState>
 			No pens added yet. Use the button above, or flag pens from the <a href={resolve('/pens')}
 				>pens list</a
 			> or individual pen pages.
-		</p>
+		</EmptyState>
 	{/if}
 {:else if activeTab === 'compare'}
 	{#if flaggedItems.length < 2}
-		<p class="no-data">
+		<EmptyState>
 			Flag at least 2 pens to compare. Currently {flaggedItems.length} flagged.
-		</p>
+		</EmptyState>
 	{:else}
 		<div class="compare-toolbar">
 			<Button
@@ -466,14 +466,14 @@
 	{/if}
 {:else if activeTab === 'pressure'}
 	{#if $flaggedPenTotalCount === 0}
-		<p class="no-data">
+		<EmptyState>
 			Nothing flagged. Flag a pen model from the <a href={resolve('/pens')}>pens list</a>, a pen
 			family, or a pen unit to see its sessions overlaid here.
-		</p>
+		</EmptyState>
 	{:else if matchedSessions.length === 0}
-		<p class="no-data">
+		<EmptyState>
 			Flagged: {flagSummary}. No pressure-response sessions match the current flags.
-		</p>
+		</EmptyState>
 	{:else}
 		<div class="overlay-toolbar">
 			<p class="overlay-summary">
@@ -512,9 +512,9 @@
 	{/if}
 {:else if activeTab === 'iaf'}
 	{#if flaggedItems.length === 0}
-		<p class="no-data">
+		<EmptyState>
 			Flag at least one pen to see its Piaf chart. Currently {flaggedItems.length} flagged.
-		</p>
+		</EmptyState>
 	{:else}
 		<section class="group-section">
 			<h2 class="group-heading">All flagged pens — combined</h2>
@@ -558,9 +558,9 @@
 	{/if}
 {:else if activeTab === 'max'}
 	{#if flaggedItems.length === 0}
-		<p class="no-data">
+		<EmptyState>
 			Flag at least one pen to see its Pmax chart. Currently {flaggedItems.length} flagged.
-		</p>
+		</EmptyState>
 	{:else}
 		{#if anyCombinedData}
 			<section class="per-pen-section combined-section">
@@ -804,16 +804,6 @@
 
 	.differs {
 		background: #fef3c7;
-	}
-
-	.no-data {
-		font-size: 13px;
-		color: var(--text-dim);
-		font-style: italic;
-	}
-
-	.no-data a {
-		color: var(--link);
 	}
 
 	.overlay-toolbar {
