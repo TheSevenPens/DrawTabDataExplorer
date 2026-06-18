@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
+	import ChartFrame from '$lib/components/ChartFrame.svelte';
 
 	export interface HistogramRange {
 		label: string;
@@ -253,186 +254,206 @@
 
 {#if values.length > 0}
 	<div class="histogram-container">
-		<div class="histogram-toolbar">
-			{#if compareYears !== undefined}
-				<label class="compare-label">
-					Compare to tablets released in last:
-					<select class="compare-select" bind:value={compareYears}>
-						{#each compareYearOptions as opt, i (i)}
-							<option value={opt}>{opt !== null ? `${opt} years` : 'all time'}</option>
-						{/each}
-					</select>
-				</label>
-			{/if}
-			<ChartExportButton getSvg={() => svgEl} title={title || 'histogram'} />
-		</div>
-		<svg
-			bind:this={svgEl}
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 {width} {totalHeight}"
-			class="histogram"
-			style="font-family: 'Google Sans', sans-serif;"
-		>
-			<!-- Hidden texts for measuring actual label widths -->
-			{#each uniqueLabels as label, i (i)}
-				<text
-					bind:this={labelMeasureEls[i]}
-					x="0"
-					y="-1000"
-					font-size="10"
-					font-weight="600"
-					visibility="hidden">{label}</text
+		<div class="histogram-frame">
+			<ChartFrame>
+				{#snippet controls()}
+					{#if compareYears !== undefined}
+						<label class="compare-label">
+							Compare to tablets released in last:
+							<select class="compare-select" bind:value={compareYears}>
+								{#each compareYearOptions as opt, i (i)}
+									<option value={opt}>{opt !== null ? `${opt} years` : 'all time'}</option>
+								{/each}
+							</select>
+						</label>
+					{/if}
+				{/snippet}
+				{#snippet actions()}
+					<ChartExportButton getSvg={() => svgEl} title={title || 'histogram'} />
+				{/snippet}
+				<svg
+					bind:this={svgEl}
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 {width} {totalHeight}"
+					class="histogram"
+					style="font-family: 'Google Sans', sans-serif;"
 				>
-			{/each}
+					<!-- Hidden texts for measuring actual label widths -->
+					{#each uniqueLabels as label, i (i)}
+						<text
+							bind:this={labelMeasureEls[i]}
+							x="0"
+							y="-1000"
+							font-size="10"
+							font-weight="600"
+							visibility="hidden">{label}</text
+						>
+					{/each}
 
-			{#if title}
-				<text
-					x={width / 2}
-					y={20}
-					text-anchor="middle"
-					font-size="14"
-					font-weight="600"
-					fill="var(--text)">{titleText}</text
-				>
-				{#if subtitle}
-					<text x={width / 2} y={38} text-anchor="middle" font-size="12" fill="var(--text-muted)"
-						>{subtitle}</text
-					>
-				{/if}
-			{/if}
-			<!-- Range backgrounds -->
-			{#each ranges as range, i (i)}
-				<rect
-					x={xScale(range.min)}
-					y={padTop}
-					width={xScale(range.max) - xScale(range.min)}
-					height={chartH}
-					fill="#3b82f6"
-					opacity={rangeOpacities[i % rangeOpacities.length]}
-				/>
-				<text
-					x={(xScale(range.min) + xScale(range.max)) / 2}
-					y={padTop - 24}
-					text-anchor="middle"
-					font-size="12"
-					fill="var(--text-muted)">{range.label}</text
-				>
-				<text
-					x={(xScale(range.min) + xScale(range.max)) / 2}
-					y={padTop - 10}
-					text-anchor="middle"
-					font-size="10"
-					fill="var(--text-dim)"
-					>{range.min}{showUnitInBands ? unit : ''}–{range.max}{showUnitInBands ? unit : ''}</text
-				>
-			{/each}
+					{#if title}
+						<text
+							x={width / 2}
+							y={20}
+							text-anchor="middle"
+							font-size="14"
+							font-weight="600"
+							fill="var(--text)">{titleText}</text
+						>
+						{#if subtitle}
+							<text
+								x={width / 2}
+								y={38}
+								text-anchor="middle"
+								font-size="12"
+								fill="var(--text-muted)">{subtitle}</text
+							>
+						{/if}
+					{/if}
+					<!-- Range backgrounds -->
+					{#each ranges as range, i (i)}
+						<rect
+							x={xScale(range.min)}
+							y={padTop}
+							width={xScale(range.max) - xScale(range.min)}
+							height={chartH}
+							fill="#3b82f6"
+							opacity={rangeOpacities[i % rangeOpacities.length]}
+						/>
+						<text
+							x={(xScale(range.min) + xScale(range.max)) / 2}
+							y={padTop - 24}
+							text-anchor="middle"
+							font-size="12"
+							fill="var(--text-muted)">{range.label}</text
+						>
+						<text
+							x={(xScale(range.min) + xScale(range.max)) / 2}
+							y={padTop - 10}
+							text-anchor="middle"
+							font-size="10"
+							fill="var(--text-dim)"
+							>{range.min}{showUnitInBands ? unit : ''}–{range.max}{showUnitInBands
+								? unit
+								: ''}</text
+						>
+					{/each}
 
-			<!-- X axis -->
-			<line
-				x1={padLeft}
-				y1={padTop + chartH}
-				x2={padLeft + chartW}
-				y2={padTop + chartH}
-				stroke="var(--text-dim)"
-				stroke-width="1"
-			/>
-			{#each Array(tickCount) as _, i (i)}
-				{@const val = tickStart + i * tickStep}
-				{#if val >= scaleMin && val <= scaleMax}
+					<!-- X axis -->
 					<line
-						x1={xScale(val)}
+						x1={padLeft}
 						y1={padTop + chartH}
-						x2={xScale(val)}
-						y2={padTop + chartH + 4}
+						x2={padLeft + chartW}
+						y2={padTop + chartH}
 						stroke="var(--text-dim)"
 						stroke-width="1"
 					/>
-					<text
-						x={xScale(val)}
-						y={padTop + chartH + 15}
-						text-anchor="middle"
-						font-size="11"
-						fill="var(--text-dim)">{val}{showUnitInAxis ? unit : ''}</text
-					>
-				{/if}
-			{/each}
+					{#each Array(tickCount) as _, i (i)}
+						{@const val = tickStart + i * tickStep}
+						{#if val >= scaleMin && val <= scaleMax}
+							<line
+								x1={xScale(val)}
+								y1={padTop + chartH}
+								x2={xScale(val)}
+								y2={padTop + chartH + 4}
+								stroke="var(--text-dim)"
+								stroke-width="1"
+							/>
+							<text
+								x={xScale(val)}
+								y={padTop + chartH + 15}
+								text-anchor="middle"
+								font-size="11"
+								fill="var(--text-dim)">{val}{showUnitInAxis ? unit : ''}</text
+							>
+						{/if}
+					{/each}
 
-			<!-- Histogram bars -->
-			{#each bins as count, i (i)}
-				{#if count > 0}
-					{@const barX = xScale(scaleMin + i * binSize)}
-					{@const barW = xScale(scaleMin + (i + 1) * binSize) - barX - 1}
-					{@const barH = (count / maxCount) * chartH * 0.85}
-					<rect
-						x={barX}
-						y={padTop + chartH - barH}
-						width={barW}
-						height={barH}
-						fill="#1e3a5f"
-						opacity="0.85"
-						rx="1"
-					/>
-				{/if}
-			{/each}
+					<!-- Histogram bars -->
+					{#each bins as count, i (i)}
+						{#if count > 0}
+							{@const barX = xScale(scaleMin + i * binSize)}
+							{@const barW = xScale(scaleMin + (i + 1) * binSize) - barX - 1}
+							{@const barH = (count / maxCount) * chartH * 0.85}
+							<rect
+								x={barX}
+								y={padTop + chartH - barH}
+								width={barW}
+								height={barH}
+								fill="#1e3a5f"
+								opacity="0.85"
+								rx="1"
+							/>
+						{/if}
+					{/each}
 
-			<!-- KDE curve (in front of bars) -->
-			{#if kdePath}
-				<path d={kdePath} fill="#0d9488" opacity="0.15" />
-				<path d={kdePath} fill="none" stroke="#0d9488" stroke-width="2" opacity="0.7" />
-			{/if}
+					<!-- KDE curve (in front of bars) -->
+					{#if kdePath}
+						<path d={kdePath} fill="#0d9488" opacity="0.15" />
+						<path d={kdePath} fill="none" stroke="#0d9488" stroke-width="2" opacity="0.7" />
+					{/if}
 
-			<!-- Markers -->
-			{#each positionedMarkers as marker, i (i)}
-				{@const labelY = padTop + chartH + 42 + marker.tier * 14}
-				<line
-					x1={marker.x}
-					y1={padTop - 8}
-					x2={marker.x}
-					y2={labelY - 4}
-					stroke="#e11d48"
-					stroke-width="1.5"
-					stroke-dasharray="4 3"
-					opacity="0.7"
-				/>
-				<text
-					x={marker.side === 'left' ? marker.x - 4 : marker.x + 4}
-					y={labelY}
-					text-anchor={marker.side === 'left' ? 'end' : 'start'}
-					font-size="10"
-					font-weight="600"
-					fill="#e11d48">{marker.label}</text
-				>
-			{/each}
+					<!-- Markers -->
+					{#each positionedMarkers as marker, i (i)}
+						{@const labelY = padTop + chartH + 42 + marker.tier * 14}
+						<line
+							x1={marker.x}
+							y1={padTop - 8}
+							x2={marker.x}
+							y2={labelY - 4}
+							stroke="#e11d48"
+							stroke-width="1.5"
+							stroke-dasharray="4 3"
+							opacity="0.7"
+						/>
+						<text
+							x={marker.side === 'left' ? marker.x - 4 : marker.x + 4}
+							y={labelY}
+							text-anchor={marker.side === 'left' ? 'end' : 'start'}
+							font-size="10"
+							font-weight="600"
+							fill="#e11d48">{marker.label}</text
+						>
+					{/each}
 
-			<!-- Current value indicator -->
-			{#if currentValue !== null}
-				<line
-					x1={tx}
-					y1={padTop - 8}
-					x2={tx}
-					y2={padTop + chartH + 30}
-					stroke="#e11d48"
-					stroke-width="2"
-				/>
-				<text
-					x={tx}
-					y={padTop + chartH + 42}
-					text-anchor="middle"
-					font-size="12"
-					font-weight="bold"
-					fill="#e11d48">{currentValue.toFixed(1)}{unit}</text
-				>
-				{#if currentLabel}
-					<text x={tx} y={padTop + chartH + 56} text-anchor="middle" font-size="11" fill="#e11d48"
-						>{currentLabel}</text
-					>
-				{/if}
-			{/if}
-		</svg>
+					<!-- Current value indicator -->
+					{#if currentValue !== null}
+						<line
+							x1={tx}
+							y1={padTop - 8}
+							x2={tx}
+							y2={padTop + chartH + 30}
+							stroke="#e11d48"
+							stroke-width="2"
+						/>
+						<text
+							x={tx}
+							y={padTop + chartH + 42}
+							text-anchor="middle"
+							font-size="12"
+							font-weight="bold"
+							fill="#e11d48">{currentValue.toFixed(1)}{unit}</text
+						>
+						{#if currentLabel}
+							<text
+								x={tx}
+								y={padTop + chartH + 56}
+								text-anchor="middle"
+								font-size="11"
+								fill="#e11d48">{currentLabel}</text
+							>
+						{/if}
+					{/if}
+				</svg>
+			</ChartFrame>
+		</div>
 	</div>
 {/if}
 
 <style>
+	.histogram-frame {
+		width: 900px;
+	}
+
 	.histogram-container {
 		margin: 16px 0;
 		overflow-x: auto;
@@ -441,15 +462,6 @@
 	.histogram {
 		width: 900px;
 		height: auto;
-	}
-
-	.histogram-toolbar {
-		width: 900px;
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		gap: 12px;
-		margin-bottom: 4px;
 	}
 
 	.compare-label {
