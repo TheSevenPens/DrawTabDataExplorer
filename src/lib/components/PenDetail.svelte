@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
@@ -113,9 +114,7 @@
 		<div class="basics-item">
 			<dt>Brand</dt>
 			<dd>
-				<a href={resolve('/entity/[entityId]', { entityId: pen.Brand.toLowerCase() })}
-					>{brandName(pen.Brand)}</a
-				>
+				<EntityLink entityId={pen.Brand.toLowerCase()}>{brandName(pen.Brand)}</EntityLink>
 			</dd>
 		</div>
 		<div class="basics-item">
@@ -136,9 +135,7 @@
 			<div class="basics-item">
 				<dt>Family</dt>
 				<dd>
-					<a href={resolve('/entity/[entityId]', { entityId: pen.PenFamily })}
-						>{getPenFamilyName(pen.PenFamily)}</a
-					>
+					<EntityLink entityId={pen.PenFamily}>{getPenFamilyName(pen.PenFamily)}</EntityLink>
 				</dd>
 			</div>
 		{/if}
@@ -345,13 +342,6 @@
 	.basics-item dd {
 		font-size: 13px;
 		color: var(--text);
-	}
-	.basics-item dd a {
-		color: var(--link);
-		text-decoration: none;
-	}
-	.basics-item dd a:hover {
-		text-decoration: underline;
 	}
 
 	.tab-content {
