@@ -4,6 +4,7 @@
 	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
+	import FlagButton from '$lib/components/FlagButton.svelte';
 	import type { CellLinks } from '$lib/table-types.js';
 
 	let {
@@ -96,13 +97,11 @@
 					{#if showFlags}
 						{@const eid = item.Meta?.EntityId ?? item.EntityId ?? item.InventoryId ?? ''}
 						<td class="flag-col">
-							<button
-								class="flag-btn"
-								class:flagged={flaggedIds!.has(eid)}
+							<FlagButton
+								compact
+								flagged={flaggedIds!.has(eid)}
 								onclick={() => onToggleFlag!(eid)}
-								title={flaggedIds!.has(eid) ? 'Unflag' : 'Flag for comparison'}
-								>{flaggedIds!.has(eid) ? '\u2691' : '\u2690'}</button
-							>
+							/>
 						</td>
 					{/if}
 					{#each fieldDefs as f (f.key)}
@@ -177,23 +176,5 @@
 		width: 28px;
 		padding: 0 2px;
 		text-align: center;
-	}
-
-	.flag-btn {
-		background: none;
-		border: none;
-		cursor: pointer;
-		font-size: 16px;
-		color: var(--text-dim);
-		padding: 0;
-		line-height: 1;
-	}
-
-	.flag-btn.flagged {
-		color: #d97706;
-	}
-
-	.flag-btn:hover {
-		color: #d97706;
 	}
 </style>
