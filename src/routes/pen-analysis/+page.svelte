@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createExportDialogHost } from '$lib/export-dialog-host.svelte.js';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
@@ -296,21 +297,8 @@
 		{ id: 'ud-emr', category: 'Tags', label: 'UD EMR' },
 	];
 
-	let exportDialog: {
-		title: string;
-		filename: string;
-		headers: string[];
-		rows: (string | number)[][];
-	} | null = $state(null);
-
-	function openExport(
-		title: string,
-		filename: string,
-		headers: string[],
-		rows: (string | number)[][],
-	): void {
-		exportDialog = { title, filename, headers, rows };
-	}
+	const exportHost = createExportDialogHost();
+	const openExport = exportHost.open;
 </script>
 
 {#snippet rankTable(p: RankTableProps)}
@@ -660,14 +648,14 @@
 		{/snippet}
 	</SectionedPage>
 
-	{#if exportDialog}
+	{#if exportHost.config}
 		<ExportDialog
 			entityType="pen-analysis"
-			title={exportDialog.title}
-			filename={exportDialog.filename}
-			headers={exportDialog.headers}
-			rows={exportDialog.rows}
-			onclose={() => (exportDialog = null)}
+			title={exportHost.config.title}
+			filename={exportHost.config.filename}
+			headers={exportHost.config.headers}
+			rows={exportHost.config.rows}
+			onclose={exportHost.close}
 		/>
 	{/if}
 </ChromeLayout>

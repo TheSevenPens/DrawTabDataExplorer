@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createExportDialogHost } from '$lib/export-dialog-host.svelte.js';
 	import LoadingState from '$lib/components/LoadingState.svelte';
 	import {
 		penTabletRangesCm,
@@ -156,23 +157,10 @@
 		}, {}),
 	);
 
-	// Single shared ExportDialog. Each section's Export trigger sets
-	// `exportDialog` to a config object; the dialog mounts when set.
-	let exportDialog: {
-		title: string;
-		filename: string;
-		headers: string[];
-		rows: (string | number)[][];
-	} | null = $state(null);
-
-	function openExport(
-		title: string,
-		filename: string,
-		headers: string[],
-		rows: (string | number)[][],
-	): void {
-		exportDialog = { title, filename, headers, rows };
-	}
+	// Single shared ExportDialog via the shared export host (#236);
+	// `openExport` is a local alias so the section triggers read unchanged.
+	const exportHost = createExportDialogHost();
+	const openExport = exportHost.open;
 </script>
 
 <ChromeLayout subNavTabs={dataTabs}>
@@ -565,14 +553,14 @@
 		{/snippet}
 	</SectionedPage>
 
-	{#if exportDialog}
+	{#if exportHost.config}
 		<ExportDialog
 			entityType="reference"
-			title={exportDialog.title}
-			filename={exportDialog.filename}
-			headers={exportDialog.headers}
-			rows={exportDialog.rows}
-			onclose={() => (exportDialog = null)}
+			title={exportHost.config.title}
+			filename={exportHost.config.filename}
+			headers={exportHost.config.headers}
+			rows={exportHost.config.rows}
+			onclose={exportHost.close}
 		/>
 	{/if}
 </ChromeLayout>

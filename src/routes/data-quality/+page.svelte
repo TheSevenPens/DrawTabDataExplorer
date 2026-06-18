@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createExportDialogHost } from '$lib/export-dialog-host.svelte.js';
 	import { resolve } from '$app/paths';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
@@ -15,24 +16,11 @@
 
 	let { data } = $props();
 
-	// Single shared ExportDialog instance, opened by per-section trigger
-	// buttons. Each trigger sets `exportDialog` to a config object; the
-	// dialog mounts when set and closes by setting it back to null.
-	let exportDialog: {
-		title: string;
-		filename: string;
-		headers: string[];
-		rows: (string | number)[][];
-	} | null = $state(null);
-
-	function openExport(
-		title: string,
-		filename: string,
-		headers: string[],
-		rows: (string | number)[][],
-	): void {
-		exportDialog = { title, filename, headers, rows };
-	}
+	// Single shared ExportDialog, opened by per-section trigger buttons via the
+	// shared export host (#236). `openExport` is kept as a local alias so the
+	// section triggers read unchanged.
+	const exportHost = createExportDialogHost();
+	const openExport = exportHost.open;
 
 	const analysis = $derived(analyzeData(data));
 
@@ -847,14 +835,14 @@
 			{/snippet}
 		</SectionedPage>
 
-		{#if exportDialog}
+		{#if exportHost.config}
 			<ExportDialog
 				entityType="data-quality"
-				title={exportDialog.title}
-				filename={exportDialog.filename}
-				headers={exportDialog.headers}
-				rows={exportDialog.rows}
-				onclose={() => (exportDialog = null)}
+				title={exportHost.config.title}
+				filename={exportHost.config.filename}
+				headers={exportHost.config.headers}
+				rows={exportHost.config.rows}
+				onclose={exportHost.close}
 			/>
 		{/if}
 	{/if}
