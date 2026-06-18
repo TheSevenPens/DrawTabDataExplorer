@@ -7,6 +7,7 @@
 	import { fmtP } from '$data/lib/pressure/interpolate.js';
 	import { resolveRangeByUnit, type RangeMetric } from '$data/lib/pressure/range-resolve.js';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
+	import { slugify } from '$lib/chart-export/filenames.js';
 
 	let {
 		metric,
@@ -138,12 +139,7 @@
 		return `${fmt(resolved.length, 'pen unit', 'pen units')} · ${measuredCount} measured · ${estimatedCount} estimated`;
 	});
 
-	let nameSlug = $derived(
-		chartTitlePrefix
-			.replace(/[^a-z0-9]+/gi, '-')
-			.replace(/^-+|-+$/g, '')
-			.toLowerCase() || 'pen',
-	);
+	let nameSlug = $derived(slugify(chartTitlePrefix) || 'pen');
 	let metricLower = $derived(metric.toLowerCase());
 
 	let summaryExportRows = $derived<(string | number)[][]>(

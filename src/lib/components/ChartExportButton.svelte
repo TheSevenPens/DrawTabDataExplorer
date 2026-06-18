@@ -14,6 +14,8 @@
 	// a canvas at 2× scale on a white background (so transparent SVG fills
 	// don't produce a transparent PNG). PNG in canvas mode reads from the
 	// chart's own canvas directly.
+	import { slugify, datedFilename } from '$lib/chart-export/filenames.js';
+
 	interface Props {
 		title: string;
 		filename?: string;
@@ -30,20 +32,8 @@
 	let open = $state(false);
 	let toast = $state<string | null>(null);
 
-	function slug(s: string): string {
-		return s
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, '-')
-			.replace(/^-+|-+$/g, '');
-	}
-
-	function dateStamp(): string {
-		return new Date().toISOString().slice(0, 10);
-	}
-
 	function getFilename(ext: string): string {
-		const base = filename ?? slug(title || 'chart');
-		return `${base}-${dateStamp()}.${ext}`;
+		return datedFilename(filename ?? slugify(title || 'chart'), ext);
 	}
 
 	function showToast(msg: string): void {

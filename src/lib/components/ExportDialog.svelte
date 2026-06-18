@@ -2,6 +2,7 @@
 	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
 	import { exportTableAsPptx } from '$lib/pptx-export';
 	import type { RowRecord } from '$lib/table-types.js';
+	import { datedFilename } from '$lib/chart-export/filenames.js';
 
 	interface Props {
 		entityType: string;
@@ -165,9 +166,7 @@
 	}
 
 	function getFilename(): string {
-		const base = filename ?? entityType;
-		const date = new Date().toISOString().slice(0, 10);
-		return `${base}-${date}.${getExtension()}`;
+		return datedFilename(filename ?? entityType, getExtension());
 	}
 
 	async function doExport() {
