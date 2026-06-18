@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import { type Tablet } from '$data/lib/drawtab-loader.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
 	import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
@@ -49,14 +49,10 @@
 											{#each includedPenItems as pen, i (pen.entityId)}
 												{#if i > 0},
 												{/if}
-												<a href={resolve('/entity/[entityId]', { entityId: pen.entityId })}
-													>{pen.name}</a
-												>
+												<EntityLink entityId={pen.entityId}>{pen.name}</EntityLink>
 											{/each}
 										{:else if f.key === 'ModelFamily' && family}
-											<a href={resolve('/entity/[entityId]', { entityId: family.EntityId })}
-												>{family.FamilyName}</a
-											>
+											<EntityLink entityId={family.EntityId}>{family.FamilyName}</EntityLink>
 										{:else if isUrl(val)}
 											<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 											<a href={val} target="_blank" rel="noopener">
