@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
@@ -314,7 +315,7 @@
 
 {#snippet rankTable(p: RankTableProps)}
 	{#if p.rows.length === 0}
-		<p class="no-data">No measurements available.</p>
+		<EmptyState>No measurements available.</EmptyState>
 	{:else}
 		<div class="rank-controls">
 			<div class="controls-left">
@@ -612,7 +613,7 @@
 						tablets.
 					</p>
 					{#if udemrPens.length === 0}
-						<p class="no-data">No pens tagged UDEMR.</p>
+						<EmptyState>No pens tagged UDEMR.</EmptyState>
 					{:else}
 						<div class="rank-controls">
 							<span class="ud-count">{penCountLabel(udemrPens.length)}</span>
@@ -690,11 +691,6 @@
 		font-size: 13px;
 		color: var(--text-dim);
 		margin-bottom: 8px;
-	}
-	.no-data {
-		font-size: 13px;
-		color: var(--text-muted);
-		font-style: italic;
 	}
 	.rank-controls {
 		display: flex;

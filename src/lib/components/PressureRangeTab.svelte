@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import EntityLink from '$lib/components/EntityLink.svelte';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
 	import { PIAF_BANDS, PMAX_BANDS } from '$lib/bands.js';
@@ -380,16 +381,10 @@
 		</div>
 	{/if}
 {:else}
-	<p class="no-data">No {metric} data available for {entityLabel}.</p>
+	<EmptyState>No {metric} data available for {entityLabel}.</EmptyState>
 {/if}
 
 <style>
-	.no-data {
-		font-size: 13px;
-		color: var(--text-muted);
-		font-style: italic;
-	}
-
 	.view-toggle {
 		display: inline-flex;
 		gap: 0;

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
@@ -140,7 +141,7 @@
 			</tbody>
 		</table>
 	{:else}
-		<p class="no-data">No tablets found in this family.</p>
+		<EmptyState>No tablets found in this family.</EmptyState>
 	{/if}
 </section>
 
@@ -214,11 +215,6 @@
 	}
 	td a:hover {
 		text-decoration: underline;
-	}
-	.no-data {
-		font-size: 13px;
-		color: #999;
-		font-style: italic;
 	}
 
 	.dim-chart-section {

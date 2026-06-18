@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import { brandName, getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { findSimilarTablets } from '$data/lib/compat-helpers.js';
@@ -161,7 +162,7 @@
 		</tbody>
 	</table>
 {:else}
-	<p class="no-data">No matching tablets found. Try adjusting the filters.</p>
+	<EmptyState>No matching tablets found. Try adjusting the filters.</EmptyState>
 {/if}
 
 <style>
@@ -229,11 +230,5 @@
 
 	.similar-table a:hover {
 		text-decoration: underline;
-	}
-
-	.no-data {
-		font-size: 13px;
-		color: var(--text-dim);
-		font-style: italic;
 	}
 </style>

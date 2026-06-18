@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import ValueHistogram from '$lib/components/ValueHistogram.svelte';
 	import DistributionTable from '$lib/components/DistributionTable.svelte';
 	import AnalysisExportRow from '$lib/tablet-analysis/AnalysisExportRow.svelte';
@@ -151,7 +152,7 @@
 	<AnalysisExportRow onclick={onExport} />
 	<DistributionTable labelHeader="Band" rows={bandRows} total={rows.length} />
 {:else}
-	<p class="no-data">No measurements available.</p>
+	<EmptyState>No measurements available.</EmptyState>
 {/if}
 
 <style>
@@ -159,11 +160,6 @@
 		font-size: 13px;
 		color: var(--text-dim);
 		margin-bottom: 8px;
-	}
-	.no-data {
-		font-size: 13px;
-		color: var(--text-muted);
-		font-style: italic;
 	}
 
 	.stat-tables {
