@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import { type Brand, BRAND_FIELDS, BRAND_FIELD_GROUPS } from '$data/lib/entities/brand-fields.js';
 	import { type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
@@ -100,7 +101,7 @@
 					</tbody>
 				</table>
 			{:else}
-				<p class="no-data">No tablets found for this brand.</p>
+				<EmptyState>No tablets found for this brand.</EmptyState>
 			{/if}
 		{:else if activeTab === 'pens'}
 			{#if sortedPens.length > 0}
@@ -132,11 +133,11 @@
 					</tbody>
 				</table>
 			{:else}
-				<p class="no-data">No pens found for this brand.</p>
+				<EmptyState>No pens found for this brand.</EmptyState>
 			{/if}
 		{:else if activeTab === 'timeline'}
 			{#if timeline.length === 0}
-				<p class="no-data">No timeline data available.</p>
+				<EmptyState>No timeline data available.</EmptyState>
 			{:else}
 				<div class="brand-timeline">
 					{#each timeline as entry (entry.year)}
@@ -223,12 +224,6 @@
 	td {
 		padding: 5px 10px;
 		border-bottom: 1px solid var(--border);
-	}
-
-	.no-data {
-		font-size: 13px;
-		color: #999;
-		font-style: italic;
 	}
 
 	.brand-timeline {

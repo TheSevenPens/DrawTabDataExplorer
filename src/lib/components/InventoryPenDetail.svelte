@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import Nav from '$lib/components/Nav.svelte';
 	import DetailView from '$lib/components/DetailView.svelte';
@@ -96,7 +97,7 @@
 				{defectsByInventoryId}
 			/>
 		{:else}
-			<p class="no-data">No pressure response sessions recorded for this pen unit.</p>
+			<EmptyState>No pressure response sessions recorded for this pen unit.</EmptyState>
 		{/if}
 	</div>
 {/if}
@@ -157,10 +158,5 @@
 	}
 	.tab-content {
 		margin-bottom: 24px;
-	}
-	.no-data {
-		font-size: 13px;
-		color: var(--text-muted);
-		font-style: italic;
 	}
 </style>

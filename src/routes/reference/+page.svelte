@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LoadingState from '$lib/components/LoadingState.svelte';
 	import {
 		penTabletRangesCm,
 		penTabletRangesIn,
@@ -317,7 +318,7 @@
 							</tbody>
 						</table>
 					{:else}
-						<p class="no-data">Loading...</p>
+						<LoadingState />
 					{/if}
 				</section>
 			{/snippet}
@@ -649,12 +650,6 @@
 		font-weight: 600;
 		color: var(--th-text);
 		background: var(--th-bg);
-	}
-
-	.no-data {
-		font-size: 13px;
-		color: var(--text-dim);
-		font-style: italic;
 	}
 
 	.ref-blurb {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { POPULAR_RATIOS, VERYCLOSE_THRESHOLD } from '$data/lib/aspect-ratio.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { MM_TO_IN } from '$lib/tablet-size-ranges.js';
@@ -130,7 +131,7 @@
 </script>
 
 {#if calcs.length === 0}
-	<p class="no-data">Active area dimensions are missing for this tablet.</p>
+	<EmptyState>Active area dimensions are missing for this tablet.</EmptyState>
 {:else}
 	<div class="intro">
 		<p>
@@ -401,10 +402,5 @@
 	}
 	.swatch.lost {
 		background: #bfe5f5;
-	}
-	.no-data {
-		font-size: 13px;
-		color: var(--text-dim);
-		font-style: italic;
 	}
 </style>

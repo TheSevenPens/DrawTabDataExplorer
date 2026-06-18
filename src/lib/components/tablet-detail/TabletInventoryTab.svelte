@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import type { InventoryTablet } from '$data/lib/entities/inventory-tablet-fields.js';
 
@@ -27,7 +28,7 @@
 		</tbody>
 	</table>
 {:else}
-	<p class="no-data">You don't own a unit of this tablet model.</p>
+	<EmptyState>You don't own a unit of this tablet model.</EmptyState>
 {/if}
 
 <style>
@@ -53,11 +54,5 @@
 	}
 	.compat-table a:hover {
 		text-decoration: underline;
-	}
-
-	.no-data {
-		font-size: 13px;
-		color: var(--text-dim);
-		font-style: italic;
 	}
 </style>
