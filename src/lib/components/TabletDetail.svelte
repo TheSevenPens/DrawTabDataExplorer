@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { brandName, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
-	import Nav from '$lib/components/Nav.svelte';
+	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
@@ -47,16 +47,15 @@
 	);
 </script>
 
-<Nav />
-
-<div class="title-row">
-	<h1>{tabletFullName(tablet)}</h1>
-	<FlagButton
-		flagged={$flaggedTablets.includes(tablet.Meta.EntityId)}
-		onclick={() => toggleFlag(tablet.Meta.EntityId)}
-		label="Flag this tablet for comparison"
-	/>
-</div>
+<DetailPageFrame title={tabletFullName(tablet)}>
+	{#snippet actions()}
+		<FlagButton
+			flagged={$flaggedTablets.includes(tablet.Meta.EntityId)}
+			onclick={() => toggleFlag(tablet.Meta.EntityId)}
+			label="Flag this tablet for comparison"
+		/>
+	{/snippet}
+</DetailPageFrame>
 
 <section class="basics">
 	<dl class="basics-grid">
@@ -158,17 +157,6 @@
 </section>
 
 <style>
-	.title-row {
-		display: flex;
-		align-items: baseline;
-		gap: 12px;
-		margin-bottom: 16px;
-	}
-
-	h1 {
-		margin: 0;
-	}
-
 	.basics {
 		margin-bottom: 20px;
 		padding: 12px 16px;
