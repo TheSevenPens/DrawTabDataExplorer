@@ -9,6 +9,7 @@ static/pen-families
 static/tablet-families
 static/pen-compat
 static/pressure-response
+static/pressure-range
 static/inventory
 static/brands
 static/reference
