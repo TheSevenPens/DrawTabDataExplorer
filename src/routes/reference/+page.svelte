@@ -6,8 +6,7 @@
 		displayRangesIn,
 		MM_TO_IN,
 	} from '$lib/tablet-size-ranges.js';
-	import Nav from '$lib/components/Nav.svelte';
-	import SubNav from '$lib/components/SubNav.svelte';
+	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
 	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import BandsChart from '$lib/components/BandsChart.svelte';
@@ -219,539 +218,539 @@
 	}
 </script>
 
-<Nav />
-<SubNav tabs={dataTabs} />
-<h1>Reference</h1>
+<ChromeLayout subNavTabs={dataTabs}>
+	<h1>Reference</h1>
 
-<SectionedPage sections={sectionDefs} defaultSection="tablet-sizes">
-	{#snippet content(activeSection: string)}
-		{#if activeSection === 'tablet-sizes'}
-			<section>
-				<div class="section-header">
-					<h2>Pen Tablet Size Categories</h2>
-					<button
-						class="copy-btn"
-						onclick={() =>
-							openExport(
-								'Pen Tablet Size Categories',
-								'pen-tablet-sizes',
-								[
-									'Category',
-									'Range (cm)',
-									'Range (in)',
-									'Similar ISO A',
-									'Diagonal (cm)',
-									'Diagonal (in)',
-								],
-								penTabletRangesCm.map((range, i) => {
-									const inRange = penTabletRangesIn[i];
-									const iso = closestISOA((range.min + range.max) / 2);
-									return [
-										range.label,
-										`${range.min} cm – ${range.max} cm`,
-										`${inRange.min}″ – ${inRange.max}″`,
-										iso.name,
-										`${iso.diagCm} cm`,
-										`${iso.diagIn}″`,
-									];
-								}),
-							)}>Export</button
-					>
-				</div>
-				<table id="pen-tablet-table" class="ref-table">
-					<thead
-						><tr
-							><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th><th
-								>Diagonal (cm)</th
-							><th>Diagonal (in)</th></tr
-						></thead
-					>
-					<tbody>
-						{#each penTabletRangesCm as range, i (range.label)}
-							{@const inRange = penTabletRangesIn[i]}
-							{@const midCm = (range.min + range.max) / 2}
-							{@const iso = closestISOA(midCm)}
-							<tr>
-								<td>{range.label}</td>
-								<td>{range.min} cm – {range.max} cm</td>
-								<td>{inRange.min}″ – {inRange.max}″</td>
-								<td>{iso.name}</td>
-								<td>{iso.diagCm} cm</td>
-								<td>{iso.diagIn}″</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</section>
-
-			<section>
-				<div class="section-header">
-					<h2>Pen Display Size Categories</h2>
-					<button
-						class="copy-btn"
-						onclick={() =>
-							openExport(
-								'Pen Display Size Categories',
-								'pen-display-sizes',
-								[
-									'Category',
-									'Range (cm)',
-									'Range (in)',
-									'Similar ISO A',
-									'Diagonal (cm)',
-									'Diagonal (in)',
-								],
-								displayRangesCm.map((range, i) => {
-									const inRange = displayRangesIn[i];
-									const iso = closestISOA((range.min + range.max) / 2);
-									return [
-										range.label,
-										`${range.min} cm – ${range.max} cm`,
-										`${inRange.min}″ – ${inRange.max}″`,
-										iso.name,
-										`${iso.diagCm} cm`,
-										`${iso.diagIn}″`,
-									];
-								}),
-							)}>Export</button
-					>
-				</div>
-				<table id="pen-display-table" class="ref-table">
-					<thead
-						><tr
-							><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th><th
-								>Diagonal (cm)</th
-							><th>Diagonal (in)</th></tr
-						></thead
-					>
-					<tbody>
-						{#each displayRangesCm as range, i (range.label)}
-							{@const inRange = displayRangesIn[i]}
-							{@const midCm = (range.min + range.max) / 2}
-							{@const iso = closestISOA(midCm)}
-							<tr>
-								<td>{range.label}</td>
-								<td>{range.min} cm – {range.max} cm</td>
-								<td>{inRange.min}″ – {inRange.max}″</td>
-								<td>{iso.name}</td>
-								<td>{iso.diagCm} cm</td>
-								<td>{iso.diagIn}″</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</section>
-		{:else if activeSection === 'iso-paper-a'}
-			<section>
-				<div class="section-header">
-					<h2>ISO A Paper Sizes</h2>
-					<button
-						class="copy-btn"
-						disabled={aSeries.length === 0}
-						onclick={() =>
-							openExport(
-								'ISO A Paper Sizes',
-								'iso-a-paper-sizes',
-								[
-									'Name',
-									'Width (cm)',
-									'Height (cm)',
-									'Diagonal (cm)',
-									'Width (in)',
-									'Height (in)',
-									'Diagonal (in)',
-								],
-								aSeries.map((size) => {
-									const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
-									const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
-									return [
-										size.Name,
-										(size.Width_mm / 10).toFixed(1),
-										(size.Height_mm / 10).toFixed(1),
-										diagCm.toFixed(1),
-										size.Width_in,
-										size.Height_in,
-										diagIn.toFixed(1),
-									];
-								}),
-							)}>Export</button
-					>
-				</div>
-				{#if aSeries.length > 0}
-					<table id="iso-a-paper-table" class="ref-table">
-						<thead
-							><tr
-								><th>Name</th><th>Width (cm)</th><th>Height (cm)</th><th>Diagonal (cm)</th><th
-									>Width (in)</th
-								><th>Height (in)</th><th>Diagonal (in)</th></tr
-							></thead
+	<SectionedPage sections={sectionDefs} defaultSection="tablet-sizes">
+		{#snippet content(activeSection: string)}
+			{#if activeSection === 'tablet-sizes'}
+				<section>
+					<div class="section-header">
+						<h2>Pen Tablet Size Categories</h2>
+						<button
+							class="copy-btn"
+							onclick={() =>
+								openExport(
+									'Pen Tablet Size Categories',
+									'pen-tablet-sizes',
+									[
+										'Category',
+										'Range (cm)',
+										'Range (in)',
+										'Similar ISO A',
+										'Diagonal (cm)',
+										'Diagonal (in)',
+									],
+									penTabletRangesCm.map((range, i) => {
+										const inRange = penTabletRangesIn[i];
+										const iso = closestISOA((range.min + range.max) / 2);
+										return [
+											range.label,
+											`${range.min} cm – ${range.max} cm`,
+											`${inRange.min}″ – ${inRange.max}″`,
+											iso.name,
+											`${iso.diagCm} cm`,
+											`${iso.diagIn}″`,
+										];
+									}),
+								)}>Export</button
 						>
-						<tbody>
-							{#each aSeries as size (size.Name)}
-								{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
-								{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
-								<tr>
-									<td>{size.Name}</td>
-									<td>{(size.Width_mm / 10).toFixed(1)}</td>
-									<td>{(size.Height_mm / 10).toFixed(1)}</td>
-									<td>{diagCm.toFixed(1)}</td>
-									<td>{size.Width_in}</td>
-									<td>{size.Height_in}</td>
-									<td>{diagIn.toFixed(1)}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				{:else}
-					<p class="no-data">Loading...</p>
-				{/if}
-			</section>
-		{:else if activeSection === 'iso-paper-b'}
-			<section>
-				<div class="section-header">
-					<h2>ISO B Paper Sizes</h2>
-					<button
-						class="copy-btn"
-						disabled={bSeries.length === 0}
-						onclick={() =>
-							openExport(
-								'ISO B Paper Sizes',
-								'iso-b-paper-sizes',
-								[
-									'Name',
-									'Width (cm)',
-									'Height (cm)',
-									'Diagonal (cm)',
-									'Width (in)',
-									'Height (in)',
-									'Diagonal (in)',
-								],
-								bSeries.map((size) => {
-									const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
-									const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
-									return [
-										size.Name,
-										(size.Width_mm / 10).toFixed(1),
-										(size.Height_mm / 10).toFixed(1),
-										diagCm.toFixed(1),
-										size.Width_in,
-										size.Height_in,
-										diagIn.toFixed(1),
-									];
-								}),
-							)}>Export</button
-					>
-				</div>
-				{#if bSeries.length > 0}
-					<table id="iso-b-paper-table" class="ref-table">
+					</div>
+					<table id="pen-tablet-table" class="ref-table">
 						<thead
 							><tr
-								><th>Name</th><th>Width (cm)</th><th>Height (cm)</th><th>Diagonal (cm)</th><th
-									>Width (in)</th
-								><th>Height (in)</th><th>Diagonal (in)</th></tr
-							></thead
-						>
-						<tbody>
-							{#each bSeries as size (size.Name)}
-								{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
-								{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
-								<tr>
-									<td>{size.Name}</td>
-									<td>{(size.Width_mm / 10).toFixed(1)}</td>
-									<td>{(size.Height_mm / 10).toFixed(1)}</td>
-									<td>{diagCm.toFixed(1)}</td>
-									<td>{size.Width_in}</td>
-									<td>{size.Height_in}</td>
-									<td>{diagIn.toFixed(1)}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				{:else}
-					<p class="no-data">Loading...</p>
-				{/if}
-			</section>
-		{:else if activeSection === 'us-paper'}
-			<section>
-				<div class="section-header">
-					<h2>US Paper Sizes</h2>
-					<button
-						class="copy-btn"
-						disabled={usPaperSizes.length === 0}
-						onclick={() =>
-							openExport(
-								'US Paper Sizes',
-								'us-paper-sizes',
-								[
-									'Name',
-									'Series',
-									'Width (cm)',
-									'Height (cm)',
-									'Diagonal (cm)',
-									'Width (in)',
-									'Height (in)',
-									'Diagonal (in)',
-								],
-								usPaperSizes.map((size) => {
-									const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
-									const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
-									return [
-										size.Name,
-										size.Series,
-										(size.Width_mm / 10).toFixed(1),
-										(size.Height_mm / 10).toFixed(1),
-										diagCm.toFixed(1),
-										size.Width_in,
-										size.Height_in,
-										diagIn.toFixed(1),
-									];
-								}),
-							)}>Export</button
-					>
-				</div>
-				{#if usPaperSizes.length > 0}
-					<table id="us-paper-table" class="ref-table">
-						<thead
-							><tr
-								><th>Name</th><th>Series</th><th>Width (cm)</th><th>Height (cm)</th><th
+								><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th><th
 									>Diagonal (cm)</th
-								><th>Width (in)</th><th>Height (in)</th><th>Diagonal (in)</th></tr
+								><th>Diagonal (in)</th></tr
 							></thead
 						>
 						<tbody>
-							{#each usPaperSizes as size (size.Name)}
-								{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
-								{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
+							{#each penTabletRangesCm as range, i (range.label)}
+								{@const inRange = penTabletRangesIn[i]}
+								{@const midCm = (range.min + range.max) / 2}
+								{@const iso = closestISOA(midCm)}
 								<tr>
-									<td>{size.Name}</td>
-									<td>{size.Series}</td>
-									<td>{(size.Width_mm / 10).toFixed(1)}</td>
-									<td>{(size.Height_mm / 10).toFixed(1)}</td>
-									<td>{diagCm.toFixed(1)}</td>
-									<td>{size.Width_in}</td>
-									<td>{size.Height_in}</td>
-									<td>{diagIn.toFixed(1)}</td>
+									<td>{range.label}</td>
+									<td>{range.min} cm – {range.max} cm</td>
+									<td>{inRange.min}″ – {inRange.max}″</td>
+									<td>{iso.name}</td>
+									<td>{iso.diagCm} cm</td>
+									<td>{iso.diagIn}″</td>
 								</tr>
 							{/each}
 						</tbody>
 					</table>
-				{:else}
-					<p class="no-data">Loading...</p>
-				{/if}
-			</section>
-		{:else if activeSection === 'display-resolutions'}
-			<section>
-				<div class="section-header">
-					<h2>Display Resolution Categories</h2>
-					<button
-						class="copy-btn"
-						onclick={() => {
-							const headers = [
-								'Category',
-								'Resolution',
-								'Megapixels',
-								'Aspect Ratio',
-								'Displays in dataset',
-							];
-							const rows: (string | number)[][] = [];
-							for (const cat of resolutionCategories) {
-								cat.resolutions.forEach((res, i) => {
-									const mp = ((res.w * res.h) / 1_000_000).toFixed(2);
-									const g = gcd(res.w, res.h);
-									const ar = `${res.w / g}:${res.h / g}`;
-									const count = i === 0 ? (resolutionCounts[cat.name] ?? 0) : '';
-									rows.push([cat.name, `${res.w} × ${res.h}`, `${mp} MP`, ar, count]);
-								});
-							}
-							rows.push(['Other', '—', '—', '—', resolutionCounts['Other'] ?? 0]);
-							openExport('Display Resolution Categories', 'display-resolutions', headers, rows);
-						}}>Export</button
-					>
-				</div>
-				<table id="res-cat-table" class="ref-table">
-					<thead>
-						<tr>
-							<th>Category</th>
-							<th>Resolution(s)</th>
-							<th>Megapixels</th>
-							<th>Aspect Ratio</th>
-							<th>Displays in dataset</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each resolutionCategories as cat (cat.name)}
-							{#each cat.resolutions as res, i (i)}
-								{@const mp = ((res.w * res.h) / 1_000_000).toFixed(2)}
-								{@const g = gcd(res.w, res.h)}
-								{@const ar = `${res.w / g}:${res.h / g}`}
-								{@const count = i === 0 ? (resolutionCounts[cat.name] ?? 0) : null}
+				</section>
+
+				<section>
+					<div class="section-header">
+						<h2>Pen Display Size Categories</h2>
+						<button
+							class="copy-btn"
+							onclick={() =>
+								openExport(
+									'Pen Display Size Categories',
+									'pen-display-sizes',
+									[
+										'Category',
+										'Range (cm)',
+										'Range (in)',
+										'Similar ISO A',
+										'Diagonal (cm)',
+										'Diagonal (in)',
+									],
+									displayRangesCm.map((range, i) => {
+										const inRange = displayRangesIn[i];
+										const iso = closestISOA((range.min + range.max) / 2);
+										return [
+											range.label,
+											`${range.min} cm – ${range.max} cm`,
+											`${inRange.min}″ – ${inRange.max}″`,
+											iso.name,
+											`${iso.diagCm} cm`,
+											`${iso.diagIn}″`,
+										];
+									}),
+								)}>Export</button
+						>
+					</div>
+					<table id="pen-display-table" class="ref-table">
+						<thead
+							><tr
+								><th>Category</th><th>Range (cm)</th><th>Range (in)</th><th>Similar ISO A</th><th
+									>Diagonal (cm)</th
+								><th>Diagonal (in)</th></tr
+							></thead
+						>
+						<tbody>
+							{#each displayRangesCm as range, i (range.label)}
+								{@const inRange = displayRangesIn[i]}
+								{@const midCm = (range.min + range.max) / 2}
+								{@const iso = closestISOA(midCm)}
 								<tr>
-									{#if i === 0}
-										<td rowspan={cat.resolutions.length} class="cat-name">{cat.name}</td>
-									{/if}
-									<td>{res.w} × {res.h}</td>
-									<td>{mp} MP</td>
-									<td>{ar}</td>
-									{#if i === 0}
-										<td rowspan={cat.resolutions.length} class="count-cell">
-											{count === 0 ? '—' : count}
-										</td>
-									{/if}
+									<td>{range.label}</td>
+									<td>{range.min} cm – {range.max} cm</td>
+									<td>{inRange.min}″ – {inRange.max}″</td>
+									<td>{iso.name}</td>
+									<td>{iso.diagCm} cm</td>
+									<td>{iso.diagIn}″</td>
 								</tr>
 							{/each}
-						{/each}
-						<tr class="other-row">
-							<td>Other</td>
-							<td>—</td>
-							<td>—</td>
-							<td>—</td>
-							<td>{resolutionCounts['Other'] ?? 0}</td>
-						</tr>
-					</tbody>
-				</table>
-			</section>
-		{:else if activeSection === 'piaf-ranking'}
-			<section>
-				<div class="section-header">
-					<h2>IAF Ranking</h2>
-				</div>
-				<p class="ref-blurb">
-					IAF (Initial Activation Force) is the minimum force required for a pen tip to register
-					pressure. Lower is better — a lighter touch means more natural shading and less hand
-					fatigue.
-				</p>
-				<BandsChart
-					bands={piafBands}
-					axisMax={10}
-					axisStep={1}
-					unit="gf"
-					title="IAF Ranking"
-					showBandRanges={false}
-				/>
-				<div class="subsection-header">
-					<h3>Ranking Bands</h3>
-					<button
-						class="copy-btn"
-						onclick={() =>
-							openExport(
-								'IAF Ranking',
-								'iaf-ranking',
-								['Rank', 'Rating', 'Range (gf)'],
-								piafBands.map((b) => [
-									b.label,
-									b.name ?? '',
-									b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
-								]),
-							)}>Export</button
-					>
-				</div>
-				<table class="ref-table">
-					<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
-					<tbody>
-						{#each piafBands as b (b.label)}
-							<tr>
-								<td>{b.label}</td>
-								<td>{b.name ?? ''}</td>
-								<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</section>
-		{:else if activeSection === 'pmax-ranking'}
-			<section>
-				<div class="section-header">
-					<h2>MAX Ranking</h2>
-				</div>
-				<BandsChart
-					bands={pmaxBands}
-					axisMax={1000}
-					axisStep={100}
-					unit="gf"
-					title="MAX Ranking"
-					showBandRanges={false}
-				/>
-				<div class="subsection-header">
-					<h3>Ranking Bands</h3>
-					<button
-						class="copy-btn"
-						onclick={() =>
-							openExport(
-								'MAX Ranking',
-								'max-ranking',
-								['Rank', 'Rating', 'Range (gf)'],
-								pmaxBandsByRank.map((b) => [
-									b.label,
-									b.name ?? '',
-									b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
-								]),
-							)}>Export</button
-					>
-				</div>
-				<table class="ref-table">
-					<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
-					<tbody>
-						{#each pmaxBandsByRank as b (b.label)}
-							<tr>
-								<td>{b.label}</td>
-								<td>{b.name ?? ''}</td>
-								<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</section>
-		{:else}
-			{#each specBandSections as s (s.id)}
-				{#if activeSection === s.id}
-					<section>
-						<div class="section-header">
-							<h2>{s.title}</h2>
-							<button
-								class="copy-btn"
-								onclick={() =>
-									openExport(
-										s.title,
-										s.filename,
-										['Rank', `Range (${s.unit})`],
-										s.bands.map((b) => [b.label, formatBandRange(b, s.unit)]),
-									)}>Export</button
+						</tbody>
+					</table>
+				</section>
+			{:else if activeSection === 'iso-paper-a'}
+				<section>
+					<div class="section-header">
+						<h2>ISO A Paper Sizes</h2>
+						<button
+							class="copy-btn"
+							disabled={aSeries.length === 0}
+							onclick={() =>
+								openExport(
+									'ISO A Paper Sizes',
+									'iso-a-paper-sizes',
+									[
+										'Name',
+										'Width (cm)',
+										'Height (cm)',
+										'Diagonal (cm)',
+										'Width (in)',
+										'Height (in)',
+										'Diagonal (in)',
+									],
+									aSeries.map((size) => {
+										const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
+										const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
+										return [
+											size.Name,
+											(size.Width_mm / 10).toFixed(1),
+											(size.Height_mm / 10).toFixed(1),
+											diagCm.toFixed(1),
+											size.Width_in,
+											size.Height_in,
+											diagIn.toFixed(1),
+										];
+									}),
+								)}>Export</button
+						>
+					</div>
+					{#if aSeries.length > 0}
+						<table id="iso-a-paper-table" class="ref-table">
+							<thead
+								><tr
+									><th>Name</th><th>Width (cm)</th><th>Height (cm)</th><th>Diagonal (cm)</th><th
+										>Width (in)</th
+									><th>Height (in)</th><th>Diagonal (in)</th></tr
+								></thead
 							>
-						</div>
-						<p class="ref-blurb">{s.blurb}</p>
-						<p class="ref-blurb">
-							Used by the Tablets ▸ Analysis ▸ {s.title.replace(' Bands', '')} histogram. Edit
-							<code>src/lib/bands.ts</code> to change thresholds — the histogram and this table both read
-							from the same source.
-						</p>
-						<table class="ref-table">
-							<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
 							<tbody>
-								{#each s.bands as b (b.label)}
+								{#each aSeries as size (size.Name)}
+									{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
+									{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
 									<tr>
-										<td>{b.label}</td>
-										<td>{formatBandRange(b, s.unit)}</td>
+										<td>{size.Name}</td>
+										<td>{(size.Width_mm / 10).toFixed(1)}</td>
+										<td>{(size.Height_mm / 10).toFixed(1)}</td>
+										<td>{diagCm.toFixed(1)}</td>
+										<td>{size.Width_in}</td>
+										<td>{size.Height_in}</td>
+										<td>{diagIn.toFixed(1)}</td>
 									</tr>
 								{/each}
 							</tbody>
 						</table>
-					</section>
-				{/if}
-			{/each}
-		{/if}
-	{/snippet}
-</SectionedPage>
+					{:else}
+						<p class="no-data">Loading...</p>
+					{/if}
+				</section>
+			{:else if activeSection === 'iso-paper-b'}
+				<section>
+					<div class="section-header">
+						<h2>ISO B Paper Sizes</h2>
+						<button
+							class="copy-btn"
+							disabled={bSeries.length === 0}
+							onclick={() =>
+								openExport(
+									'ISO B Paper Sizes',
+									'iso-b-paper-sizes',
+									[
+										'Name',
+										'Width (cm)',
+										'Height (cm)',
+										'Diagonal (cm)',
+										'Width (in)',
+										'Height (in)',
+										'Diagonal (in)',
+									],
+									bSeries.map((size) => {
+										const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
+										const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
+										return [
+											size.Name,
+											(size.Width_mm / 10).toFixed(1),
+											(size.Height_mm / 10).toFixed(1),
+											diagCm.toFixed(1),
+											size.Width_in,
+											size.Height_in,
+											diagIn.toFixed(1),
+										];
+									}),
+								)}>Export</button
+						>
+					</div>
+					{#if bSeries.length > 0}
+						<table id="iso-b-paper-table" class="ref-table">
+							<thead
+								><tr
+									><th>Name</th><th>Width (cm)</th><th>Height (cm)</th><th>Diagonal (cm)</th><th
+										>Width (in)</th
+									><th>Height (in)</th><th>Diagonal (in)</th></tr
+								></thead
+							>
+							<tbody>
+								{#each bSeries as size (size.Name)}
+									{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
+									{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
+									<tr>
+										<td>{size.Name}</td>
+										<td>{(size.Width_mm / 10).toFixed(1)}</td>
+										<td>{(size.Height_mm / 10).toFixed(1)}</td>
+										<td>{diagCm.toFixed(1)}</td>
+										<td>{size.Width_in}</td>
+										<td>{size.Height_in}</td>
+										<td>{diagIn.toFixed(1)}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{:else}
+						<p class="no-data">Loading...</p>
+					{/if}
+				</section>
+			{:else if activeSection === 'us-paper'}
+				<section>
+					<div class="section-header">
+						<h2>US Paper Sizes</h2>
+						<button
+							class="copy-btn"
+							disabled={usPaperSizes.length === 0}
+							onclick={() =>
+								openExport(
+									'US Paper Sizes',
+									'us-paper-sizes',
+									[
+										'Name',
+										'Series',
+										'Width (cm)',
+										'Height (cm)',
+										'Diagonal (cm)',
+										'Width (in)',
+										'Height (in)',
+										'Diagonal (in)',
+									],
+									usPaperSizes.map((size) => {
+										const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10;
+										const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2);
+										return [
+											size.Name,
+											size.Series,
+											(size.Width_mm / 10).toFixed(1),
+											(size.Height_mm / 10).toFixed(1),
+											diagCm.toFixed(1),
+											size.Width_in,
+											size.Height_in,
+											diagIn.toFixed(1),
+										];
+									}),
+								)}>Export</button
+						>
+					</div>
+					{#if usPaperSizes.length > 0}
+						<table id="us-paper-table" class="ref-table">
+							<thead
+								><tr
+									><th>Name</th><th>Series</th><th>Width (cm)</th><th>Height (cm)</th><th
+										>Diagonal (cm)</th
+									><th>Width (in)</th><th>Height (in)</th><th>Diagonal (in)</th></tr
+								></thead
+							>
+							<tbody>
+								{#each usPaperSizes as size (size.Name)}
+									{@const diagCm = Math.sqrt(size.Width_mm ** 2 + size.Height_mm ** 2) / 10}
+									{@const diagIn = Math.sqrt(size.Width_in ** 2 + size.Height_in ** 2)}
+									<tr>
+										<td>{size.Name}</td>
+										<td>{size.Series}</td>
+										<td>{(size.Width_mm / 10).toFixed(1)}</td>
+										<td>{(size.Height_mm / 10).toFixed(1)}</td>
+										<td>{diagCm.toFixed(1)}</td>
+										<td>{size.Width_in}</td>
+										<td>{size.Height_in}</td>
+										<td>{diagIn.toFixed(1)}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{:else}
+						<p class="no-data">Loading...</p>
+					{/if}
+				</section>
+			{:else if activeSection === 'display-resolutions'}
+				<section>
+					<div class="section-header">
+						<h2>Display Resolution Categories</h2>
+						<button
+							class="copy-btn"
+							onclick={() => {
+								const headers = [
+									'Category',
+									'Resolution',
+									'Megapixels',
+									'Aspect Ratio',
+									'Displays in dataset',
+								];
+								const rows: (string | number)[][] = [];
+								for (const cat of resolutionCategories) {
+									cat.resolutions.forEach((res, i) => {
+										const mp = ((res.w * res.h) / 1_000_000).toFixed(2);
+										const g = gcd(res.w, res.h);
+										const ar = `${res.w / g}:${res.h / g}`;
+										const count = i === 0 ? (resolutionCounts[cat.name] ?? 0) : '';
+										rows.push([cat.name, `${res.w} × ${res.h}`, `${mp} MP`, ar, count]);
+									});
+								}
+								rows.push(['Other', '—', '—', '—', resolutionCounts['Other'] ?? 0]);
+								openExport('Display Resolution Categories', 'display-resolutions', headers, rows);
+							}}>Export</button
+						>
+					</div>
+					<table id="res-cat-table" class="ref-table">
+						<thead>
+							<tr>
+								<th>Category</th>
+								<th>Resolution(s)</th>
+								<th>Megapixels</th>
+								<th>Aspect Ratio</th>
+								<th>Displays in dataset</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each resolutionCategories as cat (cat.name)}
+								{#each cat.resolutions as res, i (i)}
+									{@const mp = ((res.w * res.h) / 1_000_000).toFixed(2)}
+									{@const g = gcd(res.w, res.h)}
+									{@const ar = `${res.w / g}:${res.h / g}`}
+									{@const count = i === 0 ? (resolutionCounts[cat.name] ?? 0) : null}
+									<tr>
+										{#if i === 0}
+											<td rowspan={cat.resolutions.length} class="cat-name">{cat.name}</td>
+										{/if}
+										<td>{res.w} × {res.h}</td>
+										<td>{mp} MP</td>
+										<td>{ar}</td>
+										{#if i === 0}
+											<td rowspan={cat.resolutions.length} class="count-cell">
+												{count === 0 ? '—' : count}
+											</td>
+										{/if}
+									</tr>
+								{/each}
+							{/each}
+							<tr class="other-row">
+								<td>Other</td>
+								<td>—</td>
+								<td>—</td>
+								<td>—</td>
+								<td>{resolutionCounts['Other'] ?? 0}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+			{:else if activeSection === 'piaf-ranking'}
+				<section>
+					<div class="section-header">
+						<h2>IAF Ranking</h2>
+					</div>
+					<p class="ref-blurb">
+						IAF (Initial Activation Force) is the minimum force required for a pen tip to register
+						pressure. Lower is better — a lighter touch means more natural shading and less hand
+						fatigue.
+					</p>
+					<BandsChart
+						bands={piafBands}
+						axisMax={10}
+						axisStep={1}
+						unit="gf"
+						title="IAF Ranking"
+						showBandRanges={false}
+					/>
+					<div class="subsection-header">
+						<h3>Ranking Bands</h3>
+						<button
+							class="copy-btn"
+							onclick={() =>
+								openExport(
+									'IAF Ranking',
+									'iaf-ranking',
+									['Rank', 'Rating', 'Range (gf)'],
+									piafBands.map((b) => [
+										b.label,
+										b.name ?? '',
+										b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<table class="ref-table">
+						<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
+						<tbody>
+							{#each piafBands as b (b.label)}
+								<tr>
+									<td>{b.label}</td>
+									<td>{b.name ?? ''}</td>
+									<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{:else if activeSection === 'pmax-ranking'}
+				<section>
+					<div class="section-header">
+						<h2>MAX Ranking</h2>
+					</div>
+					<BandsChart
+						bands={pmaxBands}
+						axisMax={1000}
+						axisStep={100}
+						unit="gf"
+						title="MAX Ranking"
+						showBandRanges={false}
+					/>
+					<div class="subsection-header">
+						<h3>Ranking Bands</h3>
+						<button
+							class="copy-btn"
+							onclick={() =>
+								openExport(
+									'MAX Ranking',
+									'max-ranking',
+									['Rank', 'Rating', 'Range (gf)'],
+									pmaxBandsByRank.map((b) => [
+										b.label,
+										b.name ?? '',
+										b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
+									]),
+								)}>Export</button
+						>
+					</div>
+					<table class="ref-table">
+						<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
+						<tbody>
+							{#each pmaxBandsByRank as b (b.label)}
+								<tr>
+									<td>{b.label}</td>
+									<td>{b.name ?? ''}</td>
+									<td>{b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</section>
+			{:else}
+				{#each specBandSections as s (s.id)}
+					{#if activeSection === s.id}
+						<section>
+							<div class="section-header">
+								<h2>{s.title}</h2>
+								<button
+									class="copy-btn"
+									onclick={() =>
+										openExport(
+											s.title,
+											s.filename,
+											['Rank', `Range (${s.unit})`],
+											s.bands.map((b) => [b.label, formatBandRange(b, s.unit)]),
+										)}>Export</button
+								>
+							</div>
+							<p class="ref-blurb">{s.blurb}</p>
+							<p class="ref-blurb">
+								Used by the Tablets ▸ Analysis ▸ {s.title.replace(' Bands', '')} histogram. Edit
+								<code>src/lib/bands.ts</code> to change thresholds — the histogram and this table both
+								read from the same source.
+							</p>
+							<table class="ref-table">
+								<thead><tr><th>Rank</th><th>Rating</th><th>Range</th></tr></thead>
+								<tbody>
+									{#each s.bands as b (b.label)}
+										<tr>
+											<td>{b.label}</td>
+											<td>{formatBandRange(b, s.unit)}</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</section>
+					{/if}
+				{/each}
+			{/if}
+		{/snippet}
+	</SectionedPage>
 
-{#if exportDialog}
-	<ExportDialog
-		entityType="reference"
-		title={exportDialog.title}
-		filename={exportDialog.filename}
-		headers={exportDialog.headers}
-		rows={exportDialog.rows}
-		onclose={() => (exportDialog = null)}
-	/>
-{/if}
+	{#if exportDialog}
+		<ExportDialog
+			entityType="reference"
+			title={exportDialog.title}
+			filename={exportDialog.filename}
+			headers={exportDialog.headers}
+			rows={exportDialog.rows}
+			onclose={() => (exportDialog = null)}
+		/>
+	{/if}
+</ChromeLayout>
 
 <style>
 	h1 {
