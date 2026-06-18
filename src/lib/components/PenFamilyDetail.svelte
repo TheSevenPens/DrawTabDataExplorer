@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import type { Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
-	import Nav from '$lib/components/Nav.svelte';
+	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
 	import {
 		type PenFamily,
 		PEN_FAMILY_FIELDS,
@@ -60,16 +60,15 @@
 	let sortedMemberPens: Pen[] = $derived([...memberPens].sort(comparePenByYearDesc));
 </script>
 
-<Nav />
-
-<div class="title-row">
-	<h1>{family.FamilyName}</h1>
-	<FlagButton
-		flagged={$flaggedPenFamilies.includes(family.EntityId.toLowerCase())}
-		onclick={() => toggleFlaggedPenFamily(family.EntityId)}
-		label="Flag this pen family"
-	/>
-</div>
+<DetailPageFrame title={family.FamilyName}>
+	{#snippet actions()}
+		<FlagButton
+			flagged={$flaggedPenFamilies.includes(family.EntityId.toLowerCase())}
+			onclick={() => toggleFlaggedPenFamily(family.EntityId)}
+			label="Flag this pen family"
+		/>
+	{/snippet}
+</DetailPageFrame>
 
 <Tabs
 	tabs={[
@@ -190,16 +189,6 @@
 {/if}
 
 <style>
-	.title-row {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-bottom: 8px;
-	}
-	.title-row h1 {
-		margin: 0;
-	}
-
 	.tab-content {
 		margin-bottom: 24px;
 	}

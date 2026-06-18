@@ -2,7 +2,7 @@
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
-	import Nav from '$lib/components/Nav.svelte';
+	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
 	import {
 		type TabletFamily,
 		TABLET_FAMILY_FIELDS,
@@ -76,9 +76,7 @@
 	);
 </script>
 
-<Nav />
-
-<h1>{family.FamilyName}</h1>
+<DetailPageFrame title={family.FamilyName} />
 <DetailView item={family} fields={TABLET_FAMILY_FIELDS} fieldGroups={TABLET_FAMILY_FIELD_GROUPS} />
 
 <section class="family-section">
