@@ -48,6 +48,7 @@
 	let staleMeasurements = $derived(analysis.staleMeasurements);
 	let remeasureRecommendations = $derived(analysis.remeasureRecommendations);
 	let iafEstimatedNoMeasurement = $derived(analysis.iafEstimatedNoMeasurement);
+	let tabletsMissingExactReleaseDate = $derived(analysis.tabletsMissingExactReleaseDate);
 
 	// Source of truth for the navigation tree. `count` (optional) is
 	// re-read every render so the badge stays in sync with the derived
@@ -120,6 +121,12 @@
 			category: 'Pressure Response',
 			label: 'IAF — Not Measured',
 			count: iafEstimatedNoMeasurement.length,
+		},
+		{
+			id: 'tablet-release-dates',
+			category: 'Field Completion',
+			label: 'Tablet Release Dates',
+			count: tabletsMissingExactReleaseDate.length,
 		},
 		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
 		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
@@ -622,6 +629,63 @@
 											</td>
 											<td class="mono">{p.inventoryId}</td>
 											<td class="mono">{p.estimate.toFixed(1)}</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						{/if}
+					</section>
+				{/if}
+
+				{#if activeSection === 'tablet-release-dates'}
+					<section class="section">
+						<SectionHeader
+							title="Tablets — No Exact Release Date"
+							count={tabletsMissingExactReleaseDate.length}
+							disabled={tabletsMissingExactReleaseDate.length === 0}
+							onExport={() =>
+								openExport(
+									'Tablets Without an Exact Release Date',
+									'data-quality-tablet-release-dates',
+									['Brand', 'Model ID', 'Name', 'Current ReleaseDate', 'Missing'],
+									tabletsMissingExactReleaseDate.map((t) => [
+										t.brand,
+										t.id,
+										t.name,
+										t.releaseDate,
+										t.missing,
+									]),
+								)}
+						/>
+						<p class="description">
+							Tablets whose <code>Model.ReleaseDate</code> isn't an exact
+							<code>YYYY-MM-DD</code> — broken out by what's missing: no date, year only, or month only.
+						</p>
+						{#if tabletsMissingExactReleaseDate.length === 0}
+							<StatusMessage variant="good"
+								>Every tablet has an exact (YYYY-MM-DD) release date.</StatusMessage
+							>
+						{:else}
+							<table class="compact">
+								<thead>
+									<tr>
+										<th>Brand</th>
+										<th>Tablet</th>
+										<th>Current</th>
+										<th>Missing</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each tabletsMissingExactReleaseDate as t (t.entityId)}
+										<tr>
+											<td>{t.brand}</td>
+											<td>
+												<a href={resolve('/entity/[entityId]', { entityId: t.entityId })}>
+													{t.name} ({t.id})
+												</a>
+											</td>
+											<td class="mono">{t.releaseDate || '—'}</td>
+											<td>{t.missing}</td>
 										</tr>
 									{/each}
 								</tbody>
