@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Nav from '$lib/components/Nav.svelte';
+	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
 	import {
 		type Driver,
 		DRIVER_FIELDS,
@@ -14,7 +14,5 @@
 	let driverName = $derived(nameField ? nameField.getValue(driver) : driver.DriverVersion);
 </script>
 
-<Nav />
-
-<h1>{driverName}</h1>
+<DetailPageFrame title={driverName} />
 <DetailView item={driver} fields={DRIVER_FIELDS} fieldGroups={DRIVER_FIELD_GROUPS} />

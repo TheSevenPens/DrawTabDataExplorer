@@ -6,7 +6,7 @@
 	import DetailView from '$lib/components/DetailView.svelte';
 	import EntityLink from '$lib/components/EntityLink.svelte';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
-	import Nav from '$lib/components/Nav.svelte';
+	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import { tabletNameAndId } from '$lib/tablet-helpers.js';
 
@@ -44,11 +44,7 @@
 	});
 </script>
 
-<Nav />
-
-<div class="title-row">
-	<h1>{brand.BrandName}</h1>
-</div>
+<DetailPageFrame title={brand.BrandName} />
 
 <DetailView item={brand} fields={BRAND_FIELDS} fieldGroups={BRAND_FIELD_GROUPS} />
 
@@ -187,13 +183,6 @@
 </div>
 
 <style>
-	.title-row {
-		margin-bottom: 16px;
-	}
-	h1 {
-		margin: 0;
-	}
-
 	.tabs-section {
 		margin-top: 24px;
 	}
