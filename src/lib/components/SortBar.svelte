@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type AnyFieldDisplayDef } from '@thesevenpens/queriton';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
+	import PopoverMenu from '$lib/components/PopoverMenu.svelte';
 	import { moveItem } from '$lib/pill-dnd.js';
 
 	interface SortItem {
@@ -109,8 +110,6 @@
 	}
 </script>
 
-<svelte:window onclick={() => (contextMenu = null)} />
-
 <div class="toolbar-item">
 	<button
 		class="toolbar-btn sort-btn"
@@ -182,12 +181,18 @@
 </div>
 
 {#if contextMenu}
-	<div class="context-menu" style="left: {contextMenu.x}px; top: {contextMenu.y}px;">
-		<button onclick={() => setDirection(contextMenu!.index, 'asc')}>Sort Ascending</button>
-		<button onclick={() => setDirection(contextMenu!.index, 'desc')}>Sort Descending</button>
-		<hr />
-		<button class="delete" onclick={() => remove(contextMenu!.index)}>Remove</button>
-	</div>
+	{@const idx = contextMenu.index}
+	<PopoverMenu
+		x={contextMenu.x}
+		y={contextMenu.y}
+		items={[
+			{ label: 'Sort Ascending', onclick: () => setDirection(idx, 'asc') },
+			{ label: 'Sort Descending', onclick: () => setDirection(idx, 'desc') },
+			{ divider: true },
+			{ label: 'Remove', danger: true, onclick: () => remove(idx) },
+		]}
+		onclose={() => (contextMenu = null)}
+	/>
 {/if}
 
 <style>
@@ -316,40 +321,5 @@
 	}
 	.add-wrapper {
 		position: relative;
-	}
-
-	.context-menu {
-		position: fixed;
-		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 6px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-		z-index: 200;
-		min-width: 150px;
-	}
-	.context-menu button {
-		display: block;
-		width: 100%;
-		text-align: left;
-		padding: 6px 12px;
-		font-size: 13px;
-		border: none;
-		background: none;
-		cursor: pointer;
-		color: var(--text);
-	}
-	.context-menu button:hover {
-		background: var(--hover-bg);
-	}
-	.context-menu button.delete {
-		color: #e11d48;
-	}
-	.context-menu button.delete:hover {
-		background: #fef2f2;
-	}
-	.context-menu hr {
-		border: none;
-		border-top: 1px solid var(--border);
-		margin: 2px 0;
 	}
 </style>
