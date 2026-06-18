@@ -6,12 +6,14 @@
 		BRAND_DEFAULT_VIEW,
 	} from '$data/lib/entities/brand-fields.js';
 	import EntityListLayout from '$lib/components/EntityListLayout.svelte';
+	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
 </script>
 
 <EntityListLayout
 	title="Brands"
+	subNavTabs={dataSubNavTabs()}
 	entityType="brands"
 	entityLabel="brands"
 	data={data.brands}
