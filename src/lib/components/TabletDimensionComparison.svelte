@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Dimensions, ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
+	import ChartFrame from '$lib/components/ChartFrame.svelte';
 
 	let {
 		dims,
@@ -171,89 +172,86 @@
 </script>
 
 {#if layout}
-	<div class="chart-toolbar">
-		<ChartExportButton getSvg={() => svgEl} {title} />
-	</div>
-	<div class="iso-chart-scroll">
-		<svg
-			bind:this={svgEl}
-			xmlns="http://www.w3.org/2000/svg"
-			width={layout.svgW}
-			height={CHART_H + PAD_TOP + PAD_BOT}
-			role="img"
-			aria-label="Active area size comparison"
-		>
-			<g transform="translate(0,{PAD_TOP})">
+	<ChartFrame>
+		{#snippet actions()}
+			<ChartExportButton getSvg={() => svgEl} {title} />
+		{/snippet}
+		<div class="iso-chart-scroll">
+			<svg
+				bind:this={svgEl}
+				xmlns="http://www.w3.org/2000/svg"
+				width={layout.svgW}
+				height={CHART_H + PAD_TOP + PAD_BOT}
+				role="img"
+				aria-label="Active area size comparison"
+			>
+				<g transform="translate(0,{PAD_TOP})">
+					{#each layout.rects as r, i (i)}
+						{#if stacked && r.colorIdx != null}
+							<rect
+								x={r.x}
+								y={CHART_H - r.sh}
+								width={r.sw}
+								height={r.sh}
+								fill={STACK_FILLS[r.colorIdx % STACK_FILLS.length]}
+								stroke={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}
+								stroke-width="1.5"
+								fill-opacity="0.75"
+							/>
+							<text
+								x={r.x + r.sw / 2}
+								y={CHART_H - r.sh - 6}
+								text-anchor="middle"
+								font-size="11"
+								font-weight="700"
+								fill={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}
+								font-family="inherit">{r.label}</text
+							>
+						{:else}
+							<rect
+								x={r.x}
+								y={CHART_H - r.sh}
+								width={r.sw}
+								height={r.sh}
+								class={r.isTablet ? 'rect-tablet' : 'rect-iso'}
+							/>
+							<text
+								x={r.x + r.sw / 2}
+								y={CHART_H - r.sh - 6}
+								text-anchor="middle"
+								class={r.isTablet ? 'lbl-tablet' : 'lbl-iso'}>{r.label}</text
+							>
+							<text x={r.x + r.sw / 2} y={CHART_H + 14} text-anchor="middle" class="lbl-dims"
+								>{r.dimsLabel}</text
+							>
+						{/if}
+					{/each}
+					<line x1="0" y1={CHART_H} x2={layout.svgW} y2={CHART_H} class="baseline" />
+				</g>
+			</svg>
+		</div>
+		{#if stacked && layout.rects.length > 0}
+			<div class="stack-legend">
 				{#each layout.rects as r, i (i)}
-					{#if stacked && r.colorIdx != null}
-						<rect
-							x={r.x}
-							y={CHART_H - r.sh}
-							width={r.sw}
-							height={r.sh}
-							fill={STACK_FILLS[r.colorIdx % STACK_FILLS.length]}
-							stroke={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}
-							stroke-width="1.5"
-							fill-opacity="0.75"
-						/>
-						<text
-							x={r.x + r.sw / 2}
-							y={CHART_H - r.sh - 6}
-							text-anchor="middle"
-							font-size="11"
-							font-weight="700"
-							fill={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}
-							font-family="inherit">{r.label}</text
-						>
-					{:else}
-						<rect
-							x={r.x}
-							y={CHART_H - r.sh}
-							width={r.sw}
-							height={r.sh}
-							class={r.isTablet ? 'rect-tablet' : 'rect-iso'}
-						/>
-						<text
-							x={r.x + r.sw / 2}
-							y={CHART_H - r.sh - 6}
-							text-anchor="middle"
-							class={r.isTablet ? 'lbl-tablet' : 'lbl-iso'}>{r.label}</text
-						>
-						<text x={r.x + r.sw / 2} y={CHART_H + 14} text-anchor="middle" class="lbl-dims"
-							>{r.dimsLabel}</text
-						>
+					{#if r.colorIdx != null}
+						<div class="legend-item">
+							<span
+								class="legend-swatch"
+								style="background:{STACK_FILLS[
+									r.colorIdx % STACK_FILLS.length
+								]};border-color:{STACK_STROKES[r.colorIdx % STACK_STROKES.length]}"
+							></span>
+							<span class="legend-label">{r.label}</span>
+							<span class="legend-dims">{r.dimsLabel} mm</span>
+						</div>
 					{/if}
 				{/each}
-				<line x1="0" y1={CHART_H} x2={layout.svgW} y2={CHART_H} class="baseline" />
-			</g>
-		</svg>
-	</div>
-	{#if stacked && layout.rects.length > 0}
-		<div class="stack-legend">
-			{#each layout.rects as r, i (i)}
-				{#if r.colorIdx != null}
-					<div class="legend-item">
-						<span
-							class="legend-swatch"
-							style="background:{STACK_FILLS[
-								r.colorIdx % STACK_FILLS.length
-							]};border-color:{STACK_STROKES[r.colorIdx % STACK_STROKES.length]}"
-						></span>
-						<span class="legend-label">{r.label}</span>
-						<span class="legend-dims">{r.dimsLabel} mm</span>
-					</div>
-				{/if}
-			{/each}
-		</div>
-	{/if}
+			</div>
+		{/if}
+	</ChartFrame>
 {/if}
 
 <style>
-	.chart-toolbar {
-		display: flex;
-		justify-content: flex-end;
-		margin-bottom: 6px;
-	}
 	.iso-chart-scroll {
 		overflow-x: auto;
 		padding-bottom: 4px;
