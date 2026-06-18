@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
+	import ChartFrame from '$lib/components/ChartFrame.svelte';
 	import type { Band } from '$lib/bands.js';
 
 	export interface BandMarker {
@@ -131,185 +132,182 @@
 </script>
 
 <div class="bands-chart-wrap">
-	<div class="export-row">
-		<ChartExportButton
-			getSvg={() => svgEl}
-			title={title ?? 'bands-chart'}
-			filename={exportFilename}
-		/>
-	</div>
-	<svg
-		bind:this={svgEl}
-		xmlns="http://www.w3.org/2000/svg"
-		viewBox="0 0 {W} {H}"
-		class="bands-chart"
-		role="img"
-		aria-label="Range bands chart"
-		font-family="'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-	>
-		<rect x="0" y="0" width={W} height={H} fill="var(--bands-bg, #e5edf6)" />
+	<ChartFrame>
+		{#snippet actions()}
+			<ChartExportButton
+				getSvg={() => svgEl}
+				title={title ?? 'bands-chart'}
+				filename={exportFilename}
+			/>
+		{/snippet}
+		<svg
+			bind:this={svgEl}
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 {W} {H}"
+			class="bands-chart"
+			role="img"
+			aria-label="Range bands chart"
+			font-family="'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+		>
+			<rect x="0" y="0" width={W} height={H} fill="var(--bands-bg, #e5edf6)" />
 
-		{#if heading}
-			<text
-				x={W / 2}
-				y={22}
-				text-anchor="middle"
-				class="chart-heading"
-				font-size="18"
-				font-weight="700">{heading}</text
-			>
-			{#if subtitle}
+			{#if heading}
 				<text
 					x={W / 2}
-					y={42}
+					y={22}
 					text-anchor="middle"
-					class="chart-subtitle"
-					font-size="13"
-					font-weight="400">{subtitle}</text
+					class="chart-heading"
+					font-size="18"
+					font-weight="700">{heading}</text
 				>
+				{#if subtitle}
+					<text
+						x={W / 2}
+						y={42}
+						text-anchor="middle"
+						class="chart-subtitle"
+						font-size="13"
+						font-weight="400">{subtitle}</text
+					>
+				{/if}
 			{/if}
-		{/if}
 
-		<!-- Vertical band-divider dashed lines. Drawn between adjacent bands,
+			<!-- Vertical band-divider dashed lines. Drawn between adjacent bands,
 			 and also at the leftmost band's lower bound when that bound is > 0
 			 (e.g. Pmax ranking starts at 100 gf, not 0). -->
-		{#each bands as b, i (i)}
-			{#if i > 0 || b.min > 0}
-				<line
-					x1={x(b.min)}
-					y1={PAD_TOP - 50}
-					x2={x(b.min)}
-					y2={axisY}
-					stroke="var(--bands-divider, #6b94c2)"
-					stroke-width="2"
-					stroke-dasharray="6 4"
-				/>
-			{/if}
-		{/each}
-
-		<!-- Band labels (title + optional numeric range under it) -->
-		{#each bands as b, i (i)}
-			{@const cx = (x(b.min) + x(bandRight(b))) / 2}
-			{@const rangeText = b.max === null ? `${b.min} ↔ ∞` : `${b.min} ↔ ${b.max}`}
-			<text
-				x={cx}
-				y={PAD_TOP - 25}
-				text-anchor="middle"
-				class="band-label"
-				font-weight="700"
-				font-size="18">{b.label}</text
-			>
-			{#if showBandRanges}
-				<text x={cx} y={PAD_TOP} text-anchor="middle" class="band-range" font-size="14"
-					>{rangeText}</text
-				>
-			{/if}
-		{/each}
-
-		<!-- Main axis line -->
-		<line
-			x1={PAD_L}
-			y1={axisY}
-			x2={W - PAD_R}
-			y2={axisY}
-			stroke="var(--bands-axis, #111)"
-			stroke-width="3"
-		/>
-
-		<!-- Tick marks + tick labels -->
-		{#each ticks as t (t)}
-			<line
-				x1={x(t)}
-				y1={axisY - 8}
-				x2={x(t)}
-				y2={axisY + 8}
-				stroke="var(--bands-axis, #111)"
-				stroke-width="2"
-			/>
-			<text x={x(t)} y={axisY + 28} text-anchor="middle" class="axis-tick" font-size="14"
-				>{t}{showUnitInAxis ? ` ${unit}` : ''}</text
-			>
-		{/each}
-
-		<!-- Optional shaded range (drawn behind markers) -->
-		{#if shadedRange}
-			{@const lo = Math.max(0, Math.min(shadedRange.min, shadedRange.max))}
-			{@const hi = Math.min(axisMax, Math.max(shadedRange.min, shadedRange.max))}
-			{#if hi > lo}
-				<rect
-					x={x(lo)}
-					y={PAD_TOP + 30}
-					width={x(hi) - x(lo)}
-					height={axisY + 4 - (PAD_TOP + 30)}
-					fill="#dc2626"
-					fill-opacity="0.18"
-				/>
-			{/if}
-		{/if}
-
-		<!-- Optional per-pen shaded ranges, drawn as horizontal stripes so
-			 multiple pens' min/max bands don't pile up on each other. -->
-		{#if shadedRanges && shadedRanges.length > 0}
-			{#each shadedRanges as r, i (i)}
-				{@const lo = Math.max(0, Math.min(r.min, r.max))}
-				{@const hi = Math.min(axisMax, Math.max(r.min, r.max))}
-				{#if hi > lo}
-					<rect
-						x={x(lo)}
-						y={markerBandTop + i * markerSliceH}
-						width={x(hi) - x(lo)}
-						height={markerSliceH}
-						fill={r.color ?? '#dc2626'}
-						fill-opacity="0.22"
+			{#each bands as b, i (i)}
+				{#if i > 0 || b.min > 0}
+					<line
+						x1={x(b.min)}
+						y1={PAD_TOP - 50}
+						x2={x(b.min)}
+						y2={axisY}
+						stroke="var(--bands-divider, #6b94c2)"
+						stroke-width="2"
+						stroke-dasharray="6 4"
 					/>
 				{/if}
 			{/each}
-		{/if}
 
-		<!-- Red marker lines (e.g. measured Pmax values). When the marker
+			<!-- Band labels (title + optional numeric range under it) -->
+			{#each bands as b, i (i)}
+				{@const cx = (x(b.min) + x(bandRight(b))) / 2}
+				{@const rangeText = b.max === null ? `${b.min} ↔ ∞` : `${b.min} ↔ ${b.max}`}
+				<text
+					x={cx}
+					y={PAD_TOP - 25}
+					text-anchor="middle"
+					class="band-label"
+					font-weight="700"
+					font-size="18">{b.label}</text
+				>
+				{#if showBandRanges}
+					<text x={cx} y={PAD_TOP} text-anchor="middle" class="band-range" font-size="14"
+						>{rangeText}</text
+					>
+				{/if}
+			{/each}
+
+			<!-- Main axis line -->
+			<line
+				x1={PAD_L}
+				y1={axisY}
+				x2={W - PAD_R}
+				y2={axisY}
+				stroke="var(--bands-axis, #111)"
+				stroke-width="3"
+			/>
+
+			<!-- Tick marks + tick labels -->
+			{#each ticks as t (t)}
+				<line
+					x1={x(t)}
+					y1={axisY - 8}
+					x2={x(t)}
+					y2={axisY + 8}
+					stroke="var(--bands-axis, #111)"
+					stroke-width="2"
+				/>
+				<text x={x(t)} y={axisY + 28} text-anchor="middle" class="axis-tick" font-size="14"
+					>{t}{showUnitInAxis ? ` ${unit}` : ''}</text
+				>
+			{/each}
+
+			<!-- Optional shaded range (drawn behind markers) -->
+			{#if shadedRange}
+				{@const lo = Math.max(0, Math.min(shadedRange.min, shadedRange.max))}
+				{@const hi = Math.min(axisMax, Math.max(shadedRange.min, shadedRange.max))}
+				{#if hi > lo}
+					<rect
+						x={x(lo)}
+						y={PAD_TOP + 30}
+						width={x(hi) - x(lo)}
+						height={axisY + 4 - (PAD_TOP + 30)}
+						fill="#dc2626"
+						fill-opacity="0.18"
+					/>
+				{/if}
+			{/if}
+
+			<!-- Optional per-pen shaded ranges, drawn as horizontal stripes so
+			 multiple pens' min/max bands don't pile up on each other. -->
+			{#if shadedRanges && shadedRanges.length > 0}
+				{#each shadedRanges as r, i (i)}
+					{@const lo = Math.max(0, Math.min(r.min, r.max))}
+					{@const hi = Math.min(axisMax, Math.max(r.min, r.max))}
+					{#if hi > lo}
+						<rect
+							x={x(lo)}
+							y={markerBandTop + i * markerSliceH}
+							width={x(hi) - x(lo)}
+							height={markerSliceH}
+							fill={r.color ?? '#dc2626'}
+							fill-opacity="0.22"
+						/>
+					{/if}
+				{/each}
+			{/if}
+
+			<!-- Red marker lines (e.g. measured Pmax values). When the marker
 			 declares a seriesIndex AND shadedRanges is present, the line is
 			 bounded to that pen's vertical slice (same slicing scheme as
 			 the stripes above) so per-pen min/median/max stay aligned with
 			 their stripe. -->
-		{#each markers as m, i (i)}
-			{#if m.value >= 0 && m.value <= axisMax}
-				{@const sliced = m.seriesIndex !== undefined && markerSliceN > 0}
-				{@const y1Val = sliced ? markerBandTop + m.seriesIndex! * markerSliceH : markerBandTop}
-				{@const y2Val = sliced
-					? markerBandTop + (m.seriesIndex! + 1) * markerSliceH
-					: markerBandBot}
-				<line
-					x1={x(m.value)}
-					y1={y1Val}
-					x2={x(m.value)}
-					y2={y2Val}
-					stroke={m.color ?? '#dc2626'}
-					stroke-width={m.strokeWidth ?? 2}
-					stroke-dasharray={m.dashed === false ? undefined : '5 4'}
-				/>
-				{#if m.label}
-					<text
-						x={x(m.value)}
-						y={PAD_TOP + 24}
-						text-anchor="middle"
-						class="marker-label"
-						font-size="12"
-						font-weight="600">{m.label}</text
-					>
+			{#each markers as m, i (i)}
+				{#if m.value >= 0 && m.value <= axisMax}
+					{@const sliced = m.seriesIndex !== undefined && markerSliceN > 0}
+					{@const y1Val = sliced ? markerBandTop + m.seriesIndex! * markerSliceH : markerBandTop}
+					{@const y2Val = sliced
+						? markerBandTop + (m.seriesIndex! + 1) * markerSliceH
+						: markerBandBot}
+					<line
+						x1={x(m.value)}
+						y1={y1Val}
+						x2={x(m.value)}
+						y2={y2Val}
+						stroke={m.color ?? '#dc2626'}
+						stroke-width={m.strokeWidth ?? 2}
+						stroke-dasharray={m.dashed === false ? undefined : '5 4'}
+					/>
+					{#if m.label}
+						<text
+							x={x(m.value)}
+							y={PAD_TOP + 24}
+							text-anchor="middle"
+							class="marker-label"
+							font-size="12"
+							font-weight="600">{m.label}</text
+						>
+					{/if}
 				{/if}
-			{/if}
-		{/each}
-	</svg>
+			{/each}
+		</svg>
+	</ChartFrame>
 </div>
 
 <style>
 	.bands-chart-wrap {
 		max-width: 1000px;
-	}
-	.export-row {
-		display: flex;
-		justify-content: flex-end;
-		margin-bottom: 4px;
 	}
 	.bands-chart {
 		width: 100%;
