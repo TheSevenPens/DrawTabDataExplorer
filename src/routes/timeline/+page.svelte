@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { base, resolve } from '$app/paths';
 	import { untrack } from 'svelte';
-	import { brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
+	import { brandName, type Tablet, type Pen, type Driver } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 
 	let { data } = $props();
 
 	let tablets: Tablet[] = $derived(data.tablets);
 	let pens: Pen[] = $derived(data.pens);
+	let drivers: Driver[] = $derived(data.drivers);
 	let brands = $derived(data.brands);
+
+	const OS_LABELS: Record<string, string> = { MACOS: 'macOS', WINDOWS: 'Windows' };
 
 	let filterBrand = $state('');
 	let filterType = $state('');
@@ -42,6 +45,7 @@
 		monthUnknown: boolean; // year-month mode, item has no month
 		tablets: Tablet[];
 		pens: Pen[];
+		drivers: Driver[];
 	}
 
 	// Period bucket for an item. In year mode everything keys on the launch
@@ -73,10 +77,10 @@
 		// state — a plain Map is correct (no SvelteMap reactivity needed).
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const map = new Map<string, Period>();
-		const ensure = (k: Omit<Period, 'tablets' | 'pens'>) => {
+		const ensure = (k: Omit<Period, 'tablets' | 'pens' | 'drivers'>) => {
 			let p = map.get(k.sort);
 			if (!p) {
-				p = { ...k, tablets: [], pens: [] };
+				p = { ...k, tablets: [], pens: [], drivers: [] };
 				map.set(k.sort, p);
 			}
 			return p;
@@ -95,6 +99,14 @@
 			if (!inRange(p.PenYear)) continue;
 			ensure(periodKey(p.PenYear, undefined)).pens.push(p);
 		}
+		// Drivers carry a full ReleaseDate (no LaunchYear); the year is its first
+		// 4 chars. Like pens, drivers ignore the tablet-only type filter.
+		for (const d of drivers) {
+			if (filterBrand && d.Brand !== filterBrand) continue;
+			const year = (d.ReleaseDate ?? '').slice(0, 4);
+			if (!inRange(year)) continue;
+			ensure(periodKey(year, d.ReleaseDate)).drivers.push(d);
+		}
 
 		// Year mode fills empty years across the visible range so gaps read as
 		// "No releases". Year-month mode would explode into mostly-empty months,
@@ -103,7 +115,15 @@
 			for (let y = from; y <= to; y++) {
 				const k = String(y);
 				if (!map.has(k))
-					map.set(k, { sort: k, year: k, month: null, monthUnknown: false, tablets: [], pens: [] });
+					map.set(k, {
+						sort: k,
+						year: k,
+						month: null,
+						monthUnknown: false,
+						tablets: [],
+						pens: [],
+						drivers: [],
+					});
 			}
 		}
 
@@ -116,6 +136,7 @@
 
 	let totalTablets = $derived(groupedTimeline.reduce((sum, e) => sum + e.tablets.length, 0));
 	let totalPens = $derived(groupedTimeline.reduce((sum, e) => sum + e.pens.length, 0));
+	let totalDrivers = $derived(groupedTimeline.reduce((sum, e) => sum + e.drivers.length, 0));
 	let periodNoun = $derived(groupBy === 'year' ? 'years' : 'periods');
 </script>
 
@@ -124,7 +145,9 @@
 <div class="title-row">
 	<h1>Timeline</h1>
 	<span class="subtitle"
-		>{groupedTimeline.length} {periodNoun}, {totalTablets} tablets, {totalPens} pens</span
+		>{groupedTimeline.length}
+		{periodNoun}, {totalTablets} tablets, {totalPens} pens, {totalDrivers}
+		drivers</span
 	>
 </div>
 
@@ -169,7 +192,7 @@
 				{/if}
 			</div>
 			<div class="year-content">
-				{#if entry.tablets.length === 0 && entry.pens.length === 0}
+				{#if entry.tablets.length === 0 && entry.pens.length === 0 && entry.drivers.length === 0}
 					<p class="no-releases">No releases</p>
 				{/if}
 				{#if entry.tablets.length > 0}
@@ -207,6 +230,23 @@
 									<span class="item-brand">{brandName(p.Brand)}</span>
 									<span class="item-name">{p.PenName}</span>
 									<span class="item-id">{p.PenId}</span>
+								</a>
+							{/each}
+						</div>
+					</div>
+				{/if}
+				{#if entry.drivers.length > 0}
+					<div class="category">
+						<h3>Drivers ({entry.drivers.length})</h3>
+						<div class="items">
+							{#each entry.drivers as d (d.EntityId)}
+								<a
+									class="item driver"
+									href={resolve('/entity/[entityId]', { entityId: d.EntityId })}
+								>
+									<span class="item-brand">{brandName(d.Brand)}</span>
+									<span class="item-name">{d.DriverVersion}</span>
+									<span class="item-id">{OS_LABELS[d.OSFamily] ?? d.OSFamily}</span>
 								</a>
 							{/each}
 						</div>
@@ -364,7 +404,8 @@
 		background: var(--hover-bg);
 	}
 
-	.item.pen:hover {
+	.item.pen:hover,
+	.item.driver:hover {
 		border-color: var(--link);
 	}
 
