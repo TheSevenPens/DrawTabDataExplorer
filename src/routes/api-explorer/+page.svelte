@@ -6,6 +6,8 @@
 	import QuickApiReference from '$lib/components/QuickApiReference.svelte';
 	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import SegmentedControl from '$lib/components/SegmentedControl.svelte';
 	import {
 		type Preset,
 		presets,
@@ -164,9 +166,9 @@
 				rows="12"
 			></textarea>
 			<div class="run-row">
-				<button class="run-btn" onclick={runQuery} disabled={running || !ds}>
+				<Button variant="primary" size="md" onclick={runQuery} disabled={running || !ds}>
 					{running ? 'Running…' : 'Run'}
-				</button>
+				</Button>
 				{#if elapsedMs !== null}
 					<span class="meta">{elapsedMs} ms</span>
 				{/if}
@@ -187,20 +189,14 @@
 						<input type="checkbox" bind:checked={showMeta} />
 						Show meta fields
 					</label>
-					<div class="view-toggle" role="group" aria-label="Result view">
-						<button
-							type="button"
-							class:active={viewMode === 'json'}
-							onclick={() => (viewMode = 'json')}
-							aria-pressed={viewMode === 'json'}>JSON</button
-						>
-						<button
-							type="button"
-							class:active={viewMode === 'table'}
-							onclick={() => (viewMode = 'table')}
-							aria-pressed={viewMode === 'table'}>Table</button
-						>
-					</div>
+					<SegmentedControl
+						options={[
+							{ value: 'json', label: 'JSON' },
+							{ value: 'table', label: 'Table' },
+						]}
+						bind:value={viewMode}
+						ariaLabel="Result view"
+					/>
 					{#if viewMode === 'table' && exportTable}
 						<ExportTableButton
 							entityType="api-explorer"
@@ -210,7 +206,7 @@
 							rows={exportTable.rows}
 						/>
 					{/if}
-					<button class="copy-btn" onclick={copyResult}>Copy</button>
+					<Button variant="subtle" onclick={copyResult}>Copy</Button>
 				{/if}
 			</div>
 			{#if error}
@@ -354,45 +350,10 @@
 		margin-top: 8px;
 	}
 
-	.run-btn {
-		padding: 6px 18px;
-		font-size: 13px;
-		font-weight: 600;
-		border: 1px solid #2563eb;
-		border-radius: 4px;
-		background: #2563eb;
-		color: #fff;
-		cursor: pointer;
-	}
-
-	.run-btn:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	.run-btn:not(:disabled):hover {
-		background: #1d4ed8;
-	}
-
 	.meta {
 		font-size: 12px;
 		color: var(--text-muted);
 		font-variant-numeric: tabular-nums;
-	}
-
-	.copy-btn {
-		padding: 2px 8px;
-		font-size: 12px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
-	}
-
-	.copy-btn:hover {
-		background: var(--hover-bg);
-		color: var(--text);
 	}
 
 	.result-pane {
@@ -446,36 +407,6 @@
 	}
 	.meta-toggle:hover {
 		color: var(--text);
-	}
-
-	.view-toggle {
-		display: inline-flex;
-		gap: 0;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		overflow: hidden;
-		margin-right: 4px;
-	}
-	.view-toggle button {
-		appearance: none;
-		border: none;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		padding: 2px 10px;
-		font-size: 12px;
-		cursor: pointer;
-		border-right: 1px solid var(--border);
-	}
-	.view-toggle button:last-child {
-		border-right: none;
-	}
-	.view-toggle button:hover {
-		color: var(--text);
-	}
-	.view-toggle button.active {
-		background: var(--bg);
-		color: #6b21a8;
-		font-weight: 600;
 	}
 
 	.table-wrap {

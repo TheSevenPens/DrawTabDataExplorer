@@ -4,6 +4,8 @@
   via the "JSON" tab on the detail page rather than a floating dialog.
 -->
 <script lang="ts">
+	import Button from '$lib/components/Button.svelte';
+
 	let { entity }: { entity: Record<string, unknown> } = $props();
 
 	let copied = $state(false);
@@ -18,9 +20,9 @@
 
 <div class="json-tab">
 	<div class="toolbar">
-		<button class="copy-btn" onclick={copyJson} title="Copy JSON to clipboard">
+		<Button variant="subtle" onclick={copyJson} title="Copy JSON to clipboard">
 			{copied ? '✓ Copied' : 'Copy'}
-		</button>
+		</Button>
 	</div>
 	<pre>{json}</pre>
 </div>
@@ -34,19 +36,6 @@
 	.toolbar {
 		display: flex;
 		justify-content: flex-end;
-	}
-	.copy-btn {
-		font-size: 12px;
-		padding: 3px 10px;
-		border: 1px solid var(--border, #bbb);
-		border-radius: 3px;
-		background: var(--bg-card, #f5f5f5);
-		color: var(--text, #333);
-		cursor: pointer;
-	}
-	.copy-btn:hover {
-		border-color: #2563eb;
-		color: #2563eb;
 	}
 	pre {
 		margin: 0;
