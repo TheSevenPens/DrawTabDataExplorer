@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { brandName, type Pen, type PenFamily } from '$data/lib/drawtab-loader.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
+	import Button from '$lib/components/Button.svelte';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import {
 		flaggedPenUnits,
@@ -82,7 +83,7 @@
 		<a href={resolve('/pen-compare')}>Pens ▸ Compare ▸ Pressure Response</a>.
 	</p>
 	{#if $flaggedPenTotalCount > 0}
-		<button class="clear-btn" onclick={clearAllPenFlags}>Clear all flags</button>
+		<Button variant="danger" onclick={clearAllPenFlags}>Clear all flags</Button>
 	{/if}
 </div>
 
@@ -167,20 +168,6 @@
 		margin: 0;
 		color: var(--text-muted);
 		font-size: 13px;
-	}
-	.clear-btn {
-		margin-top: 8px;
-		padding: 4px 12px;
-		font-size: 13px;
-		border: 1px solid var(--border);
-		background: var(--bg-card);
-		color: var(--text-muted);
-		border-radius: 4px;
-		cursor: pointer;
-	}
-	.clear-btn:hover {
-		border-color: #b91c1c;
-		color: #b91c1c;
 	}
 	.empty {
 		margin: 24px 0;
