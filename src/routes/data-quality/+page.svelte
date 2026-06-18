@@ -3,20 +3,14 @@
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { analyzeData } from '$lib/data-quality/analysis.js';
 	import SectionHeader from '$lib/data-quality/SectionHeader.svelte';
 	import CompletionSection from '$lib/data-quality/CompletionSection.svelte';
 
-	const dataTabs = [
-		{ href: '/reference', label: 'Reference' },
-		{ href: '/data-dictionary', label: 'Data Dictionary' },
-		{ href: '/api-explorer', label: 'API Explorer' },
-		{ href: '/data-quality', label: 'Data Quality' },
-		{ href: '/pen-compat', label: 'Pen Compat' },
-		{ href: '/wacom-driver-compat', label: 'Driver Compat' },
-	];
+	const dataTabs = dataSubNavTabs();
 
 	let { data } = $props();
 

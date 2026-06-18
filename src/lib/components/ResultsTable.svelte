@@ -4,6 +4,7 @@
 	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
+	import type { CellLinks } from '$lib/table-types.js';
 
 	let {
 		data,
@@ -17,12 +18,14 @@
 		flaggedIds,
 		onToggleFlag,
 	}: {
+		// Heterogeneous entity rows — see EntityExplorer / table-types.ts (#221).
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		data: any[];
 		visibleFields: string[];
 		fields: AnyFieldDisplayDef[];
 		detailBasePath?: string;
 		linkField?: string;
-		cellLinks?: Record<string, (item: any) => { label: string; href: string }[]>;
+		cellLinks?: CellLinks;
 		columnWidths?: Record<string, number>;
 		onwidthchange?: () => void;
 		flaggedIds?: Set<string>;

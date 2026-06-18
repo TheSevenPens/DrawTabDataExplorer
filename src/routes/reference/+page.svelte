@@ -8,6 +8,7 @@
 	} from '$lib/tablet-size-ranges.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import BandsChart from '$lib/components/BandsChart.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
@@ -24,14 +25,7 @@
 		type SpecBand,
 	} from '$lib/bands.js';
 
-	const dataTabs = [
-		{ href: '/reference', label: 'Reference' },
-		{ href: '/data-dictionary', label: 'Data Dictionary' },
-		{ href: '/api-explorer', label: 'API Explorer' },
-		{ href: '/data-quality', label: 'Data Quality' },
-		{ href: '/pen-compat', label: 'Pen Compat' },
-		{ href: '/wacom-driver-compat', label: 'Driver Compat' },
-	];
+	const dataTabs = dataSubNavTabs();
 
 	const sectionDefs: Section[] = [
 		{ id: 'tablet-sizes', category: 'Tablets', label: 'Tablet Sizes' },

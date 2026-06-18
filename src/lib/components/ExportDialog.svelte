@@ -1,12 +1,16 @@
 <script lang="ts">
 	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
 	import { exportTableAsPptx } from '$lib/pptx-export';
+	import type { RowRecord } from '$lib/table-types.js';
 
 	interface Props {
 		entityType: string;
 		onclose: () => void;
 		// Rich mode — scope toggles enabled (rows: view vs all, columns: view vs all)
+		// Heterogeneous entity rows from callers — see table-types.ts (#221).
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		allData?: any[];
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		filteredData?: any[];
 		allFields?: AnyFieldDisplayDef[];
 		visibleFields?: string[];
@@ -53,10 +57,10 @@
 	interface ExportField {
 		key: string;
 		label: string;
-		getValue: (row: any) => unknown;
+		getValue: (row: RowRecord) => unknown;
 	}
 
-	const exportRows: any[] = $derived.by(() => {
+	const exportRows: RowRecord[] = $derived.by(() => {
 		if (simpleMode) {
 			return (rows ?? []).map((arr) => {
 				const obj: Record<string, unknown> = {};
@@ -71,16 +75,20 @@
 
 	const exportFields: ExportField[] = $derived.by(() => {
 		if (simpleMode) {
-			return (headers ?? []).map((h) => ({ key: h, label: h, getValue: (row: any) => row[h] }));
+			return (headers ?? []).map((h) => ({
+				key: h,
+				label: h,
+				getValue: (row: RowRecord) => row[h],
+			}));
 		}
 		const keys = colMode === 'all' ? (allFields ?? []).map((f) => f.key) : (visibleFields ?? []);
 		return keys
 			.map((k) => (allFields ?? []).find((f) => f.key === k))
 			.filter((f): f is AnyFieldDisplayDef => Boolean(f))
-			.map((f) => ({ key: f.key, label: f.label, getValue: (row: any) => f.getValue(row) }));
+			.map((f) => ({ key: f.key, label: f.label, getValue: (row: RowRecord) => f.getValue(row) }));
 	});
 
-	function cell(row: any, field: ExportField): string {
+	function cell(row: RowRecord, field: ExportField): string {
 		const v = field.getValue(row);
 		return v == null ? '' : String(v);
 	}

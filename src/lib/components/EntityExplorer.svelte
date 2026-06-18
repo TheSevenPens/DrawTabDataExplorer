@@ -15,6 +15,7 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import { loadColumnWidths, saveColumnWidths } from '$lib/column-widths.js';
+	import type { CellLinks } from '$lib/table-types.js';
 
 	let {
 		title,
@@ -27,7 +28,7 @@
 		defaultView,
 		detailBasePath = '',
 		linkField = 'EntityId',
-		cellLinks = {} as Record<string, (item: any) => { label: string; href: string }[]>,
+		cellLinks = {} as CellLinks,
 		quickFilterFields = [],
 		defaultFilterField,
 		alwaysSearchFields = [],
@@ -39,6 +40,11 @@
 		title: string;
 		entityType: string;
 		entityLabel: string;
+		// Heterogeneous entity rows (Tablet/Pen/inventory/compat/…). Kept as
+		// `any[]` at this boundary: callers pass interface-typed arrays that
+		// aren't assignable to `Record<string, unknown>`, and rows are only ever
+		// read through `fields[].getValue`. See table-types.ts / issue #221.
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		data: any[];
 		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
@@ -46,7 +52,7 @@
 		defaultView: Step[];
 		detailBasePath?: string;
 		linkField?: string;
-		cellLinks?: Record<string, (item: any) => { label: string; href: string }[]>;
+		cellLinks?: CellLinks;
 		quickFilterFields?: string[];
 		defaultFilterField?: string;
 		/** Field keys to always include in text search even when not in

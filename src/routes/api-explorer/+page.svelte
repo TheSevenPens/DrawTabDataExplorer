@@ -4,16 +4,10 @@
 	import { DrawTabDataSet } from '$data/lib/dataset.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 
-	const dataTabs = [
-		{ href: '/reference', label: 'Reference' },
-		{ href: '/data-dictionary', label: 'Data Dictionary' },
-		{ href: '/api-explorer', label: 'API Explorer' },
-		{ href: '/data-quality', label: 'Data Quality' },
-		{ href: '/pen-compat', label: 'Pen Compat' },
-		{ href: '/wacom-driver-compat', label: 'Driver Compat' },
-	];
+	const dataTabs = dataSubNavTabs();
 
 	interface Preset {
 		label: string;
@@ -472,6 +466,12 @@ return { inventoryId: inv.InventoryId, pen: pen?.PenId };`,
 	let running = $state(false);
 	let elapsedMs = $state<number | null>(null);
 
+	// NOTE: /api-explorer intentionally constructs its OWN DrawTabDataSet here
+	// rather than using the session-scoped `ds` from `+layout.ts` via
+	// `parent().ds` (the normal pattern — see CLAUDE.md "One DataSet per
+	// session"). This route is an interactive sandbox: it demonstrates and runs
+	// arbitrary `DrawTabDataSet` queries, so it deliberately owns a fresh, clearly
+	// scoped instance. Do NOT copy this exception into regular data pages.
 	let ds = $state<DrawTabDataSet | null>(null);
 
 	onMount(() => {
