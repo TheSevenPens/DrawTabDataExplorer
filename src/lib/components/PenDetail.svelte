@@ -14,6 +14,7 @@
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import {
 		tabletFullName,
 		buildTabletNameMap,
@@ -230,7 +231,7 @@
 				</tbody>
 			</table>
 		{:else}
-			<p class="no-data">You don't own a unit of this pen model.</p>
+			<EmptyState>You don't own a unit of this pen model.</EmptyState>
 		{/if}
 	</div>
 {/if}
@@ -302,7 +303,7 @@
 				{defectsByInventoryId}
 			/>
 		{:else}
-			<p class="no-data">No pressure response data available for this pen model.</p>
+			<EmptyState>No pressure response data available for this pen model.</EmptyState>
 		{/if}
 	</div>
 {/if}
@@ -397,12 +398,6 @@
 		border-radius: 4px;
 		background: var(--bg-card);
 		color: var(--text);
-	}
-
-	.no-data {
-		font-size: 13px;
-		color: var(--text-dim);
-		font-style: italic;
 	}
 
 	.compat-table {
