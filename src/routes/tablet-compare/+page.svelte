@@ -209,12 +209,12 @@
 
 {#if activeTab === 'flagged'}
 	<div class="flagged-actions">
-		<button
-			class="add-tablet-btn"
+		<Button
+			variant="secondary"
 			onclick={() => (showPicker = true)}
 			disabled={$flaggedTablets.length >= 6}
-			title={$flaggedTablets.length >= 6 ? 'All 6 slots are used' : 'Add a tablet to compare'}
-			>+ Add tablet</button
+			disabledReason="All 6 slots are used"
+			title="Add a tablet to compare">+ Add tablet</Button
 		>
 		{#if flaggedItems.length > 0}
 			<Button variant="subtle" onclick={copyFlaggedList}>{copyFlaggedStatus || 'Copy list'}</Button>
@@ -464,27 +464,6 @@
 		align-items: center;
 		gap: 8px;
 		margin-bottom: 12px;
-	}
-
-	.add-tablet-btn {
-		padding: 5px 14px;
-		font-size: 13px;
-		font-weight: 600;
-		border: 1px solid #2563eb;
-		border-radius: 4px;
-		background: #2563eb;
-		color: #fff;
-		cursor: pointer;
-	}
-
-	.add-tablet-btn:hover:not(:disabled) {
-		background: #1d4ed8;
-		border-color: #1d4ed8;
-	}
-
-	.add-tablet-btn:disabled {
-		opacity: 0.45;
-		cursor: default;
 	}
 
 	.flagged-list {

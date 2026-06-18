@@ -393,7 +393,7 @@
 
 {#if activeTab === 'flagged'}
 	<div class="flagged-actions">
-		<button class="add-pen-btn" onclick={() => (showPicker = true)}>+ Add pen</button>
+		<Button variant="secondary" onclick={() => (showPicker = true)}>+ Add pen</Button>
 		{#if flaggedItems.length > 0}
 			<Button variant="subtle" onclick={copyFlaggedList}>{copyFlaggedStatus || 'Copy list'}</Button>
 			<Button variant="danger" onclick={clearFlaggedPenModels}>Clear all</Button>
@@ -701,22 +701,6 @@
 		align-items: center;
 		gap: 8px;
 		margin-bottom: 12px;
-	}
-
-	.add-pen-btn {
-		padding: 5px 14px;
-		font-size: 13px;
-		font-weight: 600;
-		border: 1px solid #2563eb;
-		border-radius: 4px;
-		background: #2563eb;
-		color: #fff;
-		cursor: pointer;
-	}
-
-	.add-pen-btn:hover:not(:disabled) {
-		background: #1d4ed8;
-		border-color: #1d4ed8;
 	}
 
 	.flagged-list {
