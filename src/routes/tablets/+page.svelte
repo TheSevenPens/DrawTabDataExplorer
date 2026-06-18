@@ -42,7 +42,7 @@
 	defaultColumns={TABLET_DEFAULT_COLUMNS}
 	defaultView={TABLET_DEFAULT_VIEW}
 	detailBasePath="/entity"
-	linkField="NameAndModelId"
+	linkField="ModelName"
 	{cellLinks}
 	defaultFilterField="Brand"
 	quickFilterFields={['Brand', 'ModelType', 'DigitizerSizeCategory']}
