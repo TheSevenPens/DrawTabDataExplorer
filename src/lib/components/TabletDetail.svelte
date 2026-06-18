@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import { brandName, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
@@ -62,8 +62,8 @@
 		<div class="basics-item">
 			<dt>Brand</dt>
 			<dd>
-				<a href={resolve('/entity/[entityId]', { entityId: tablet.Model.Brand.toLowerCase() })}
-					>{brandName(tablet.Model.Brand)}</a
+				<EntityLink entityId={tablet.Model.Brand.toLowerCase()}
+					>{brandName(tablet.Model.Brand)}</EntityLink
 				>
 			</dd>
 		</div>
@@ -71,9 +71,7 @@
 			<div class="basics-item">
 				<dt>Family</dt>
 				<dd>
-					<a href={resolve('/entity/[entityId]', { entityId: family.EntityId })}
-						>{family.FamilyName}</a
-					>
+					<EntityLink entityId={family.EntityId}>{family.FamilyName}</EntityLink>
 				</dd>
 			</div>
 		{/if}
@@ -110,7 +108,7 @@
 					{#each includedPenItems as pen, i (pen.entityId)}
 						{#if i > 0},
 						{/if}
-						<a href={resolve('/entity/[entityId]', { entityId: pen.entityId })}>{pen.name}</a>
+						<EntityLink entityId={pen.entityId}>{pen.name}</EntityLink>
 					{/each}
 				</dd>
 			</div>
@@ -192,15 +190,6 @@
 	.basics-item dd {
 		font-size: 13px;
 		color: var(--text);
-	}
-
-	.basics-item dd a {
-		color: var(--link);
-		text-decoration: none;
-	}
-
-	.basics-item dd a:hover {
-		text-decoration: underline;
 	}
 
 	.tab-content {
