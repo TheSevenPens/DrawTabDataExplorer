@@ -7,6 +7,7 @@
 	import { brandName, type Pen } from '$data/lib/drawtab-loader.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
 	import { toggleFlaggedPenModel } from '$lib/flagged-store.js';
+	import PickerModalShell from '$lib/components/PickerModalShell.svelte';
 	import { onMount } from 'svelte';
 
 	interface Props {
@@ -42,114 +43,60 @@
 	// Comparison uses the lowercase EntityId (matches the flag store's
 	// normalization in toggleFlaggedPenModel).
 	let flaggedIdSet = $derived(new Set(flaggedIds.map((id) => id.toLowerCase())));
-
-	function onBackdropClick(e: MouseEvent) {
-		if (e.target === e.currentTarget) onclose();
-	}
-
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
-	}
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<PickerModalShell title="Add Pen" {onclose}>
+	{#snippet headerAccessory()}
+		<span class="slot-count">{flaggedIds.length} flagged</span>
+	{/snippet}
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="backdrop" onclick={onBackdropClick}>
-	<div class="modal" role="dialog" aria-modal="true" aria-label="Add pen" tabindex="-1">
-		<div class="modal-header">
-			<h2>Add Pen</h2>
-			<span class="slot-count">{flaggedIds.length} flagged</span>
-			<button class="close-btn" onclick={onclose} aria-label="Close">✕</button>
-		</div>
-
-		<div class="filters">
-			<input
-				bind:this={searchInput}
-				type="search"
-				class="search-input"
-				placeholder="Search brand, name, or ID…"
-				bind:value={searchText}
-			/>
-			<select bind:value={filterBrand}>
-				<option value="">All Brands</option>
-				{#each brands as b (b)}
-					<option value={b}>{brandName(b)}</option>
-				{/each}
-			</select>
-		</div>
-
-		<div class="results-count">
-			{filteredPens.length} pen{filteredPens.length === 1 ? '' : 's'}
-		</div>
-
-		<ul class="pen-list" role="list">
-			{#each filteredPens as p (p.EntityId)}
-				{@const alreadyAdded = flaggedIdSet.has(p.EntityId.toLowerCase())}
-				<li class:added={alreadyAdded} role="listitem">
-					<div class="pen-info">
-						<span class="pen-brand">{brandName(p.Brand)}</span>
-						<span class="pen-name">{p.PenName}</span>
-						<span class="pen-id">{p.PenId}</span>
-					</div>
-					{#if alreadyAdded}
-						<button class="add-btn is-added" disabled>✓ Added</button>
-					{:else}
-						<button
-							class="add-btn"
-							onclick={() => toggleFlaggedPenModel(p.EntityId)}
-							title={`Add ${p.PenName}`}>+ Add</button
-						>
-					{/if}
-				</li>
+	<div class="filters">
+		<input
+			bind:this={searchInput}
+			type="search"
+			class="search-input"
+			placeholder="Search brand, name, or ID…"
+			bind:value={searchText}
+		/>
+		<select bind:value={filterBrand}>
+			<option value="">All Brands</option>
+			{#each brands as b (b)}
+				<option value={b}>{brandName(b)}</option>
 			{/each}
-			{#if filteredPens.length === 0}
-				<li class="empty" role="listitem">No pens match your search.</li>
-			{/if}
-		</ul>
+		</select>
 	</div>
-</div>
+
+	<div class="results-count">
+		{filteredPens.length} pen{filteredPens.length === 1 ? '' : 's'}
+	</div>
+
+	<ul class="pen-list" role="list">
+		{#each filteredPens as p (p.EntityId)}
+			{@const alreadyAdded = flaggedIdSet.has(p.EntityId.toLowerCase())}
+			<li class:added={alreadyAdded} role="listitem">
+				<div class="pen-info">
+					<span class="pen-brand">{brandName(p.Brand)}</span>
+					<span class="pen-name">{p.PenName}</span>
+					<span class="pen-id">{p.PenId}</span>
+				</div>
+				{#if alreadyAdded}
+					<button class="add-btn is-added" disabled>✓ Added</button>
+				{:else}
+					<button
+						class="add-btn"
+						onclick={() => toggleFlaggedPenModel(p.EntityId)}
+						title={`Add ${p.PenName}`}>+ Add</button
+					>
+				{/if}
+			</li>
+		{/each}
+		{#if filteredPens.length === 0}
+			<li class="empty" role="listitem">No pens match your search.</li>
+		{/if}
+	</ul>
+</PickerModalShell>
 
 <style>
-	.backdrop {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.45);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 200;
-	}
-
-	.modal {
-		background: var(--bg);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		width: min(640px, 95vw);
-		max-height: min(600px, 90vh);
-		display: flex;
-		flex-direction: column;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-	}
-
-	.modal-header {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 14px 16px 12px;
-		border-bottom: 1px solid var(--border);
-		flex-shrink: 0;
-	}
-
-	.modal-header h2 {
-		margin: 0;
-		font-size: 15px;
-		font-weight: 700;
-		color: var(--text);
-		flex: 1;
-	}
-
 	.slot-count {
 		font-size: 12px;
 		color: var(--text-muted);
@@ -157,22 +104,6 @@
 		border: 1px solid var(--border-light);
 		border-radius: 10px;
 		padding: 2px 8px;
-	}
-
-	.close-btn {
-		background: none;
-		border: none;
-		cursor: pointer;
-		font-size: 16px;
-		color: var(--text-muted);
-		padding: 2px 6px;
-		border-radius: 4px;
-		line-height: 1;
-	}
-
-	.close-btn:hover {
-		background: var(--hover-bg);
-		color: var(--text);
 	}
 
 	.filters {
