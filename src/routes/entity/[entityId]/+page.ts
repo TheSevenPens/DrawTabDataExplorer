@@ -11,6 +11,22 @@ import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 import { buildTabletNameMap } from '$lib/tablet-helpers.js';
 
+/** Count assigned (non-UNASSIGNED) inventory records per entity id, so the
+ * compat tables can show "how many of this model you own". */
+function countByEntity<T extends { InventoryId?: string }>(
+	records: readonly T[],
+	getId: (r: T) => string | undefined,
+): Map<string, number> {
+	const counts = new Map<string, number>();
+	for (const r of records) {
+		if (r.InventoryId === 'UNASSIGNED') continue;
+		const id = getId(r);
+		if (!id) continue;
+		counts.set(id, (counts.get(id) ?? 0) + 1);
+	}
+	return counts;
+}
+
 export async function load({ params, parent }) {
 	const entityId = decodeURIComponent(params.entityId);
 	const parts = entityId.split('.');
@@ -22,16 +38,26 @@ export async function load({ params, parent }) {
 		case 'tablet': {
 			const tablet = await ds.Tablets.find((t) => t.Meta.EntityId === entityId);
 			if (!tablet) error(404, 'Tablet not found');
-			const [allTablets, allPens, compatiblePens, family, isoSizes, allInventoryTablets] =
-				await Promise.all([
-					ds.Tablets.toArray(),
-					ds.Pens.toArray(),
-					tablet.getCompatiblePens(),
-					tablet.getFamily(),
-					ds.getISOPaperSizes(),
-					ds.InventoryTablets.toArray(),
-				]);
+			const [
+				allTablets,
+				allPens,
+				compatiblePens,
+				family,
+				isoSizes,
+				allInventoryTablets,
+				allInventoryPens,
+			] = await Promise.all([
+				ds.Tablets.toArray(),
+				ds.Pens.toArray(),
+				tablet.getCompatiblePens(),
+				tablet.getFamily(),
+				ds.getISOPaperSizes(),
+				ds.InventoryTablets.toArray(),
+				ds.InventoryPens.toArray(),
+			]);
 			const inventoryUnits = allInventoryTablets.filter((u) => u.TabletEntityId === entityId);
+			// How many of each compatible pen model are in the inventory.
+			const inventoryPenCounts = countByEntity(allInventoryPens, (p) => p.PenEntityId);
 			return {
 				entityType,
 				tablet,
@@ -41,20 +67,28 @@ export async function load({ params, parent }) {
 				isoSizes,
 				family,
 				inventoryUnits,
+				inventoryPenCounts,
 			};
 		}
 
 		case 'pen': {
 			const pen = await ds.Pens.find((p) => p.EntityId === entityId);
 			if (!pen) error(404, 'Pen not found');
-			const [compatibleTablets, allTablets, allPressure, allInventory, allRange] =
-				await Promise.all([
-					pen.getCompatibleTablets(),
-					ds.Tablets.toArray(),
-					ds.PressureResponse.toArray(),
-					ds.InventoryPens.toArray(),
-					ds.PressureRange.toArray(),
-				]);
+			const [
+				compatibleTablets,
+				allTablets,
+				allPressure,
+				allInventory,
+				allRange,
+				allInventoryTablets,
+			] = await Promise.all([
+				pen.getCompatibleTablets(),
+				ds.Tablets.toArray(),
+				ds.PressureResponse.toArray(),
+				ds.InventoryPens.toArray(),
+				ds.PressureRange.toArray(),
+				ds.InventoryTablets.toArray(),
+			]);
 			const includedWithTablets = allTablets.filter((t) =>
 				(t.Model.IncludedPen ?? []).some((p) => p === entityId),
 			);
@@ -67,6 +101,8 @@ export async function load({ params, parent }) {
 			const maxMeasurements = allRange.filter(
 				(m) => m.Metric === 'MAX' && m.PenEntityId === entityId,
 			);
+			// How many of each compatible tablet model are in the inventory.
+			const inventoryTabletCounts = countByEntity(allInventoryTablets, (t) => t.TabletEntityId);
 			return {
 				entityType,
 				pen,
@@ -78,6 +114,7 @@ export async function load({ params, parent }) {
 				inventoryUnits,
 				iafMeasurements,
 				maxMeasurements,
+				inventoryTabletCounts,
 			};
 		}
 

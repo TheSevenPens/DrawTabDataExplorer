@@ -104,7 +104,9 @@
 					{/if}
 					{#each fieldDefs as f (f.key)}
 						{@const val = f.getValue(item)}
-						{@const displayVal = formatValue(val, f.unit, $unitPreference)}
+						{@const displayVal = f.getDisplayValue
+							? f.getDisplayValue(item)
+							: formatValue(val, f.unit, $unitPreference)}
 						{#if cellLinks[f.key]}
 							{@const links = cellLinks[f.key](item)}
 							<td class:dim={links.length === 0}>

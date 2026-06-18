@@ -144,7 +144,11 @@
 	{:else if activeTab === 'force' && canShowForce}
 		<ForceProportionsView width={activeAreaW} height={activeAreaH} />
 	{:else if activeTab === 'pens'}
-		<TabletCompatiblePensTab {tablet} {compatiblePens} />
+		<TabletCompatiblePensTab
+			{tablet}
+			{compatiblePens}
+			inventoryPenCounts={data.inventoryPenCounts ?? new Map()}
+		/>
 	{:else if activeTab === 'inventory'}
 		<TabletInventoryTab {inventoryUnits} />
 	{:else if activeTab === 'similar'}

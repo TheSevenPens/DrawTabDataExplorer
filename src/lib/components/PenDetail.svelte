@@ -40,6 +40,10 @@
 	let tabletNameById = $derived(buildTabletNameMap(allTablets));
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
 	let inventoryUnits: InventoryPen[] = $derived(data.inventoryUnits ?? []);
+	// TabletEntityId → count of that model owned in inventory.
+	let inventoryTabletCounts: ReadonlyMap<string, number> = $derived(
+		data.inventoryTabletCounts ?? new Map(),
+	);
 	let pressureSessionCount = $derived(pressureSessions.length);
 	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
 		data.defectsByInventoryId ?? new Map(),
@@ -76,13 +80,19 @@
 			t.Meta.EntityId,
 			t.Model.Type,
 			t.Model.LaunchYear ?? '',
+			inventoryTabletCounts.get(t.Meta.EntityId) ?? 0,
 		]);
 	}
 
 	function tabletCompatRows(tablets: Tablet[]): CompatRow[] {
 		return tablets.map((t) => ({
 			href: resolve('/entity/[entityId]', { entityId: t.Meta.EntityId }),
-			cells: [tabletFullName(t), t.Model.Type, t.Model.LaunchYear ?? ''],
+			cells: [
+				tabletFullName(t),
+				t.Model.Type,
+				t.Model.LaunchYear ?? '',
+				inventoryTabletCounts.get(t.Meta.EntityId) ?? 0,
+			],
 		}));
 	}
 </script>
@@ -169,13 +179,13 @@
 {#if activeTab === 'tablets'}
 	<div class="tab-content">
 		<CompatEntityTable
-			columns={['Tablet', 'Type', 'Year']}
+			columns={['Tablet', 'Type', 'Year', 'Inventory']}
 			rows={tabletCompatRows(compatibleTablets)}
 			emptyMessage="No tablet compatibility data available for this pen."
 			exportEntityType="pen-tablets"
 			exportTitle={`Compatible Tablets — ${penBrandAndName(pen)}`}
 			exportFilename={`${pen.EntityId}-compatible-tablets`}
-			exportHeaders={['Tablet', 'Entity ID', 'Type', 'Year']}
+			exportHeaders={['Tablet', 'Entity ID', 'Type', 'Year', 'Inventory']}
 			exportRows={tabletExportRows(compatibleTablets)}
 		/>
 	</div>
@@ -184,13 +194,13 @@
 {#if activeTab === 'included'}
 	<div class="tab-content">
 		<CompatEntityTable
-			columns={['Tablet', 'Type', 'Year']}
+			columns={['Tablet', 'Type', 'Year', 'Inventory']}
 			rows={tabletCompatRows(includedWithTablets)}
 			emptyMessage="No tablets list this pen as included."
 			exportEntityType="pen-tablets"
 			exportTitle={`Included With — ${penBrandAndName(pen)}`}
 			exportFilename={`${pen.EntityId}-included-with-tablets`}
-			exportHeaders={['Tablet', 'Entity ID', 'Type', 'Year']}
+			exportHeaders={['Tablet', 'Entity ID', 'Type', 'Year', 'Inventory']}
 			exportRows={tabletExportRows(includedWithTablets)}
 		/>
 	</div>
