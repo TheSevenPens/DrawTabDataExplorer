@@ -21,6 +21,11 @@
 		type FilterItem,
 		type SortItem,
 	} from '$lib/entity-explorer/view-state.js';
+	import {
+		applyQuickFilters,
+		applyOwnedOnly,
+		applyTextSearch,
+	} from '$lib/entity-explorer/search.js';
 
 	let {
 		title,
@@ -160,49 +165,26 @@
 		const r = pipelineResult;
 		let filtered = r.data;
 
-		// Apply quick filters
-		const activeQuick = Object.entries(quickFilters).filter(([, v]) => v !== '');
-		if (activeQuick.length > 0) {
-			filtered = filtered.filter((row) =>
-				activeQuick.every(([key, val]) => {
-					const fd = fields.find((f) => f.key === key);
-					if (!fd) return true;
-					return String(fd.getValue(row) ?? '') === val;
-				}),
+		filtered = applyQuickFilters(filtered, quickFilters, fields);
+
+		// "Owned only" toggle — keep rows whose configured counter field is > 0.
+		if (ownedOnly && ownedOnlyFilter) {
+			filtered = applyOwnedOnly(
+				filtered,
+				fields.find((f) => f.key === ownedOnlyFilter.field),
 			);
 		}
 
-		// Apply the optional "owned only" toggle — keeps rows whose
-		// configured field's numeric value parses to > 0. The field is
-		// expected to be a counter ("UnitsInInventory") so a "0" / "" /
-		// non-numeric value all read as "not owned".
-		if (ownedOnly && ownedOnlyFilter) {
-			const fd = fields.find((f) => f.key === ownedOnlyFilter.field);
-			if (fd) {
-				filtered = filtered.filter((row) => {
-					const n = Number(fd.getValue(row));
-					return Number.isFinite(n) && n > 0;
-				});
-			}
-		}
-
-		// Apply search — check visible fields plus any fields the parent
-		// flagged via alwaysSearchFields (force-include even when hidden).
+		// Search across visible fields plus any always-search fields the parent
+		// flagged (force-included even when their column is hidden).
 		if (searchText.trim()) {
-			const q = searchText.trim().toLowerCase();
 			const visibleDefs = r.visibleFields
 				.map((key) => fields.find((f) => f.key === key))
-				.filter(Boolean);
+				.filter((f): f is AnyFieldDisplayDef => Boolean(f));
 			const alwaysDefs = fields.filter(
 				(f) => alwaysSearchFields.includes(f.key) && !r.visibleFields.includes(f.key),
 			);
-			const searchDefs = [...visibleDefs, ...alwaysDefs];
-			filtered = filtered.filter((row) =>
-				searchDefs.some((f) => {
-					const val = f!.getValue(row);
-					return val != null && String(val).toLowerCase().includes(q);
-				}),
-			);
+			filtered = applyTextSearch(filtered, searchText, [...visibleDefs, ...alwaysDefs]);
 		}
 
 		return { ...r, data: filtered };
