@@ -260,9 +260,45 @@ export function analyzeData(data: AnalysisInput) {
 			(a, b) => a.penName.localeCompare(b.penName) || a.inventoryId.localeCompare(b.inventoryId),
 		);
 
+	// Tablets whose Model.ReleaseDate isn't an exact YYYY-MM-DD, broken out by
+	// how much precision is missing: none (no date), year-only (YYYY), or
+	// month-only (YYYY-MM). Exact dates pass.
+	const releaseDatePrecisionLabel = {
+		none: 'missing',
+		year: 'year only (no month/day)',
+		month: 'month only (no day)',
+	} as const;
+	const tabletsMissingExactReleaseDate = ds.tablets
+		.map((t) => {
+			const rd = t.Model.ReleaseDate ?? '';
+			let precision: 'none' | 'year' | 'month' | 'exact';
+			if (/^\d{4}-\d{2}-\d{2}$/.test(rd)) precision = 'exact';
+			else if (/^\d{4}-\d{2}$/.test(rd)) precision = 'month';
+			else if (/^\d{4}$/.test(rd)) precision = 'year';
+			else precision = 'none';
+			return {
+				brand: t.Model.Brand,
+				id: t.Model.Id,
+				name: t.Model.Name,
+				entityId: t.Meta.EntityId,
+				releaseDate: rd,
+				precision,
+				missing: precision === 'exact' ? '' : releaseDatePrecisionLabel[precision],
+			};
+		})
+		.filter((t) => t.precision !== 'exact')
+		// year-only (most incomplete) first, then month-only, then by brand/id
+		.sort(
+			(a, b) =>
+				a.precision.localeCompare(b.precision) ||
+				a.brand.localeCompare(b.brand) ||
+				a.id.localeCompare(b.id),
+		);
+
 	return {
 		ds,
 		inventoryPenCount: invPens.length,
+		tabletsMissingExactReleaseDate,
 		inventoryTabletCount: invTablets.length,
 		issues: allIssues,
 		nonMonotonicSessions: findNonMonotonicSessions(ds.pressureResponse),

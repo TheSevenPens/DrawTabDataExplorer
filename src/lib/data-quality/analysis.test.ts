@@ -108,6 +108,41 @@ describe('analyzeData — iafEstimatedNoMeasurement', () => {
 	});
 });
 
+const tabletWithDate = (id: string, releaseDate: string): Tablet =>
+	({
+		Meta: { EntityId: `wacom.tablet.${id.toLowerCase()}` },
+		Model: {
+			Brand: 'WACOM',
+			Id: id,
+			Name: id,
+			Type: 'PENTABLET',
+			LaunchYear: '2020',
+			ReleaseDate: releaseDate,
+		},
+	}) as unknown as Tablet;
+
+describe('analyzeData — tabletsMissingExactReleaseDate', () => {
+	it('flags non-exact dates by precision and excludes exact YYYY-MM-DD', () => {
+		const input: AnalysisInput = {
+			...emptyInput(),
+			tablets: [
+				tabletWithDate('EXACT', '2023-08-10'),
+				tabletWithDate('MONTH', '2007-11'),
+				tabletWithDate('YEAR', '1984'),
+				tabletWithDate('NONE', ''),
+			],
+		};
+		const r = analyzeData(input);
+		const byId = new Map(r.tabletsMissingExactReleaseDate.map((t) => [t.id, t]));
+		expect(byId.has('EXACT')).toBe(false);
+		expect(byId.get('MONTH')?.precision).toBe('month');
+		expect(byId.get('YEAR')?.precision).toBe('year');
+		expect(byId.get('NONE')?.precision).toBe('none');
+		expect(byId.get('NONE')?.missing).toBe('missing');
+		expect(r.tabletsMissingExactReleaseDate).toHaveLength(3);
+	});
+});
+
 describe('analyzeData — pressure-range integrity', () => {
 	const base: AnalysisInput = {
 		...emptyInput(),
