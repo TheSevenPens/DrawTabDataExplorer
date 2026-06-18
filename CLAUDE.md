@@ -274,6 +274,16 @@ applies **measured-wins-per-unit**: a pen unit with any direct
 The `/pen-compare` IAF tab also shows one combined `PressureRangeTab`
 over all flagged pens at the top.
 
+## Extracted helpers ship with tests
+
+When you pull pure logic out of a component into a `.ts` helper (e.g.
+`src/lib/pill-dnd.ts`, `src/lib/entity-explorer/view-state.ts`,
+`src/lib/data-quality/analysis.ts`), add a focused Vitest `*.test.ts`
+beside it in the same change. The point of extracting is testability — a
+helper without coverage misses the benefit and makes the next refactor
+riskier. (The `data-repo` submodule follows the same rule for its `lib/`
+helpers; see GitHub #225.)
+
 ## Type aliases
 
 `AnyFieldDef` is a convenience alias for `FieldDef<any>` used throughout UI
