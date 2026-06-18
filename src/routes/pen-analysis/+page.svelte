@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Nav from '$lib/components/Nav.svelte';
-	import SubNav from '$lib/components/SubNav.svelte';
+	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
@@ -313,253 +312,6 @@
 	}
 </script>
 
-<Nav />
-<SubNav tabs={penTabs} />
-<h1>Pen Analysis</h1>
-
-<SectionedPage sections={sectionDefs} defaultSection="iaf">
-	{#snippet content(activeSection: string)}
-		{#if activeSection === 'iaf'}
-			<section class="section">
-				<PressureMetricSection
-					title="IAF Distribution"
-					description={`Initial Activation Force per pen unit — direct measurement where available, otherwise estimated from pressure sessions. Lower is better — a lighter touch means more natural shading and less hand fatigue. ${iafMeasuredCount} of ${iafResolved.length} units measured directly.`}
-					bands={PIAF_BANDS}
-					axisMax={22}
-					binSize={0.5}
-					tickStep={1}
-					rows={piafRows}
-					onExport={() =>
-						openExport(
-							'IAF per session',
-							'pen-analysis-iaf',
-							['Inventory ID', 'Pen', 'IAF (gf)'],
-							piafRows.map((r) => [r.inventoryId, r.penEntityId, fmtP(r.value)]),
-						)}
-				/>
-			</section>
-		{/if}
-
-		{#if activeSection === 'lowest-iaf'}
-			<section class="section">
-				<h2>Lowest IAF</h2>
-				{@render rankTable({
-					rows: lowestPiafRows,
-					title: 'Lowest IAF',
-					filename: 'pen-analysis-lowest-iaf',
-					count: lowestPiafCount,
-					onCountChange: (n) => (lowestPiafCount = n),
-					mode: lowestPiafMode,
-					onModeChange: (m) => (lowestPiafMode = m),
-					brand: lowestPiafBrand,
-					onBrandChange: (b) => (lowestPiafBrand = b),
-					brands: availableBrands,
-					chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
-				})}
-			</section>
-		{/if}
-
-		{#if activeSection === 'highest-iaf'}
-			<section class="section">
-				<h2>Highest IAF</h2>
-				{@render rankTable({
-					rows: highestPiafRows,
-					title: 'Highest IAF',
-					filename: 'pen-analysis-highest-iaf',
-					count: highestPiafCount,
-					onCountChange: (n) => (highestPiafCount = n),
-					mode: highestPiafMode,
-					onModeChange: (m) => (highestPiafMode = m),
-					brand: highestPiafBrand,
-					onBrandChange: (b) => (highestPiafBrand = b),
-					brands: availableBrands,
-					chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
-				})}
-			</section>
-		{/if}
-
-		{#if activeSection === 'max'}
-			<section class="section">
-				<PressureMetricSection
-					title="MAX Distribution"
-					description="Force needed to reach 100% logical pressure across all non-defective measurement sessions. Too low forces the user to push uncomfortably hard; too high reduces dynamic range."
-					bands={PMAX_BANDS}
-					axisMax={1000}
-					binSize={25}
-					tickStep={100}
-					rows={maxRows}
-					onExport={() =>
-						openExport(
-							'MAX per session',
-							'pen-analysis-max',
-							['Inventory ID', 'Pen', 'MAX (gf)'],
-							maxRows.map((r) => [r.inventoryId, r.penEntityId, fmtP(r.value)]),
-						)}
-				/>
-			</section>
-		{/if}
-
-		{#if activeSection === 'lowest-max'}
-			<section class="section">
-				<h2>Lowest MAX</h2>
-				{@render rankTable({
-					rows: lowestMaxRows,
-					title: 'Lowest MAX',
-					filename: 'pen-analysis-lowest-max',
-					count: lowestMaxCount,
-					onCountChange: (n) => (lowestMaxCount = n),
-					mode: lowestMaxMode,
-					onModeChange: (m) => (lowestMaxMode = m),
-					brand: lowestMaxBrand,
-					onBrandChange: (b) => (lowestMaxBrand = b),
-					brands: availableBrands,
-					chart: { bands: PMAX_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
-				})}
-			</section>
-		{/if}
-
-		{#if activeSection === 'highest-max'}
-			<section class="section">
-				<h2>Highest MAX</h2>
-				{@render rankTable({
-					rows: highestMaxRows,
-					title: 'Highest MAX',
-					filename: 'pen-analysis-highest-max',
-					count: highestMaxCount,
-					onCountChange: (n) => (highestMaxCount = n),
-					mode: highestMaxMode,
-					onModeChange: (m) => (highestMaxMode = m),
-					brand: highestMaxBrand,
-					onBrandChange: (b) => (highestMaxBrand = b),
-					brands: availableBrands,
-					chart: { bands: PMAX_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
-				})}
-			</section>
-		{/if}
-
-		{#if activeSection === 'diameter'}
-			<section class="section">
-				<PressureMetricSection
-					title="Diameter Distribution"
-					description="Barrel diameter across every pen model with a recorded value. Thicker barrels suit a relaxed grip; thinner ones a precise, pencil-like hold."
-					bands={PEN_DIAMETER_BANDS}
-					axisMax={34}
-					binSize={1}
-					tickStep={5}
-					unit="mm"
-					rows={diameterRows}
-					subtitleOverride={penCountLabel(diameterRows.length)}
-					onExport={() =>
-						openExport(
-							'Diameter',
-							'pen-analysis-diameter',
-							['Pen', 'Diameter (mm)'],
-							dimensionExportRows(diameterRows),
-						)}
-				/>
-			</section>
-		{/if}
-
-		{#if activeSection === 'weight'}
-			<section class="section">
-				<PressureMetricSection
-					title="Weight Distribution"
-					description="Pen weight across every pen model with a recorded value. Heavier pens feel substantial but can fatigue over long sessions; lighter ones reduce strain."
-					bands={PEN_WEIGHT_BANDS}
-					axisMax={32}
-					binSize={1}
-					tickStep={5}
-					unit="g"
-					rows={weightRows}
-					subtitleOverride={penCountLabel(weightRows.length)}
-					onExport={() =>
-						openExport(
-							'Weight',
-							'pen-analysis-weight',
-							['Pen', 'Weight (g)'],
-							dimensionExportRows(weightRows),
-						)}
-				/>
-			</section>
-		{/if}
-
-		{#if activeSection === 'length'}
-			<section class="section">
-				<PressureMetricSection
-					title="Length Distribution"
-					description="Overall length across every pen model with a recorded value. Longer pens balance differently in the hand than shorter, stubbier ones."
-					bands={PEN_LENGTH_BANDS}
-					axisMax={180}
-					binSize={2}
-					tickStep={10}
-					unit="mm"
-					rows={lengthRows}
-					subtitleOverride={penCountLabel(lengthRows.length)}
-					onExport={() =>
-						openExport(
-							'Length',
-							'pen-analysis-length',
-							['Pen', 'Length (mm)'],
-							dimensionExportRows(lengthRows),
-						)}
-				/>
-			</section>
-		{/if}
-
-		{#if activeSection === 'ud-emr'}
-			<section class="section">
-				<h2>UD EMR</h2>
-				<p class="description">
-					Pens tagged <code>UDEMR</code> — universal-display EMR styli usable across compatible EMR tablets.
-				</p>
-				{#if udemrPens.length === 0}
-					<p class="no-data">No pens tagged UDEMR.</p>
-				{:else}
-					<div class="rank-controls">
-						<span class="ud-count">{penCountLabel(udemrPens.length)}</span>
-						<ExportTableButton
-							entityType="pen-analysis"
-							title="UD EMR pens"
-							filename="pen-analysis-ud-emr"
-							headers={['Pen', 'Diameter (mm)', 'Weight (g)', 'Length (mm)']}
-							rows={udemrPens.map((p) => [
-								penFullName(p),
-								p.Diameter ?? '',
-								p.Weight ?? '',
-								p.Length ?? '',
-							])}
-						/>
-					</div>
-					<table class="rank-table">
-						<thead>
-							<tr>
-								<th>Pen</th>
-								<th class="num">Diameter <span class="unit">(mm)</span></th>
-								<th class="num">Weight <span class="unit">(g)</span></th>
-								<th class="num">Length <span class="unit">(mm)</span></th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each udemrPens as p (p.EntityId)}
-								<tr>
-									<td>
-										<a href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>
-											{penFullName(p)}
-										</a>
-									</td>
-									<td class="num mono">{p.Diameter || '—'}</td>
-									<td class="num mono">{p.Weight || '—'}</td>
-									<td class="num mono">{p.Length || '—'}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				{/if}
-			</section>
-		{/if}
-	{/snippet}
-</SectionedPage>
-
 {#snippet rankTable(p: RankTableProps)}
 	{#if p.rows.length === 0}
 		<p class="no-data">No measurements available.</p>
@@ -660,16 +412,264 @@
 	{/if}
 {/snippet}
 
-{#if exportDialog}
-	<ExportDialog
-		entityType="pen-analysis"
-		title={exportDialog.title}
-		filename={exportDialog.filename}
-		headers={exportDialog.headers}
-		rows={exportDialog.rows}
-		onclose={() => (exportDialog = null)}
-	/>
-{/if}
+<ChromeLayout subNavTabs={penTabs}>
+	<h1>Pen Analysis</h1>
+
+	<SectionedPage sections={sectionDefs} defaultSection="iaf">
+		{#snippet content(activeSection: string)}
+			{#if activeSection === 'iaf'}
+				<section class="section">
+					<PressureMetricSection
+						title="IAF Distribution"
+						description={`Initial Activation Force per pen unit — direct measurement where available, otherwise estimated from pressure sessions. Lower is better — a lighter touch means more natural shading and less hand fatigue. ${iafMeasuredCount} of ${iafResolved.length} units measured directly.`}
+						bands={PIAF_BANDS}
+						axisMax={22}
+						binSize={0.5}
+						tickStep={1}
+						rows={piafRows}
+						onExport={() =>
+							openExport(
+								'IAF per session',
+								'pen-analysis-iaf',
+								['Inventory ID', 'Pen', 'IAF (gf)'],
+								piafRows.map((r) => [r.inventoryId, r.penEntityId, fmtP(r.value)]),
+							)}
+					/>
+				</section>
+			{/if}
+
+			{#if activeSection === 'lowest-iaf'}
+				<section class="section">
+					<h2>Lowest IAF</h2>
+					{@render rankTable({
+						rows: lowestPiafRows,
+						title: 'Lowest IAF',
+						filename: 'pen-analysis-lowest-iaf',
+						count: lowestPiafCount,
+						onCountChange: (n) => (lowestPiafCount = n),
+						mode: lowestPiafMode,
+						onModeChange: (m) => (lowestPiafMode = m),
+						brand: lowestPiafBrand,
+						onBrandChange: (b) => (lowestPiafBrand = b),
+						brands: availableBrands,
+						chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
+					})}
+				</section>
+			{/if}
+
+			{#if activeSection === 'highest-iaf'}
+				<section class="section">
+					<h2>Highest IAF</h2>
+					{@render rankTable({
+						rows: highestPiafRows,
+						title: 'Highest IAF',
+						filename: 'pen-analysis-highest-iaf',
+						count: highestPiafCount,
+						onCountChange: (n) => (highestPiafCount = n),
+						mode: highestPiafMode,
+						onModeChange: (m) => (highestPiafMode = m),
+						brand: highestPiafBrand,
+						onBrandChange: (b) => (highestPiafBrand = b),
+						brands: availableBrands,
+						chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
+					})}
+				</section>
+			{/if}
+
+			{#if activeSection === 'max'}
+				<section class="section">
+					<PressureMetricSection
+						title="MAX Distribution"
+						description="Force needed to reach 100% logical pressure across all non-defective measurement sessions. Too low forces the user to push uncomfortably hard; too high reduces dynamic range."
+						bands={PMAX_BANDS}
+						axisMax={1000}
+						binSize={25}
+						tickStep={100}
+						rows={maxRows}
+						onExport={() =>
+							openExport(
+								'MAX per session',
+								'pen-analysis-max',
+								['Inventory ID', 'Pen', 'MAX (gf)'],
+								maxRows.map((r) => [r.inventoryId, r.penEntityId, fmtP(r.value)]),
+							)}
+					/>
+				</section>
+			{/if}
+
+			{#if activeSection === 'lowest-max'}
+				<section class="section">
+					<h2>Lowest MAX</h2>
+					{@render rankTable({
+						rows: lowestMaxRows,
+						title: 'Lowest MAX',
+						filename: 'pen-analysis-lowest-max',
+						count: lowestMaxCount,
+						onCountChange: (n) => (lowestMaxCount = n),
+						mode: lowestMaxMode,
+						onModeChange: (m) => (lowestMaxMode = m),
+						brand: lowestMaxBrand,
+						onBrandChange: (b) => (lowestMaxBrand = b),
+						brands: availableBrands,
+						chart: { bands: PMAX_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
+					})}
+				</section>
+			{/if}
+
+			{#if activeSection === 'highest-max'}
+				<section class="section">
+					<h2>Highest MAX</h2>
+					{@render rankTable({
+						rows: highestMaxRows,
+						title: 'Highest MAX',
+						filename: 'pen-analysis-highest-max',
+						count: highestMaxCount,
+						onCountChange: (n) => (highestMaxCount = n),
+						mode: highestMaxMode,
+						onModeChange: (m) => (highestMaxMode = m),
+						brand: highestMaxBrand,
+						onBrandChange: (b) => (highestMaxBrand = b),
+						brands: availableBrands,
+						chart: { bands: PMAX_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
+					})}
+				</section>
+			{/if}
+
+			{#if activeSection === 'diameter'}
+				<section class="section">
+					<PressureMetricSection
+						title="Diameter Distribution"
+						description="Barrel diameter across every pen model with a recorded value. Thicker barrels suit a relaxed grip; thinner ones a precise, pencil-like hold."
+						bands={PEN_DIAMETER_BANDS}
+						axisMax={34}
+						binSize={1}
+						tickStep={5}
+						unit="mm"
+						rows={diameterRows}
+						subtitleOverride={penCountLabel(diameterRows.length)}
+						onExport={() =>
+							openExport(
+								'Diameter',
+								'pen-analysis-diameter',
+								['Pen', 'Diameter (mm)'],
+								dimensionExportRows(diameterRows),
+							)}
+					/>
+				</section>
+			{/if}
+
+			{#if activeSection === 'weight'}
+				<section class="section">
+					<PressureMetricSection
+						title="Weight Distribution"
+						description="Pen weight across every pen model with a recorded value. Heavier pens feel substantial but can fatigue over long sessions; lighter ones reduce strain."
+						bands={PEN_WEIGHT_BANDS}
+						axisMax={32}
+						binSize={1}
+						tickStep={5}
+						unit="g"
+						rows={weightRows}
+						subtitleOverride={penCountLabel(weightRows.length)}
+						onExport={() =>
+							openExport(
+								'Weight',
+								'pen-analysis-weight',
+								['Pen', 'Weight (g)'],
+								dimensionExportRows(weightRows),
+							)}
+					/>
+				</section>
+			{/if}
+
+			{#if activeSection === 'length'}
+				<section class="section">
+					<PressureMetricSection
+						title="Length Distribution"
+						description="Overall length across every pen model with a recorded value. Longer pens balance differently in the hand than shorter, stubbier ones."
+						bands={PEN_LENGTH_BANDS}
+						axisMax={180}
+						binSize={2}
+						tickStep={10}
+						unit="mm"
+						rows={lengthRows}
+						subtitleOverride={penCountLabel(lengthRows.length)}
+						onExport={() =>
+							openExport(
+								'Length',
+								'pen-analysis-length',
+								['Pen', 'Length (mm)'],
+								dimensionExportRows(lengthRows),
+							)}
+					/>
+				</section>
+			{/if}
+
+			{#if activeSection === 'ud-emr'}
+				<section class="section">
+					<h2>UD EMR</h2>
+					<p class="description">
+						Pens tagged <code>UDEMR</code> — universal-display EMR styli usable across compatible EMR
+						tablets.
+					</p>
+					{#if udemrPens.length === 0}
+						<p class="no-data">No pens tagged UDEMR.</p>
+					{:else}
+						<div class="rank-controls">
+							<span class="ud-count">{penCountLabel(udemrPens.length)}</span>
+							<ExportTableButton
+								entityType="pen-analysis"
+								title="UD EMR pens"
+								filename="pen-analysis-ud-emr"
+								headers={['Pen', 'Diameter (mm)', 'Weight (g)', 'Length (mm)']}
+								rows={udemrPens.map((p) => [
+									penFullName(p),
+									p.Diameter ?? '',
+									p.Weight ?? '',
+									p.Length ?? '',
+								])}
+							/>
+						</div>
+						<table class="rank-table">
+							<thead>
+								<tr>
+									<th>Pen</th>
+									<th class="num">Diameter <span class="unit">(mm)</span></th>
+									<th class="num">Weight <span class="unit">(g)</span></th>
+									<th class="num">Length <span class="unit">(mm)</span></th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each udemrPens as p (p.EntityId)}
+									<tr>
+										<td>
+											<a href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>
+												{penFullName(p)}
+											</a>
+										</td>
+										<td class="num mono">{p.Diameter || '—'}</td>
+										<td class="num mono">{p.Weight || '—'}</td>
+										<td class="num mono">{p.Length || '—'}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					{/if}
+				</section>
+			{/if}
+		{/snippet}
+	</SectionedPage>
+
+	{#if exportDialog}
+		<ExportDialog
+			entityType="pen-analysis"
+			title={exportDialog.title}
+			filename={exportDialog.filename}
+			headers={exportDialog.headers}
+			rows={exportDialog.rows}
+			onclose={() => (exportDialog = null)}
+		/>
+	{/if}
+</ChromeLayout>
 
 <style>
 	h1 {
