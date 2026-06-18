@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { brandName, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import FlagButton from '$lib/components/FlagButton.svelte';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
 	import type { InventoryTablet } from '$data/lib/entities/inventory-tablet-fields.js';
@@ -50,13 +51,11 @@
 
 <div class="title-row">
 	<h1>{tabletFullName(tablet)}</h1>
-	<button
-		class="flag-toggle"
-		class:flagged={$flaggedTablets.includes(tablet.Meta.EntityId)}
+	<FlagButton
+		flagged={$flaggedTablets.includes(tablet.Meta.EntityId)}
 		onclick={() => toggleFlag(tablet.Meta.EntityId)}
-	>
-		{$flaggedTablets.includes(tablet.Meta.EntityId) ? 'Unflag' : 'Flag'}
-	</button>
+		label="Flag this tablet for comparison"
+	/>
 </div>
 
 <section class="basics">
@@ -168,27 +167,6 @@
 
 	h1 {
 		margin: 0;
-	}
-
-	.flag-toggle {
-		padding: 4px 10px;
-		font-size: 13px;
-		border: 1px solid #d97706;
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: #d97706;
-		cursor: pointer;
-		font-weight: 600;
-	}
-
-	.flag-toggle:hover {
-		background: #d97706;
-		color: #fff;
-	}
-
-	.flag-toggle.flagged {
-		background: #d97706;
-		color: #fff;
 	}
 
 	.basics {
