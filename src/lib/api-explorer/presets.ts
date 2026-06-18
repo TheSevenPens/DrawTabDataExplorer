@@ -31,6 +31,7 @@ export const PRESET_GROUPS: { group: string; labels: string[] }[] = [
 			'between operator: launch year range',
 			'Strict (case-sensitive) contains',
 			'Distinct values of a field',
+			'Pens tagged UDEMR',
 		],
 	},
 	{
@@ -185,6 +186,18 @@ return await ds.Tablets
 		label: 'Distinct values of a field',
 		body: `// .distinct() returns a sorted array of distinct non-empty values.
 return await ds.Tablets.filter('Brand', '==', 'WACOM').distinct('ModelType');`,
+	},
+	{
+		label: 'Pens tagged UDEMR',
+		body: `// Pens whose Tags array includes "UDEMR" (a universal/active EMR pen
+// tag — no tablet carries it; only pens have a Tags field). The Tags
+// FieldDef joins the array to a string, so the case-insensitive
+// 'contains' operator matches the tag.
+return await ds.Pens
+  .filter('Tags', 'contains', 'UDEMR')
+  .select(['Brand', 'PenId', 'PenName', 'Tags'])
+  .sort('Brand', 'asc')
+  .toArray();`,
 	},
 	{
 		label: 'Predicate-function filter',
