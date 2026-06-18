@@ -271,7 +271,7 @@
 
 	:global(.step-type) {
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		min-width: 60px;
 		padding-top: 4px;
 	}

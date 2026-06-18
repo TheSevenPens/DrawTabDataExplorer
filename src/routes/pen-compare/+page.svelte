@@ -792,7 +792,7 @@
 	.group-header {
 		font-weight: 700;
 		background: var(--th-bg);
-		color: #6b21a8;
+		color: var(--text);
 		font-size: 12px;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
@@ -845,7 +845,7 @@
 	.group-heading {
 		font-size: 16px;
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		margin: 0 0 12px;
 		padding-bottom: 4px;
 		border-bottom: 2px solid var(--border);
@@ -872,7 +872,7 @@
 	.per-pen-heading {
 		font-size: 16px;
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		margin: 0 0 12px;
 		padding-bottom: 4px;
 		border-bottom: 2px solid var(--border);
@@ -1021,7 +1021,7 @@
 
 	.view-toggle button.active {
 		background: var(--bg);
-		color: #6b21a8;
+		color: var(--text);
 		font-weight: 600;
 	}
 </style>

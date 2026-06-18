@@ -298,7 +298,7 @@
 	}
 	.sort-pill .arrow {
 		font-size: 10px;
-		color: #6b21a8;
+		color: var(--text);
 	}
 
 	.add-btn {

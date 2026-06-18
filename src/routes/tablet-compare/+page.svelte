@@ -414,14 +414,14 @@
 	.stack-toggle.active {
 		background: #ede9fe;
 		border-color: #7c3aed;
-		color: #6b21a8;
+		color: var(--text);
 		font-weight: 600;
 	}
 
 	.hist-section h2 {
 		font-size: 14px;
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		margin-bottom: 6px;
 		padding-bottom: 3px;
 		border-bottom: 2px solid var(--border);
@@ -556,7 +556,7 @@
 	.group-header {
 		font-weight: 700;
 		background: var(--th-bg);
-		color: #6b21a8;
+		color: var(--text);
 		font-size: 12px;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;

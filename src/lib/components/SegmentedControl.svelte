@@ -68,11 +68,7 @@
 
 	.segmented button.active {
 		background: var(--bg);
-		color: #6b21a8;
+		color: var(--text);
 		font-weight: 600;
-	}
-
-	:global([data-theme='dark']) .segmented button.active {
-		color: #c4b5fd;
 	}
 </style>

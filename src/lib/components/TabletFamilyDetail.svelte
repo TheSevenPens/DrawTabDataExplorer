@@ -182,7 +182,7 @@
 	.family-section h2 {
 		font-size: 15px;
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		margin-bottom: 8px;
 		padding-bottom: 4px;
 		border-bottom: 2px solid #e0e0e0;
@@ -251,6 +251,6 @@
 	.stack-toggle.active {
 		background: #ede9fe;
 		border-color: #7c3aed;
-		color: #7c3aed;
+		color: var(--text);
 	}
 </style>

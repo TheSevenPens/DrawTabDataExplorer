@@ -108,7 +108,7 @@
 	h2 {
 		font-size: 14px;
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		margin-bottom: 0;
 	}
 

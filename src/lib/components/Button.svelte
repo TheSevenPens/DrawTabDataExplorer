@@ -158,12 +158,8 @@
 
 	/* toggle pressed state (used with subtle/menu-trigger for view toggles) */
 	.btn[aria-pressed='true'] {
-		color: #6b21a8;
+		color: var(--text);
 		border-color: var(--border);
 		font-weight: 600;
-	}
-
-	:global([data-theme='dark']) .btn[aria-pressed='true'] {
-		color: #c4b5fd;
 	}
 </style>
