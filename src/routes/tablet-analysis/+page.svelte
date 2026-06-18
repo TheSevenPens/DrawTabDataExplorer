@@ -1,6 +1,5 @@
 <script lang="ts">
-	import Nav from '$lib/components/Nav.svelte';
-	import SubNav from '$lib/components/SubNav.svelte';
+	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { flaggedCount } from '$lib/flagged-store.js';
@@ -212,199 +211,199 @@
 	let pdMarkers = $derived(markersFor(pdOverlay));
 </script>
 
-<Nav />
-<SubNav tabs={tabletTabs} />
-<h1>Analysis</h1>
+<ChromeLayout subNavTabs={tabletTabs}>
+	<h1>Analysis</h1>
 
-<SectionedPage sections={sectionDefs} defaultSection="aspect-pen-tablet">
-	{#snippet content(activeSection: string)}
-		{#if activeSection === 'aspect-pen-tablet'}
-			<section class="section">
-				<AspectRatioRatioSection
-					title="Pen Tablets ({penTablets.length})"
-					rows={ptAR}
-					onExport={() => {
-						const total = ptAR.reduce((s, r) => s + r.count, 0);
-						openExport(
-							'Aspect Ratio: Pen Tablets',
-							'analysis-aspect-ratio-pen-tablets',
-							['Ratio', 'Decimal', 'Category', 'Count', '%'],
-							ptAR.map((r) => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
-						);
-					}}
-				/>
-			</section>
-		{:else if activeSection === 'aspect-pen-tablet-by-category'}
-			<section class="section">
-				<AspectRatioCategorySection
-					title="Pen Tablets — by Category ({penTablets.length})"
-					description="Buckets each tablet’s digitizer aspect ratio into a popular ratio (16:9, 16:10, 3:2, 4:3, 5:4, 1:1) at one of three closeness tiers (EXACT ≤ 0.005, VERYCLOSE ≤ 0.02, CLOSE ≤ 0.05), or OTHER."
-					rows={ptARCat}
-					onExport={() => {
-						const total = ptARCat.reduce((s, r) => s + r.count, 0);
-						openExport(
-							'Aspect Ratio Category: Pen Tablets',
-							'analysis-aspect-ratio-category-pen-tablets',
-							['Category', 'Count', '%'],
-							ptARCat.map((r) => [r.label, r.count, pct(r.count, total)]),
-						);
-					}}
-				/>
-			</section>
-		{:else if activeSection === 'aspect-pen-display'}
-			<section class="section">
-				<AspectRatioRatioSection
-					title="Pen Displays & Standalones ({penDisplays.length})"
-					rows={pdAR}
-					onExport={() => {
-						const total = pdAR.reduce((s, r) => s + r.count, 0);
-						openExport(
-							'Aspect Ratio: Pen Displays & Standalones',
-							'analysis-aspect-ratio-pen-displays',
-							['Ratio', 'Decimal', 'Category', 'Count', '%'],
-							pdAR.map((r) => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
-						);
-					}}
-				/>
-			</section>
-		{:else if activeSection === 'aspect-pen-display-by-category'}
-			<section class="section">
-				<AspectRatioCategorySection
-					title="Pen Displays & Standalones — by Category ({penDisplays.length})"
-					description="Buckets each pen display’s (or standalone’s) aspect ratio into a popular ratio at one of three closeness tiers, or OTHER."
-					rows={pdARCat}
-					onExport={() => {
-						const total = pdARCat.reduce((s, r) => s + r.count, 0);
-						openExport(
-							'Aspect Ratio Category: Pen Displays & Standalones',
-							'analysis-aspect-ratio-category-pen-displays',
-							['Category', 'Count', '%'],
-							pdARCat.map((r) => [r.label, r.count, pct(r.count, total)]),
-						);
-					}}
-				/>
-			</section>
-		{:else if activeSection === 'panel-tech'}
-			<section class="section">
-				<PanelTechSection
-					rows={panelTechRows}
-					total={panelTechTotal}
-					coveredOf={panelTechCovered}
-					onExport={() =>
-						openExport(
-							'Panel Technology',
-							'analysis-panel-tech',
-							['Panel Tech', 'Count', '%'],
-							panelTechRows.map((r) => [r.label, r.count, pct(r.count, panelTechTotal)]),
-						)}
-				/>
-			</section>
-		{:else}
-			{#each numericSections as section (section.id)}
-				{#if activeSection === section.id}
-					<section class="section">
-						<NumericMetricSection
-							{section}
-							bind:compareYears={yearFilters[section.id]}
-							onExport={() =>
-								openExport(
-									section.title,
-									section.filename,
-									[section.title, 'Count', '%'],
-									section.data.rows.map((r) => [
-										Number(r.label),
-										r.count,
-										pct(r.count, section.data.count),
-									]),
-								)}
-						/>
-					</section>
-				{/if}
-			{/each}
-		{/if}
+	<SectionedPage sections={sectionDefs} defaultSection="aspect-pen-tablet">
+		{#snippet content(activeSection: string)}
+			{#if activeSection === 'aspect-pen-tablet'}
+				<section class="section">
+					<AspectRatioRatioSection
+						title="Pen Tablets ({penTablets.length})"
+						rows={ptAR}
+						onExport={() => {
+							const total = ptAR.reduce((s, r) => s + r.count, 0);
+							openExport(
+								'Aspect Ratio: Pen Tablets',
+								'analysis-aspect-ratio-pen-tablets',
+								['Ratio', 'Decimal', 'Category', 'Count', '%'],
+								ptAR.map((r) => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
+							);
+						}}
+					/>
+				</section>
+			{:else if activeSection === 'aspect-pen-tablet-by-category'}
+				<section class="section">
+					<AspectRatioCategorySection
+						title="Pen Tablets — by Category ({penTablets.length})"
+						description="Buckets each tablet’s digitizer aspect ratio into a popular ratio (16:9, 16:10, 3:2, 4:3, 5:4, 1:1) at one of three closeness tiers (EXACT ≤ 0.005, VERYCLOSE ≤ 0.02, CLOSE ≤ 0.05), or OTHER."
+						rows={ptARCat}
+						onExport={() => {
+							const total = ptARCat.reduce((s, r) => s + r.count, 0);
+							openExport(
+								'Aspect Ratio Category: Pen Tablets',
+								'analysis-aspect-ratio-category-pen-tablets',
+								['Category', 'Count', '%'],
+								ptARCat.map((r) => [r.label, r.count, pct(r.count, total)]),
+							);
+						}}
+					/>
+				</section>
+			{:else if activeSection === 'aspect-pen-display'}
+				<section class="section">
+					<AspectRatioRatioSection
+						title="Pen Displays & Standalones ({penDisplays.length})"
+						rows={pdAR}
+						onExport={() => {
+							const total = pdAR.reduce((s, r) => s + r.count, 0);
+							openExport(
+								'Aspect Ratio: Pen Displays & Standalones',
+								'analysis-aspect-ratio-pen-displays',
+								['Ratio', 'Decimal', 'Category', 'Count', '%'],
+								pdAR.map((r) => [r.ratio16, r.decimal, r.category, r.count, pct(r.count, total)]),
+							);
+						}}
+					/>
+				</section>
+			{:else if activeSection === 'aspect-pen-display-by-category'}
+				<section class="section">
+					<AspectRatioCategorySection
+						title="Pen Displays & Standalones — by Category ({penDisplays.length})"
+						description="Buckets each pen display’s (or standalone’s) aspect ratio into a popular ratio at one of three closeness tiers, or OTHER."
+						rows={pdARCat}
+						onExport={() => {
+							const total = pdARCat.reduce((s, r) => s + r.count, 0);
+							openExport(
+								'Aspect Ratio Category: Pen Displays & Standalones',
+								'analysis-aspect-ratio-category-pen-displays',
+								['Category', 'Count', '%'],
+								pdARCat.map((r) => [r.label, r.count, pct(r.count, total)]),
+							);
+						}}
+					/>
+				</section>
+			{:else if activeSection === 'panel-tech'}
+				<section class="section">
+					<PanelTechSection
+						rows={panelTechRows}
+						total={panelTechTotal}
+						coveredOf={panelTechCovered}
+						onExport={() =>
+							openExport(
+								'Panel Technology',
+								'analysis-panel-tech',
+								['Panel Tech', 'Count', '%'],
+								panelTechRows.map((r) => [r.label, r.count, pct(r.count, panelTechTotal)]),
+							)}
+					/>
+				</section>
+			{:else}
+				{#each numericSections as section (section.id)}
+					{#if activeSection === section.id}
+						<section class="section">
+							<NumericMetricSection
+								{section}
+								bind:compareYears={yearFilters[section.id]}
+								onExport={() =>
+									openExport(
+										section.title,
+										section.filename,
+										[section.title, 'Count', '%'],
+										section.data.rows.map((r) => [
+											Number(r.label),
+											r.count,
+											pct(r.count, section.data.count),
+										]),
+									)}
+							/>
+						</section>
+					{/if}
+				{/each}
+			{/if}
 
-		{#if activeSection === 'pressure-levels'}
-			<section class="section">
-				<PressureLevelsSection
-					rows={pressureRows}
-					total={pressureTotal}
-					coveredOf={allTablets.length}
-					onExport={() =>
-						openExport(
-							'Pressure Levels',
-							'analysis-pressure-levels',
-							['Pressure Levels', 'Count', '%'],
-							pressureRows.map((r) => [Number(r.label), r.count, pct(r.count, pressureTotal)]),
-						)}
-				/>
-			</section>
-		{/if}
+			{#if activeSection === 'pressure-levels'}
+				<section class="section">
+					<PressureLevelsSection
+						rows={pressureRows}
+						total={pressureTotal}
+						coveredOf={allTablets.length}
+						onExport={() =>
+							openExport(
+								'Pressure Levels',
+								'analysis-pressure-levels',
+								['Pressure Levels', 'Count', '%'],
+								pressureRows.map((r) => [Number(r.label), r.count, pct(r.count, pressureTotal)]),
+							)}
+					/>
+				</section>
+			{/if}
 
-		{#if activeSection === 'touch-support'}
-			<section class="section">
-				<TouchSupportSection
-					rows={touchSupportRows}
-					total={touchTotal}
-					coveredOf={allTablets.length}
-					onExport={() =>
-						openExport(
-							'Touch Support',
-							'analysis-touch-support',
-							['Touch', 'Count', '%'],
-							touchSupportRows.map((r) => [r.label, r.count, pct(r.count, touchTotal)]),
-						)}
-				/>
-			</section>
-		{/if}
+			{#if activeSection === 'touch-support'}
+				<section class="section">
+					<TouchSupportSection
+						rows={touchSupportRows}
+						total={touchTotal}
+						coveredOf={allTablets.length}
+						onExport={() =>
+							openExport(
+								'Touch Support',
+								'analysis-touch-support',
+								['Touch', 'Count', '%'],
+								touchSupportRows.map((r) => [r.label, r.count, pct(r.count, touchTotal)]),
+							)}
+					/>
+				</section>
+			{/if}
 
-		{#if activeSection === 'sizes-pen-tablet'}
-			<section class="section">
-				<TabletDiagonalSection
-					title="Pen Tablet diagonal"
-					description="Distribution of pen-tablet active-area diagonals. Use the overlay control to project paper-size markers onto the chart."
-					histogramTitle="Pen tablet active area diagonal"
-					tablets={ptSizesTablets}
-					values={ptSizesValues}
-					ranges={ptSizesRanges}
-					unit={isMetric ? ' cm' : '"'}
-					binSize={isMetric ? 1 : 0.5}
-					bind:overlay={ptOverlay}
-					bind:compareYears={ptSizesYears}
-					markers={ptMarkers}
-				/>
-			</section>
-		{/if}
+			{#if activeSection === 'sizes-pen-tablet'}
+				<section class="section">
+					<TabletDiagonalSection
+						title="Pen Tablet diagonal"
+						description="Distribution of pen-tablet active-area diagonals. Use the overlay control to project paper-size markers onto the chart."
+						histogramTitle="Pen tablet active area diagonal"
+						tablets={ptSizesTablets}
+						values={ptSizesValues}
+						ranges={ptSizesRanges}
+						unit={isMetric ? ' cm' : '"'}
+						binSize={isMetric ? 1 : 0.5}
+						bind:overlay={ptOverlay}
+						bind:compareYears={ptSizesYears}
+						markers={ptMarkers}
+					/>
+				</section>
+			{/if}
 
-		{#if activeSection === 'sizes-pen-display'}
-			<section class="section">
-				<TabletDiagonalSection
-					title="Pen Display diagonal"
-					description="Distribution of pen-display (and standalone) active-area diagonals. Use the overlay control to project paper-size markers onto the chart."
-					histogramTitle="Pen display active area diagonal"
-					tablets={pdSizesTablets}
-					values={pdSizesValues}
-					ranges={pdSizesRanges}
-					unit={isMetric ? ' cm' : '"'}
-					binSize={isMetric ? 1 : 0.5}
-					bind:overlay={pdOverlay}
-					bind:compareYears={pdSizesYears}
-					markers={pdMarkers}
-				/>
-			</section>
-		{/if}
-	{/snippet}
-</SectionedPage>
+			{#if activeSection === 'sizes-pen-display'}
+				<section class="section">
+					<TabletDiagonalSection
+						title="Pen Display diagonal"
+						description="Distribution of pen-display (and standalone) active-area diagonals. Use the overlay control to project paper-size markers onto the chart."
+						histogramTitle="Pen display active area diagonal"
+						tablets={pdSizesTablets}
+						values={pdSizesValues}
+						ranges={pdSizesRanges}
+						unit={isMetric ? ' cm' : '"'}
+						binSize={isMetric ? 1 : 0.5}
+						bind:overlay={pdOverlay}
+						bind:compareYears={pdSizesYears}
+						markers={pdMarkers}
+					/>
+				</section>
+			{/if}
+		{/snippet}
+	</SectionedPage>
 
-{#if exportDialog}
-	<ExportDialog
-		entityType="analysis"
-		title={exportDialog.title}
-		filename={exportDialog.filename}
-		headers={exportDialog.headers}
-		rows={exportDialog.rows}
-		onclose={() => (exportDialog = null)}
-	/>
-{/if}
+	{#if exportDialog}
+		<ExportDialog
+			entityType="analysis"
+			title={exportDialog.title}
+			filename={exportDialog.filename}
+			headers={exportDialog.headers}
+			rows={exportDialog.rows}
+			onclose={() => (exportDialog = null)}
+		/>
+	{/if}
+</ChromeLayout>
 
 <style>
 	h1 {
