@@ -16,6 +16,11 @@
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import { loadColumnWidths, saveColumnWidths } from '$lib/column-widths.js';
 	import type { CellLinks } from '$lib/table-types.js';
+	import {
+		buildActiveSteps,
+		type FilterItem,
+		type SortItem,
+	} from '$lib/entity-explorer/view-state.js';
 
 	let {
 		title,
@@ -69,18 +74,6 @@
 	} = $props();
 
 	let resolvedTitleTag = $derived(titleTag ?? 'h1');
-
-	interface FilterItem {
-		field: string;
-		operator: string;
-		value: string;
-		disabled?: boolean;
-	}
-
-	interface SortItem {
-		field: string;
-		direction: 'asc' | 'desc';
-	}
 
 	function getInitialColumns(): string[] {
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
@@ -156,18 +149,7 @@
 
 	let allSteps = $derived.by((): Step[] => {
 		void tick;
-		const steps: Step[] = [];
-		for (const f of filters) {
-			const needsValue = f.operator !== 'empty' && f.operator !== 'notempty';
-			if (!f.disabled && (!needsValue || f.value !== '')) {
-				steps.push({ kind: 'filter', field: f.field, operator: f.operator, value: f.value });
-			}
-		}
-		for (const s of sorts) {
-			steps.push({ kind: 'sort', field: s.field, direction: s.direction });
-		}
-		steps.push({ kind: 'select' as const, fields: selectedColumns });
-		return steps;
+		return buildActiveSteps(filters, sorts, selectedColumns);
 	});
 
 	let pipelineResult = $derived.by(() => {
@@ -241,19 +223,6 @@
 			.map((s) => ({ field: s.field, direction: s.direction }));
 		refresh();
 	}
-
-	let stepsForSave = $derived.by((): Step[] => {
-		void tick;
-		const steps: Step[] = [];
-		for (const f of filters) {
-			steps.push({ kind: 'filter' as const, field: f.field, operator: f.operator, value: f.value });
-		}
-		for (const s of sorts) {
-			steps.push({ kind: 'sort' as const, field: s.field, direction: s.direction });
-		}
-		steps.push({ kind: 'select' as const, fields: selectedColumns });
-		return steps;
-	});
 </script>
 
 <div class="title-row">
@@ -303,7 +272,7 @@
 		{fieldGroups}
 		{defaultFilterField}
 		onchange={refresh}
-		steps={stepsForSave}
+		steps={allSteps}
 		{entityType}
 		{defaultView}
 		onload={loadView}

@@ -36,6 +36,12 @@ function persist(entityType: string, views: SavedView[]) {
 	setStorageJson(getStorageKey(entityType), views);
 }
 
+/**
+ * Persist a named saved view. `steps` is the *active* query (the same pipeline
+ * that executes) — disabled filters are already excluded upstream by
+ * `buildActiveSteps`, so a saved view captures the active query only and
+ * disabled filters stay transient UI state, never persisted (GitHub #227).
+ */
 export function saveView(entityType: string, name: string, steps: Step[]): void {
 	const views = loadViews(entityType);
 	const existing = views.findIndex((v) => v.name === name);
