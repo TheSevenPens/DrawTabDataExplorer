@@ -11,19 +11,19 @@
 </script>
 
 {#if data.entityType === 'tablet'}
-	<TabletDetail data={data as any} />
+	<TabletDetail {data} />
 {:else if data.entityType === 'pen'}
-	<PenDetail data={data as any} />
+	<PenDetail {data} />
 {:else if data.entityType === 'brand'}
-	<BrandDetail data={data as any} />
+	<BrandDetail {data} />
 {:else if data.entityType === 'driver'}
-	<DriverDetail data={data as any} />
+	<DriverDetail {data} />
 {:else if data.entityType === 'penfamily'}
-	<PenFamilyDetail data={data as any} />
+	<PenFamilyDetail {data} />
 {:else if data.entityType === 'tabletfamily'}
-	<TabletFamilyDetail data={data as any} />
+	<TabletFamilyDetail {data} />
 {:else if data.entityType === 'session'}
-	<SessionDetail data={data as any} />
+	<SessionDetail {data} />
 {:else}
 	<h1>Unknown entity</h1>
 	<p>Entity type not recognised.</p>

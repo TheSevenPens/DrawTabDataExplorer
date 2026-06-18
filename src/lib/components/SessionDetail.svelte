@@ -20,8 +20,10 @@
 	}: {
 		data: {
 			session: PressureResponse;
-			pen: Pen | undefined;
-			tablet: Tablet | undefined;
+			// Loader resolves these via session.getPen()/getTablet(), which return
+			// null when the reference is dangling; the template guards with `pen ?`.
+			pen: Pen | null;
+			tablet: Tablet | null;
 			defectInfo?: DefectInfo | null;
 		};
 	} = $props();

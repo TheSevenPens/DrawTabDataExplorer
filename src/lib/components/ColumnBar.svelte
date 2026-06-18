@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type AnyFieldDisplayDef } from '@thesevenpens/queriton';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
+	import { moveItem } from '$lib/pill-dnd.js';
 
 	let {
 		columns = $bindable(),
@@ -80,10 +81,7 @@
 
 	function onDrop(index: number) {
 		if (dragIndex !== null && dragIndex !== index) {
-			const item = columns.splice(dragIndex, 1)[0]!;
-			let insertAt = dragOverSide === 'right' ? index + 1 : index;
-			if (dragIndex < index) insertAt--;
-			columns.splice(Math.max(0, insertAt), 0, item);
+			columns = moveItem(columns, dragIndex, index, dragOverSide);
 			onchange();
 		}
 		dragIndex = null;
