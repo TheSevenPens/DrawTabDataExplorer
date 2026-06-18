@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
 	import { PIAF_BANDS, PMAX_BANDS } from '$lib/bands.js';
 	import type { PressureResponse, PressureRange } from '$data/lib/drawtab-loader.js';
@@ -290,9 +290,7 @@
 						<tr>
 							{#if showPenColumn}
 								<td>
-									<a href={resolve('/entity/[entityId]', { entityId: r.penEntityId })}>
-										{penName(r.penEntityId)}
-									</a>
+									<EntityLink entityId={r.penEntityId}>{penName(r.penEntityId)}</EntityLink>
 								</td>
 							{/if}
 							<td class="mono">{r.inventoryId}</td>
@@ -343,34 +341,27 @@
 						<tr>
 							{#if showPenColumn}
 								<td>
-									<a href={resolve('/entity/[entityId]', { entityId: s.penEntityId })}>
-										{penName(s.penEntityId)}
-									</a>
+									<EntityLink entityId={s.penEntityId}>{penName(s.penEntityId)}</EntityLink>
 								</td>
 							{/if}
 							<td class="mono">
 								{#if s.sessionEntityId}
-									<a href={resolve('/entity/[entityId]', { entityId: s.sessionEntityId })}
-										>{s.inventoryId}</a
-									>
+									<EntityLink entityId={s.sessionEntityId}>{s.inventoryId}</EntityLink>
 								{:else}
 									{s.inventoryId}
 								{/if}
 							</td>
 							<td class="mono">
 								{#if s.sessionEntityId}
-									<a href={resolve('/entity/[entityId]', { entityId: s.sessionEntityId })}
-										>{s.date}</a
-									>
+									<EntityLink entityId={s.sessionEntityId}>{s.date}</EntityLink>
 								{:else}
 									{s.date}
 								{/if}
 							</td>
 							<td>
 								{#if s.tabletEntityId}
-									<a href={resolve('/entity/[entityId]', { entityId: s.tabletEntityId })}>
-										{tabletName(s.tabletEntityId)}
-									</a>
+									<EntityLink entityId={s.tabletEntityId}>{tabletName(s.tabletEntityId)}</EntityLink
+									>
 								{/if}
 							</td>
 							<td class="mono">{s.driver}</td>
@@ -526,13 +517,6 @@
 	}
 	.range-table tr:hover td {
 		background: var(--hover-bg);
-	}
-	.range-table a {
-		color: var(--link);
-		text-decoration: none;
-	}
-	.range-table a:hover {
-		text-decoration: underline;
 	}
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
