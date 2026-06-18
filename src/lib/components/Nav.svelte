@@ -35,7 +35,7 @@
 		{
 			href: '/reference',
 			label: 'Data',
-			altActive: ['/brands', '/data-dictionary', '/api-explorer', '/data-quality'],
+			altActive: ['/data-dictionary', '/api-explorer', '/data-quality'],
 		},
 		{ href: '/about', label: 'About' },
 	];

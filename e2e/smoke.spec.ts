@@ -5,7 +5,6 @@ import { test, expect, type Page } from '@playwright/test';
 // fail it.
 const ROUTES: { path: string; h1: RegExp }[] = [
 	{ path: '/tablets', h1: /Tablets|Tablet Models|Drawing Tablets/i },
-	{ path: '/brands', h1: /Brands/i },
 	{ path: '/tablet-families', h1: /Tablet Families/i },
 	{ path: '/pens', h1: /Pens/i },
 	{ path: '/pen-families', h1: /Pen Families/i },
@@ -71,7 +70,8 @@ test.describe('List → detail navigation', () => {
 	});
 
 	test('Brands list → brand detail page', async ({ page }) => {
-		await page.goto('/brands', { waitUntil: 'networkidle' });
+		// Brands now live as a Reference section rather than a standalone route.
+		await page.goto('/reference#brands', { waitUntil: 'networkidle' });
 		const firstBrandLink = page.locator('a[href^="/entity/"]').first();
 		await expect(firstBrandLink).toBeVisible({ timeout: 10_000 });
 		await firstBrandLink.click();

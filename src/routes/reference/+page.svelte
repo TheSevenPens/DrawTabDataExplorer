@@ -14,6 +14,12 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import DriverCompatSection from '$lib/reference/DriverCompatSection.svelte';
 	import {
+		BRAND_FIELDS,
+		BRAND_FIELD_GROUPS,
+		BRAND_DEFAULT_COLUMNS,
+		BRAND_DEFAULT_VIEW,
+	} from '$data/lib/entities/brand-fields.js';
+	import {
 		PEN_COMPAT_FIELDS,
 		PEN_COMPAT_FIELD_GROUPS,
 		PEN_COMPAT_DEFAULT_COLUMNS,
@@ -50,6 +56,7 @@
 	const dataTabs = dataSubNavTabs();
 
 	const sectionDefs: Section[] = [
+		{ id: 'brands', category: 'Entities', label: 'Brands' },
 		{ id: 'tablet-sizes', category: 'Tablets', label: 'Tablet Sizes' },
 		{ id: 'display-resolutions', category: 'Tablets', label: 'Display Resolutions' },
 		{ id: 'iso-paper-a', category: 'Paper Sizes', label: 'ISO A Paper Sizes' },
@@ -523,6 +530,20 @@
 						</tbody>
 					</table>
 				</section>
+			{:else if activeSection === 'brands'}
+				<EntityExplorer
+					title="Brands"
+					entityType="brands"
+					entityLabel="brands"
+					data={data.brands}
+					fields={BRAND_FIELDS}
+					fieldGroups={BRAND_FIELD_GROUPS}
+					defaultColumns={BRAND_DEFAULT_COLUMNS}
+					defaultView={BRAND_DEFAULT_VIEW}
+					detailBasePath="/entity"
+					linkField="BrandName"
+					defaultFilterField="BrandName"
+				/>
 			{:else if activeSection === 'pen-compat'}
 				<EntityExplorer
 					title="Pen Compatibility"
