@@ -11,6 +11,14 @@
 	import Button from '$lib/components/Button.svelte';
 	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
+	import DriverCompatSection from '$lib/reference/DriverCompatSection.svelte';
+	import {
+		PEN_COMPAT_FIELDS,
+		PEN_COMPAT_FIELD_GROUPS,
+		PEN_COMPAT_DEFAULT_COLUMNS,
+		PEN_COMPAT_DEFAULT_VIEW,
+	} from '$data/lib/entities/pen-compat-fields.js';
 	import BandsChart from '$lib/components/BandsChart.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import {
@@ -56,6 +64,8 @@
 		{ id: 'bands-accuracy-center', category: 'Digitizer Bands', label: 'Accuracy (Center)' },
 		{ id: 'bands-accuracy-corner', category: 'Digitizer Bands', label: 'Accuracy (Corner)' },
 		{ id: 'bands-report-rate', category: 'Digitizer Bands', label: 'Report Rate' },
+		{ id: 'pen-compat', category: 'Compatibility', label: 'Pen Compatibility' },
+		{ id: 'driver-compat', category: 'Compatibility', label: 'Driver Compatibility' },
 	];
 
 	interface BandSection {
@@ -513,6 +523,25 @@
 						</tbody>
 					</table>
 				</section>
+			{:else if activeSection === 'pen-compat'}
+				<EntityExplorer
+					title="Pen Compatibility"
+					entityType="pen-compat"
+					entityLabel="compatibility rows"
+					data={data.penCompat}
+					fields={PEN_COMPAT_FIELDS}
+					fieldGroups={PEN_COMPAT_FIELD_GROUPS}
+					defaultColumns={PEN_COMPAT_DEFAULT_COLUMNS}
+					defaultView={PEN_COMPAT_DEFAULT_VIEW}
+					defaultFilterField="TabletFullName"
+					quickFilterFields={['Brand']}
+				/>
+			{:else if activeSection === 'driver-compat'}
+				<DriverCompatSection
+					products={data.wacomProducts}
+					modelToTablet={data.modelToTablet}
+					sensorIdToTablet={data.sensorIdToTablet}
+				/>
 			{:else}
 				{#each specBandSections as s (s.id)}
 					{#if activeSection === s.id}

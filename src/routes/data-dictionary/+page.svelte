@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
+	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
 	import { BRAND_FIELDS } from '$data/lib/entities/brand-fields.js';
 	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
@@ -15,14 +16,7 @@
 	import { INVENTORY_PEN_FIELDS } from '$data/lib/entities/inventory-pen-fields.js';
 	import { INVENTORY_TABLET_FIELDS } from '$data/lib/entities/inventory-tablet-fields.js';
 
-	const dataTabs = [
-		{ href: '/reference', label: 'Reference' },
-		{ href: '/data-dictionary', label: 'Data Dictionary' },
-		{ href: '/api-explorer', label: 'API Explorer' },
-		{ href: '/data-quality', label: 'Data Quality' },
-		{ href: '/pen-compat', label: 'Pen Compat' },
-		{ href: '/wacom-driver-compat', label: 'Driver Compat' },
-	];
+	const dataTabs = dataSubNavTabs();
 
 	interface EntityDef {
 		id: string;

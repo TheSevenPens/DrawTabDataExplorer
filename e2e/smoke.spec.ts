@@ -9,7 +9,6 @@ const ROUTES: { path: string; h1: RegExp }[] = [
 	{ path: '/tablet-families', h1: /Tablet Families/i },
 	{ path: '/pens', h1: /Pens/i },
 	{ path: '/pen-families', h1: /Pen Families/i },
-	{ path: '/pen-compat', h1: /Pen Compat|Compatibility/i },
 	{ path: '/drivers', h1: /Drivers/i },
 	{ path: '/pressure-response', h1: /Pressure Response/i },
 	{ path: '/pen-inventory', h1: /Pen Inventory/i },
