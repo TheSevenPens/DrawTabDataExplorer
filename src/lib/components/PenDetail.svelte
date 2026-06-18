@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
-	import Nav from '$lib/components/Nav.svelte';
+	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
 	import { type Pen, PEN_FIELDS, getPenFamilyName } from '$data/lib/entities/pen-fields.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
@@ -98,16 +98,15 @@
 	}
 </script>
 
-<Nav />
-
-<div class="title-row">
-	<h1>{penFullName(pen)}</h1>
-	<FlagButton
-		flagged={$flaggedPenModels.includes(pen.EntityId.toLowerCase())}
-		onclick={() => toggleFlaggedPenModel(pen.EntityId)}
-		label="Flag this pen model"
-	/>
-</div>
+<DetailPageFrame title={penFullName(pen)}>
+	{#snippet actions()}
+		<FlagButton
+			flagged={$flaggedPenModels.includes(pen.EntityId.toLowerCase())}
+			onclick={() => toggleFlaggedPenModel(pen.EntityId)}
+			label="Flag this pen model"
+		/>
+	{/snippet}
+</DetailPageFrame>
 
 <section class="basics">
 	<dl class="basics-grid">
@@ -315,16 +314,6 @@
 {/if}
 
 <style>
-	.title-row {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-bottom: 16px;
-	}
-	.title-row h1 {
-		margin: 0;
-	}
-
 	.basics {
 		margin-bottom: 20px;
 		padding: 12px 16px;
