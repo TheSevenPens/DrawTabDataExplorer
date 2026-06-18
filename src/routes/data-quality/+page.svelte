@@ -6,7 +6,7 @@
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { analyzeData } from '$lib/data-quality/analysis.js';
-	import SectionHeader from '$lib/data-quality/SectionHeader.svelte';
+	import SectionHeader from '$lib/components/SectionHeader.svelte';
 	import CompletionSection from '$lib/data-quality/CompletionSection.svelte';
 	import StatusMessage from '$lib/components/StatusMessage.svelte';
 	import LoadingState from '$lib/components/LoadingState.svelte';
