@@ -1,53 +1,122 @@
 <script lang="ts">
 	import { base, resolve } from '$app/paths';
 	import { untrack } from 'svelte';
-	import { brandName } from '$data/lib/drawtab-loader.js';
+	import { brandName, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 
 	let { data } = $props();
 
-	let timeline = $derived(data.timeline);
+	let tablets: Tablet[] = $derived(data.tablets);
+	let pens: Pen[] = $derived(data.pens);
 	let brands = $derived(data.brands);
-	let allYears = $derived(data.allYears);
 
 	let filterBrand = $state('');
 	let filterType = $state('');
 	let sortOrder: 'newest' | 'oldest' = $state('newest');
-	// yearFrom/yearTo are user-editable range inputs seeded from the
-	// loaded data once. `untrack` tells the compiler the initial-value
-	// read is deliberate.
+	let groupBy: 'year' | 'year-month' = $state('year');
+	// yearFrom/yearTo are user-editable range inputs seeded from the loaded
+	// data once. `untrack` tells the compiler the initial read is deliberate.
 	let yearFrom = $state(untrack(() => data.yearFrom));
 	let yearTo = $state(untrack(() => data.yearTo));
 
-	let filteredTimeline = $derived.by(() => {
-		let result = timeline;
+	const MONTHS = [
+		'',
+		'Jan',
+		'Feb',
+		'Mar',
+		'Apr',
+		'May',
+		'Jun',
+		'Jul',
+		'Aug',
+		'Sep',
+		'Oct',
+		'Nov',
+		'Dec',
+	];
+
+	interface Period {
+		sort: string;
+		year: string;
+		month: number | null; // 1-12 when known
+		monthUnknown: boolean; // year-month mode, item has no month
+		tablets: Tablet[];
+		pens: Pen[];
+	}
+
+	// Period bucket for an item. In year mode everything keys on the launch
+	// year. In year-month mode, tablets with a month-precision ReleaseDate
+	// (YYYY-MM…) key on that month; year-only dates and all pens (which have
+	// no release date) drop into a per-year "month unknown" bucket.
+	function periodKey(year: string, releaseDate: string | undefined) {
+		if (groupBy === 'year-month' && releaseDate && /^\d{4}-\d{2}/.test(releaseDate)) {
+			const ym = releaseDate.slice(0, 7);
+			return { sort: ym, year: ym.slice(0, 4), month: Number(ym.slice(5, 7)), monthUnknown: false };
+		}
+		if (groupBy === 'year-month') {
+			return { sort: `${year}-00`, year, month: null, monthUnknown: true };
+		}
+		return { sort: year, year, month: null, monthUnknown: false };
+	}
+
+	let groupedTimeline = $derived.by(() => {
 		const from = Number(yearFrom);
 		const to = Number(yearTo);
-		if (!isNaN(from) && !isNaN(to)) {
-			result = result.filter((e) => {
-				const y = Number(e.year);
-				return !isNaN(y) && y >= from && y <= to;
-			});
-		}
-		if (sortOrder === 'oldest') {
-			result = [...result].reverse();
-		}
-		return result.map((entry) => {
-			let tablets = entry.tablets;
-			let pens = entry.pens;
-			if (filterBrand) {
-				tablets = tablets.filter((t) => t.Model.Brand === filterBrand);
-				pens = pens.filter((p) => p.Brand === filterBrand);
+		const inRange = (y: string) => {
+			const n = Number(y);
+			if (isNaN(n)) return false;
+			if (isNaN(from) || isNaN(to)) return true;
+			return n >= from && n <= to;
+		};
+
+		// Transient local accumulator rebuilt each computation, not reactive
+		// state — a plain Map is correct (no SvelteMap reactivity needed).
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const map = new Map<string, Period>();
+		const ensure = (k: Omit<Period, 'tablets' | 'pens'>) => {
+			let p = map.get(k.sort);
+			if (!p) {
+				p = { ...k, tablets: [], pens: [] };
+				map.set(k.sort, p);
 			}
-			if (filterType) {
-				tablets = tablets.filter((t) => t.Model.Type === filterType);
+			return p;
+		};
+
+		for (const t of tablets) {
+			if (filterBrand && t.Model.Brand !== filterBrand) continue;
+			if (filterType && t.Model.Type !== filterType) continue;
+			if (!inRange(t.Model.LaunchYear)) continue;
+			ensure(periodKey(t.Model.LaunchYear, t.Model.ReleaseDate)).tablets.push(t);
+		}
+		// Type is a tablet property, so the type filter doesn't apply to pens
+		// (matches prior behavior); pens still honor brand + year-range filters.
+		for (const p of pens) {
+			if (filterBrand && p.Brand !== filterBrand) continue;
+			if (!inRange(p.PenYear)) continue;
+			ensure(periodKey(p.PenYear, undefined)).pens.push(p);
+		}
+
+		// Year mode fills empty years across the visible range so gaps read as
+		// "No releases". Year-month mode would explode into mostly-empty months,
+		// so it only lists periods that actually have releases.
+		if (groupBy === 'year' && !isNaN(from) && !isNaN(to)) {
+			for (let y = from; y <= to; y++) {
+				const k = String(y);
+				if (!map.has(k))
+					map.set(k, { sort: k, year: k, month: null, monthUnknown: false, tablets: [], pens: [] });
 			}
-			return { year: entry.year, tablets, pens };
-		});
+		}
+
+		const periods = [...map.values()];
+		periods.sort((a, b) =>
+			sortOrder === 'newest' ? b.sort.localeCompare(a.sort) : a.sort.localeCompare(b.sort),
+		);
+		return periods;
 	});
 
-	let totalTablets = $derived(filteredTimeline.reduce((sum, e) => sum + e.tablets.length, 0));
-	let totalPens = $derived(filteredTimeline.reduce((sum, e) => sum + e.pens.length, 0));
+	let totalTablets = $derived(groupedTimeline.reduce((sum, e) => sum + e.tablets.length, 0));
+	let totalPens = $derived(groupedTimeline.reduce((sum, e) => sum + e.pens.length, 0));
+	let periodNoun = $derived(groupBy === 'year' ? 'years' : 'periods');
 </script>
 
 <Nav />
@@ -55,7 +124,7 @@
 <div class="title-row">
 	<h1>Timeline</h1>
 	<span class="subtitle"
-		>{filteredTimeline.length} years, {totalTablets} tablets, {totalPens} pens</span
+		>{groupedTimeline.length} {periodNoun}, {totalTablets} tablets, {totalPens} pens</span
 	>
 </div>
 
@@ -72,28 +141,33 @@
 		<option value="PENDISPLAY">Pen Display</option>
 		<option value="STANDALONE">Standalone</option>
 	</select>
+	<select bind:value={groupBy}>
+		<option value="year">Group by Year</option>
+		<option value="year-month">Group by Year-Month</option>
+	</select>
 	<select bind:value={sortOrder}>
 		<option value="newest">Newest First</option>
 		<option value="oldest">Oldest First</option>
 	</select>
 	<span class="year-range">
 		<label for="year-from">From</label>
-		<input id="year-from" type="number" bind:value={yearFrom} min={allYears[0]} max={yearTo} />
+		<input id="year-from" type="number" bind:value={yearFrom} min={data.minYear} max={yearTo} />
 		<label for="year-to">To</label>
-		<input
-			id="year-to"
-			type="number"
-			bind:value={yearTo}
-			min={yearFrom}
-			max={allYears[allYears.length - 1]}
-		/>
+		<input id="year-to" type="number" bind:value={yearTo} min={yearFrom} max={data.maxYear} />
 	</span>
 </div>
 
 <div class="timeline">
-	{#each filteredTimeline as entry (entry.year)}
+	{#each groupedTimeline as entry (entry.sort)}
 		<div class="year-block">
-			<div class="year-label">{entry.year}</div>
+			<div class="year-label">
+				<span class="period-year">{entry.year}</span>
+				{#if entry.month}
+					<span class="period-month">{MONTHS[entry.month]}</span>
+				{:else if entry.monthUnknown}
+					<span class="period-month dim">no month</span>
+				{/if}
+			</div>
 			<div class="year-content">
 				{#if entry.tablets.length === 0 && entry.pens.length === 0}
 					<p class="no-releases">No releases</p>
@@ -164,6 +238,7 @@
 		display: flex;
 		gap: 8px;
 		margin-bottom: 20px;
+		flex-wrap: wrap;
 	}
 
 	.filters select {
@@ -216,11 +291,30 @@
 		position: absolute;
 		left: -80px;
 		top: 0;
-		width: 60px;
+		width: 64px;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		text-align: right;
+	}
+
+	.period-year {
 		font-size: 20px;
 		font-weight: 700;
 		color: var(--text);
-		text-align: right;
+		line-height: 1.1;
+	}
+
+	.period-month {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--text-muted);
+	}
+
+	.period-month.dim {
+		font-weight: 500;
+		color: var(--text-dim);
+		font-style: italic;
 	}
 
 	.year-content {
