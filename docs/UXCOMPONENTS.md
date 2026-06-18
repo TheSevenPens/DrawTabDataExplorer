@@ -1,9 +1,43 @@
 # UX components
 
 **Audience:** contributors and agents touching the UI.
-**Source of truth:** [src/lib/components/](../src/lib/components/) (49 components). Each entry below points back to the file.
+**Source of truth:** [src/lib/components/](../src/lib/components/) (58 components). Each entry below points back to the file.
 
 Components are grouped by role. Each entry has a one-line purpose, key props, and pointers to where it's used. Screenshots will be added later — [scripts/capture-component-screenshots.mjs](../scripts/capture-component-screenshots.mjs) is wired up to drive Playwright against the running dev server and drop PNGs into `docs/images/components/` when we want to regenerate them.
+
+---
+
+## 0. Shared primitives & frames
+
+The reusable building blocks from the UX-architecture pass (GitHub #228). Prefer these over one-off markup: feature components compose them rather than re-implementing buttons, empty states, links, menus, or chrome. **Frames own chrome only** (title / count / actions / empty / controls); the body stays a snippet so specialized components (`EntityExplorer`, `PressureChart`, the compare matrices) stay specialized.
+
+### `Button`
+
+Shared command button. _Props:_ `variant` (`primary` / `secondary` / `subtle` / `danger` / `icon` / `menu-trigger`), `size` (`sm` / `md`), `pressed?` (aria-pressed for toggles), `disabled`, `disabledReason?` (surfaced as the tooltip when disabled). The one bit of logic — `resolveButtonTitle` — lives in [button-helpers.ts](../src/lib/components/button-helpers.ts) with tests.
+
+### `SegmentedControl`
+
+Generic two/three-option view toggle (`bind:value`, generic over the value type). Replaces the hand-rolled `.view-toggle` pattern. _Used by:_ `/api-explorer` (JSON/Table), and available for other mode switches.
+
+### `EmptyState` / `StatusMessage` / `LoadingState`
+
+The status-state primitives. `EmptyState` — muted "no data" message + optional `action` snippet for empty-workflow CTAs. `StatusMessage` — `good` / `warning` / `error` / `info` (error gets `role="alert"`). `LoadingState` — consistent "Loading…". _Used by:_ data-quality, detail tabs, analysis, compare, reference.
+
+### `EntityLink`
+
+Canonical link to `/entity/[entityId]`. Centralizes the `resolve()` call + `var(--link)` styling. The label is a snippet passed from the canonical formatters (`penFullName` / `tabletFullName` / …) — **never reconstruct a display name inline** (see CLAUDE.md § Label formatting). For data-shaped links (`ResultsTable` `cellLinks`) the route still builds hrefs in code.
+
+### `PopoverMenu`
+
+One anchored popover menu (position `{x, y}` + `items` + `onclose`; owns outside-click + Escape dismissal). _Used by:_ the `FilterBar` / `SortBar` / `ColumnBar` pill context menus.
+
+### `TableFrame`
+
+Table chrome: optional title + count badge + subtitle, a right-aligned `actions` area (export/commands sit with the table), and an `EmptyState`-backed empty state. Body is a snippet. _Used by:_ `CompatEntityTable`. _Note:_ actions hide when empty.
+
+### `ChartFrame`
+
+Chart chrome: optional title/subtitle, a left-aligned `controls` slot (view/zoom/compare selectors), a right-aligned `actions` slot (export), and a footer/legend slot. Body (the SVG/canvas) is a snippet. _Used by:_ `BandsChart`, `ValueHistogram`, `TabletDimensionComparison`, `PressureChart`.
 
 ---
 
@@ -38,6 +72,18 @@ _Used by:_ `TabletDetail`, `PenDetail`, `PenFamilyDetail`, `TabletFamilyDetail`,
 Thin shell that wraps `Nav` + optional `SubNav` + `EntityExplorer` for the simple list routes (brands, drivers, tablet-families, pen-families). Pages that need extra page-only logic skip this and wire the pieces directly.
 
 _Props:_ `subNavTabs?`, plus passthroughs to `EntityExplorer`.
+
+### `ChromeLayout`
+
+`Nav` + optional `SubNav` + a content slot, for arbitrary-content (non-list) pages. _Props:_ `subNavTabs?`, `children`. _Used by:_ `/reference`, `/data-quality`, `/api-explorer`, `/tablet-analysis`, `/pen-analysis`.
+
+### `DetailPageFrame`
+
+`Nav` + a detail-page title row with an optional right-aligned `actions` slot (flag / copy / export). The page body stays a sibling after it (not wrapped as children), so each detail page keeps its own structure. _Props:_ `title`, `actions?`. _Used by:_ `PenDetail`, `TabletDetail`, `PenFamilyDetail`, `TabletFamilyDetail`, `BrandDetail`, `DriverDetail`. (`SessionDetail` keeps a bespoke `Nav`+`SubNav` header; the inventory detail headers carry a model link rather than an action.)
+
+### `SectionHeader`
+
+Shared section heading (title + optional count) with either a convenience `onExport` Export button (via `Button`) or an arbitrary `actions` snippet. Promoted out of `data-quality/` in #231. _Used by:_ `/data-quality` and `CompletionSection`. (`/reference` keeps its in-snippet headers but routes their Export buttons through `Button`.)
 
 ### `SectionedPage`
 
@@ -103,9 +149,9 @@ _Backing store:_ [src/lib/views.ts](../src/lib/views.ts).
 
 Field-list popover used by FilterBar / SortBar / ColumnBar to choose a field. Groups fields by `category`, supports search-as-you-type.
 
-### Query pipeline steps (currently unused)
+### Extracted query-control helpers
 
-`FilterStep`, `SortStep`, `SelectStep`, `TakeStep` are per-step editor components matching queriton's `Step` discriminated union. They predate the bar-of-pills UI in `EntityExplorer` and are not currently imported anywhere — kept around in case the saved-views editor or `/api-explorer` ever grows an inline step editor.
+The bar-of-pills UI is the only query editor; the old per-step editor components (`FilterStep` / `SortStep` / `SelectStep` / `TakeStep`) were deleted in #217. Pure logic behind the bars lives in helpers with tests: [pill-dnd.ts](../src/lib/pill-dnd.ts) (`computeDropIndex` / `moveItem`, used by SortBar/ColumnBar), [entity-explorer/view-state.ts](../src/lib/entity-explorer/view-state.ts) (`buildActiveSteps` — excludes disabled filters per #227), and [entity-explorer/search.ts](../src/lib/entity-explorer/search.ts) (quick-filter / owned-only / text-search). The three bars share one `PopoverMenu` for their pill context menus.
 
 ---
 
@@ -240,11 +286,15 @@ Pen-model search modal. Type to filter, click to select. Used by `/pen-compare` 
 
 Tablet-model search modal. Mirror of `PenPicker`, used by `/tablet-compare`. Capped at 6 flags (matches the inventory comparison limit).
 
+### `PickerModalShell`
+
+Shared modal shell behind `PenPicker` / `TabletPicker` (#215): backdrop click-to-close, Escape, the dialog frame, and the header (title + optional accessory + close button). Each picker supplies its own filters/list as `children` plus an optional `headerAccessory` (slot-count badge) and `footer`. `FieldPicker` is intentionally not migrated (it's an anchored popover, not a centered modal).
+
 ### `ExportDialog`
 
 Universal "Export" dialog supporting PNG / CSV / TSV / JSON / HTML / Markdown across the explorer. Has a _rich_ mode (per-result-view scope toggles) and a _simple_ mode (caller passes headers + rows ready to serialise).
 
-_Used by:_ EntityExplorer, ResultsTable, DetailView's per-section copy buttons, multiple analysis pages.
+_Used by:_ EntityExplorer, ResultsTable, DetailView's per-section copy buttons, multiple analysis pages. The Data routes (`/data-quality`, `/reference`, `/tablet-analysis`, `/pen-analysis`) share one dialog instance via [`createExportDialogHost()`](../src/lib/export-dialog-host.svelte.ts) (#236) instead of each re-declaring the `exportDialog` state + `openExport` setter.
 
 ### `JsonTab`
 
@@ -260,7 +310,7 @@ Small reusable controls.
 
 ### `FlagButton`
 
-Flag / un-flag toggle for individual rows. The flag is stored per entity type via [src/lib/flagged-store.ts](../src/lib/flagged-store.ts). Tablets cap at 6 flags (for the Compare page's SVG outlines); pens are uncapped (the `/pen-flagged` pressure overlay benefits from more).
+The single flag / un-flag toggle (⚐ / ⚑). Two variants: default (bordered, detail-page headers) and `compact` (borderless, dense table cells). Every flag affordance routes through it — `ResultsTable` cells (`compact`), `TabletDetail` / `PenDetail` / `PenFamilyDetail` headers, and the `/pen-flagged` lists — so they look and behave consistently (#235). The flag is stored per entity type via [src/lib/flagged-store.ts](../src/lib/flagged-store.ts). Tablets cap at 6 flags (for the Compare page's SVG outlines); pens are uncapped (the `/pen-flagged` pressure overlay benefits from more).
 
 ### `ExportTableButton`
 
@@ -270,7 +320,9 @@ Compact "Export" button that opens `ExportDialog` in simple mode. Used wherever 
 
 Chart-specific export trigger. Two modes: PNG-of-the-canvas, or HTML-table-of-the-underlying-data (passed in as a `getDataHtml: () => string` callback).
 
-_Used by:_ every `PressureChart`, `BandsChart`, `ValueHistogram`.
+Filename slugging is centralized in [src/lib/chart-export/filenames.ts](../src/lib/chart-export/filenames.ts) (#224).
+
+_Used by:_ `PressureChart`, `BandsChart`, `ValueHistogram`, `TabletDimensionComparison` (all now mounted through `ChartFrame`'s `actions` slot).
 
 ---
 

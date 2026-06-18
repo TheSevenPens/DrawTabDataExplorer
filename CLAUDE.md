@@ -177,6 +177,39 @@ What's automated (no manual action needed):
 
 ## UI component architecture
 
+### Shared primitives & frames (use these, don't re-roll)
+
+The UX-architecture pass (GitHub #228) added a small reusable layer. Reach
+for these instead of one-off markup — the full catalog with props is in
+[docs/UXCOMPONENTS.md](docs/UXCOMPONENTS.md) § 0.
+
+- **`Button`** / **`SegmentedControl`** — command buttons
+  (variants primary/secondary/subtle/danger/icon/menu-trigger; pass
+  `disabledReason` for a disabled-state tooltip) and view toggles. Don't
+  add bespoke `.copy-btn`/`.add-btn`/`.view-toggle` styles.
+- **`EmptyState` / `StatusMessage` / `LoadingState`** — no-data, good/warn/
+  error, and loading text. Don't hand-roll `.no-data`/`.empty`/`.good`.
+- **`EntityLink`** — markup links to `/entity/[entityId]`. The label still
+  comes from the canonical formatters (see § Label formatting); EntityLink
+  only wraps the `<a>`. Data-shaped links (ResultsTable `cellLinks`) build
+  hrefs in route code.
+- **`PopoverMenu`** — one anchored menu (FilterBar/SortBar/ColumnBar pill
+  context menus).
+- **`FlagButton`** — every flag affordance (table cells use `compact`).
+- **Frames own chrome only, body stays a snippet:** `TableFrame`
+  (title/count/actions/empty), `ChartFrame` (title/controls/actions/footer),
+  `ChromeLayout` (Nav + optional SubNav + content, for the Data pages and
+  analysis routes), `DetailPageFrame` (Nav + title + actions, detail pages),
+  `SectionHeader` (shared section heading). `EntityExplorer`,
+  `PressureChart`, and the compare matrices stay specialized inside them.
+- **`createExportDialogHost()`** ([src/lib/export-dialog-host.svelte.ts](src/lib/export-dialog-host.svelte.ts))
+  — one ExportDialog state per Data route; don't re-declare `exportDialog` +
+  `openExport`.
+
+When pulling repeated markup into one of these, delete the now-dead CSS and
+run `npm run check` (it flags unused selectors) — and remember the "extracted
+helpers ship with tests" rule for any pure logic you split out.
+
 ### EntityListLayout
 
 Thin shell that wraps `<Nav>` + optional `<SubNav>` + `<EntityExplorer>`,
