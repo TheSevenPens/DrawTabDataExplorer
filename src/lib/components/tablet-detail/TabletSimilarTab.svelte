@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import { brandName, getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { findSimilarTablets } from '$data/lib/compat-helpers.js';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
@@ -142,11 +142,7 @@
 				{@const px = t.Display?.PixelDimensions}
 				{@const pxDensity = px && d && px.Width && d.Width ? (px.Width / d.Width).toFixed(2) : ''}
 				<tr>
-					<td
-						><a href={resolve('/entity/[entityId]', { entityId: t.Meta.EntityId })}
-							>{tabletFullName(t)}</a
-						></td
-					>
+					<td><EntityLink entityId={t.Meta.EntityId}>{tabletFullName(t)}</EntityLink></td>
 					<td>{t.Model.LaunchYear || ''}</td>
 					<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
 					<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>
@@ -220,15 +216,6 @@
 
 	.similar-table tr:hover td {
 		background: var(--hover-bg);
-	}
-
-	.similar-table a {
-		color: var(--link);
-		text-decoration: none;
-	}
-
-	.similar-table a:hover {
-		text-decoration: underline;
 	}
 
 	.no-data {

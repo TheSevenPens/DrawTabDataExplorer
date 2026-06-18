@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import {
@@ -21,7 +22,7 @@
 <div class="title-row">
 	<h1>{item.InventoryId}</h1>
 	<span class="model-link">
-		<a href={resolve('/entity/[entityId]', { entityId: item.TabletEntityId })}>{modelName}</a>
+		<EntityLink entityId={item.TabletEntityId}>{modelName}</EntityLink>
 	</span>
 </div>
 
@@ -49,9 +50,9 @@
 							<a href={resolve('/pen-inventory/[id]', { id: p._id })}>{p.InventoryId}</a>
 						</td>
 						<td>
-							<a href={resolve('/entity/[entityId]', { entityId: p.PenEntityId })}>
-								{penNameMap.get(p.PenEntityId) ?? p.PenEntityId}
-							</a>
+							<EntityLink entityId={p.PenEntityId}
+								>{penNameMap.get(p.PenEntityId) ?? p.PenEntityId}</EntityLink
+							>
 						</td>
 						<td>{p.Brand}</td>
 					</tr>
@@ -75,13 +76,6 @@
 	.model-link {
 		font-size: 16px;
 		color: var(--text-muted);
-	}
-	.model-link a {
-		color: var(--link);
-		text-decoration: none;
-	}
-	.model-link a:hover {
-		text-decoration: underline;
 	}
 	.bundled-section {
 		margin-top: 24px;

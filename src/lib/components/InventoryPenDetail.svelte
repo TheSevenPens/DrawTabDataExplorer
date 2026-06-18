@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import PressureChart from '$lib/components/PressureChart.svelte';
@@ -51,7 +51,7 @@
 <div class="title-row">
 	<h1>{item.InventoryId}</h1>
 	<span class="model-link">
-		<a href={resolve('/entity/[entityId]', { entityId: item.PenEntityId })}>{modelName}</a>
+		<EntityLink entityId={item.PenEntityId}>{modelName}</EntityLink>
 	</span>
 </div>
 
@@ -147,13 +147,6 @@
 	.model-link {
 		font-size: 16px;
 		color: var(--text-muted);
-	}
-	.model-link a {
-		color: var(--link);
-		text-decoration: none;
-	}
-	.model-link a:hover {
-		text-decoration: underline;
 	}
 	.tab-content {
 		margin-bottom: 24px;

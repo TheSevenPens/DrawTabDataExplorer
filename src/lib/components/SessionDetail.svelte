@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import { type PressureResponse, type Pen, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { penFullName } from '$lib/pen-helpers.js';
 	import { tabletFullName } from '$lib/tablet-helpers.js';
@@ -112,7 +112,7 @@
 	<dl class="meta">
 		<dt>Pen</dt>
 		<dd>
-			<a href={resolve('/entity/[entityId]', { entityId: session.PenEntityId })}>{penLabel}</a>
+			<EntityLink entityId={session.PenEntityId}>{penLabel}</EntityLink>
 		</dd>
 		<dt>Inventory ID</dt>
 		<dd class="mono">{session.InventoryId}</dd>
@@ -120,9 +120,7 @@
 		<dd class="mono">{session.Date}</dd>
 		<dt>Tablet</dt>
 		<dd>
-			<a href={resolve('/entity/[entityId]', { entityId: session.TabletEntityId })}>
-				{tabletLabel}
-			</a>
+			<EntityLink entityId={session.TabletEntityId}>{tabletLabel}</EntityLink>
 		</dd>
 		<dt>Driver</dt>
 		<dd class="mono">{session.Driver}</dd>

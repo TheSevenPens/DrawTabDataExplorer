@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import {
@@ -101,11 +101,7 @@
 					{@const d = tablet.Digitizer?.Dimensions}
 					{@const isPenTablet = tablet.Model.Type === 'PENTABLET'}
 					<tr>
-						<td
-							><a href={resolve('/entity/[entityId]', { entityId: tablet.Meta.EntityId })}
-								>{tablet.Model.Id}</a
-							></td
-						>
+						<td><EntityLink entityId={tablet.Meta.EntityId}>{tablet.Model.Id}</EntityLink></td>
 						<td>{tablet.Model.Name}</td>
 						<td>{(tablet.Model.AlternateNames ?? []).join(', ')}</td>
 						<td>{tablet.Model.Type}</td>
@@ -207,13 +203,6 @@
 	}
 	tr:hover td {
 		background: #f0f7ff;
-	}
-	td a {
-		color: #2563eb;
-		text-decoration: none;
-	}
-	td a:hover {
-		text-decoration: underline;
 	}
 	.no-data {
 		font-size: 13px;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import type { Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import {
@@ -113,10 +113,11 @@
 					{#each sortedMemberPens as p (p.EntityId)}
 						<tr>
 							<td>
-								<a href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>
-									{penBrandAndName(p)}
-									{#if !penIdRedundantInName(p)}<span class="dim">({p.PenId})</span>{/if}
-								</a>
+								<EntityLink entityId={p.EntityId}
+									>{penBrandAndName(p)}
+									{#if !penIdRedundantInName(p)}<span class="dim">({p.PenId})</span
+										>{/if}</EntityLink
+								>
 							</td>
 							<td class="year">{p.PenYear || ''}</td>
 						</tr>
@@ -227,13 +228,6 @@
 	}
 	.pen-table tr:hover td {
 		background: var(--hover-bg);
-	}
-	.pen-table a {
-		color: var(--link);
-		text-decoration: none;
-	}
-	.pen-table a:hover {
-		text-decoration: underline;
 	}
 	.year {
 		color: var(--text-muted);
