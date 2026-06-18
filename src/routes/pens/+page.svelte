@@ -56,7 +56,7 @@
 	fieldGroups={PEN_FIELD_GROUPS}
 	defaultColumns={PEN_DEFAULT_COLUMNS}
 	defaultView={PEN_DEFAULT_VIEW}
-	linkField="FullName"
+	linkField="PenName"
 	detailBasePath="/entity"
 	{cellLinks}
 	defaultFilterField="PenFamily"
