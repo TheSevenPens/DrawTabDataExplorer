@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Button from '$lib/components/Button.svelte';
 	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
 
 	interface QuickFilterOption {
@@ -61,7 +62,7 @@
 		</label>
 	{/if}
 	{#if isDirty}
-		<button class="clear-btn" onclick={clear}>Clear</button>
+		<Button variant="subtle" onclick={clear}>Clear</Button>
 	{/if}
 </div>
 
@@ -127,19 +128,5 @@
 	}
 	.owned-toggle input {
 		margin: 0;
-	}
-
-	.clear-btn {
-		padding: 5px 10px;
-		font-size: 13px;
-		border: 1px solid var(--border-light);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
-	}
-
-	.clear-btn:hover {
-		border-color: var(--text-muted);
 	}
 </style>
