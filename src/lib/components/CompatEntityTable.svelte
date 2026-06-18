@@ -10,6 +10,7 @@
 	// separately.
 
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
+	import TableFrame from '$lib/components/TableFrame.svelte';
 
 	type Cell = string | number | null | undefined;
 
@@ -41,8 +42,8 @@
 	} = $props();
 </script>
 
-{#if rows.length > 0}
-	<div class="table-header">
+<TableFrame isEmpty={rows.length === 0} {emptyMessage}>
+	{#snippet actions()}
 		<ExportTableButton
 			entityType={exportEntityType}
 			title={exportTitle}
@@ -50,7 +51,7 @@
 			headers={exportHeaders}
 			rows={exportRows}
 		/>
-	</div>
+	{/snippet}
 	<table class="compat-table">
 		<thead>
 			<tr>
@@ -73,17 +74,9 @@
 			{/each}
 		</tbody>
 	</table>
-{:else}
-	<p class="no-data">{emptyMessage}</p>
-{/if}
+</TableFrame>
 
 <style>
-	.table-header {
-		display: flex;
-		justify-content: flex-end;
-		margin-bottom: 8px;
-	}
-
 	.compat-table {
 		width: 100%;
 		border-collapse: collapse;
@@ -106,11 +99,5 @@
 	}
 	.compat-table a:hover {
 		text-decoration: underline;
-	}
-
-	.no-data {
-		font-size: 13px;
-		color: var(--text-dim);
-		font-style: italic;
 	}
 </style>
