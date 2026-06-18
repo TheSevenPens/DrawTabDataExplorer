@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import { brandName, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import {
 		estimatePiaf,
@@ -112,26 +112,23 @@
 					{/if}
 					{#if showModel}
 						<td>
-							<a href={resolve('/entity/[entityId]', { entityId: r.session.PenEntityId })}>
-								{penNameById.get(r.session.PenEntityId) ?? r.session.PenEntityId}
-							</a>
+							<EntityLink entityId={r.session.PenEntityId}
+								>{penNameById.get(r.session.PenEntityId) ?? r.session.PenEntityId}</EntityLink
+							>
 						</td>
 					{/if}
 					<td class="mono">
-						<a href={resolve('/entity/[entityId]', { entityId: sessionEntityId(r.session) })}>
-							{r.session.InventoryId}
-						</a>
+						<EntityLink entityId={sessionEntityId(r.session)}>{r.session.InventoryId}</EntityLink>
 					</td>
 					<td class="mono">
-						<a href={resolve('/entity/[entityId]', { entityId: sessionEntityId(r.session) })}>
-							{r.session.Date}
-						</a>
+						<EntityLink entityId={sessionEntityId(r.session)}>{r.session.Date}</EntityLink>
 					</td>
 					<td>
 						{#if r.session.TabletEntityId}
-							<a href={resolve('/entity/[entityId]', { entityId: r.session.TabletEntityId })}>
-								{tabletNameById.get(r.session.TabletEntityId) ?? r.session.TabletEntityId}
-							</a>
+							<EntityLink entityId={r.session.TabletEntityId}
+								>{tabletNameById.get(r.session.TabletEntityId) ??
+									r.session.TabletEntityId}</EntityLink
+							>
 						{/if}
 					</td>
 					<td class="mono">{r.session.Driver}</td>
@@ -205,12 +202,5 @@
 		color: #d97706;
 		font-weight: 700;
 		cursor: help;
-	}
-	a {
-		color: var(--link);
-		text-decoration: none;
-	}
-	a:hover {
-		text-decoration: underline;
 	}
 </style>
