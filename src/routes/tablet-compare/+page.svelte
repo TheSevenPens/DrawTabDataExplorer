@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
+	import Button from '$lib/components/Button.svelte';
 	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
@@ -216,9 +217,9 @@
 			>+ Add tablet</button
 		>
 		{#if flaggedItems.length > 0}
-			<button class="copy-btn" onclick={copyFlaggedList}>{copyFlaggedStatus || 'Copy list'}</button>
+			<Button variant="subtle" onclick={copyFlaggedList}>{copyFlaggedStatus || 'Copy list'}</Button>
 		{/if}
-		<button class="clear-btn" onclick={clearFlags}>Clear all</button>
+		<Button variant="danger" onclick={clearFlags}>Clear all</Button>
 	</div>
 	{#if flaggedItems.length > 0}
 		<ul class="flagged-list">
@@ -247,10 +248,10 @@
 		</p>
 	{:else}
 		<div class="compare-toolbar">
-			<button
-				class="copy-btn"
+			<Button
+				variant="subtle"
 				onclick={() => (showExport = true)}
-				disabled={compareExportRows.length === 0}>Export</button
+				disabled={compareExportRows.length === 0}>Export</Button
 			>
 		</div>
 		<div class="compare-wrap">
@@ -486,21 +487,6 @@
 		cursor: default;
 	}
 
-	.clear-btn {
-		padding: 4px 12px;
-		font-size: 13px;
-		border: 1px solid #dc2626;
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: #dc2626;
-		cursor: pointer;
-	}
-
-	.clear-btn:hover:not(:disabled) {
-		background: #dc2626;
-		color: #fff;
-	}
-
 	.flagged-list {
 		list-style: none;
 		padding: 0;
@@ -541,21 +527,6 @@
 		display: flex;
 		gap: 8px;
 		margin-bottom: 12px;
-	}
-
-	.copy-btn {
-		padding: 4px 12px;
-		font-size: 12px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
-	}
-
-	.copy-btn:hover {
-		background: var(--hover-bg);
-		color: var(--text);
 	}
 
 	.compare-wrap {
