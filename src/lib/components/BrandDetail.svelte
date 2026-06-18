@@ -3,6 +3,7 @@
 	import { type Brand, BRAND_FIELDS, BRAND_FIELD_GROUPS } from '$data/lib/entities/brand-fields.js';
 	import { type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import DetailView from '$lib/components/DetailView.svelte';
+	import EntityLink from '$lib/components/EntityLink.svelte';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
@@ -90,13 +91,7 @@
 					<tbody>
 						{#each sortedTablets as t (t.Meta.EntityId)}
 							<tr>
-								<td
-									><a
-										class="entity-link"
-										href={resolve('/entity/[entityId]', { entityId: t.Meta.EntityId })}
-										>{tabletNameAndId(t)}</a
-									></td
-								>
+								<td><EntityLink entityId={t.Meta.EntityId}>{tabletNameAndId(t)}</EntityLink></td>
 								<td>{(t.Model.AlternateNames ?? []).join(', ')}</td>
 								<td>{t.Model.Type}</td>
 								<td>{t.Model.LaunchYear ?? ''}</td>
@@ -129,12 +124,7 @@
 					<tbody>
 						{#each sortedPens as p (p.EntityId)}
 							<tr>
-								<td
-									><a
-										class="entity-link"
-										href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>{p.PenName}</a
-									></td
-								>
+								<td><EntityLink entityId={p.EntityId}>{p.PenName}</EntityLink></td>
 								<td>{p.PenId}</td>
 								<td>{p.PenYear ?? ''}</td>
 							</tr>
@@ -233,14 +223,6 @@
 	td {
 		padding: 5px 10px;
 		border-bottom: 1px solid var(--border);
-	}
-
-	.entity-link {
-		color: var(--link);
-		text-decoration: none;
-	}
-	.entity-link:hover {
-		text-decoration: underline;
 	}
 
 	.no-data {
