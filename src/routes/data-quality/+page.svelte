@@ -8,6 +8,8 @@
 	import { analyzeData } from '$lib/data-quality/analysis.js';
 	import SectionHeader from '$lib/data-quality/SectionHeader.svelte';
 	import CompletionSection from '$lib/data-quality/CompletionSection.svelte';
+	import StatusMessage from '$lib/components/StatusMessage.svelte';
+	import LoadingState from '$lib/components/LoadingState.svelte';
 
 	const dataTabs = dataSubNavTabs();
 
@@ -145,7 +147,7 @@
 	<h1>Data Quality</h1>
 
 	{#if !ds}
-		<p>Loading...</p>
+		<LoadingState />
 	{:else}
 		<SectionedPage sections={sectionDefs} defaultSection="entity-counts">
 			{#snippet content(activeSection: string)}
@@ -188,7 +190,7 @@
 								)}
 						/>
 						{#if issues.length === 0}
-							<p class="good">No issues found.</p>
+							<StatusMessage variant="good">No issues found.</StatusMessage>
 						{:else}
 							<table>
 								<thead>
@@ -230,7 +232,7 @@
 							IDs in pen-compat that don't match any record in the referenced entity.
 						</p>
 						{#if orphanedCompat.length === 0}
-							<p class="good">No orphaned references.</p>
+							<StatusMessage variant="good">No orphaned references.</StatusMessage>
 						{:else}
 							<table class="compact">
 								<thead><tr><th>Type</th><th>ID</th></tr></thead>
@@ -260,7 +262,9 @@
 						/>
 						<p class="description">Wacom tablets that have no entries in pen-compat.</p>
 						{#if tabletsNoCompat.length === 0}
-							<p class="good">All Wacom tablets have compatibility data.</p>
+							<StatusMessage variant="good"
+								>All Wacom tablets have compatibility data.</StatusMessage
+							>
 						{:else}
 							<table class="compact">
 								<thead><tr><th>Model ID</th><th>Name</th></tr></thead>
@@ -290,7 +294,7 @@
 						/>
 						<p class="description">Pens that have no entries in pen-compat.</p>
 						{#if pensNoCompat.length === 0}
-							<p class="good">All pens have compatibility data.</p>
+							<StatusMessage variant="good">All pens have compatibility data.</StatusMessage>
 						{:else}
 							<table class="compact">
 								<thead><tr><th>Pen ID</th><th>Name</th></tr></thead>
@@ -329,7 +333,9 @@
 							with its tablet.
 						</p>
 						{#if includedPenMissingCompat.length === 0}
-							<p class="good">All included pens have a matching pen-compat row.</p>
+							<StatusMessage variant="good"
+								>All included pens have a matching pen-compat row.</StatusMessage
+							>
 						{:else}
 							<table class="compact">
 								<thead>
@@ -373,7 +379,7 @@
 							Family IDs referenced by pens or tablets that don't exist in the family entities.
 						</p>
 						{#if orphanedFamilies.length === 0}
-							<p class="good">No orphaned family references.</p>
+							<StatusMessage variant="good">No orphaned family references.</StatusMessage>
 						{:else}
 							<table class="compact">
 								<thead><tr><th>Type</th><th>Family ID</th><th>Referenced By</th></tr></thead>
@@ -421,7 +427,9 @@
 							line and interpolation can return wrong results.
 						</p>
 						{#if nonMonotonicSessions.length === 0}
-							<p class="good">All sessions are monotonically non-decreasing on both axes.</p>
+							<StatusMessage variant="good"
+								>All sessions are monotonically non-decreasing on both axes.</StatusMessage
+							>
 						{:else}
 							<table class="compact">
 								<thead>
@@ -495,7 +503,9 @@
 							The Piaf estimate may be unreliable for these.
 						</p>
 						{#if missingLowEndPens.length === 0}
-							<p class="good">All pens have low-end measurements covering the activation point.</p>
+							<StatusMessage variant="good"
+								>All pens have low-end measurements covering the activation point.</StatusMessage
+							>
 						{:else}
 							<table class="compact">
 								<thead>
@@ -545,7 +555,9 @@
 							Pens with only one recorded session. A second session would confirm consistency.
 						</p>
 						{#if singleSessionPens.length === 0}
-							<p class="good">Every pen has at least two sessions on record.</p>
+							<StatusMessage variant="good"
+								>Every pen has at least two sessions on record.</StatusMessage
+							>
 						{:else}
 							<table class="compact">
 								<thead>
@@ -598,7 +610,9 @@
 							measurement yet — prime candidates for measuring directly.
 						</p>
 						{#if iafEstimatedNoMeasurement.length === 0}
-							<p class="good">Every unit with an IAF estimate also has a direct measurement.</p>
+							<StatusMessage variant="good"
+								>Every unit with an IAF estimate also has a direct measurement.</StatusMessage
+							>
 						{:else}
 							<table class="compact">
 								<thead>
@@ -653,7 +667,8 @@
 							invalidate older curves.
 						</p>
 						{#if staleMeasurements.length === 0}
-							<p class="good">Every pen has a session in the last year.</p>
+							<StatusMessage variant="good">Every pen has a session in the last year.</StatusMessage
+							>
 						{:else}
 							<table class="compact">
 								<thead>
@@ -709,7 +724,7 @@
 							reasons appear first.
 						</p>
 						{#if remeasureRecommendations.length === 0}
-							<p class="good">No pens need re-measurement.</p>
+							<StatusMessage variant="good">No pens need re-measurement.</StatusMessage>
 						{:else}
 							<table class="compact">
 								<thead>
@@ -858,12 +873,6 @@
 		font-size: 13px;
 		color: #888;
 		margin-bottom: 8px;
-	}
-
-	.good {
-		font-size: 14px;
-		color: #16a34a;
-		font-weight: 600;
 	}
 
 	table {

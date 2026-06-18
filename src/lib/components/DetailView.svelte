@@ -4,6 +4,7 @@
 	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
+	import LoadingState from '$lib/components/LoadingState.svelte';
 
 	let {
 		item,
@@ -21,7 +22,7 @@
 </script>
 
 {#if item === null}
-	<p>Loading...</p>
+	<LoadingState />
 {:else}
 	{#each fieldGroups as group (group)}
 		{@const groupFields = fields.filter((f) => f.group === group)}
