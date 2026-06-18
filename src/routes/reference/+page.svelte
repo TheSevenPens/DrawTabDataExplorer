@@ -8,6 +8,7 @@
 		displayRangesIn,
 	} from '$lib/tablet-size-ranges.js';
 	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import BandsChart from '$lib/components/BandsChart.svelte';
@@ -178,8 +179,8 @@
 				<section>
 					<div class="section-header">
 						<h2>{heading}</h2>
-						<button
-							class="copy-btn"
+						<Button
+							variant="subtle"
 							onclick={() =>
 								openExport(
 									heading,
@@ -204,7 +205,7 @@
 											`${iso.diagIn}″`,
 										];
 									}),
-								)}>Export</button
+								)}>Export</Button
 						>
 					</div>
 					<table id={tableId} class="ref-table">
@@ -243,8 +244,8 @@
 				<section>
 					<div class="section-header">
 						<h2>{heading}</h2>
-						<button
-							class="copy-btn"
+						<Button
+							variant="subtle"
 							disabled={sizes.length === 0}
 							onclick={() =>
 								openExport(
@@ -271,7 +272,7 @@
 												'Diagonal (in)',
 											],
 									paperSizeExportRows(sizes, { includeSeries }),
-								)}>Export</button
+								)}>Export</Button
 						>
 					</div>
 					{#if sizes.length > 0}
@@ -354,8 +355,8 @@
 				<section>
 					<div class="section-header">
 						<h2>Display Resolution Categories</h2>
-						<button
-							class="copy-btn"
+						<Button
+							variant="subtle"
 							onclick={() => {
 								const headers = [
 									'Category',
@@ -376,7 +377,7 @@
 								}
 								rows.push(['Other', '—', '—', '—', resolutionCounts['Other'] ?? 0]);
 								openExport('Display Resolution Categories', 'display-resolutions', headers, rows);
-							}}>Export</button
+							}}>Export</Button
 						>
 					</div>
 					<table id="res-cat-table" class="ref-table">
@@ -441,8 +442,8 @@
 					/>
 					<div class="subsection-header">
 						<h3>Ranking Bands</h3>
-						<button
-							class="copy-btn"
+						<Button
+							variant="subtle"
 							onclick={() =>
 								openExport(
 									'IAF Ranking',
@@ -453,7 +454,7 @@
 										b.name ?? '',
 										b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
 									]),
-								)}>Export</button
+								)}>Export</Button
 						>
 					</div>
 					<table class="ref-table">
@@ -484,8 +485,8 @@
 					/>
 					<div class="subsection-header">
 						<h3>Ranking Bands</h3>
-						<button
-							class="copy-btn"
+						<Button
+							variant="subtle"
 							onclick={() =>
 								openExport(
 									'MAX Ranking',
@@ -496,7 +497,7 @@
 										b.name ?? '',
 										b.max === null ? `> ${b.min} gf` : `${b.min} gf to ${b.max} gf`,
 									]),
-								)}>Export</button
+								)}>Export</Button
 						>
 					</div>
 					<table class="ref-table">
@@ -518,15 +519,15 @@
 						<section>
 							<div class="section-header">
 								<h2>{s.title}</h2>
-								<button
-									class="copy-btn"
+								<Button
+									variant="subtle"
 									onclick={() =>
 										openExport(
 											s.title,
 											s.filename,
 											['Rank', `Range (${s.unit})`],
 											s.bands.map((b) => [b.label, formatBandRange(b, s.unit)]),
-										)}>Export</button
+										)}>Export</Button
 								>
 							</div>
 							<p class="ref-blurb">{s.blurb}</p>
@@ -605,21 +606,6 @@
 		font-weight: 600;
 		color: var(--text-muted);
 		margin: 0;
-	}
-
-	.copy-btn {
-		padding: 2px 8px;
-		font-size: 12px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
-		cursor: pointer;
-	}
-
-	.copy-btn:hover {
-		background: var(--hover-bg);
-		color: var(--text);
 	}
 
 	.ref-table {
