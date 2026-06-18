@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import { getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import Button from '$lib/components/Button.svelte';
@@ -235,17 +236,17 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="no-data">
+		<EmptyState>
 			No tablets added yet. Use the button above, or flag tablets from the <a href={resolve('/')}
 				>tablets list</a
 			> or individual tablet pages.
-		</p>
+		</EmptyState>
 	{/if}
 {:else if activeTab === 'compare'}
 	{#if flaggedItems.length < 2}
-		<p class="no-data">
+		<EmptyState>
 			Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.
-		</p>
+		</EmptyState>
 	{:else}
 		<div class="compare-toolbar">
 			<Button
@@ -288,9 +289,9 @@
 	{/if}
 {:else if activeTab === 'sizes'}
 	{#if flaggedItems.length < 2}
-		<p class="no-data">
+		<EmptyState>
 			Flag at least 2 tablets to compare. Currently {flaggedItems.length} flagged.
-		</p>
+		</EmptyState>
 	{:else}
 		{#if dimCompItems.length >= 2}
 			<section class="hist-section">
@@ -567,15 +568,5 @@
 
 	.differs {
 		background: #fef3c7;
-	}
-
-	.no-data {
-		font-size: 13px;
-		color: var(--text-dim);
-		font-style: italic;
-	}
-
-	.no-data a {
-		color: var(--link);
 	}
 </style>

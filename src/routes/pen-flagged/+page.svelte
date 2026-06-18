@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import { brandName, type Pen, type PenFamily } from '$data/lib/drawtab-loader.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
@@ -88,9 +89,9 @@
 </div>
 
 {#if $flaggedPenTotalCount === 0}
-	<p class="empty">
+	<EmptyState>
 		Nothing flagged yet. Open a pen, pen family, or inventory pen and click the ⚐ button to flag it.
-	</p>
+	</EmptyState>
 {:else}
 	{#if flaggedModelEntries.length > 0}
 		<section>
@@ -168,12 +169,6 @@
 		margin: 0;
 		color: var(--text-muted);
 		font-size: 13px;
-	}
-	.empty {
-		margin: 24px 0;
-		font-size: 14px;
-		color: var(--text-muted);
-		font-style: italic;
 	}
 	section h2 {
 		font-size: 16px;
