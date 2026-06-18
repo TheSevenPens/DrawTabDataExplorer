@@ -13,7 +13,6 @@
 	};
 
 	const links: LinkSpec[] = [
-		{ href: '/brands', label: 'Brands' },
 		{
 			href: '/tablets',
 			label: 'Tablets',
@@ -37,6 +36,7 @@
 			href: '/reference',
 			label: 'Data',
 			altActive: [
+				'/brands',
 				'/data-dictionary',
 				'/api-explorer',
 				'/data-quality',
