@@ -411,7 +411,7 @@
 	}
 	.view-toggle button.active {
 		background: var(--bg);
-		color: #6b21a8;
+		color: var(--text);
 		font-weight: 600;
 	}
 

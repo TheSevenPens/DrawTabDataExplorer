@@ -301,7 +301,7 @@
 	h2 {
 		font-size: 18px;
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		margin: 0;
 	}
 

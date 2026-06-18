@@ -69,7 +69,7 @@
 		margin: 0;
 		font-size: 14px;
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;

@@ -81,7 +81,7 @@
 	h2 {
 		font-size: 15px;
 		font-weight: 600;
-		color: #6b21a8;
+		color: var(--text);
 		margin: 0 0 8px;
 	}
 	.meta {
