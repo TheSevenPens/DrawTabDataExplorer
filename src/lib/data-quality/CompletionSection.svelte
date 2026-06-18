@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { buildFilterUrl } from '$lib/filter-url.js';
-	import SectionHeader from '$lib/data-quality/SectionHeader.svelte';
+	import SectionHeader from '$lib/components/SectionHeader.svelte';
 	import type { CompletionStat } from '$lib/data-quality/helpers.js';
 
 	type ExportRow = string | number;
