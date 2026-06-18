@@ -22,6 +22,7 @@
 	} from '$data/lib/pressure/interpolate.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
+	import ChartFrame from '$lib/components/ChartFrame.svelte';
 
 	Chart.register(
 		LineController,
@@ -536,57 +537,61 @@
 	}
 </script>
 
-<div class="chart-toolbar">
-	<label>
-		View
-		<select bind:value={viewMode}>
-			<option value="raw">Raw</option>
-			<option value="estimates">Raw + estimates</option>
-			<option value="standardized">Standardized</option>
-			<option value="envelope">Envelope</option>
-		</select>
-	</label>
-	{#if !lockedZoom}
-		<label>
-			Zoom
-			<select bind:value={userZoom}>
-				<option value="normal">Normal</option>
-				<option value="piaf">Piaf detail (0-20 gf)</option>
-				<option value="piaftransition">Piaf transition</option>
-				<option value="pmax">Pmax detail (95-100%)</option>
-			</select>
-		</label>
-	{/if}
-	{#if viewMode === 'envelope'}
-		<label>
-			Range
-			<select bind:value={envelopeRange}>
-				<option value="minmax">Min / Max</option>
-				<option value="p05p95">P05 / P95</option>
-				<option value="p25p75">P25 / P75</option>
-			</select>
-		</label>
-	{/if}
-	{#if defectiveCount > 0}
-		<label class="defective-toggle" title="Defective sessions are hidden by default">
-			<input type="checkbox" bind:checked={showDefective} />
-			Show {defectiveCount} defective
-		</label>
-	{/if}
-	<span class="spacer"></span>
-	<ChartExportButton
-		title={title || 'pressure-response'}
-		getCanvas={() => canvas}
-		getDataHtml={buildTableHtml}
-	/>
-</div>
-
-<div class="chart-wrap" style="height: {height}px;">
-	<canvas bind:this={canvas}></canvas>
-</div>
+<ChartFrame>
+	{#snippet controls()}
+		<div class="chart-controls">
+			<label>
+				View
+				<select bind:value={viewMode}>
+					<option value="raw">Raw</option>
+					<option value="estimates">Raw + estimates</option>
+					<option value="standardized">Standardized</option>
+					<option value="envelope">Envelope</option>
+				</select>
+			</label>
+			{#if !lockedZoom}
+				<label>
+					Zoom
+					<select bind:value={userZoom}>
+						<option value="normal">Normal</option>
+						<option value="piaf">Piaf detail (0-20 gf)</option>
+						<option value="piaftransition">Piaf transition</option>
+						<option value="pmax">Pmax detail (95-100%)</option>
+					</select>
+				</label>
+			{/if}
+			{#if viewMode === 'envelope'}
+				<label>
+					Range
+					<select bind:value={envelopeRange}>
+						<option value="minmax">Min / Max</option>
+						<option value="p05p95">P05 / P95</option>
+						<option value="p25p75">P25 / P75</option>
+					</select>
+				</label>
+			{/if}
+			{#if defectiveCount > 0}
+				<label class="defective-toggle" title="Defective sessions are hidden by default">
+					<input type="checkbox" bind:checked={showDefective} />
+					Show {defectiveCount} defective
+				</label>
+			{/if}
+		</div>
+	{/snippet}
+	{#snippet actions()}
+		<ChartExportButton
+			title={title || 'pressure-response'}
+			getCanvas={() => canvas}
+			getDataHtml={buildTableHtml}
+		/>
+	{/snippet}
+	<div class="chart-wrap" style="height: {height}px;">
+		<canvas bind:this={canvas}></canvas>
+	</div>
+</ChartFrame>
 
 <style>
-	.chart-toolbar {
+	.chart-controls {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 12px;
@@ -595,16 +600,13 @@
 		font-size: 12px;
 		color: var(--text-muted);
 	}
-	.chart-toolbar label {
+	.chart-controls label {
 		display: inline-flex;
 		gap: 6px;
 		align-items: center;
 	}
-	.chart-toolbar select {
+	.chart-controls select {
 		font-size: 12px;
-	}
-	.spacer {
-		flex: 1;
 	}
 	.defective-toggle {
 		color: #b45309;
