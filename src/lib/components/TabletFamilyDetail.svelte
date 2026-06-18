@@ -249,8 +249,8 @@
 	}
 
 	.stack-toggle.active {
-		background: #ede9fe;
-		border-color: #7c3aed;
+		background: var(--hover-bg);
+		border-color: var(--link);
 		color: var(--text);
 	}
 </style>
