@@ -50,6 +50,23 @@
 	let iafEstimatedNoMeasurement = $derived(analysis.iafEstimatedNoMeasurement);
 	let tabletsMissingExactReleaseDate = $derived(analysis.tabletsMissingExactReleaseDate);
 
+	// Brand + Missing filters for the "Tablets — No Exact Release Date" section.
+	let releaseDateBrand = $state('');
+	let releaseDateMissing = $state('');
+	let releaseDateBrands = $derived(
+		[...new Set(tabletsMissingExactReleaseDate.map((t) => t.brand))].sort(),
+	);
+	let releaseDateMissingKinds = $derived(
+		[...new Set(tabletsMissingExactReleaseDate.map((t) => t.missing))].sort(),
+	);
+	let filteredReleaseDateTablets = $derived(
+		tabletsMissingExactReleaseDate.filter(
+			(t) =>
+				(!releaseDateBrand || t.brand === releaseDateBrand) &&
+				(!releaseDateMissing || t.missing === releaseDateMissing),
+		),
+	);
+
 	// Source of truth for the navigation tree. `count` (optional) is
 	// re-read every render so the badge stays in sync with the derived
 	// state above.
@@ -641,14 +658,14 @@
 					<section class="section">
 						<SectionHeader
 							title="Tablets — No Exact Release Date"
-							count={tabletsMissingExactReleaseDate.length}
-							disabled={tabletsMissingExactReleaseDate.length === 0}
+							count={filteredReleaseDateTablets.length}
+							disabled={filteredReleaseDateTablets.length === 0}
 							onExport={() =>
 								openExport(
 									'Tablets Without an Exact Release Date',
 									'data-quality-tablet-release-dates',
 									['Brand', 'Model ID', 'Name', 'Current ReleaseDate', 'Missing'],
-									tabletsMissingExactReleaseDate.map((t) => [
+									filteredReleaseDateTablets.map((t) => [
 										t.brand,
 										t.id,
 										t.name,
@@ -666,6 +683,26 @@
 								>Every tablet has an exact (YYYY-MM-DD) release date.</StatusMessage
 							>
 						{:else}
+							<div class="dq-filters">
+								<label class="dq-filter">
+									Brand:
+									<select bind:value={releaseDateBrand}>
+										<option value="">All ({tabletsMissingExactReleaseDate.length})</option>
+										{#each releaseDateBrands as b (b)}
+											<option value={b}>{b}</option>
+										{/each}
+									</select>
+								</label>
+								<label class="dq-filter">
+									Missing:
+									<select bind:value={releaseDateMissing}>
+										<option value="">All</option>
+										{#each releaseDateMissingKinds as m (m)}
+											<option value={m}>{m}</option>
+										{/each}
+									</select>
+								</label>
+							</div>
 							<table class="compact">
 								<thead>
 									<tr>
@@ -676,7 +713,7 @@
 									</tr>
 								</thead>
 								<tbody>
-									{#each tabletsMissingExactReleaseDate as t (t.entityId)}
+									{#each filteredReleaseDateTablets as t (t.entityId)}
 										<tr>
 											<td>{t.brand}</td>
 											<td>
@@ -925,6 +962,30 @@
 		font-size: 13px;
 		color: #888;
 		margin-bottom: 8px;
+	}
+
+	.dq-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 16px;
+		margin-bottom: 8px;
+	}
+
+	.dq-filter {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 13px;
+		color: var(--text-muted);
+	}
+
+	.dq-filter select {
+		padding: 4px 8px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
 	}
 
 	table {

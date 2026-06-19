@@ -37,7 +37,9 @@ export function inventoryTabletCellLinks(
 		],
 		TabletEntityId: (item) => [
 			{
-				label: tabletNameMap.get(item.TabletEntityId) ?? item.TabletEntityId,
+				// Show the plain tablet name (Brand and Model ID are their own
+				// columns); fall back to the full-name map, then the EntityId.
+				label: item.ModelName || tabletNameMap.get(item.TabletEntityId) || item.TabletEntityId,
 				href: `${base}/entity/${encodeURIComponent(item.TabletEntityId)}`,
 			},
 		],
