@@ -65,7 +65,7 @@ export async function load({ parent }) {
 ## 7. Change pressure chart behavior
 
 1. Read `CLAUDE.md` § Pressure response charts first.
-2. Edit `src/lib/components/PressureChart.svelte`.
+2. Edit `src/lib/components/PressureResponseChart.svelte`.
 3. Check `PenDetail`, `PenFamilyDetail`, `SessionDetail`, `/pressure-response`.
 
 **Verify:** `npm run check`, manual check on a pen with sessions; `npm run test:unit` if touching `data-repo/lib/pressure/`.

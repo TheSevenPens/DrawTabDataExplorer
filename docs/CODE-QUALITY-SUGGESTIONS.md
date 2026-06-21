@@ -20,7 +20,7 @@ These suggestions came from reviewing the app docs and the current Svelte/Svelte
 | Medium      | Low-medium  | Narrow broad `any` usage in generic export/table infrastructure          | `EntityExplorer.svelte`, `ResultsTable.svelte`, `ExportDialog.svelte`                                                                             |
 | High        | High        | Refactor very large route pages into section components and pure helpers | `src/routes/api-explorer/+page.svelte`, `pen-compare`, `reference`, `data-quality`, `pen-analysis`                                                |
 | Medium      | High        | Create a formal analysis-section abstraction                             | `SectionedPage.svelte`, analysis/reference/data-quality routes                                                                                    |
-| Medium      | Medium-high | Consolidate chart/export logic across chart components                   | `PressureChart.svelte`, `BandsChart.svelte`, chart export helpers                                                                                 |
+| Medium      | Medium-high | Consolidate chart/export logic across chart components                   | `PressureResponseChart.svelte`, `PressureBandsChart.svelte`, chart export helpers                                                                 |
 | High        | Medium      | Add focused unit tests for extracted pure helpers                        | `src/lib/data-quality/`, `src/lib/tablet-analysis/`, future helper modules                                                                        |
 | Medium      | Low-medium  | Audit `/api-explorer` dataset construction                               | `src/routes/api-explorer/+page.svelte`, `src/routes/+layout.ts`                                                                                   |
 | Medium      | Low-medium  | Clarify saved-view behavior for disabled filters                         | `src/lib/components/EntityExplorer.svelte`, `src/lib/views.ts`                                                                                    |
@@ -256,7 +256,7 @@ Use this to drive common headers, empty states, counts, and export behavior wher
 
 ## 11. Consolidate chart/export logic across chart components
 
-`PressureChart.svelte` contains specialized dataset construction and non-obvious Chart.js behavior. Other chart components also carry export-related conventions.
+`PressureResponseChart.svelte` contains specialized dataset construction and non-obvious Chart.js behavior. Other chart components also carry export-related conventions.
 
 ### Recommendation
 
@@ -394,7 +394,7 @@ Svelte snippets (the per-section rendering) can't live in a plain TS config?
 Could you sketch how `export`/`count` wire up without pushing markup into the
 config?
 
-**11. Chart helpers** — Note: `CLAUDE.md` flags the PressureChart envelope
+**11. Chart helpers** — Note: `CLAUDE.md` flags the PressureResponseChart envelope
 polygon + dynamic Pmax axis as fragile/non-obvious. Q: worth the regression
 risk to extract `envelope.ts`/`axis.ts`? I'd suggest the low-risk
 `chart-export/filenames.ts` first and treat envelope extraction as separate.

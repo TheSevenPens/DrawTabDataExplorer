@@ -60,8 +60,8 @@ DrawTabDataExplorer/
 │       │   ├── ValueHistogram.svelte       # Histogram with KDE, ranges, markers
 │       │   ├── TabletSizeComparison.svelte # Histogram + ISO note for tablet detail
 │       │   ├── ForceProportionsView.svelte # Force-Proportions loss diagram (16:9, 16:10)
-│       │   ├── BandsChart.svelte           # Range-bands chart with markers + shadedRange
-│       │   ├── PressureChart.svelte         # Chart.js scatter for force vs. pressure
+│       │   ├── PressureBandsChart.svelte           # Range-bands chart with markers + shadedRange
+│       │   ├── PressureResponseChart.svelte         # Chart.js scatter for force vs. pressure
 │       │   ├── SessionDetail.svelte         # Per-session detail rendered at /entity/<id>
 │       │   ├── SavedViews.svelte
 │       │   ├── SubNav.svelte                # Sub-tab row under main nav
@@ -141,7 +141,7 @@ paper sizes), and an optional `compareYears` dropdown to filter the
 dataset by release year. Used on the tablet detail page, the Reference
 page's Tablet Sizes tab, and the ISO Paper Sizes tab.
 
-**BandsChart** — Pure-SVG horizontal range-bands chart used on the
+**PressureBandsChart** — Pure-SVG horizontal range-bands chart used on the
 Reference page (Piaf Ranking, Pmax Ranking) and the Pmax
 tabs on pen / pen-family detail pages. Optional props:
 
@@ -191,7 +191,7 @@ sub-tabs are declared inline on each Data page.
 
 ## Pressure response charts
 
-`PressureChart.svelte` — Chart.js scatter for force (gf) vs pressure (%).
+`PressureResponseChart.svelte` — Chart.js scatter for force (gf) vs pressure (%).
 Used on the Pressure Response tabs and the `/pen-compare` combined Pmax
 comparison (`lockedZoom="pmax"`).
 
@@ -206,7 +206,7 @@ parameterised by a `metric` prop (`"IAF"` | `"MAX"`). It replaces the
 former separate `PiafTab` / `PmaxTab`. A toggle at the top switches three
 view modes (Summary is the default):
 
-1. _Summary_ — `<BandsChart>` with Min / Max markers, a bold labelled
+1. _Summary_ — `<PressureBandsChart>` with Min / Max markers, a bold labelled
    Median, and a `shadedRange` across min↔max, plus a Min/Median/Max table.
 2. _By unit_ — one marker / table row per pen unit (the median of that
    unit's datapoints); solid marker = measured, dashed = estimated.

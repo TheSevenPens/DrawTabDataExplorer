@@ -31,10 +31,10 @@
 	import PenPicker from '$lib/components/PenPicker.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
-	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
+	import PressureBandsChart, { type BandMarker } from '$lib/components/PressureBandsChart.svelte';
 	import { PMAX_BANDS } from '$lib/bands.js';
 	import { estimatePmax, fmtP } from '$data/lib/pressure/interpolate.js';
-	import PressureChart from '$lib/components/PressureChart.svelte';
+	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import { paletteColor } from '$lib/chart-palette.js';
@@ -92,7 +92,7 @@
 	// its own color set + chart sessions so colors are stable within a section
 	// but independent across sections. `penColor` is shared with the combined
 	// view at the top of the Pmax tab so a pen's marker color in the
-	// merged BandsChart matches its session curves in the merged PressureChart.
+	// merged PressureBandsChart matches its session curves in the merged PressureResponseChart.
 	let perPenSections = $derived(
 		flaggedItems.map((p, i) => {
 			const sessions = sessionsByPenEntityId.get(p.EntityId) ?? [];
@@ -117,8 +117,8 @@
 	// --- Combined Pmax comparison ---
 	//
 	// Aggregates every flagged pen's non-defective sessions onto one
-	// BandsChart (Pmax markers colored per pen) plus one zoomed
-	// PressureChart (curves recolored per pen, so a pen's sessions cluster
+	// PressureBandsChart (Pmax markers colored per pen) plus one zoomed
+	// PressureResponseChart (curves recolored per pen, so a pen's sessions cluster
 	// visually even when its individual sessions are still distinct lines).
 	let nonDefectiveByPen = $derived(
 		perPenSections.map((s) => ({
@@ -162,7 +162,7 @@
 	// pen's horizontal stripe (matching `combinedShadedRanges`). It was
 	// tried and rolled back here — full-height markers read better as
 	// "Pmax estimates on a shared axis," which is the point of the chart.
-	// The slicing capability is left intact in BandsChart for future use.
+	// The slicing capability is left intact in PressureBandsChart for future use.
 	let combinedMaxMarkersSummary: BandMarker[] = $derived.by(() => {
 		const out: BandMarker[] = [];
 		for (const s of pmaxByPen) {
@@ -224,7 +224,7 @@
 	let combinedPenWithDataCount = $derived(pmaxByPen.filter((s) => s.pmaxValues.length > 0).length);
 	let anyCombinedData = $derived(combinedSessionCount > 0);
 
-	// The combined PressureChart takes a `hiddenIds` set; we don't expose
+	// The combined PressureResponseChart takes a `hiddenIds` set; we don't expose
 	// toggle UI here, so it stays empty. Shared reference avoids unnecessary
 	// re-renders from new empty-set identities.
 	const EMPTY_HIDDEN: ReadonlySet<string> = new Set();
@@ -489,7 +489,7 @@
 				</select>
 			</label>
 		</div>
-		<PressureChart
+		<PressureResponseChart
 			sessions={overlayChartSessions}
 			title="Flagged pens"
 			hiddenIds={overlayHiddenIds}
@@ -600,7 +600,7 @@
 							: 's'} with data.
 					{/if}
 				</p>
-				<BandsChart
+				<PressureBandsChart
 					bands={PMAX_BANDS}
 					axisMax={1000}
 					axisStep={100}
@@ -639,7 +639,7 @@
 					color — clusters of like-colored curves let you compare pens against each other on the
 					same axis.
 				</p>
-				<PressureChart
+				<PressureResponseChart
 					sessions={combinedChartSessions}
 					title="Flagged pens — max pressure"
 					hiddenIds={EMPTY_HIDDEN}

@@ -24,7 +24,7 @@
 | Step-by-step workflows   | [`docs/RECIPES.md`](docs/RECIPES.md)             | Files listed in recipe                                                                                                  |
 | Data shape / validation  | `data-repo/docs/ARCHITECTURE.md`                 | `data-repo/lib/schemas.ts`, `FIELDS.txt`                                                                                |
 | Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`            | `CLAUDE.md` § Adding a brand                                                                                            |
-| Pressure / charts        | `CLAUDE.md` § Pressure response                  | `PressureChart.svelte`                                                                                                  |
+| Pressure / charts        | `CLAUDE.md` § Pressure response                  | `PressureResponseChart.svelte`                                                                                          |
 | Tests / verify           | [`docs/TESTING.md`](docs/TESTING.md)             | Run commands below                                                                                                      |
 | Planned work             | [`docs/FUTURES.txt`](docs/FUTURES.txt)           | GitHub issue bodies                                                                                                     |
 | Don'ts (quick scan)      | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md) | `CLAUDE.md` for detail                                                                                                  |

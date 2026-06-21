@@ -23,7 +23,7 @@
 	}: {
 		sessions: PressureResponse[];
 		/** Color for each session, keyed by `_id`. Should match what
-		 * was passed to `<PressureChart>` so swatches and lines agree. */
+		 * was passed to `<PressureResponseChart>` so swatches and lines agree. */
 		colors: ReadonlyMap<string, string>;
 		hiddenIds: ReadonlySet<string>;
 		onToggle: (id: string) => void;

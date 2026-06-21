@@ -3,7 +3,7 @@
  * companion components (legend tables, color swatches, etc).
  *
  * Picking colors at the parent level and threading them through both
- * `<PressureChart>` and `<PressureResponseChartLegendTable>` keeps swatches in the
+ * `<PressureResponseChart>` and `<PressureResponseChartLegendTable>` keeps swatches in the
  * legend in sync with the lines on the chart.
  */
 export const CHART_PALETTE = [

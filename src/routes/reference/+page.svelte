@@ -25,7 +25,7 @@
 		PEN_COMPAT_DEFAULT_COLUMNS,
 		PEN_COMPAT_DEFAULT_VIEW,
 	} from '$data/lib/entities/pen-compat-fields.js';
-	import BandsChart from '$lib/components/BandsChart.svelte';
+	import PressureBandsChart from '$lib/components/PressureBandsChart.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import {
 		PIAF_BANDS,
@@ -449,7 +449,7 @@
 						pressure. Lower is better — a lighter touch means more natural shading and less hand
 						fatigue.
 					</p>
-					<BandsChart
+					<PressureBandsChart
 						bands={piafBands}
 						axisMax={10}
 						axisStep={1}
@@ -492,7 +492,7 @@
 					<div class="section-header">
 						<h2>MAX Ranking</h2>
 					</div>
-					<BandsChart
+					<PressureBandsChart
 						bands={pmaxBands}
 						axisMax={1000}
 						axisStep={100}

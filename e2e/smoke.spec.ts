@@ -130,7 +130,7 @@ test.describe('Session detail navigation', () => {
 		await firstSessionLink.click();
 		await page.waitForURL(/\/entity\/[a-z0-9._-]+\.session\./);
 		await expect(page.locator('h1').first()).toBeVisible();
-		// Session detail renders a PressureChart canvas.
+		// Session detail renders a PressureResponseChart canvas.
 		await expect(page.locator('canvas').first()).toBeVisible({ timeout: 10_000 });
 		expect(errors).toEqual([]);
 	});

@@ -9,7 +9,7 @@ Components are grouped by role. Each entry has a one-line purpose, key props, an
 
 ## 0. Shared primitives & frames
 
-The reusable building blocks from the UX-architecture pass (GitHub #228). Prefer these over one-off markup: feature components compose them rather than re-implementing buttons, empty states, links, menus, or chrome. **Frames own chrome only** (title / count / actions / empty / controls); the body stays a snippet so specialized components (`EntityExplorer`, `PressureChart`, the compare matrices) stay specialized.
+The reusable building blocks from the UX-architecture pass (GitHub #228). Prefer these over one-off markup: feature components compose them rather than re-implementing buttons, empty states, links, menus, or chrome. **Frames own chrome only** (title / count / actions / empty / controls); the body stays a snippet so specialized components (`EntityExplorer`, `PressureResponseChart`, the compare matrices) stay specialized.
 
 ### `Button`
 
@@ -37,7 +37,7 @@ Table chrome: optional title + count badge + subtitle, a right-aligned `actions`
 
 ### `ChartFrame`
 
-Chart chrome: optional title/subtitle, a left-aligned `controls` slot (view/zoom/compare selectors), a right-aligned `actions` slot (export), and a footer/legend slot. Body (the SVG/canvas) is a snippet. _Used by:_ `BandsChart`, `ValueHistogram`, `TabletDimensionComparison`, `PressureChart`.
+Chart chrome: optional title/subtitle, a left-aligned `controls` slot (view/zoom/compare selectors), a right-aligned `actions` slot (export), and a footer/legend slot. Body (the SVG/canvas) is a snippet. _Used by:_ `PressureBandsChart`, `ValueHistogram`, `TabletDimensionComparison`, `PressureResponseChart`.
 
 ---
 
@@ -171,7 +171,7 @@ Detail page for a single pen model. Tabs: _Model_ / _Specs_ / _Inventory_ / _Com
 
 ### `PenFamilyDetail`
 
-Detail page for a pen family (e.g. _Wacom Pro Pen Gen 3_). Tabs include the same pressure views (`PressureChart`, plus `PressureRangeTab` for IAF and MAX) aggregated across the family's members.
+Detail page for a pen family (e.g. _Wacom Pro Pen Gen 3_). Tabs include the same pressure views (`PressureResponseChart`, plus `PressureRangeTab` for IAF and MAX) aggregated across the family's members.
 
 ### `TabletFamilyDetail`
 
@@ -187,7 +187,7 @@ Detail page for a single driver release. Shows OS / version / source / changelog
 
 ### `SessionDetail`
 
-Detail page for a pressure-response session. Header with pen / inventory / date / tablet / driver / OS, the standard `PressureChart`, the Piaf / Pmax estimate table, and the raw record table.
+Detail page for a pressure-response session. Header with pen / inventory / date / tablet / driver / OS, the standard `PressureResponseChart`, the Piaf / Pmax estimate table, and the raw record table.
 
 ### `InventoryPenDetail`
 
@@ -209,7 +209,7 @@ These are reusable sub-views referenced by the `Tabs` strip on pen / pen-family 
 
 ### `PressureRangeTab`
 
-Shared IAF / MAX tab, parameterised by a `metric` prop (`"IAF" | "MAX"`); replaced the former `PiafTab` / `PmaxTab`. A toggle selects three modes — _Summary_ (min/median/max, default), _By unit_ (one row per pen unit), _By sample_ (every datapoint) — all rendered as a `BandsChart` + table. Values come from `resolveRangeByUnit` (measured-wins-per-unit: a direct `PressureRange` measurement beats the per-session estimate); measured markers are solid, estimated dashed. Used by the pen / pen-family / inventory-unit detail tabs and `/pen-compare` (per-pen and one combined-across-flagged-pens instance on the IAF tab).
+Shared IAF / MAX tab, parameterised by a `metric` prop (`"IAF" | "MAX"`); replaced the former `PiafTab` / `PmaxTab`. A toggle selects three modes — _Summary_ (min/median/max, default), _By unit_ (one row per pen unit), _By sample_ (every datapoint) — all rendered as a `PressureBandsChart` + table. Values come from `resolveRangeByUnit` (measured-wins-per-unit: a direct `PressureRange` measurement beats the per-session estimate); measured markers are solid, estimated dashed. Used by the pen / pen-family / inventory-unit detail tabs and `/pen-compare` (per-pen and one combined-across-flagged-pens instance on the IAF tab).
 
 ---
 
@@ -217,7 +217,7 @@ Shared IAF / MAX tab, parameterised by a `metric` prop (`"IAF" | "MAX"`); replac
 
 Pure presentation components. Each has clear inputs and produces an SVG or canvas chart.
 
-### `PressureChart`
+### `PressureResponseChart`
 
 Chart.js scatter of physical force (gf) vs logical pressure (%). View modes: _Raw_ / _Raw + estimates_ / _Standardized_ / _Envelope_. Zoom modes: _Normal_ / _Piaf detail (0-20 gf)_ / _Pmax detail (95-100%)_. Optional `lockedZoom` hides the dropdown and forces a preset (used by the `/pen-compare` combined Pmax comparison).
 
@@ -225,9 +225,9 @@ Chart.js scatter of physical force (gf) vs logical pressure (%). View modes: _Ra
 
 ### `PressureResponseChartLegendTable`
 
-Per-session legend table that sits below a `PressureChart` when multiple sessions are overlaid. Each row shows colour swatch, label, visibility toggle, and Piaf / P25 / P50 / P75 / Pmax values.
+Per-session legend table that sits below a `PressureResponseChart` when multiple sessions are overlaid. Each row shows colour swatch, label, visibility toggle, and Piaf / P25 / P50 / P75 / Pmax values.
 
-### `BandsChart`
+### `PressureBandsChart`
 
 Pure-SVG horizontal range-bands chart. One band per record; optional `markers` (red vertical lines, dashed or solid, with labels), `shadedRange` (semi-transparent red rectangle for highlighting a min↔max span), and `heading` (rendered _inside_ the SVG so it survives PNG/SVG export).
 
@@ -322,7 +322,7 @@ Chart-specific export trigger. Two modes: PNG-of-the-canvas, or HTML-table-of-th
 
 Filename slugging is centralized in [src/lib/chart-export/filenames.ts](../src/lib/chart-export/filenames.ts) (#224).
 
-_Used by:_ `PressureChart`, `BandsChart`, `ValueHistogram`, `TabletDimensionComparison` (all now mounted through `ChartFrame`'s `actions` slot).
+_Used by:_ `PressureResponseChart`, `PressureBandsChart`, `ValueHistogram`, `TabletDimensionComparison` (all now mounted through `ChartFrame`'s `actions` slot).
 
 ---
 
@@ -330,7 +330,7 @@ _Used by:_ `PressureChart`, `BandsChart`, `ValueHistogram`, `TabletDimensionComp
 
 ### `/pressure-backfill` route
 
-Per-session navigator that lets a contributor add `(force, 0)` / `(force, 100)` endpoint records to pressure sessions that don't capture them. Reuses `PressureChart` twice (Piaf zoom + Pmax zoom). Not linked from `Nav`.
+Per-session navigator that lets a contributor add `(force, 0)` / `(force, 100)` endpoint records to pressure sessions that don't capture them. Reuses `PressureResponseChart` twice (Piaf zoom + Pmax zoom). Not linked from `Nav`.
 
 ### `/marker-debug` route
 
@@ -340,13 +340,13 @@ Visual test harness for `ValueHistogram` marker / range rendering — a grid of 
 
 ## Cross-reference
 
-| If you're changing...                          | Touch                                                                                                |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| The pressure-response math                     | [data-repo/lib/pressure/interpolate.ts](../data-repo/lib/pressure/interpolate.ts) — _then_ the chart |
-| The query pipeline behaviour                   | [packages/queriton/](../packages/queriton/) — _then_ `EntityExplorer` / `QueryPipelineBar`           |
-| The field registry for an entity               | `data-repo/lib/entities/<entity>-fields.ts`                                                          |
-| The exporter formats                           | [src/lib/export/](../src/lib/export/) — _then_ `ExportDialog`                                        |
-| The flag store (which entities can be flagged) | [src/lib/flagged-store.ts](../src/lib/flagged-store.ts) — _then_ `FlagButton` / picker UIs           |
-| The pressure-chart visual quirks               | **First read [CLAUDE.md § Pressure response charts](../CLAUDE.md)**, then `PressureChart.svelte`     |
+| If you're changing...                          | Touch                                                                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| The pressure-response math                     | [data-repo/lib/pressure/interpolate.ts](../data-repo/lib/pressure/interpolate.ts) — _then_ the chart     |
+| The query pipeline behaviour                   | [packages/queriton/](../packages/queriton/) — _then_ `EntityExplorer` / `QueryPipelineBar`               |
+| The field registry for an entity               | `data-repo/lib/entities/<entity>-fields.ts`                                                              |
+| The exporter formats                           | [src/lib/export/](../src/lib/export/) — _then_ `ExportDialog`                                            |
+| The flag store (which entities can be flagged) | [src/lib/flagged-store.ts](../src/lib/flagged-store.ts) — _then_ `FlagButton` / picker UIs               |
+| The pressure-chart visual quirks               | **First read [CLAUDE.md § Pressure response charts](../CLAUDE.md)**, then `PressureResponseChart.svelte` |
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the runtime data-flow picture and [WHERE.md](WHERE.md) for the goal→files lookup.

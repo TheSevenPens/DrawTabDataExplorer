@@ -10,7 +10,7 @@
 	import JsonTab from '$lib/components/JsonTab.svelte';
 	import CompatEntityTable, { type CompatRow } from '$lib/components/CompatEntityTable.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
-	import PressureChart from '$lib/components/PressureChart.svelte';
+	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
@@ -280,7 +280,7 @@
 					</select>
 				</label>
 			</div>
-			<PressureChart
+			<PressureResponseChart
 				sessions={chartSessions}
 				title={`${pen.PenName} pressure response`}
 				hiddenIds={hiddenSessionIds}
