@@ -1,5 +1,5 @@
 // Unified band definitions used by:
-//   - BandsChart (Piaf and Pmax horizontal ranking visualisations)
+//   - PressureBandsChart (Piaf and Pmax horizontal ranking visualisations)
 //   - ValueHistogram (the spec band overlays on Brightness, Contrast, etc.)
 //   - The Reference page documentation tables
 //
@@ -7,7 +7,7 @@
 // open-ended right edge ("and above") — currently only used by the
 // pressure bands.
 
-/** Open-ended right edge allowed (used by BandsChart for Piaf / Pmax
+/** Open-ended right edge allowed (used by PressureBandsChart for Piaf / Pmax
  * where the trailing band is "AVOID" or "EXCESSIVE", i.e. ≥ N). */
 export interface Band {
 	label: string;
@@ -26,7 +26,7 @@ export interface SpecBand {
 	max: number;
 }
 
-// --- Pen Pressure (used by BandsChart) ---
+// --- Pen Pressure (used by PressureBandsChart) ---
 
 /** Piaf (Initial Activation Force) ranking bands in gram-force. Lower is
  * better — a lighter touch means more natural shading and less hand
@@ -53,7 +53,7 @@ export const PMAX_BANDS: Band[] = [
 	{ min: 900, max: null, label: 'X', name: 'EXCESSIVE' },
 ];
 
-// --- Pen Dimensions (used by BandsChart / ValueHistogram) ---
+// --- Pen Dimensions (used by PressureBandsChart / ValueHistogram) ---
 //
 // Descriptive size tiers for the pen-analysis Dimensions histograms. These
 // are not quality judgements — they're just readable buckets for the

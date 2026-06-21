@@ -205,7 +205,7 @@ dataset via `loadAllData()` — it just doesn't visualize it.
 
 What PenPressureData has that the Explorer doesn't:
 
-- `PressureChart.svelte` — Chart.js scatter of force (gf) vs.
+- `PressureResponseChart.svelte` — Chart.js scatter of force (gf) vs.
   pressure (%); zoom modes (normal / Piaf detail 0-20gf / Pmax
   detail 95-100%); data view modes (raw / raw+estimates /
   standardized / envelope); envelope range options (Min/Max /
@@ -232,7 +232,7 @@ What PenPressureData has that the Explorer doesn't:
    `interpolate.js` to `data-repo/lib/pressure/interpolate.ts` (typed)
    plus a `session-id.ts` helper that derives the canonical
    `<brand>.session.<inventoryid>_<date>` EntityId from the raw
-   session record. New `PressureChart.svelte` (Chart.js scatter,
+   session record. New `PressureResponseChart.svelte` (Chart.js scatter,
    raw + P00/P100 estimate dashed extensions) and `SessionDetail.svelte`.
    `/pressure-response` is now a Sessions list (124 entries) with
    brand/pen filters; rows link to `/entity/<sessionEntityId>` which
@@ -242,7 +242,7 @@ What PenPressureData has that the Explorer doesn't:
 2. ✅ **Pen detail pages light up with pressure data.** (2026-05-01)
    The Pressure Response tab on
    [`PenDetail.svelte`](../src/lib/components/PenDetail.svelte)
-   now renders an overlaid `<PressureChart>` of every session for
+   now renders an overlaid `<PressureResponseChart>` of every session for
    the pen, plus a session table with per-row IAF / Max Force
    estimates and links to the canonical session detail page.
    [`PenFamilyDetail.svelte`](../src/lib/components/PenFamilyDetail.svelte)
@@ -284,7 +284,7 @@ PressureResponse[]` for the `pen` and `penfamily` cases.
    flag-id when no `EntityId` exists). New `/pen-flagged` route
    under **Pens** lists each flagged item with an Unflag button and
    overlays every matching pressure-response session on a single
-   `<PressureChart>` for cross-pen comparison. Sub-nav badge in
+   `<PressureResponseChart>` for cross-pen comparison. Sub-nav badge in
    every pen-context page reflects the live total count.
 
 **Deprecation banner shipped.** (PenPressureData commit `060f09f`,
@@ -297,7 +297,7 @@ stays live (not archived).
 
 **Phase 5+ — feature-parity punch list:**
 
-5. ✅ **Chart toolbar.** (2026-05-01) `PressureChart.svelte` gained
+5. ✅ **Chart toolbar.** (2026-05-01) `PressureResponseChart.svelte` gained
    View (raw / raw+estimates / standardized / envelope), Zoom
    (normal / Piaf detail / Pmax detail), Range (envelope
    Min/Max / P05-P95 / P25-P75), and 4 export buttons (copy PNG,
@@ -309,7 +309,7 @@ stays live (not archived).
    columns (P00, P01, P05, P10, P20, P25, P30, P40, P50, P60, P70,
    P75, P80, P90, P95, P99, P100) — each cell is the interpolated
    physical force at that logical-pressure percentile. Show/hide
-   syncs with `<PressureChart>` via a shared `hiddenIds` set so
+   syncs with `<PressureResponseChart>` via a shared `hiddenIds` set so
    unchecking a row hides its line live. Color sync between chart
    and legend goes through a shared `src/lib/chart-palette.ts`
    helper. Replaces the simple session-summary table on PenDetail;
@@ -333,7 +333,7 @@ stays live (not archived).
    `/pressure-response` Sessions list gained per-row checkboxes
    - "Select all visible" / "Clear" buttons. Selecting 1+ rows
      reveals an Overlay section above the table with a
-     `<PressureChart>` and `<SessionStats>` for the selection.
+     `<PressureResponseChart>` and `<SessionStats>` for the selection.
 10. ⏭ **Curve label collisions — not applicable as the problem
     PenPressureData has.** Their chart draws an in-plot legend
     box (custom Chart.js plugin) where labels can crowd each other
@@ -363,7 +363,7 @@ stays live (not archived).
 
 - Source repo cloned as a sibling at `../PenPressureData/`. Pull
   it before referencing files (`cd ../PenPressureData && git pull`).
-- Already in place: `chart.js` dep, `PressureChart.svelte`,
+- Already in place: `chart.js` dep, `PressureResponseChart.svelte`,
   `SessionDetail.svelte`,
   `data-repo/lib/pressure/{interpolate,session-id,data-quality}.ts`,
   `FlagButton.svelte`, three pen flag stores, `/pen-flagged` route,

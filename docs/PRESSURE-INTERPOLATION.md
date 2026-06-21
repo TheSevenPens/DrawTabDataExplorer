@@ -43,7 +43,7 @@ If `y1 === y0` (flat segment), returns `x0`. If no segment brackets the target, 
 Inputs are **not assumed sorted**; the scan finds max-A / min-B across all records.
 
 `estimatePiaf` returns only the **force** (x). Where the activation point is
-_plotted_ (the dashed estimate vertex / dotted circle in `PressureChart`, the
+_plotted_ (the dashed estimate vertex / dotted circle in `PressureResponseChart`, the
 `SessionDetail` records row), its **logical-pressure (y)** is `IAF_LOGICAL_PCT`,
 **not 0 %**: IAF is the force that produces the _first non-zero_ level, so the
 point sits at the smallest non-zero pressure a typical 8192-level pen reports —

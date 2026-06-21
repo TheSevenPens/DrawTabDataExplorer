@@ -10,7 +10,7 @@
 		IAF_LOGICAL_PCT,
 	} from '$data/lib/pressure/interpolate.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
-	import PressureChart from '$lib/components/PressureChart.svelte';
+	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
@@ -87,7 +87,7 @@
 	// On a single-session detail page, the user explicitly navigated to this
 	// session — the chart must render even if the pen unit is flagged
 	// defective. (The defect banner above the chart conveys the warning;
-	// PressureChart's default "hide defective" filter would otherwise
+	// PressureResponseChart's default "hide defective" filter would otherwise
 	// leave the canvas blank with only a "Show 1 defective" toggle, which
 	// looks like a broken page rather than a deliberate safety filter.)
 	let chartSessions = $derived([
@@ -135,7 +135,7 @@
 	</dl>
 </div>
 
-<PressureChart sessions={chartSessions} />
+<PressureResponseChart sessions={chartSessions} />
 
 <section class="stats">
 	<h2>Estimates</h2>

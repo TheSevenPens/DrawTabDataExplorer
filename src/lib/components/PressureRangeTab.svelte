@@ -1,7 +1,7 @@
 <script lang="ts">
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import EntityLink from '$lib/components/EntityLink.svelte';
-	import BandsChart, { type BandMarker } from '$lib/components/BandsChart.svelte';
+	import PressureBandsChart, { type BandMarker } from '$lib/components/PressureBandsChart.svelte';
 	import { PIAF_BANDS, PMAX_BANDS } from '$lib/bands.js';
 	import type { PressureResponse, PressureRange } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
@@ -213,7 +213,7 @@
 	</div>
 {/if}
 
-<BandsChart
+<PressureBandsChart
 	{bands}
 	{axisMax}
 	{axisStep}

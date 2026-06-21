@@ -16,7 +16,7 @@
 	import { brandName } from '$data/lib/drawtab-loader.js';
 	import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 	import type { PressureRecord } from '$data/lib/pressure/interpolate.js';
-	import PressureChart from '$lib/components/PressureChart.svelte';
+	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 
 	let { data } = $props();
 
@@ -259,7 +259,7 @@
 	// --- Chart input -------------------------------------------------------
 	//
 	// One session showing both the originally measured records and (when
-	// present) the proposed endpoint(s). The PressureChart's "Raw +
+	// present) the proposed endpoint(s). The PressureResponseChart's "Raw +
 	// estimates" view uses estimatePiaf/Pmax internally — with the proposed
 	// records spliced in those calls hit the bracket-midpoint branch, so
 	// the dashed estimate line on the chart matches the readouts above.
@@ -349,7 +349,7 @@
 				<h3 class="panel-title">
 					Piaf zoom <span class="panel-sub">— tune Piaf</span>
 				</h3>
-				<PressureChart sessions={chartSessions} height={320} title="" lockedZoom="piaf" />
+				<PressureResponseChart sessions={chartSessions} height={320} title="" lockedZoom="piaf" />
 				{#if current.needsPiaf}
 					{@const r = piafRange}
 					<div class="slider-row">
@@ -385,7 +385,7 @@
 				<h3 class="panel-title">
 					Pmax zoom <span class="panel-sub">— tune Pmax</span>
 				</h3>
-				<PressureChart sessions={chartSessions} height={320} title="" lockedZoom="pmax" />
+				<PressureResponseChart sessions={chartSessions} height={320} title="" lockedZoom="pmax" />
 				{#if current.needsPmax}
 					{@const r = pmaxRange}
 					<div class="slider-row">

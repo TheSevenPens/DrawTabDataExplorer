@@ -1,6 +1,6 @@
 // Shared chart-session state builders for the three pen-pressure detail
 // pages (PenDetail, PenFamilyDetail, InventoryPenDetail). Each page
-// renders a PressureChart + PressureResponseChartLegendTable + SessionStats
+// renders a PressureResponseChart + PressureResponseChartLegendTable + SessionStats
 // trio and needs identical inputs: per-session color, per-session label,
 // defect flags, and a hidden-set toggle. The Svelte state ($state Set)
 // stays in the parent component so it can be shared with PressureRangeTab.

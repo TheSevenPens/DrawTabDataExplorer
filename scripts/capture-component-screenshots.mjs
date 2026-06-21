@@ -183,7 +183,7 @@ const SPECS = [
 
 	// --- Charts and visualizations ----------------------------------------
 	{
-		name: 'PressureChart',
+		name: 'PressureResponseChart',
 		route: '/entity/wacom.session.wap.0001_2024-09-02',
 		selector: '.chart-wrap, canvas',
 		waitAfter: 2500,
@@ -200,7 +200,7 @@ const SPECS = [
 		waitAfter: 1500,
 	},
 	{
-		name: 'BandsChart',
+		name: 'PressureBandsChart',
 		route: '/reference#piaf-ranking',
 		selector: '.bands-chart, svg.bands-chart',
 		waitAfter: 1500,

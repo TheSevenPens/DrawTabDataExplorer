@@ -48,7 +48,7 @@ Domain vocabulary used across this repo. Alphabetised. Each entry: short definit
 
 See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/session-id.ts](../data-repo/lib/pressure/session-id.ts) for the session derivation.
 
-**Envelope** — `PressureChart` view mode that overlays Min/Max (or P05/P95, or P25/P75) bands across all selected sessions. Implemented as a single closed-polygon dataset with `fill: 'shape'` to avoid Chart.js's between-datasets fill bug. See [CLAUDE.md § Pressure response charts](../CLAUDE.md).
+**Envelope** — `PressureResponseChart` view mode that overlays Min/Max (or P05/P95, or P25/P75) bands across all selected sessions. Implemented as a single closed-polygon dataset with `fill: 'shape'` to avoid Chart.js's between-datasets fill bug. See [CLAUDE.md § Pressure response charts](../CLAUDE.md).
 
 **Field def** / **`FieldDef`** / **`FieldDisplayDef`** — The descriptor type that drives every column / filter / sort / detail row / export across the explorer. See [FIELDDEFS.md](FIELDDEFS.md).
 
@@ -82,7 +82,7 @@ See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/se
 
 **`physicalGf`** — The "force" axis on pressure-response curves, in gram-force.
 
-**Pressure response curve** — The map between physical force applied to a pen tip and the logical pressure value the driver reports. Captured as a sparse sequence of `[force, pct]` records per **session**. Visualised by [PressureChart.svelte](../src/lib/components/PressureChart.svelte).
+**Pressure response curve** — The map between physical force applied to a pen tip and the logical pressure value the driver reports. Captured as a sparse sequence of `[force, pct]` records per **session**. Visualised by [PressureResponseChart.svelte](../src/lib/components/PressureResponseChart.svelte).
 
 **Pressure session** / **PressureResponse session** — One capture event of a pen ↔ tablet pair under specific driver / OS conditions. Has `Records: [force, pct][]`, `Date`, `User`, `Notes`. Identified by `<brand>.session.<inventoryid>_<date>`. Stored in `data-repo/data/pressure-response/`.
 
@@ -92,7 +92,7 @@ See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/se
 
 **Pmax** — Maximum Force (formerly P100 / Max Pressure / MaxP100). Physical force (gf) at which the pen's logical pressure reaches 100 % (digitizer saturation). Computed by `estimatePmax`. See [PRESSURE-INTERPOLATION.md](PRESSURE-INTERPOLATION.md).
 
-**P50** / **Median** — The force at logical 50 %. Used as the "middle" marker on `BandsChart`.
+**P50** / **Median** — The force at logical 50 %. Used as the "middle" marker on `PressureBandsChart`.
 
 **Powershell wide-indent JSON** — The non-standard JSON formatting used by `data-repo/data/*.json` files (29 / 33 / 45 / 49 / 53 space indent levels). Produced originally by PowerShell `ConvertTo-Json`; preserved by all write scripts via either re-shelling to PowerShell or surgical text splicing. **Do not `JSON.parse → JSON.stringify` round-trip these files** — the resulting diff is enormous.
 

@@ -16,7 +16,7 @@
 		PEN_LENGTH_BANDS,
 		type Band,
 	} from '$lib/bands.js';
-	import BandsChart from '$lib/components/BandsChart.svelte';
+	import PressureBandsChart from '$lib/components/PressureBandsChart.svelte';
 	import type { Pen, PressureResponse } from '$data/lib/drawtab-loader.js';
 	import { brandName } from '$data/lib/drawtab-loader.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
@@ -385,7 +385,7 @@
 		{#if p.chart}
 			{@const chart = p.chart}
 			<div class="rank-chart">
-				<BandsChart
+				<PressureBandsChart
 					bands={chart.bands}
 					axisMax={chart.axisMax}
 					axisStep={chart.axisStep}

@@ -3,7 +3,7 @@
 	// the chrome around a chart body: optional title/subtitle, a left-aligned
 	// controls area (view/zoom/compare selectors), a right-aligned actions area
 	// (export), and an optional footer/legend slot below the chart. The chart
-	// body itself stays a snippet/child — PressureChart, BandsChart,
+	// body itself stays a snippet/child — PressureResponseChart, PressureBandsChart,
 	// ValueHistogram, etc. remain specialized (the #228 ruling: frames
 	// standardize chrome via slots, not a universal chart API).
 	import type { Snippet } from 'svelte';

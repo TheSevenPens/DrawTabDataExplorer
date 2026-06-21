@@ -11,7 +11,7 @@
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import { comparePenByYearDesc } from '$lib/pen-helpers.js';
-	import PressureChart from '$lib/components/PressureChart.svelte';
+	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
@@ -131,7 +131,7 @@
 {#if activeTab === 'pressure'}
 	<div class="tab-content">
 		{#if pressureSessions.length > 0}
-			<PressureChart
+			<PressureResponseChart
 				sessions={chartSessions}
 				title={`${family.FamilyName} pressure response`}
 				hiddenIds={hiddenSessionIds}

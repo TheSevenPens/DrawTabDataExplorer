@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import Nav from '$lib/components/Nav.svelte';
 	import DetailView from '$lib/components/DetailView.svelte';
-	import PressureChart from '$lib/components/PressureChart.svelte';
+	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
@@ -79,7 +79,7 @@
 {#if activeTab === 'pressure'}
 	<div class="tab-content">
 		{#if pressureSessions.length > 0}
-			<PressureChart
+			<PressureResponseChart
 				sessions={chartSessions}
 				title={`${item.InventoryId} pressure response`}
 				hiddenIds={hiddenSessionIds}

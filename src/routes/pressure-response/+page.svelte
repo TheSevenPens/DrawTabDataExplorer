@@ -5,7 +5,7 @@
 	import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 	import Nav from '$lib/components/Nav.svelte';
 	import SubNav from '$lib/components/SubNav.svelte';
-	import PressureChart from '$lib/components/PressureChart.svelte';
+	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
@@ -120,7 +120,7 @@
 {#if selectedSessions.length > 0}
 	<section class="overlay">
 		<h2>Overlay ({selectedSessions.length} sessions)</h2>
-		<PressureChart sessions={chartSessions} title="Selected sessions" />
+		<PressureResponseChart sessions={chartSessions} title="Selected sessions" />
 		<SessionStats
 			sessions={selectedSessions}
 			title="Aggregated across selected sessions"

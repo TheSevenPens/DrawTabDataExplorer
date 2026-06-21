@@ -4,11 +4,11 @@
 	// Two modes:
 	//   - SVG mode (caller passes `getSvg`): exports Copy PNG, Copy SVG,
 	//     Download PNG, Download SVG. Used by SVG-based charts
-	//     (ValueHistogram, BandsChart, TabletDimensionComparison).
+	//     (ValueHistogram, PressureBandsChart, TabletDimensionComparison).
 	//   - Canvas mode (caller passes `getCanvas`, optionally `getDataHtml`):
 	//     exports Copy PNG, Download PNG, and (when getDataHtml is set)
 	//     Copy data HTML, Download HTML doc. Used by Chart.js-based charts
-	//     (PressureChart).
+	//     (PressureResponseChart).
 	//
 	// PNG in SVG mode is produced by serializing the SVG, drawing it onto
 	// a canvas at 2× scale on a white background (so transparent SVG fills

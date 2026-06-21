@@ -201,7 +201,7 @@ for these instead of one-off markup — the full catalog with props is in
   `ChromeLayout` (Nav + optional SubNav + content, for the Data pages and
   analysis routes), `DetailPageFrame` (Nav + title + actions, detail pages),
   `SectionHeader` (shared section heading). `EntityExplorer`,
-  `PressureChart`, and the compare matrices stay specialized inside them.
+  `PressureResponseChart`, and the compare matrices stay specialized inside them.
 - **`createExportDialogHost()`** ([src/lib/export-dialog-host.svelte.ts](src/lib/export-dialog-host.svelte.ts))
   — one ExportDialog state per Data route; don't re-declare `exportDialog` +
   `openExport`.
@@ -273,7 +273,7 @@ node scripts/find-brand-in-name.mjs      # name starts with brand
 
 ## Pressure response chart gotchas
 
-`PressureChart.svelte` (Chart.js) has two non-obvious behaviors that
+`PressureResponseChart.svelte` (Chart.js) has two non-obvious behaviors that
 will surprise contributors:
 
 - **Envelope fill** is rendered as a single closed-polygon dataset
@@ -290,7 +290,7 @@ will surprise contributors:
   filter), so the `$effect` block explicitly reads `maxPmax` to track
   it.
 
-The `lockedZoom` prop on `PressureChart` hides the Zoom dropdown and
+The `lockedZoom` prop on `PressureResponseChart` hides the Zoom dropdown and
 forces a preset — used by the `/pen-compare` combined Pmax comparison to
 embed a max-zoomed overlay chart.
 
