@@ -22,6 +22,8 @@ export function dataSubNavTabs(): SubNavTab[] {
 	return [
 		{ href: '/reference', label: 'Reference' },
 		{ href: '/data-dictionary', label: 'Data Dictionary' },
+		{ href: '/timeline', label: 'Timeline' },
+		{ href: '/pressure-response', label: 'Pressure Response' },
 		{ href: '/api-explorer', label: 'API Explorer' },
 		{ href: '/data-quality', label: 'Data Quality' },
 	];
@@ -37,6 +39,5 @@ export function penSubNavTabs(
 		{ href: '/pen-inventory', label: 'Inventory' },
 		{ href: '/pen-flagged', label: 'Flagged', badge: opts.flaggedPenCount },
 		{ href: '/pen-compare', label: 'Compare', badge: opts.flaggedPenModelCount },
-		{ href: '/pressure-response', label: 'Pressure Response' },
 	];
 }
