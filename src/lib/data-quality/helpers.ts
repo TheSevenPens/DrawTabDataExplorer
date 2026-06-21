@@ -106,6 +106,36 @@ export function checkWhitespace(records: Record<string, any>[], entity: string):
 	return found;
 }
 
+// Inventory ids must be unique within their collection — a repeated
+// InventoryId makes per-unit lookups (pressure measurements/sessions keyed on
+// it) ambiguous, so a measurement can attach to the wrong physical unit.
+// "UNASSIGNED" is a repeatable placeholder, so it's exempt. Mirrors the CLI's
+// runInventoryDuplicateCheck in data-repo/lib/data-quality.ts.
+export function checkDuplicateInventoryIds(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	records: Record<string, any>[],
+	entity: string,
+): Issue[] {
+	const found: Issue[] = [];
+	const seen = new Set<string>();
+	for (const rec of records) {
+		const invId = rec.InventoryId;
+		if (typeof invId !== 'string' || invId === '' || invId === 'UNASSIGNED') continue;
+		if (seen.has(invId)) {
+			found.push({
+				entity,
+				entityId: invId,
+				field: 'InventoryId',
+				issue: 'duplicate InventoryId',
+				value: rec.PenEntityId ?? rec.TabletEntityId,
+			});
+		} else {
+			seen.add(invId);
+		}
+	}
+	return found;
+}
+
 export function computeCompletion(
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	records: Record<string, any>[],

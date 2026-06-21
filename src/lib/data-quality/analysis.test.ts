@@ -143,6 +143,41 @@ describe('analyzeData — tabletsMissingExactReleaseDate', () => {
 	});
 });
 
+describe('analyzeData — duplicate inventory ids', () => {
+	it('flags duplicate pen and tablet inventory ids independently, exempting UNASSIGNED', () => {
+		const input: AnalysisInput = {
+			...emptyInput(),
+			invPens: [
+				invPen({ InventoryId: 'WAP.A', _id: 'i1' }),
+				invPen({ InventoryId: 'WAP.A', _id: 'i2' }), // duplicate → flagged
+				invPen({ InventoryId: 'WAP.B', _id: 'i3' }), // unique
+				invPen({ InventoryId: 'UNASSIGNED', _id: 'i4' }),
+				invPen({ InventoryId: 'UNASSIGNED', _id: 'i5' }), // placeholder → exempt
+			],
+			invTablets: [
+				{ InventoryId: 'WAT.A', TabletEntityId: 'wacom.tablet.a', _id: 't1' },
+				{ InventoryId: 'WAT.A', TabletEntityId: 'wacom.tablet.a', _id: 't2' }, // duplicate
+			] as unknown as AnalysisInput['invTablets'],
+		};
+		const dups = analyzeData(input).issues.filter((i) => i.issue === 'duplicate InventoryId');
+		expect(dups).toHaveLength(2);
+		expect(dups.some((i) => i.entity === 'InventoryPen' && i.entityId === 'WAP.A')).toBe(true);
+		expect(dups.some((i) => i.entity === 'InventoryTablet' && i.entityId === 'WAT.A')).toBe(true);
+	});
+
+	it('reports no duplicates when all inventory ids are unique', () => {
+		const input: AnalysisInput = {
+			...emptyInput(),
+			invPens: [
+				invPen({ InventoryId: 'WAP.A', _id: 'i1' }),
+				invPen({ InventoryId: 'WAP.B', _id: 'i2' }),
+			],
+		};
+		const dups = analyzeData(input).issues.filter((i) => i.issue === 'duplicate InventoryId');
+		expect(dups).toHaveLength(0);
+	});
+});
+
 describe('analyzeData — pressure-range integrity', () => {
 	const base: AnalysisInput = {
 		...emptyInput(),
