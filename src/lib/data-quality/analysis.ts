@@ -24,6 +24,7 @@ import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 import {
 	checkRequired,
 	checkWhitespace,
+	checkDuplicateInventoryIds,
 	computeCompletion,
 	findOrphanedCompat,
 	type DataBundle,
@@ -132,6 +133,11 @@ export function analyzeData(data: AnalysisInput) {
 	allIssues.push(...checkWhitespace(ds.drivers, 'Driver'));
 	allIssues.push(...checkWhitespace(ds.pressureResponse, 'PressureResponse'));
 	allIssues.push(...checkWhitespace(pressureRange, 'PressureRange'));
+
+	// Inventory id uniqueness — pen and tablet collections checked independently
+	// (a pen and a tablet may legitimately share an id string).
+	allIssues.push(...checkDuplicateInventoryIds(invPens, 'InventoryPen'));
+	allIssues.push(...checkDuplicateInventoryIds(invTablets, 'InventoryTablet'));
 
 	// Direct pressure-range measurement integrity: the PenInventoryId must
 	// resolve to an owned inventory pen, the (optional) TabletEntityId to a
