@@ -7,12 +7,11 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
-	import { flaggedPenTotalCount } from '$lib/flagged-store.js';
-	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
+	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let { data } = $props();
 
-	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
+	const dataTabs = dataSubNavTabs();
 
 	let sessions = $derived(data.sessions);
 	let pens = $derived(data.pens);
@@ -78,7 +77,7 @@
 </script>
 
 <Nav />
-<SubNav tabs={penTabs} />
+<SubNav tabs={dataTabs} />
 
 <div class="header">
 	<h1>Pressure Response</h1>

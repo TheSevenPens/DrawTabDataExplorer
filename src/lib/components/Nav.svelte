@@ -27,15 +27,19 @@
 				'/pen-inventory',
 				'/pen-flagged',
 				'/pen-compare',
-				'/pressure-response',
 			],
 		},
 		{ href: '/drivers', label: 'Drivers' },
-		{ href: '/timeline', label: 'Timeline' },
 		{
 			href: '/reference',
 			label: 'Data',
-			altActive: ['/data-dictionary', '/api-explorer', '/data-quality'],
+			altActive: [
+				'/data-dictionary',
+				'/timeline',
+				'/pressure-response',
+				'/api-explorer',
+				'/data-quality',
+			],
 		},
 		{ href: '/about', label: 'About' },
 	];

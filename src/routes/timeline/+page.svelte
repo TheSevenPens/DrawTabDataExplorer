@@ -3,8 +3,15 @@
 	import { untrack } from 'svelte';
 	import { brandName, type Tablet, type Pen, type Driver } from '$data/lib/drawtab-loader.js';
 	import Nav from '$lib/components/Nav.svelte';
+	import SubNav from '$lib/components/SubNav.svelte';
+	import SegmentedControl from '$lib/components/SegmentedControl.svelte';
+	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
+	import { buildTimelineRows, type TimelinePeriod } from '$lib/timeline/rows.js';
 
 	let { data } = $props();
+
+	const dataTabs = dataSubNavTabs();
+	let view: 'timeline' | 'table' = $state('timeline');
 
 	let tablets: Tablet[] = $derived(data.tablets);
 	let pens: Pen[] = $derived(data.pens);
@@ -38,15 +45,7 @@
 		'Dec',
 	];
 
-	interface Period {
-		sort: string;
-		year: string;
-		month: number | null; // 1-12 when known
-		monthUnknown: boolean; // year-month mode, item has no month
-		tablets: Tablet[];
-		pens: Pen[];
-		drivers: Driver[];
-	}
+	type Period = TimelinePeriod;
 
 	// Period bucket for an item. In year mode everything keys on the launch
 	// year. In year-month mode, tablets with a month-precision ReleaseDate
@@ -134,6 +133,10 @@
 		return periods;
 	});
 
+	// Table view shares the same filtered/grouped/sorted periods, flattened to
+	// one row per entity (in period then tablet/pen/driver order).
+	let tableRows = $derived(buildTimelineRows(groupedTimeline));
+
 	let totalTablets = $derived(groupedTimeline.reduce((sum, e) => sum + e.tablets.length, 0));
 	let totalPens = $derived(groupedTimeline.reduce((sum, e) => sum + e.pens.length, 0));
 	let totalDrivers = $derived(groupedTimeline.reduce((sum, e) => sum + e.drivers.length, 0));
@@ -141,6 +144,7 @@
 </script>
 
 <Nav />
+<SubNav tabs={dataTabs} />
 
 <div class="title-row">
 	<h1>Timeline</h1>
@@ -149,6 +153,14 @@
 		{periodNoun}, {totalTablets} tablets, {totalPens} pens, {totalDrivers}
 		drivers</span
 	>
+	<SegmentedControl
+		options={[
+			{ value: 'timeline', label: 'Timeline' },
+			{ value: 'table', label: 'Table' },
+		]}
+		bind:value={view}
+		ariaLabel="View"
+	/>
 </div>
 
 <div class="filters">
@@ -180,82 +192,116 @@
 	</span>
 </div>
 
-<div class="timeline">
-	{#each groupedTimeline as entry (entry.sort)}
-		<div class="year-block">
-			<div class="year-label">
-				<span class="period-year">{entry.year}</span>
-				{#if entry.month}
-					<span class="period-month">{MONTHS[entry.month]}</span>
-				{:else if entry.monthUnknown}
-					<span class="period-month dim">no month</span>
-				{/if}
-			</div>
-			<div class="year-content">
-				{#if entry.tablets.length === 0 && entry.pens.length === 0 && entry.drivers.length === 0}
-					<p class="no-releases">No releases</p>
-				{/if}
-				{#if entry.tablets.length > 0}
-					<div class="category">
-						<h3>Tablets ({entry.tablets.length})</h3>
-						<div class="items">
-							{#each entry.tablets as t (t.Meta.EntityId)}
-								<div
-									class="item tablet"
-									role="link"
-									tabindex="0"
-									ondblclick={() => {
-										window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`;
-									}}
-									onkeydown={(e) => {
-										if (e.key === 'Enter')
+{#if view === 'timeline'}
+	<div class="timeline">
+		{#each groupedTimeline as entry (entry.sort)}
+			<div class="year-block">
+				<div class="year-label">
+					<span class="period-year">{entry.year}</span>
+					{#if entry.month}
+						<span class="period-month">{MONTHS[entry.month]}</span>
+					{:else if entry.monthUnknown}
+						<span class="period-month dim">no month</span>
+					{/if}
+				</div>
+				<div class="year-content">
+					{#if entry.tablets.length === 0 && entry.pens.length === 0 && entry.drivers.length === 0}
+						<p class="no-releases">No releases</p>
+					{/if}
+					{#if entry.tablets.length > 0}
+						<div class="category">
+							<h3>Tablets ({entry.tablets.length})</h3>
+							<div class="items">
+								{#each entry.tablets as t (t.Meta.EntityId)}
+									<div
+										class="item tablet"
+										role="link"
+										tabindex="0"
+										ondblclick={() => {
 											window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`;
-									}}
-								>
-									<span class="item-brand">{brandName(t.Model.Brand)}</span>
-									<span class="item-name">{t.Model.Name}</span>
-									<span class="item-id">{t.Model.Id}</span>
-									<span class="item-type">{t.Model.Type}</span>
-								</div>
-							{/each}
+										}}
+										onkeydown={(e) => {
+											if (e.key === 'Enter')
+												window.location.href = `${base}/entity/${encodeURIComponent(t.Meta.EntityId)}`;
+										}}
+									>
+										<span class="item-brand">{brandName(t.Model.Brand)}</span>
+										<span class="item-name">{t.Model.Name}</span>
+										<span class="item-id">{t.Model.Id}</span>
+										<span class="item-type">{t.Model.Type}</span>
+									</div>
+								{/each}
+							</div>
 						</div>
-					</div>
-				{/if}
-				{#if entry.pens.length > 0}
-					<div class="category">
-						<h3>Pens ({entry.pens.length})</h3>
-						<div class="items">
-							{#each entry.pens as p (p.EntityId)}
-								<a class="item pen" href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>
-									<span class="item-brand">{brandName(p.Brand)}</span>
-									<span class="item-name">{p.PenName}</span>
-									<span class="item-id">{p.PenId}</span>
-								</a>
-							{/each}
+					{/if}
+					{#if entry.pens.length > 0}
+						<div class="category">
+							<h3>Pens ({entry.pens.length})</h3>
+							<div class="items">
+								{#each entry.pens as p (p.EntityId)}
+									<a
+										class="item pen"
+										href={resolve('/entity/[entityId]', { entityId: p.EntityId })}
+									>
+										<span class="item-brand">{brandName(p.Brand)}</span>
+										<span class="item-name">{p.PenName}</span>
+										<span class="item-id">{p.PenId}</span>
+									</a>
+								{/each}
+							</div>
 						</div>
-					</div>
-				{/if}
-				{#if entry.drivers.length > 0}
-					<div class="category">
-						<h3>Drivers ({entry.drivers.length})</h3>
-						<div class="items">
-							{#each entry.drivers as d (d.EntityId)}
-								<a
-									class="item driver"
-									href={resolve('/entity/[entityId]', { entityId: d.EntityId })}
-								>
-									<span class="item-brand">{brandName(d.Brand)}</span>
-									<span class="item-name">{d.DriverVersion}</span>
-									<span class="item-id">{OS_LABELS[d.OSFamily] ?? d.OSFamily}</span>
-								</a>
-							{/each}
+					{/if}
+					{#if entry.drivers.length > 0}
+						<div class="category">
+							<h3>Drivers ({entry.drivers.length})</h3>
+							<div class="items">
+								{#each entry.drivers as d (d.EntityId)}
+									<a
+										class="item driver"
+										href={resolve('/entity/[entityId]', { entityId: d.EntityId })}
+									>
+										<span class="item-brand">{brandName(d.Brand)}</span>
+										<span class="item-name">{d.DriverVersion}</span>
+										<span class="item-id">{OS_LABELS[d.OSFamily] ?? d.OSFamily}</span>
+									</a>
+								{/each}
+							</div>
 						</div>
-					</div>
-				{/if}
+					{/if}
+				</div>
 			</div>
-		</div>
-	{/each}
-</div>
+		{/each}
+	</div>
+{:else}
+	<table class="timeline-table">
+		<thead>
+			<tr>
+				<th>Period</th>
+				<th>Category</th>
+				<th>Brand</th>
+				<th>Name</th>
+				<th>ID</th>
+				<th>Details</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each tableRows as row (row.entityId)}
+				<tr>
+					<td class="period-cell">
+						{row.year}{#if row.month}<span class="dim"> {MONTHS[row.month]}</span>
+						{:else if row.monthUnknown}<span class="dim"> no month</span>{/if}
+					</td>
+					<td>{row.category}</td>
+					<td>{brandName(row.brand)}</td>
+					<td><a href={resolve('/entity/[entityId]', { entityId: row.entityId })}>{row.name}</a></td
+					>
+					<td class="mono">{row.id}</td>
+					<td>{row.detail}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+{/if}
 
 <style>
 	.title-row {
@@ -429,5 +475,51 @@
 		font-size: 10px;
 		color: var(--text-dim);
 		text-transform: uppercase;
+	}
+
+	.timeline-table {
+		border-collapse: collapse;
+		font-size: 13px;
+		width: 100%;
+	}
+
+	.timeline-table th,
+	.timeline-table td {
+		padding: 5px 12px;
+		text-align: left;
+		border-bottom: 1px solid var(--border);
+		white-space: nowrap;
+	}
+
+	.timeline-table th {
+		font-weight: 600;
+		color: var(--th-text);
+		background: var(--th-bg);
+		position: sticky;
+		top: 0;
+	}
+
+	.timeline-table td a {
+		color: var(--link);
+		text-decoration: none;
+	}
+
+	.timeline-table td a:hover {
+		text-decoration: underline;
+	}
+
+	.timeline-table .period-cell {
+		font-weight: 600;
+	}
+
+	.timeline-table .dim {
+		font-weight: 400;
+		color: var(--text-dim);
+	}
+
+	.timeline-table .mono {
+		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+		font-size: 12px;
+		color: var(--text-muted);
 	}
 </style>
