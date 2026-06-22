@@ -6,7 +6,11 @@
 	import type { PressureResponse, PressureRange } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import { fmtP } from '$data/lib/pressure/interpolate.js';
-	import { resolveRangeByUnit, type RangeMetric } from '$data/lib/pressure/range-resolve.js';
+	import {
+		resolveRangeByUnit,
+		type RangeMetric,
+		type RangeSample,
+	} from '$data/lib/pressure/range-resolve.js';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import { slugify } from '$lib/chart-export/filenames.js';
 
@@ -49,37 +53,83 @@
 	let axisStep = $derived(metric === 'IAF' ? 1 : 100);
 	let showUnitInAxis = $derived(metric !== 'IAF');
 
+	// Units flagged with THIS metric's outlier defect (pressure-outlier-iaf for
+	// IAF, pressure-outlier-max for MAX) are known-bad for the metric: kept out
+	// of the chart and stats so they can't skew them, but still listed (marked)
+	// in the by-unit / by-sample tables and noted in the summary.
+	let OUTLIER_KIND = $derived(metric === 'IAF' ? 'pressure-outlier-iaf' : 'pressure-outlier-max');
+	function hasOutlierDefect(inventoryId: string): boolean {
+		const info = defectsByInventoryId.get(inventoryId);
+		return !!info && info.defects.some((d) => d.Kind === OUTLIER_KIND);
+	}
+
 	let nonDefectiveSessions = $derived(
 		pressureSessions.filter((s) => !defectsByInventoryId.has(s.InventoryId)),
 	);
 
-	// One resolved value per pen unit: direct measurement wins, else the median
-	// estimate across the unit's sessions. Sorted by value ascending.
+	const byValue = (a: { value: number }, b: { value: number }) => a.value - b.value;
+
+	// Clean set — drives the chart, stats, and summary. One resolved value per
+	// unit (direct measurement wins, else the median session estimate);
+	// outlier-defect units are excluded from both sources.
 	let resolved = $derived(
-		[...resolveRangeByUnit(metric, nonDefectiveSessions, measurements)].sort(
-			(a, b) => a.value - b.value,
-		),
+		[
+			...resolveRangeByUnit(
+				metric,
+				nonDefectiveSessions,
+				measurements.filter((m) => !hasOutlierDefect(m.PenInventoryId)),
+			),
+		].sort(byValue),
+	);
+
+	// Outlier-defect units, resolved from their own data — listed in the tables
+	// (marked defective) but kept out of the chart.
+	let outlierUnits = $derived(
+		[
+			...resolveRangeByUnit(
+				metric,
+				pressureSessions.filter((s) => hasOutlierDefect(s.InventoryId)),
+				measurements.filter((m) => hasOutlierDefect(m.PenInventoryId)),
+			),
+		].sort(byValue),
+	);
+
+	// Clean + outlier, sorted by value — what the by-unit / by-sample tables
+	// list. The chart and stats use only `resolved`.
+	let allUnits = $derived([...resolved, ...outlierUnits].sort(byValue));
+
+	// "WAP.0024 (5.7 gf), WAP.0030 (6.1 gf)" — the outlier-defect units kept out
+	// of the chart, listed in the summary note.
+	let outlierNote = $derived(
+		outlierUnits.map((u) => `${u.inventoryId} (${fmtP(u.value)} gf)`).join(', '),
 	);
 
 	let measuredCount = $derived(resolved.filter((r) => r.source === 'measured').length);
 	let estimatedCount = $derived(resolved.length - measuredCount);
 
-	// The resolved-source datapoints, flattened for the by-sample view. Grouped
-	// by unit, then chronological.
+	// Resolved-source datapoints, flattened for the by-sample view (grouped by
+	// unit, then chronological). `samples` (clean) drives the chart markers;
+	// `allSamples` (incl. outlier units) drives the by-sample table.
+	const bySampleOrder = (a: RangeSample, b: RangeSample) =>
+		a.inventoryId === b.inventoryId
+			? a.date.localeCompare(b.date)
+			: a.inventoryId.localeCompare(b.inventoryId);
 	let samples = $derived(
 		resolved
 			.flatMap((u) => u.samples)
 			.slice()
-			.sort((a, b) =>
-				a.inventoryId === b.inventoryId
-					? a.date.localeCompare(b.date)
-					: a.inventoryId.localeCompare(b.inventoryId),
-			),
+			.sort(bySampleOrder),
+	);
+	let allSamples = $derived(
+		allUnits
+			.flatMap((u) => u.samples)
+			.slice()
+			.sort(bySampleOrder),
 	);
 
 	// The Pen column only earns its space when more than one pen model is in
 	// play (a family or compare view). On a single-model page it just repeats.
-	let showPenColumn = $derived(new Set(resolved.map((r) => r.penEntityId)).size > 1);
+	let showPenColumn = $derived(new Set(allUnits.map((r) => r.penEntityId)).size > 1);
 
 	function penName(id: string): string {
 		return penNameById.get(id) ?? id;
@@ -158,14 +208,16 @@
 		`${metric} (gf)`,
 		'Source',
 		'Samples',
+		'Defect',
 	]);
 	let unitExportRows = $derived<(string | number)[][]>(
-		resolved.map((r) => [
+		allUnits.map((r) => [
 			...(showPenColumn ? [penName(r.penEntityId)] : []),
 			r.inventoryId,
 			fmtP(r.value),
 			r.source,
 			r.count,
+			hasOutlierDefect(r.inventoryId) ? OUTLIER_KIND : '',
 		]),
 	);
 	let sampleExportHeaders = $derived([
@@ -176,9 +228,10 @@
 		'Driver',
 		`${metric} (gf)`,
 		'Source',
+		'Defect',
 	]);
 	let sampleExportRows = $derived<(string | number)[][]>(
-		samples.map((s) => [
+		allSamples.map((s) => [
 			...(showPenColumn ? [penName(s.penEntityId)] : []),
 			s.inventoryId,
 			s.date,
@@ -186,6 +239,7 @@
 			s.driver,
 			fmtP(s.value),
 			s.source,
+			hasOutlierDefect(s.inventoryId) ? OUTLIER_KIND : '',
 		]),
 	);
 </script>
@@ -202,13 +256,13 @@
 			type="button"
 			class:active={view === 'unit'}
 			onclick={() => (view = 'unit')}
-			aria-pressed={view === 'unit'}>By unit ({resolved.length})</button
+			aria-pressed={view === 'unit'}>By unit ({allUnits.length})</button
 		>
 		<button
 			type="button"
 			class:active={view === 'sample'}
 			onclick={() => (view = 'sample')}
-			aria-pressed={view === 'sample'}>By sample ({samples.length})</button
+			aria-pressed={view === 'sample'}>By sample ({allSamples.length})</button
 		>
 	</div>
 {/if}
@@ -236,6 +290,13 @@
 
 {#if stats}
 	{#if view === 'summary'}
+		{#if outlierUnits.length > 0}
+			<p class="outlier-note">
+				⚠ Excluded from this summary — {outlierUnits.length}
+				unit{outlierUnits.length === 1 ? '' : 's'} marked
+				<code>{OUTLIER_KIND}</code>: {outlierNote}.
+			</p>
+		{/if}
 		<div class="table-block">
 			<div class="table-toolbar">
 				<span class="table-label">{metric} — min / median / max</span>
@@ -287,8 +348,8 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each resolved as r (r.inventoryId)}
-						<tr>
+					{#each allUnits as r (r.inventoryId)}
+						<tr class:outlier={hasOutlierDefect(r.inventoryId)}>
 							{#if showPenColumn}
 								<td>
 									<EntityLink entityId={r.penEntityId}>{penName(r.penEntityId)}</EntityLink>
@@ -304,6 +365,13 @@
 										class="tag estimated"
 										title="Estimated from {r.count} pressure session{r.count === 1 ? '' : 's'}"
 										>est.</span
+									>
+								{/if}
+								{#if hasOutlierDefect(r.inventoryId)}
+									<span
+										class="tag defect"
+										title={defectsByInventoryId.get(r.inventoryId)?.detailsLabel}
+										>⚠ {OUTLIER_KIND}</span
 									>
 								{/if}
 							</td>
@@ -338,8 +406,8 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each samples as s, i (s.inventoryId + '|' + s.date + '|' + i)}
-						<tr>
+					{#each allSamples as s, i (s.inventoryId + '|' + s.date + '|' + i)}
+						<tr class:outlier={hasOutlierDefect(s.inventoryId)}>
 							{#if showPenColumn}
 								<td>
 									<EntityLink entityId={s.penEntityId}>{penName(s.penEntityId)}</EntityLink>
@@ -372,6 +440,13 @@
 									<span class="tag measured">measured</span>
 								{:else}
 									<span class="tag estimated">est.</span>
+								{/if}
+								{#if hasOutlierDefect(s.inventoryId)}
+									<span
+										class="tag defect"
+										title={defectsByInventoryId.get(s.inventoryId)?.detailsLabel}
+										>⚠ {OUTLIER_KIND}</span
+									>
 								{/if}
 							</td>
 						</tr>
@@ -532,5 +607,28 @@
 	.tag.estimated {
 		color: #92400e;
 		background: #fde68a;
+	}
+	.tag.defect {
+		color: #991b1b;
+		background: #fee2e2;
+	}
+	.range-table tr.outlier td {
+		background: rgba(220, 38, 38, 0.06);
+	}
+	.outlier-note {
+		font-size: 12px;
+		color: #991b1b;
+		background: #fef2f2;
+		border: 1px solid #fecaca;
+		border-left: 3px solid #dc2626;
+		border-radius: 4px;
+		padding: 8px 12px;
+		margin: 0 0 12px;
+		max-width: 640px;
+		line-height: 1.45;
+	}
+	.outlier-note code {
+		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+		font-size: 11px;
 	}
 </style>
