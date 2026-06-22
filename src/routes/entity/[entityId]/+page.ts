@@ -9,7 +9,7 @@ export const prerender = false;
 import { error } from '@sveltejs/kit';
 import { sessionEntityId } from '$data/lib/pressure/session-id.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
-import { buildTabletNameMap } from '$lib/tablet-helpers.js';
+import { buildTabletNameAndIdMap } from '$lib/tablet-helpers.js';
 
 /** Count assigned (non-UNASSIGNED) inventory records per entity id, so the
  * compat tables can show "how many of this model you own". */
@@ -145,6 +145,8 @@ export async function load({ params, parent }) {
 			const maxMeasurements = allRange.filter(
 				(m) => m.Metric === 'MAX' && memberPenIds.has(m.PenEntityId),
 			);
+			// How many of each member pen model are in the inventory.
+			const inventoryPenCounts = countByEntity(allInventory, (p) => p.PenEntityId);
 			return {
 				entityType,
 				family,
@@ -153,7 +155,8 @@ export async function load({ params, parent }) {
 				defectsByInventoryId,
 				iafMeasurements,
 				maxMeasurements,
-				tabletNameById: buildTabletNameMap(allTablets),
+				inventoryPenCounts,
+				tabletNameById: buildTabletNameAndIdMap(allTablets),
 			};
 		}
 

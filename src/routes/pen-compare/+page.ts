@@ -1,5 +1,5 @@
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
-import { buildTabletNameMap } from '$lib/tablet-helpers.js';
+import { buildTabletNameAndIdMap } from '$lib/tablet-helpers.js';
 
 export const prerender = false;
 
@@ -21,6 +21,6 @@ export async function load({ parent }) {
 		defectsByInventoryId,
 		iafMeasurements,
 		maxMeasurements,
-		tabletNameById: buildTabletNameMap(allTablets),
+		tabletNameById: buildTabletNameAndIdMap(allTablets),
 	};
 }

@@ -33,10 +33,16 @@
 	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
 		data.defectsByInventoryId ?? new Map(),
 	);
+	// PenEntityId → number of (assigned) inventory units of that model.
+	let inventoryPenCounts: ReadonlyMap<string, number> = $derived(
+		data.inventoryPenCounts ?? new Map(),
+	);
 
 	// Build a per-pen label so the chart legend distinguishes models
 	// within the same family.
 	let penLabelById = $derived(new Map(memberPens.map((p) => [p.EntityId, penNameAndId(p)])));
+	// PenEntityId → Pen Model ID, for the IAF/MAX tables' first column.
+	let penIdById = $derived(new Map(memberPens.map((p) => [p.EntityId, p.PenId])));
 
 	let sessionColors = $derived(buildSessionColors(pressureSessions));
 
@@ -95,21 +101,23 @@
 					entityType="pen-family-members"
 					title={`${family.FamilyName} — Members`}
 					filename={`${family.EntityId}-members`}
-					headers={['Pen', 'Pen ID', 'Entity ID', 'Year']}
+					headers={['Pen', 'Pen ID', 'Entity ID', 'Year', 'In inventory']}
 					rows={sortedMemberPens.map((p) => [
 						penBrandAndName(p),
 						p.PenId,
 						p.EntityId,
 						p.PenYear ?? '',
+						inventoryPenCounts.get(p.EntityId) ?? 0,
 					])}
 				/>
 			</div>
 			<table class="pen-table">
 				<thead>
-					<tr><th>Name</th><th>Year</th></tr>
+					<tr><th>Name</th><th>Year</th><th class="num">In inventory</th></tr>
 				</thead>
 				<tbody>
 					{#each sortedMemberPens as p (p.EntityId)}
+						{@const inv = inventoryPenCounts.get(p.EntityId) ?? 0}
 						<tr>
 							<td>
 								<a href={resolve('/entity/[entityId]', { entityId: p.EntityId })}>
@@ -118,6 +126,9 @@
 								</a>
 							</td>
 							<td class="year">{p.PenYear || ''}</td>
+							<td class="num"
+								>{#if inv > 0}{inv}{:else}<span class="dim">0</span>{/if}</td
+							>
 						</tr>
 					{/each}
 				</tbody>
@@ -166,7 +177,7 @@
 			chartTitlePrefix={family.FamilyName}
 			entityLabel="this family"
 			measurements={data.iafMeasurements ?? []}
-			penNameById={penLabelById}
+			{penIdById}
 			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>
@@ -182,7 +193,7 @@
 			chartTitlePrefix={family.FamilyName}
 			entityLabel="this family"
 			measurements={data.maxMeasurements ?? []}
-			penNameById={penLabelById}
+			{penIdById}
 			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>
@@ -227,5 +238,11 @@
 	.year {
 		color: var(--text-muted);
 		width: 60px;
+	}
+	.pen-table th.num,
+	.pen-table td.num {
+		text-align: right;
+		white-space: nowrap;
+		width: 90px;
 	}
 </style>

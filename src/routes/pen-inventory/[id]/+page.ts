@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { penFullName } from '$lib/pen-helpers.js';
-import { buildTabletNameMap } from '$lib/tablet-helpers.js';
+import { buildTabletNameAndIdMap } from '$lib/tablet-helpers.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 
 export const prerender = false;
@@ -41,10 +41,11 @@ export async function load({ params, parent }) {
 	return {
 		item,
 		modelName,
+		penId: penModel?.PenId ?? item.PenEntityId,
 		pressureSessions: sessions,
 		defectsByInventoryId,
 		iafMeasurements,
 		maxMeasurements,
-		tabletNameById: buildTabletNameMap(allTablets),
+		tabletNameById: buildTabletNameAndIdMap(allTablets),
 	};
 }

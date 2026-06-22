@@ -24,6 +24,7 @@
 	let { data } = $props();
 	let item: InventoryPen = $derived(data.item);
 	let modelName: string = $derived(data.modelName ?? data.item.PenEntityId);
+	let penId: string = $derived(data.penId ?? data.item.PenEntityId);
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
 	let defectsByInventoryId: ReadonlyMap<string, DefectInfo> = $derived(
 		data.defectsByInventoryId ?? new Map(),
@@ -112,7 +113,7 @@
 			chartTitlePrefix={item.InventoryId}
 			entityLabel="this pen unit"
 			measurements={data.iafMeasurements ?? []}
-			penNameById={new Map([[item.PenEntityId, modelName]])}
+			penIdById={new Map([[item.PenEntityId, penId]])}
 			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>
@@ -128,7 +129,7 @@
 			chartTitlePrefix={item.InventoryId}
 			entityLabel="this pen unit"
 			measurements={data.maxMeasurements ?? []}
-			penNameById={new Map([[item.PenEntityId, modelName]])}
+			penIdById={new Map([[item.PenEntityId, penId]])}
 			tabletNameById={data.tabletNameById ?? new Map()}
 		/>
 	</div>

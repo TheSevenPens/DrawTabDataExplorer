@@ -1,6 +1,7 @@
 import {
 	setPenFamilyMemberCounts,
 	setPenFamilyInventoryCounts,
+	setPenFamilyModelIds,
 } from '$data/lib/entities/pen-family-fields.js';
 
 export async function load({ parent }) {
@@ -11,16 +12,24 @@ export async function load({ parent }) {
 		ds.InventoryPens.toArray(),
 	]);
 
-	// Pen-model count per family.
+	// Pen-model count + model-id list per family.
 	const counts: Record<string, number> = {};
 	const familyByPenEntityId = new Map<string, string>();
+	const modelIdLists: Record<string, string[]> = {};
 	for (const p of pens) {
 		if (p.PenFamily) {
 			counts[p.PenFamily] = (counts[p.PenFamily] ?? 0) + 1;
 			familyByPenEntityId.set(p.EntityId, p.PenFamily);
+			(modelIdLists[p.PenFamily] ??= []).push(p.PenId);
 		}
 	}
 	setPenFamilyMemberCounts(counts);
+
+	const modelIds: Record<string, string> = {};
+	for (const [fid, ids] of Object.entries(modelIdLists)) {
+		modelIds[fid] = [...ids].sort((a, b) => a.localeCompare(b)).join(', ');
+	}
+	setPenFamilyModelIds(modelIds);
 
 	// Physical inventory pen units per family (unit → its pen's PenFamily).
 	const invCounts: Record<string, number> = {};

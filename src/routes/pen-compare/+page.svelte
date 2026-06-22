@@ -110,9 +110,7 @@
 	// by-unit / by-sample tables show which pen each unit belongs to.
 	let combinedSessions = $derived(perPenSections.flatMap((s) => s.sessions));
 	let combinedIaf = $derived(perPenSections.flatMap((s) => s.iaf));
-	let flaggedPenNameById = $derived(
-		new Map(flaggedItems.map((p) => [p.EntityId, penBrandAndName(p)])),
-	);
+	let flaggedPenIdById = $derived(new Map(flaggedItems.map((p) => [p.EntityId, p.PenId])));
 
 	// --- Combined Pmax comparison ---
 	//
@@ -526,7 +524,7 @@
 				chartTitlePrefix="Flagged pens"
 				entityLabel="any flagged pen"
 				measurements={combinedIaf}
-				penNameById={flaggedPenNameById}
+				penIdById={flaggedPenIdById}
 				tabletNameById={data.tabletNameById ?? new Map()}
 			/>
 		</section>
@@ -549,7 +547,7 @@
 						chartTitlePrefix={section.pen.PenName}
 						entityLabel="this pen model"
 						measurements={section.iaf}
-						penNameById={new Map([[section.pen.EntityId, penBrandAndName(section.pen)]])}
+						penIdById={new Map([[section.pen.EntityId, section.pen.PenId]])}
 						tabletNameById={data.tabletNameById ?? new Map()}
 					/>
 				{/if}
@@ -667,7 +665,7 @@
 						chartTitlePrefix={section.pen.PenName}
 						entityLabel="this pen model"
 						measurements={section.max}
-						penNameById={new Map([[section.pen.EntityId, penBrandAndName(section.pen)]])}
+						penIdById={new Map([[section.pen.EntityId, section.pen.PenId]])}
 						tabletNameById={data.tabletNameById ?? new Map()}
 					/>
 				{/if}

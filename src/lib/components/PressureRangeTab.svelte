@@ -22,7 +22,7 @@
 		displayName,
 		chartTitlePrefix,
 		entityLabel,
-		penNameById = new Map<string, string>(),
+		penIdById = new Map<string, string>(),
 		tabletNameById = new Map<string, string>(),
 	}: {
 		metric: RangeMetric;
@@ -38,10 +38,10 @@
 		/** Inserted into the empty-state message: "No {metric} data available for
 		 * {entityLabel}". */
 		entityLabel: string;
-		/** PenEntityId → label, for the Pen column (shown only when the resolved
-		 * units span more than one pen model). */
-		penNameById?: ReadonlyMap<string, string>;
-		/** TabletEntityId → label, for the by-sample Tablet column. */
+		/** PenEntityId → Pen Model ID (e.g. "ACP-700") — shown as the first
+		 * "Pen Model ID" column in the by-unit and by-sample tables. */
+		penIdById?: ReadonlyMap<string, string>;
+		/** TabletEntityId → "Name (Id)" label, for the by-sample Tablet column. */
 		tabletNameById?: ReadonlyMap<string, string>;
 	} = $props();
 
@@ -127,12 +127,8 @@
 			.sort(bySampleOrder),
 	);
 
-	// The Pen column only earns its space when more than one pen model is in
-	// play (a family or compare view). On a single-model page it just repeats.
-	let showPenColumn = $derived(new Set(allUnits.map((r) => r.penEntityId)).size > 1);
-
-	function penName(id: string): string {
-		return penNameById.get(id) ?? id;
+	function penModelId(id: string): string {
+		return penIdById.get(id) ?? id;
 	}
 	function tabletName(id: string): string {
 		return id ? (tabletNameById.get(id) ?? id) : '';
@@ -203,7 +199,7 @@
 			: [],
 	);
 	let unitExportHeaders = $derived([
-		...(showPenColumn ? ['Pen'] : []),
+		'Pen Model ID',
 		'Inventory ID',
 		`${metric} (gf)`,
 		'Source',
@@ -212,7 +208,7 @@
 	]);
 	let unitExportRows = $derived<(string | number)[][]>(
 		allUnits.map((r) => [
-			...(showPenColumn ? [penName(r.penEntityId)] : []),
+			penModelId(r.penEntityId),
 			r.inventoryId,
 			fmtP(r.value),
 			r.source,
@@ -221,7 +217,7 @@
 		]),
 	);
 	let sampleExportHeaders = $derived([
-		...(showPenColumn ? ['Pen'] : []),
+		'Pen Model ID',
 		'Inventory ID',
 		'Date',
 		'Tablet',
@@ -232,7 +228,7 @@
 	]);
 	let sampleExportRows = $derived<(string | number)[][]>(
 		allSamples.map((s) => [
-			...(showPenColumn ? [penName(s.penEntityId)] : []),
+			penModelId(s.penEntityId),
 			s.inventoryId,
 			s.date,
 			tabletName(s.tabletEntityId),
@@ -340,7 +336,7 @@
 			<table class="range-table">
 				<thead>
 					<tr>
-						{#if showPenColumn}<th>Pen</th>{/if}
+						<th>Pen Model ID</th>
 						<th>Inventory ID</th>
 						<th class="num">{metric}<br /><span class="unit">(gf)</span></th>
 						<th>Source</th>
@@ -350,11 +346,9 @@
 				<tbody>
 					{#each allUnits as r (r.inventoryId)}
 						<tr class:outlier={hasOutlierDefect(r.inventoryId)}>
-							{#if showPenColumn}
-								<td>
-									<EntityLink entityId={r.penEntityId}>{penName(r.penEntityId)}</EntityLink>
-								</td>
-							{/if}
+							<td class="mono">
+								<EntityLink entityId={r.penEntityId}>{penModelId(r.penEntityId)}</EntityLink>
+							</td>
 							<td class="mono">{r.inventoryId}</td>
 							<td class="num mono">{fmtP(r.value)}</td>
 							<td>
@@ -396,7 +390,7 @@
 			<table class="range-table">
 				<thead>
 					<tr>
-						{#if showPenColumn}<th>Pen</th>{/if}
+						<th>Pen Model ID</th>
 						<th>Inventory ID</th>
 						<th>Date</th>
 						<th>Tablet</th>
@@ -408,11 +402,9 @@
 				<tbody>
 					{#each allSamples as s, i (s.inventoryId + '|' + s.date + '|' + i)}
 						<tr class:outlier={hasOutlierDefect(s.inventoryId)}>
-							{#if showPenColumn}
-								<td>
-									<EntityLink entityId={s.penEntityId}>{penName(s.penEntityId)}</EntityLink>
-								</td>
-							{/if}
+							<td class="mono">
+								<EntityLink entityId={s.penEntityId}>{penModelId(s.penEntityId)}</EntityLink>
+							</td>
 							<td class="mono">
 								{#if s.sessionEntityId}
 									<EntityLink entityId={s.sessionEntityId}>{s.inventoryId}</EntityLink>

@@ -19,6 +19,7 @@
 	import {
 		tabletFullName,
 		buildTabletNameMap,
+		buildTabletNameAndIdMap,
 		compareTabletByYearDesc,
 	} from '$lib/tablet-helpers.js';
 	import { penBrandAndName, penFullName } from '$lib/pen-helpers.js';
@@ -40,6 +41,8 @@
 	);
 	let allTablets: Tablet[] = $derived(data.allTablets ?? []);
 	let tabletNameById = $derived(buildTabletNameMap(allTablets));
+	// "Name (Id)" form for the IAF/MAX by-sample Tablet column.
+	let tabletNameAndIdById = $derived(buildTabletNameAndIdMap(allTablets));
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
 	let inventoryUnits: InventoryPen[] = $derived(data.inventoryUnits ?? []);
 	// TabletEntityId → count of that model owned in inventory.
@@ -242,8 +245,8 @@
 			chartTitlePrefix={pen.PenName}
 			entityLabel="this pen model"
 			measurements={data.iafMeasurements ?? []}
-			penNameById={new Map([[pen.EntityId, penBrandAndName(pen)]])}
-			{tabletNameById}
+			penIdById={new Map([[pen.EntityId, pen.PenId]])}
+			tabletNameById={tabletNameAndIdById}
 		/>
 	</div>
 {/if}
@@ -258,8 +261,8 @@
 			chartTitlePrefix={pen.PenName}
 			entityLabel="this pen model"
 			measurements={data.maxMeasurements ?? []}
-			penNameById={new Map([[pen.EntityId, penBrandAndName(pen)]])}
-			{tabletNameById}
+			penIdById={new Map([[pen.EntityId, pen.PenId]])}
+			tabletNameById={tabletNameAndIdById}
 		/>
 	</div>
 {/if}
