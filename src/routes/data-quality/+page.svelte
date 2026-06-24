@@ -8,6 +8,8 @@
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { analyzeData } from '$lib/data-quality/analysis.js';
 	import SectionHeader from '$lib/components/SectionHeader.svelte';
+	import SortableTable from '$lib/components/SortableTable.svelte';
+	import type { SortableColumn } from '$lib/components/sortable-table.js';
 	import CompletionSection from '$lib/data-quality/CompletionSection.svelte';
 	import StatusMessage from '$lib/components/StatusMessage.svelte';
 	import LoadingState from '$lib/components/LoadingState.svelte';
@@ -66,6 +68,172 @@
 				(!releaseDateMissing || t.missing === releaseDateMissing),
 		),
 	);
+
+	// Column configs for the SortableTable instances below. Each cell's `get`
+	// returns the display value; `sortValue` supplies a numeric/raw sort key
+	// where it differs; `href` makes a cell a link.
+	const entityCountsCols: SortableColumn[] = [
+		{ key: 'entity', label: 'Entity', get: (r) => r.entity },
+		{ key: 'count', label: 'Count', get: (r) => r.count, num: true },
+	];
+	const issuesCols: SortableColumn[] = [
+		{ key: 'entity', label: 'Entity', get: (i) => i.entity },
+		{ key: 'entityId', label: 'Entity ID', get: (i) => i.entityId, mono: true },
+		{ key: 'field', label: 'Field', get: (i) => i.field },
+		{ key: 'issue', label: 'Issue', get: (i) => i.issue },
+		{ key: 'value', label: 'Value', get: (i) => i.value ?? '', mono: true },
+	];
+	const orphanedCompatCols: SortableColumn[] = [
+		{ key: 'type', label: 'Type', get: (o) => o.type },
+		{ key: 'id', label: 'ID', get: (o) => o.id, mono: true },
+	];
+	const wacomNoCompatCols: SortableColumn[] = [
+		{ key: 'id', label: 'Model ID', get: (t) => t.id, mono: true },
+		{ key: 'name', label: 'Name', get: (t) => t.name },
+	];
+	const pensNoCompatCols: SortableColumn[] = [
+		{ key: 'id', label: 'Pen ID', get: (p) => p.id, mono: true },
+		{ key: 'name', label: 'Name', get: (p) => p.name },
+	];
+	const includedPenNoCompatCols: SortableColumn[] = [
+		{ key: 'tabletId', label: 'Tablet ID', get: (r) => r.tabletId, mono: true },
+		{ key: 'tabletName', label: 'Tablet Name', get: (r) => r.tabletName },
+		{ key: 'penEntityId', label: 'Pen EntityId', get: (r) => r.penEntityId, mono: true },
+		{ key: 'penName', label: 'Pen Name', get: (r) => r.penName },
+	];
+	const orphanedFamiliesCols: SortableColumn[] = [
+		{ key: 'type', label: 'Type', get: (o) => o.type },
+		{ key: 'id', label: 'Family ID', get: (o) => o.id, mono: true },
+		{ key: 'referencedBy', label: 'Referenced By', get: (o) => o.referencedBy, mono: true },
+	];
+	const nonMonotonicCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (n) => n.session.Brand },
+		{
+			key: 'pen',
+			label: 'Pen',
+			get: (n) => n.session.PenEntityId,
+			mono: true,
+			href: (n) => resolve('/entity/[entityId]', { entityId: n.session.PenEntityId }),
+		},
+		{
+			key: 'inventoryId',
+			label: 'Inventory ID',
+			get: (n) => n.session.InventoryId,
+			mono: true,
+			href: (n) => resolve('/entity/[entityId]', { entityId: sessionEntityId(n.session) }),
+		},
+		{ key: 'date', label: 'Date', get: (n) => n.session.Date, mono: true },
+		{ key: 'axis', label: 'Axis', get: (n) => n.firstDrop.axis },
+		{ key: 'dropIndex', label: 'Drop @', get: (n) => n.firstDrop.index, num: true },
+		{
+			key: 'fromTo',
+			label: 'From → To',
+			num: true,
+			mono: true,
+			get: (n) =>
+				`${n.firstDrop.from.toFixed(2)} → ${n.firstDrop.to.toFixed(2)}${n.firstDrop.axis === 'logical' ? '%' : ' gf'}`,
+			sortValue: (n) => n.firstDrop.from,
+		},
+	];
+	const missingLowEndCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (p) => p.brand },
+		{
+			key: 'pen',
+			label: 'Pen',
+			get: (p) => p.penEntityId,
+			mono: true,
+			href: (p) => resolve('/entity/[entityId]', { entityId: p.penEntityId }),
+		},
+		{ key: 'inventoryId', label: 'Inventory ID', get: (p) => p.inventoryId, mono: true },
+		{
+			key: 'lowest',
+			label: 'Lowest %',
+			get: (p) => p.lowestLogical.toFixed(2),
+			sortValue: (p) => p.lowestLogical,
+			num: true,
+			mono: true,
+		},
+		{ key: 'sessions', label: 'Sessions', get: (p) => p.sessionCount, num: true },
+	];
+	const singleSessionCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (p) => p.brand },
+		{
+			key: 'pen',
+			label: 'Pen',
+			get: (p) => p.penEntityId,
+			mono: true,
+			href: (p) => resolve('/entity/[entityId]', { entityId: p.penEntityId }),
+		},
+		{
+			key: 'inventoryId',
+			label: 'Inventory ID',
+			get: (p) => p.inventoryId,
+			mono: true,
+			href: (p) => resolve('/entity/[entityId]', { entityId: p.sessionEntityId }),
+		},
+		{ key: 'date', label: 'Date', get: (p) => p.date, mono: true },
+	];
+	const iafNotMeasuredCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (p) => p.brand },
+		{
+			key: 'pen',
+			label: 'Pen',
+			get: (p) => p.penName,
+			href: (p) => resolve('/entity/[entityId]', { entityId: p.penEntityId }),
+		},
+		{ key: 'inventoryId', label: 'Inventory ID', get: (p) => p.inventoryId, mono: true },
+		{
+			key: 'estimate',
+			label: 'Estimated IAF (gf)',
+			get: (p) => p.estimate.toFixed(1),
+			sortValue: (p) => p.estimate,
+			num: true,
+			mono: true,
+		},
+	];
+	const releaseDateCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (t) => t.brand },
+		{
+			key: 'tablet',
+			label: 'Tablet',
+			get: (t) => `${t.name} (${t.id})`,
+			sortValue: (t) => t.name,
+			href: (t) => resolve('/entity/[entityId]', { entityId: t.entityId }),
+		},
+		{
+			key: 'releaseDate',
+			label: 'Current',
+			get: (t) => t.releaseDate || '—',
+			sortValue: (t) => t.releaseDate,
+			mono: true,
+		},
+		{ key: 'missing', label: 'Missing', get: (t) => t.missing },
+	];
+	const staleCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (p) => p.brand },
+		{
+			key: 'pen',
+			label: 'Pen',
+			get: (p) => p.penEntityId,
+			mono: true,
+			href: (p) => resolve('/entity/[entityId]', { entityId: p.penEntityId }),
+		},
+		{ key: 'inventoryId', label: 'Inventory ID', get: (p) => p.inventoryId, mono: true },
+		{ key: 'lastDate', label: 'Last Measured', get: (p) => p.lastDate, mono: true },
+		{ key: 'daysAgo', label: 'Days Ago', get: (p) => p.daysAgo, num: true },
+	];
+	const remeasureCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (p) => p.brand },
+		{
+			key: 'pen',
+			label: 'Pen',
+			get: (p) => p.penEntityId,
+			mono: true,
+			href: (p) => resolve('/entity/[entityId]', { entityId: p.penEntityId }),
+		},
+		{ key: 'inventoryId', label: 'Inventory ID', get: (p) => p.inventoryId, mono: true },
+		{ key: 'reasons', label: 'Reasons', get: (p) => p.reasons.join(', ') },
+	];
 
 	// Source of truth for the navigation tree. `count` (optional) is
 	// re-read every render so the badge stays in sync with the derived
@@ -165,9 +333,13 @@
 			{#snippet content(activeSection: string)}
 				{#if activeSection === 'entity-counts'}
 					<section class="section">
-						<SectionHeader
-							title="Entity Counts"
-							disabled={entityCounts.length === 0}
+						<SectionHeader title="Entity Counts" />
+						<SortableTable
+							columns={entityCountsCols}
+							rows={entityCounts}
+							rowKey={(r) => r.entity}
+							tableClass="compact"
+							exportDisabled={entityCounts.length === 0}
 							onExport={() =>
 								openExport(
 									'Entity Counts',
@@ -176,84 +348,53 @@
 									entityCounts.map((r) => [r.entity, r.count]),
 								)}
 						/>
-						<table class="compact">
-							<thead><tr><th>Entity</th><th>Count</th></tr></thead>
-							<tbody>
-								{#each entityCounts as row (row.entity)}
-									<tr><td>{row.entity}</td><td>{row.count}</td></tr>
-								{/each}
-							</tbody>
-						</table>
 					</section>
 				{/if}
 
 				{#if activeSection === 'issues'}
 					<section class="section">
-						<SectionHeader
-							title="Issues"
-							count={issues.length}
-							disabled={issues.length === 0}
-							onExport={() =>
-								openExport(
-									'Issues',
-									'data-quality-issues',
-									['Entity', 'Entity ID', 'Field', 'Issue', 'Value'],
-									issues.map((i) => [i.entity, i.entityId, i.field, i.issue, i.value ?? '']),
-								)}
-						/>
+						<SectionHeader title="Issues" count={issues.length} />
 						{#if issues.length === 0}
 							<StatusMessage variant="good">No issues found.</StatusMessage>
 						{:else}
-							<table>
-								<thead>
-									<tr
-										><th>Entity</th><th>Entity ID</th><th>Field</th><th>Issue</th><th>Value</th></tr
-									>
-								</thead>
-								<tbody>
-									{#each issues as issue, i (i)}
-										<tr>
-											<td>{issue.entity}</td>
-											<td class="mono">{issue.entityId}</td>
-											<td>{issue.field}</td>
-											<td>{issue.issue}</td>
-											<td class="mono">{issue.value ?? ''}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={issuesCols}
+								rows={issues}
+								rowKey={(_r, i) => i}
+								onExport={() =>
+									openExport(
+										'Issues',
+										'data-quality-issues',
+										['Entity', 'Entity ID', 'Field', 'Issue', 'Value'],
+										issues.map((i) => [i.entity, i.entityId, i.field, i.issue, i.value ?? '']),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
 
 				{#if activeSection === 'orphaned-compat'}
 					<section class="section">
-						<SectionHeader
-							title="Orphaned Compat References"
-							count={orphanedCompat.length}
-							disabled={orphanedCompat.length === 0}
-							onExport={() =>
-								openExport(
-									'Orphaned Compat References',
-									'data-quality-orphaned-compat',
-									['Type', 'ID'],
-									orphanedCompat.map((o) => [o.type, o.id]),
-								)}
-						/>
+						<SectionHeader title="Orphaned Compat References" count={orphanedCompat.length} />
 						<p class="description">
 							IDs in pen-compat that don't match any record in the referenced entity.
 						</p>
 						{#if orphanedCompat.length === 0}
 							<StatusMessage variant="good">No orphaned references.</StatusMessage>
 						{:else}
-							<table class="compact">
-								<thead><tr><th>Type</th><th>ID</th></tr></thead>
-								<tbody>
-									{#each orphanedCompat as orphan (orphan.type + '|' + orphan.id)}
-										<tr><td>{orphan.type}</td><td class="mono">{orphan.id}</td></tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={orphanedCompatCols}
+								rows={orphanedCompat}
+								rowKey={(o) => o.type + '|' + o.id}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Orphaned Compat References',
+										'data-quality-orphaned-compat',
+										['Type', 'ID'],
+										orphanedCompat.map((o) => [o.type, o.id]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
@@ -263,14 +404,6 @@
 						<SectionHeader
 							title="Wacom Tablets with No Pen Compatibility Data"
 							count={tabletsNoCompat.length}
-							disabled={tabletsNoCompat.length === 0}
-							onExport={() =>
-								openExport(
-									'Wacom Tablets with No Pen Compatibility Data',
-									'data-quality-wacom-no-compat',
-									['Model ID', 'Name'],
-									tabletsNoCompat.map((t) => [t.id, t.name]),
-								)}
 						/>
 						<p class="description">Wacom tablets that have no entries in pen-compat.</p>
 						{#if tabletsNoCompat.length === 0}
@@ -278,14 +411,19 @@
 								>All Wacom tablets have compatibility data.</StatusMessage
 							>
 						{:else}
-							<table class="compact">
-								<thead><tr><th>Model ID</th><th>Name</th></tr></thead>
-								<tbody>
-									{#each tabletsNoCompat as t (t.id)}
-										<tr><td class="mono">{t.id}</td><td>{t.name}</td></tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={wacomNoCompatCols}
+								rows={tabletsNoCompat}
+								rowKey={(t) => t.id}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Wacom Tablets with No Pen Compatibility Data',
+										'data-quality-wacom-no-compat',
+										['Model ID', 'Name'],
+										tabletsNoCompat.map((t) => [t.id, t.name]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
@@ -295,27 +433,24 @@
 						<SectionHeader
 							title="Pens with No Tablet Compatibility Data"
 							count={pensNoCompat.length}
-							disabled={pensNoCompat.length === 0}
-							onExport={() =>
-								openExport(
-									'Pens with No Tablet Compatibility Data',
-									'data-quality-pens-no-compat',
-									['Pen ID', 'Name'],
-									pensNoCompat.map((p) => [p.id, p.name]),
-								)}
 						/>
 						<p class="description">Pens that have no entries in pen-compat.</p>
 						{#if pensNoCompat.length === 0}
 							<StatusMessage variant="good">All pens have compatibility data.</StatusMessage>
 						{:else}
-							<table class="compact">
-								<thead><tr><th>Pen ID</th><th>Name</th></tr></thead>
-								<tbody>
-									{#each pensNoCompat as p (p.id)}
-										<tr><td class="mono">{p.id}</td><td>{p.name}</td></tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={pensNoCompatCols}
+								rows={pensNoCompat}
+								rowKey={(p) => p.id}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Pens with No Tablet Compatibility Data',
+										'data-quality-pens-no-compat',
+										['Pen ID', 'Name'],
+										pensNoCompat.map((p) => [p.id, p.name]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
@@ -325,19 +460,6 @@
 						<SectionHeader
 							title="Included Pens Missing Compatibility Info"
 							count={includedPenMissingCompat.length}
-							disabled={includedPenMissingCompat.length === 0}
-							onExport={() =>
-								openExport(
-									'Included Pens Missing Compatibility Info',
-									'data-quality-included-pens-no-compat',
-									['Tablet ID', 'Tablet Name', 'Pen EntityId', 'Pen Name'],
-									includedPenMissingCompat.map((r) => [
-										r.tabletId,
-										r.tabletName,
-										r.penEntityId,
-										r.penName,
-									]),
-								)}
 						/>
 						<p class="description">
 							Tablets whose <code>Model.IncludedPen</code> references a pen, but no pen-compat row links
@@ -349,89 +471,57 @@
 								>All included pens have a matching pen-compat row.</StatusMessage
 							>
 						{:else}
-							<table class="compact">
-								<thead>
-									<tr>
-										<th>Tablet ID</th>
-										<th>Tablet Name</th>
-										<th>Pen EntityId</th>
-										<th>Pen Name</th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each includedPenMissingCompat as r (r.tabletId + '|' + r.penEntityId)}
-										<tr>
-											<td class="mono">{r.tabletId}</td>
-											<td>{r.tabletName}</td>
-											<td class="mono">{r.penEntityId}</td>
-											<td>{r.penName}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={includedPenNoCompatCols}
+								rows={includedPenMissingCompat}
+								rowKey={(r) => r.tabletId + '|' + r.penEntityId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Included Pens Missing Compatibility Info',
+										'data-quality-included-pens-no-compat',
+										['Tablet ID', 'Tablet Name', 'Pen EntityId', 'Pen Name'],
+										includedPenMissingCompat.map((r) => [
+											r.tabletId,
+											r.tabletName,
+											r.penEntityId,
+											r.penName,
+										]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
 
 				{#if activeSection === 'orphaned-families'}
 					<section class="section">
-						<SectionHeader
-							title="Orphaned Family References"
-							count={orphanedFamilies.length}
-							disabled={orphanedFamilies.length === 0}
-							onExport={() =>
-								openExport(
-									'Orphaned Family References',
-									'data-quality-orphaned-families',
-									['Type', 'Family ID', 'Referenced By'],
-									orphanedFamilies.map((o) => [o.type, o.id, o.referencedBy]),
-								)}
-						/>
+						<SectionHeader title="Orphaned Family References" count={orphanedFamilies.length} />
 						<p class="description">
 							Family IDs referenced by pens or tablets that don't exist in the family entities.
 						</p>
 						{#if orphanedFamilies.length === 0}
 							<StatusMessage variant="good">No orphaned family references.</StatusMessage>
 						{:else}
-							<table class="compact">
-								<thead><tr><th>Type</th><th>Family ID</th><th>Referenced By</th></tr></thead>
-								<tbody>
-									{#each orphanedFamilies as o (o.type + '|' + o.id + '|' + o.referencedBy)}
-										<tr>
-											<td>{o.type}</td>
-											<td class="mono">{o.id}</td>
-											<td class="mono">{o.referencedBy}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={orphanedFamiliesCols}
+								rows={orphanedFamilies}
+								rowKey={(o) => o.type + '|' + o.id + '|' + o.referencedBy}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Orphaned Family References',
+										'data-quality-orphaned-families',
+										['Type', 'Family ID', 'Referenced By'],
+										orphanedFamilies.map((o) => [o.type, o.id, o.referencedBy]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
 
 				{#if activeSection === 'pressure-non-monotonic'}
 					<section class="section">
-						<SectionHeader
-							title="Non-Monotonic Sessions"
-							count={nonMonotonicSessions.length}
-							disabled={nonMonotonicSessions.length === 0}
-							onExport={() =>
-								openExport(
-									'Non-Monotonic Pressure Sessions',
-									'data-quality-pressure-non-monotonic',
-									['Brand', 'Pen', 'Inventory ID', 'Date', 'Axis', 'Drop Index', 'From', 'To'],
-									nonMonotonicSessions.map((n) => [
-										n.session.Brand,
-										n.session.PenEntityId,
-										n.session.InventoryId,
-										n.session.Date,
-										n.firstDrop.axis,
-										n.firstDrop.index,
-										n.firstDrop.from.toFixed(2),
-										n.firstDrop.to.toFixed(2),
-									]),
-								)}
-						/>
+						<SectionHeader title="Non-Monotonic Sessions" count={nonMonotonicSessions.length} />
 						<p class="description">
 							Sessions whose records go backwards on either axis as the array progresses — logical
 							pressure (y) drops below an earlier sample, or physical force (x) drops below an
@@ -443,73 +533,35 @@
 								>All sessions are monotonically non-decreasing on both axes.</StatusMessage
 							>
 						{:else}
-							<table class="compact">
-								<thead>
-									<tr>
-										<th>Brand</th>
-										<th>Pen</th>
-										<th>Inventory ID</th>
-										<th>Date</th>
-										<th>Axis</th>
-										<th>Drop @</th>
-										<th>From → To</th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each nonMonotonicSessions as n (n.session._id)}
-										{@const unit = n.firstDrop.axis === 'logical' ? '%' : ' gf'}
-										<tr>
-											<td>{n.session.Brand}</td>
-											<td class="mono">
-												<a
-													href={resolve('/entity/[entityId]', { entityId: n.session.PenEntityId })}
-												>
-													{n.session.PenEntityId}
-												</a>
-											</td>
-											<td class="mono">
-												<a
-													href={resolve('/entity/[entityId]', {
-														entityId: sessionEntityId(n.session),
-													})}
-												>
-													{n.session.InventoryId}
-												</a>
-											</td>
-											<td class="mono">{n.session.Date}</td>
-											<td>{n.firstDrop.axis}</td>
-											<td class="num">{n.firstDrop.index}</td>
-											<td class="num mono">
-												{n.firstDrop.from.toFixed(2)} → {n.firstDrop.to.toFixed(2)}{unit}
-											</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={nonMonotonicCols}
+								rows={nonMonotonicSessions}
+								rowKey={(n) => n.session._id}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Non-Monotonic Pressure Sessions',
+										'data-quality-pressure-non-monotonic',
+										['Brand', 'Pen', 'Inventory ID', 'Date', 'Axis', 'Drop Index', 'From', 'To'],
+										nonMonotonicSessions.map((n) => [
+											n.session.Brand,
+											n.session.PenEntityId,
+											n.session.InventoryId,
+											n.session.Date,
+											n.firstDrop.axis,
+											n.firstDrop.index,
+											n.firstDrop.from.toFixed(2),
+											n.firstDrop.to.toFixed(2),
+										]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
 
 				{#if activeSection === 'pressure-missing-low-end'}
 					<section class="section">
-						<SectionHeader
-							title="Missing Low-End"
-							count={missingLowEndPens.length}
-							disabled={missingLowEndPens.length === 0}
-							onExport={() =>
-								openExport(
-									'Pens Missing Low-End Measurements',
-									'data-quality-pressure-missing-low-end',
-									['Brand', 'Pen', 'Inventory ID', 'Lowest %', 'Sessions'],
-									missingLowEndPens.map((p) => [
-										p.brand,
-										p.penEntityId,
-										p.inventoryId,
-										p.lowestLogical.toFixed(2),
-										p.sessionCount,
-									]),
-								)}
-						/>
+						<SectionHeader title="Missing Low-End" count={missingLowEndPens.length} />
 						<p class="description">
 							Pens whose lowest measured logical pressure across all sessions is still above 0.5%.
 							The Piaf estimate may be unreliable for these.
@@ -519,50 +571,32 @@
 								>All pens have low-end measurements covering the activation point.</StatusMessage
 							>
 						{:else}
-							<table class="compact">
-								<thead>
-									<tr>
-										<th>Brand</th>
-										<th>Pen</th>
-										<th>Inventory ID</th>
-										<th>Lowest %</th>
-										<th>Sessions</th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each missingLowEndPens as p (p.inventoryId)}
-										<tr>
-											<td>{p.brand}</td>
-											<td class="mono">
-												<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
-													{p.penEntityId}
-												</a>
-											</td>
-											<td class="mono">{p.inventoryId}</td>
-											<td class="num mono">{p.lowestLogical.toFixed(2)}</td>
-											<td class="num">{p.sessionCount}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={missingLowEndCols}
+								rows={missingLowEndPens}
+								rowKey={(p) => p.inventoryId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Pens Missing Low-End Measurements',
+										'data-quality-pressure-missing-low-end',
+										['Brand', 'Pen', 'Inventory ID', 'Lowest %', 'Sessions'],
+										missingLowEndPens.map((p) => [
+											p.brand,
+											p.penEntityId,
+											p.inventoryId,
+											p.lowestLogical.toFixed(2),
+											p.sessionCount,
+										]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
 
 				{#if activeSection === 'pressure-single-session'}
 					<section class="section">
-						<SectionHeader
-							title="Single-Session Pens"
-							count={singleSessionPens.length}
-							disabled={singleSessionPens.length === 0}
-							onExport={() =>
-								openExport(
-									'Pens with Only One Pressure-Response Session',
-									'data-quality-pressure-single-session',
-									['Brand', 'Pen', 'Inventory ID', 'Date'],
-									singleSessionPens.map((p) => [p.brand, p.penEntityId, p.inventoryId, p.date]),
-								)}
-						/>
+						<SectionHeader title="Single-Session Pens" count={singleSessionPens.length} />
 						<p class="description">
 							Pens with only one recorded session. A second session would confirm consistency.
 						</p>
@@ -571,29 +605,19 @@
 								>Every pen has at least two sessions on record.</StatusMessage
 							>
 						{:else}
-							<table class="compact">
-								<thead>
-									<tr><th>Brand</th><th>Pen</th><th>Inventory ID</th><th>Date</th></tr>
-								</thead>
-								<tbody>
-									{#each singleSessionPens as p (p.inventoryId)}
-										<tr>
-											<td>{p.brand}</td>
-											<td class="mono">
-												<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
-													{p.penEntityId}
-												</a>
-											</td>
-											<td class="mono">
-												<a href={resolve('/entity/[entityId]', { entityId: p.sessionEntityId })}>
-													{p.inventoryId}
-												</a>
-											</td>
-											<td class="mono">{p.date}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={singleSessionCols}
+								rows={singleSessionPens}
+								rowKey={(p) => p.inventoryId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Pens with Only One Pressure-Response Session',
+										'data-quality-pressure-single-session',
+										['Brand', 'Pen', 'Inventory ID', 'Date'],
+										singleSessionPens.map((p) => [p.brand, p.penEntityId, p.inventoryId, p.date]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
@@ -603,19 +627,6 @@
 						<SectionHeader
 							title="IAF — Estimated, Not Measured"
 							count={iafEstimatedNoMeasurement.length}
-							disabled={iafEstimatedNoMeasurement.length === 0}
-							onExport={() =>
-								openExport(
-									'Pen Units with an Estimated IAF but No Direct Measurement',
-									'data-quality-iaf-not-measured',
-									['Brand', 'Pen', 'Inventory ID', 'Estimated IAF (gf)'],
-									iafEstimatedNoMeasurement.map((p) => [
-										p.brand,
-										p.penName,
-										p.inventoryId,
-										p.estimate.toFixed(1),
-									]),
-								)}
 						/>
 						<p class="description">
 							Pen units with an estimated IAF (from pressure-response sessions) but no direct IAF
@@ -626,30 +637,24 @@
 								>Every unit with an IAF estimate also has a direct measurement.</StatusMessage
 							>
 						{:else}
-							<table class="compact">
-								<thead>
-									<tr>
-										<th>Brand</th>
-										<th>Pen</th>
-										<th>Inventory ID</th>
-										<th>Estimated IAF (gf)</th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each iafEstimatedNoMeasurement as p (p.inventoryId)}
-										<tr>
-											<td>{p.brand}</td>
-											<td>
-												<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
-													{p.penName}
-												</a>
-											</td>
-											<td class="mono">{p.inventoryId}</td>
-											<td class="mono">{p.estimate.toFixed(1)}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={iafNotMeasuredCols}
+								rows={iafEstimatedNoMeasurement}
+								rowKey={(p) => p.inventoryId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Pen Units with an Estimated IAF but No Direct Measurement',
+										'data-quality-iaf-not-measured',
+										['Brand', 'Pen', 'Inventory ID', 'Estimated IAF (gf)'],
+										iafEstimatedNoMeasurement.map((p) => [
+											p.brand,
+											p.penName,
+											p.inventoryId,
+											p.estimate.toFixed(1),
+										]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
@@ -659,20 +664,6 @@
 						<SectionHeader
 							title="Tablets — No Exact Release Date"
 							count={filteredReleaseDateTablets.length}
-							disabled={filteredReleaseDateTablets.length === 0}
-							onExport={() =>
-								openExport(
-									'Tablets Without an Exact Release Date',
-									'data-quality-tablet-release-dates',
-									['Brand', 'Model ID', 'Name', 'Current ReleaseDate', 'Missing'],
-									filteredReleaseDateTablets.map((t) => [
-										t.brand,
-										t.id,
-										t.name,
-										t.releaseDate,
-										t.missing,
-									]),
-								)}
 						/>
 						<p class="description">
 							Tablets whose <code>Model.ReleaseDate</code> isn't an exact
@@ -703,54 +694,32 @@
 									</select>
 								</label>
 							</div>
-							<table class="compact">
-								<thead>
-									<tr>
-										<th>Brand</th>
-										<th>Tablet</th>
-										<th>Current</th>
-										<th>Missing</th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each filteredReleaseDateTablets as t (t.entityId)}
-										<tr>
-											<td>{t.brand}</td>
-											<td>
-												<a href={resolve('/entity/[entityId]', { entityId: t.entityId })}>
-													{t.name} ({t.id})
-												</a>
-											</td>
-											<td class="mono">{t.releaseDate || '—'}</td>
-											<td>{t.missing}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={releaseDateCols}
+								rows={filteredReleaseDateTablets}
+								rowKey={(t) => t.entityId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Tablets Without an Exact Release Date',
+										'data-quality-tablet-release-dates',
+										['Brand', 'Model ID', 'Name', 'Current ReleaseDate', 'Missing'],
+										filteredReleaseDateTablets.map((t) => [
+											t.brand,
+											t.id,
+											t.name,
+											t.releaseDate,
+											t.missing,
+										]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
 
 				{#if activeSection === 'pressure-stale'}
 					<section class="section">
-						<SectionHeader
-							title="Stale Measurements"
-							count={staleMeasurements.length}
-							disabled={staleMeasurements.length === 0}
-							onExport={() =>
-								openExport(
-									'Pens with Stale Measurements',
-									'data-quality-pressure-stale',
-									['Brand', 'Pen', 'Inventory ID', 'Last Measured', 'Days Ago'],
-									staleMeasurements.map((p) => [
-										p.brand,
-										p.penEntityId,
-										p.inventoryId,
-										p.lastDate,
-										p.daysAgo,
-									]),
-								)}
-						/>
+						<SectionHeader title="Stale Measurements" count={staleMeasurements.length} />
 						<p class="description">
 							Pens whose most recent session was more than a year ago. Drift over time may
 							invalidate older curves.
@@ -759,32 +728,25 @@
 							<StatusMessage variant="good">Every pen has a session in the last year.</StatusMessage
 							>
 						{:else}
-							<table class="compact">
-								<thead>
-									<tr>
-										<th>Brand</th>
-										<th>Pen</th>
-										<th>Inventory ID</th>
-										<th>Last Measured</th>
-										<th>Days Ago</th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each staleMeasurements as p (p.inventoryId)}
-										<tr>
-											<td>{p.brand}</td>
-											<td class="mono">
-												<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
-													{p.penEntityId}
-												</a>
-											</td>
-											<td class="mono">{p.inventoryId}</td>
-											<td class="mono">{p.lastDate}</td>
-											<td class="num">{p.daysAgo}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={staleCols}
+								rows={staleMeasurements}
+								rowKey={(p) => p.inventoryId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Pens with Stale Measurements',
+										'data-quality-pressure-stale',
+										['Brand', 'Pen', 'Inventory ID', 'Last Measured', 'Days Ago'],
+										staleMeasurements.map((p) => [
+											p.brand,
+											p.penEntityId,
+											p.inventoryId,
+											p.lastDate,
+											p.daysAgo,
+										]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
@@ -794,19 +756,6 @@
 						<SectionHeader
 							title="Recommended for Re-measurement"
 							count={remeasureRecommendations.length}
-							disabled={remeasureRecommendations.length === 0}
-							onExport={() =>
-								openExport(
-									'Pens Recommended for Re-measurement',
-									'data-quality-pressure-remeasure',
-									['Brand', 'Pen', 'Inventory ID', 'Reasons'],
-									remeasureRecommendations.map((p) => [
-										p.brand,
-										p.penEntityId,
-										p.inventoryId,
-										p.reasons.join(', '),
-									]),
-								)}
 						/>
 						<p class="description">
 							Union of the missing-low-end, single-session, and stale checks. Pens with the most
@@ -815,25 +764,24 @@
 						{#if remeasureRecommendations.length === 0}
 							<StatusMessage variant="good">No pens need re-measurement.</StatusMessage>
 						{:else}
-							<table class="compact">
-								<thead>
-									<tr><th>Brand</th><th>Pen</th><th>Inventory ID</th><th>Reasons</th></tr>
-								</thead>
-								<tbody>
-									{#each remeasureRecommendations as p (p.inventoryId)}
-										<tr>
-											<td>{p.brand}</td>
-											<td class="mono">
-												<a href={resolve('/entity/[entityId]', { entityId: p.penEntityId })}>
-													{p.penEntityId}
-												</a>
-											</td>
-											<td class="mono">{p.inventoryId}</td>
-											<td>{p.reasons.join(', ')}</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
+							<SortableTable
+								columns={remeasureCols}
+								rows={remeasureRecommendations}
+								rowKey={(p) => p.inventoryId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Pens Recommended for Re-measurement',
+										'data-quality-pressure-remeasure',
+										['Brand', 'Pen', 'Inventory ID', 'Reasons'],
+										remeasureRecommendations.map((p) => [
+											p.brand,
+											p.penEntityId,
+											p.inventoryId,
+											p.reasons.join(', '),
+										]),
+									)}
+							/>
 						{/if}
 					</section>
 				{/if}
@@ -986,38 +934,5 @@
 		border-radius: 4px;
 		background: var(--bg-card);
 		color: var(--text);
-	}
-
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		background: #fff;
-		font-size: 13px;
-		margin-bottom: 8px;
-	}
-
-	table.compact {
-		width: auto;
-	}
-
-	th,
-	td {
-		text-align: left;
-		padding: 5px 10px;
-		border-bottom: 1px solid #e0e0e0;
-	}
-
-	th {
-		background: #333;
-		color: #fff;
-	}
-
-	tr:hover td {
-		background: #f0f7ff;
-	}
-
-	.mono {
-		font-family: monospace;
-		font-size: 12px;
 	}
 </style>
