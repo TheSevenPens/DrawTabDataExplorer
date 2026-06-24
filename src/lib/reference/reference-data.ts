@@ -98,6 +98,41 @@ export function sortBandsByRank<T extends { label: string }>(bands: T[]): T[] {
 	);
 }
 
+// --- Paper-size sorting (the /reference paper tables' sort control) ---
+
+export type PaperSortKey = 'Name' | 'Series' | 'Width' | 'Height' | 'Diagonal';
+
+/**
+ * Sort paper sizes by the chosen key/direction. Width/Height/Diagonal sort
+ * numerically (mm / computed diagonal); Name and Series use natural
+ * (numeric-aware) comparison so "A2" sorts before "A10". Returns a new array.
+ */
+export function sortPaperSizes(
+	sizes: PaperSize[],
+	key: PaperSortKey,
+	dir: 'asc' | 'desc',
+): PaperSize[] {
+	const mult = dir === 'asc' ? 1 : -1;
+	const numericVal = (s: PaperSize): number | null => {
+		switch (key) {
+			case 'Width':
+				return s.Width_mm;
+			case 'Height':
+				return s.Height_mm;
+			case 'Diagonal':
+				return diagonalCm(s.Width_mm, s.Height_mm);
+			default:
+				return null;
+		}
+	};
+	const stringVal = (s: PaperSize): string => (key === 'Series' ? s.Series : s.Name);
+	return [...sizes].sort((a, b) => {
+		const na = numericVal(a);
+		if (na !== null) return (na - (numericVal(b) as number)) * mult;
+		return stringVal(a).localeCompare(stringVal(b), undefined, { numeric: true }) * mult;
+	});
+}
+
 /**
  * Build export rows for a paper-size table: Name [, Series] then width/height
  * (cm), diagonal (cm), width/height (in), diagonal (in). `includeSeries` adds

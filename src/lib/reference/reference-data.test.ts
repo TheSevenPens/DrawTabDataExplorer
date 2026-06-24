@@ -8,6 +8,7 @@ import {
 	formatBandRange,
 	sortBandsByRank,
 	paperSizeExportRows,
+	sortPaperSizes,
 	type PaperSize,
 } from './reference-data.js';
 import type { ISOPaperSize } from '$data/lib/drawtab-loader.js';
@@ -96,5 +97,34 @@ describe('paperSizeExportRows', () => {
 		expect(rows[0][1]).toBe('A'); // Series
 		expect(rows[0][2]).toBe('21.0'); // width cm
 		expect(rows[0]).toHaveLength(8);
+	});
+});
+
+describe('sortPaperSizes', () => {
+	const sizes: PaperSize[] = [
+		{ Series: 'A', Name: 'A2', Width_mm: 420, Height_mm: 594, Width_in: 16.5, Height_in: 23.4 },
+		{ Series: 'A', Name: 'A10', Width_mm: 26, Height_mm: 37, Width_in: 1.0, Height_in: 1.5 },
+		{ Series: 'A', Name: 'A0', Width_mm: 841, Height_mm: 1189, Width_in: 33.1, Height_in: 46.8 },
+	];
+
+	it('sorts by Name using natural (numeric-aware) order', () => {
+		expect(sortPaperSizes(sizes, 'Name', 'asc').map((s) => s.Name)).toEqual(['A0', 'A2', 'A10']);
+		expect(sortPaperSizes(sizes, 'Name', 'desc').map((s) => s.Name)).toEqual(['A10', 'A2', 'A0']);
+	});
+
+	it('sorts numerically by Width and Diagonal', () => {
+		expect(sortPaperSizes(sizes, 'Width', 'asc').map((s) => s.Name)).toEqual(['A10', 'A2', 'A0']);
+		// A0 has the largest diagonal, A10 the smallest.
+		expect(sortPaperSizes(sizes, 'Diagonal', 'desc').map((s) => s.Name)).toEqual([
+			'A0',
+			'A2',
+			'A10',
+		]);
+	});
+
+	it('does not mutate the input array', () => {
+		const before = sizes.map((s) => s.Name);
+		sortPaperSizes(sizes, 'Width', 'asc');
+		expect(sizes.map((s) => s.Name)).toEqual(before);
 	});
 });

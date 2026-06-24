@@ -49,7 +49,9 @@
 		formatBandRange,
 		sortBandsByRank,
 		paperSizeExportRows,
+		sortPaperSizes,
 		type PaperSize,
+		type PaperSortKey,
 	} from '$lib/reference/reference-data.js';
 	import type { HistogramRange } from '$lib/components/ValueHistogram.svelte';
 
@@ -179,6 +181,20 @@
 	// `openExport` is a local alias so the section triggers read unchanged.
 	const exportHost = createExportDialogHost();
 	const openExport = exportHost.open;
+
+	// Per-table sort state for the paper-size tables (keyed by tableId so ISO A,
+	// ISO B, and US Paper each keep their own sort). Default: Name ascending.
+	let paperSort = $state<Record<string, { key: PaperSortKey; dir: 'asc' | 'desc' }>>({});
+	function getPaperSort(id: string): { key: PaperSortKey; dir: 'asc' | 'desc' } {
+		return paperSort[id] ?? { key: 'Name', dir: 'asc' };
+	}
+	function setPaperSortKey(id: string, key: PaperSortKey) {
+		paperSort[id] = { ...getPaperSort(id), key };
+	}
+	function togglePaperSortDir(id: string) {
+		const cur = getPaperSort(id);
+		paperSort[id] = { ...cur, dir: cur.dir === 'asc' ? 'desc' : 'asc' };
+	}
 </script>
 
 <ChromeLayout subNavTabs={dataTabs}>
@@ -261,38 +277,66 @@
 				<section>
 					<div class="section-header">
 						<h2>{heading}</h2>
-						<Button
-							variant="subtle"
-							disabled={sizes.length === 0}
-							onclick={() =>
-								openExport(
-									heading,
-									exportFilename,
-									includeSeries
-										? [
-												'Name',
-												'Series',
-												'Width (cm)',
-												'Height (cm)',
-												'Diagonal (cm)',
-												'Width (in)',
-												'Height (in)',
-												'Diagonal (in)',
-											]
-										: [
-												'Name',
-												'Width (cm)',
-												'Height (cm)',
-												'Diagonal (cm)',
-												'Width (in)',
-												'Height (in)',
-												'Diagonal (in)',
-											],
-									paperSizeExportRows(sizes, { includeSeries }),
-								)}>Export</Button
-						>
 					</div>
 					{#if sizes.length > 0}
+						{@const sort = getPaperSort(tableId)}
+						{@const sortedSizes = sortPaperSizes(sizes, sort.key, sort.dir)}
+						<div class="table-controls">
+							<div class="controls-left">
+								<label class="sort-control">
+									Sort
+									<select
+										value={sort.key}
+										onchange={(e) =>
+											setPaperSortKey(tableId, e.currentTarget.value as PaperSortKey)}
+									>
+										<option value="Name">Name</option>
+										{#if includeSeries}<option value="Series">Series</option>{/if}
+										<option value="Width">Width</option>
+										<option value="Height">Height</option>
+										<option value="Diagonal">Diagonal</option>
+									</select>
+								</label>
+								<button
+									type="button"
+									class="sort-dir"
+									onclick={() => togglePaperSortDir(tableId)}
+									title="Toggle sort direction"
+									aria-label="Toggle sort direction"
+								>
+									{sort.dir === 'asc' ? '▲ Asc' : '▼ Desc'}
+								</button>
+							</div>
+							<Button
+								variant="subtle"
+								onclick={() =>
+									openExport(
+										heading,
+										exportFilename,
+										includeSeries
+											? [
+													'Name',
+													'Series',
+													'Width (cm)',
+													'Height (cm)',
+													'Diagonal (cm)',
+													'Width (in)',
+													'Height (in)',
+													'Diagonal (in)',
+												]
+											: [
+													'Name',
+													'Width (cm)',
+													'Height (cm)',
+													'Diagonal (cm)',
+													'Width (in)',
+													'Height (in)',
+													'Diagonal (in)',
+												],
+										paperSizeExportRows(sortedSizes, { includeSeries }),
+									)}>Export</Button
+							>
+						</div>
 						<table id={tableId} class="ref-table">
 							<thead>
 								<tr>
@@ -307,7 +351,7 @@
 								</tr>
 							</thead>
 							<tbody>
-								{#each sizes as size (size.Name)}
+								{#each sortedSizes as size (size.Name)}
 									{@const diagCm = diagonalCm(size.Width_mm, size.Height_mm)}
 									{@const diagIn = diagonalIn(size.Width_in, size.Height_in)}
 									<tr>
@@ -656,6 +700,51 @@
 		font-weight: 600;
 		color: var(--text-muted);
 		margin: 0;
+	}
+
+	.table-controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin-bottom: 8px;
+	}
+
+	.controls-left {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.sort-control {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 12px;
+		color: var(--text-muted);
+	}
+
+	.sort-control select {
+		font-size: 12px;
+		padding: 3px 6px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+	}
+
+	.sort-dir {
+		font-size: 12px;
+		padding: 4px 10px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+	.sort-dir:hover {
+		border-color: var(--text-dim);
+		color: var(--text);
 	}
 
 	.ref-table {
