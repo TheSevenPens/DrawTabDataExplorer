@@ -148,19 +148,36 @@
 		min: number;
 		median: number;
 		max: number;
+		/** Mean (average) of the datapoints behind this row, in gf. */
+		mean: number;
+		/** Sample standard deviation (n−1) of the datapoints behind this row, in gf. */
+		stdDev: number;
 		/** Datapoints behind min/median/max, split by source. */
 		measuredCount: number;
 		estimatedCount: number;
 	};
 
+	function stdDev(xs: number[]): number {
+		// Sample standard deviation (n−1). A single datapoint has no spread → 0.
+		if (xs.length < 2) return 0;
+		const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
+		const v = xs.reduce((a, b) => a + (b - mean) ** 2, 0) / (xs.length - 1);
+		return Math.sqrt(v);
+	}
+
 	function statsOf(
 		samples: RankSample[],
-	): Pick<RankRow, 'min' | 'median' | 'max' | 'measuredCount' | 'estimatedCount'> {
+	): Pick<
+		RankRow,
+		'min' | 'median' | 'max' | 'mean' | 'stdDev' | 'measuredCount' | 'estimatedCount'
+	> {
 		const values = samples.map((s) => s.value);
 		return {
 			min: Math.min(...values),
 			median: median(values),
 			max: Math.max(...values),
+			mean: values.reduce((a, b) => a + b, 0) / values.length,
+			stdDev: stdDev(values),
 			measuredCount: samples.filter((s) => s.source === 'measured').length,
 			estimatedCount: samples.filter((s) => s.source === 'estimated').length,
 		};
@@ -216,13 +233,15 @@
 		mode: RankMode,
 		dir: 'asc' | 'desc',
 		count: number,
+		sortKey: 'median' | 'stdDev' = 'median',
 	): RankRow[] {
 		const filtered = brand
 			? metricRows.filter((r) => penById.get(r.penEntityId)?.Brand === brand)
 			: metricRows;
 		const agg = mode === 'units' ? aggregateByPenUnit(filtered) : aggregateByPenModel(filtered);
+		const keyOf = (r: RankRow) => (sortKey === 'stdDev' ? r.stdDev : r.median);
 		return agg
-			.sort((a, b) => (dir === 'asc' ? a.median - b.median : b.median - a.median))
+			.sort((a, b) => (dir === 'asc' ? keyOf(a) - keyOf(b) : keyOf(b) - keyOf(a)))
 			.slice(0, count);
 	}
 
@@ -240,6 +259,8 @@
 		brand: string;
 		onBrandChange: (b: string) => void;
 		brands: string[];
+		/** Show a Std Dev (gf) column and treat the table as spread-ranked. */
+		showStdDev?: boolean;
 		/** When set, render the standard band-segment chart below the table
 		 * with one marker line per row's median value. */
 		chart?: { bands: Band[]; axisMax: number; axisStep: number; showUnitInAxis: boolean };
@@ -260,14 +281,17 @@
 	const ROW_COUNT_OPTIONS = [10, 20, 30];
 	let lowestPiafCount = $state(10);
 	let highestPiafCount = $state(10);
+	let highestPiafVarCount = $state(10);
 	let lowestMaxCount = $state(10);
 	let highestMaxCount = $state(10);
 	let lowestPiafMode = $state<RankMode>('models');
 	let highestPiafMode = $state<RankMode>('models');
+	let highestPiafVarMode = $state<RankMode>('models');
 	let lowestMaxMode = $state<RankMode>('models');
 	let highestMaxMode = $state<RankMode>('models');
 	let lowestPiafBrand = $state('');
 	let highestPiafBrand = $state('');
+	let highestPiafVarBrand = $state('');
 	let lowestMaxBrand = $state('');
 	let highestMaxBrand = $state('');
 
@@ -276,6 +300,16 @@
 	);
 	let highestPiafRows = $derived(
 		sectionRows(iafRankRows, highestPiafBrand, highestPiafMode, 'desc', highestPiafCount),
+	);
+	let highestPiafVarRows = $derived(
+		sectionRows(
+			iafRankRows,
+			highestPiafVarBrand,
+			highestPiafVarMode,
+			'desc',
+			highestPiafVarCount,
+			'stdDev',
+		),
 	);
 	let lowestMaxRows = $derived(
 		sectionRows(maxRankRows, lowestMaxBrand, lowestMaxMode, 'asc', lowestMaxCount),
@@ -288,6 +322,7 @@
 		{ id: 'iaf', category: 'Pressure', label: 'IAF' },
 		{ id: 'lowest-iaf', category: 'Pressure', label: 'Lowest IAF' },
 		{ id: 'highest-iaf', category: 'Pressure', label: 'Highest IAF' },
+		{ id: 'highest-iaf-variation', category: 'Pressure', label: 'Highest IAF Variation' },
 		{ id: 'max', category: 'Pressure', label: 'MAX' },
 		{ id: 'lowest-max', category: 'Pressure', label: 'Lowest MAX' },
 		{ id: 'highest-max', category: 'Pressure', label: 'Highest MAX' },
@@ -342,6 +377,7 @@
 					'Min (gf)',
 					'Median (gf)',
 					'Max (gf)',
+					...(p.showStdDev ? ['Mean (gf)', 'Std Dev (gf)'] : []),
 					'Measured',
 					'Estimated',
 				]}
@@ -351,6 +387,7 @@
 					fmtP(r.min),
 					fmtP(r.median),
 					fmtP(r.max),
+					...(p.showStdDev ? [fmtP(r.mean), fmtP(r.stdDev)] : []),
 					r.measuredCount,
 					r.estimatedCount,
 				])}
@@ -364,6 +401,9 @@
 					<th class="num">Min <span class="unit">(gf)</span></th>
 					<th class="num">Median <span class="unit">(gf)</span></th>
 					<th class="num">Max <span class="unit">(gf)</span></th>
+					{#if p.showStdDev}<th class="num">Mean <span class="unit">(gf)</span></th><th class="num"
+							>Std Dev <span class="unit">(gf)</span></th
+						>{/if}
 					<th class="num" title="Direct measurements behind these numbers">Measured</th>
 					<th class="num" title="Estimates behind these numbers">Estimated</th>
 				</tr>
@@ -376,6 +416,9 @@
 						<td class="num mono">{fmtP(r.min)}</td>
 						<td class="num mono">{fmtP(r.median)}</td>
 						<td class="num mono">{fmtP(r.max)}</td>
+						{#if p.showStdDev}<td class="num mono">{fmtP(r.mean)}</td><td class="num mono"
+								>{fmtP(r.stdDev)}</td
+							>{/if}
 						<td class="num mono">{r.measuredCount}</td>
 						<td class="num mono">{r.estimatedCount}</td>
 					</tr>
@@ -460,6 +503,31 @@
 						brand: highestPiafBrand,
 						onBrandChange: (b) => (highestPiafBrand = b),
 						brands: availableBrands,
+						chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
+					})}
+				</section>
+			{/if}
+
+			{#if activeSection === 'highest-iaf-variation'}
+				<section class="section">
+					<h2>Highest IAF Variation</h2>
+					<p class="description">
+						Pen models whose IAF datapoints are the most spread out (sample standard deviation, gf)
+						— high variation flags inconsistent activation force across a model's units and
+						sessions.
+					</p>
+					{@render rankTable({
+						rows: highestPiafVarRows,
+						title: 'Highest IAF Variation',
+						filename: 'pen-analysis-highest-iaf-variation',
+						count: highestPiafVarCount,
+						onCountChange: (n) => (highestPiafVarCount = n),
+						mode: highestPiafVarMode,
+						onModeChange: (m) => (highestPiafVarMode = m),
+						brand: highestPiafVarBrand,
+						onBrandChange: (b) => (highestPiafVarBrand = b),
+						brands: availableBrands,
+						showStdDev: true,
 						chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
 					})}
 				</section>
