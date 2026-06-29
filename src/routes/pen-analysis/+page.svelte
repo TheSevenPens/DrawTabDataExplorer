@@ -259,7 +259,7 @@
 		brand: string;
 		onBrandChange: (b: string) => void;
 		brands: string[];
-		/** Show a Std Dev (gf) column and treat the table as spread-ranked. */
+		/** Show Mean (gf) and Std Dev (gf) columns. */
 		showStdDev?: boolean;
 		/** When set, render the standard band-segment chart below the table
 		 * with one marker line per row's median value. */
@@ -484,6 +484,7 @@
 						brand: lowestPiafBrand,
 						onBrandChange: (b) => (lowestPiafBrand = b),
 						brands: availableBrands,
+						showStdDev: true,
 						chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
 					})}
 				</section>
@@ -503,6 +504,7 @@
 						brand: highestPiafBrand,
 						onBrandChange: (b) => (highestPiafBrand = b),
 						brands: availableBrands,
+						showStdDev: true,
 						chart: { bands: PIAF_BANDS, axisMax: 22, axisStep: 1, showUnitInAxis: false },
 					})}
 				</section>
@@ -568,6 +570,7 @@
 						brand: lowestMaxBrand,
 						onBrandChange: (b) => (lowestMaxBrand = b),
 						brands: availableBrands,
+						showStdDev: true,
 						chart: { bands: PMAX_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
 					})}
 				</section>
@@ -587,6 +590,7 @@
 						brand: highestMaxBrand,
 						onBrandChange: (b) => (highestMaxBrand = b),
 						brands: availableBrands,
+						showStdDev: true,
 						chart: { bands: PMAX_BANDS, axisMax: 1000, axisStep: 100, showUnitInAxis: true },
 					})}
 				</section>
