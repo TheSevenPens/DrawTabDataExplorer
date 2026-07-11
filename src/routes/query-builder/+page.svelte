@@ -311,183 +311,185 @@
 					{/each}
 				</select>
 			</div>
-			<table class="pipeline-table">
-				<tbody>
-					<tr>
-						<th class="pipeline-label" scope="row">Source</th>
-						<td class="pipeline-cell">
-							<div class="row">
-								<label class="field-label" for="qb-collection">Collection</label>
-								<select id="qb-collection" class="select" bind:value={collection}>
-									{#each COLLECTIONS as c (c)}
-										<option value={c}>{c}</option>
-									{/each}
-								</select>
-							</div>
-						</td>
-					</tr>
-
-					<tr>
-						<th class="pipeline-label" scope="row">Filters</th>
-						<td class="pipeline-cell">
-							<FilterBar
-								bind:filters
-								{fields}
-								{fieldGroups}
-								inline
-								isOpen={true}
-								pipelineSection="filters"
-								enableCrossSectionDrag
-								onCrossSectionDrop={(field) => onCrossSectionDrop('filters', field)}
-								onchange={clearResult}
-								ontoggle={() => {}}
-							/>
-						</td>
-					</tr>
-
-					{#if outputMode === 'toArray'}
+			<div class="pipeline-table-wrap">
+				<table class="pipeline-table">
+					<tbody>
 						<tr>
-							<th class="pipeline-label" scope="row">Columns</th>
+							<th class="pipeline-label" scope="row">Source</th>
 							<td class="pipeline-cell">
-								<div class="cell-toolbar">
-									<span class="hint">{columns.length} selected</span>
-									<Button
-										variant="subtle"
-										size="sm"
-										onclick={addFilterColumns}
-										disabled={!canAddFilterColumns}
-										disabledReason="All active filter fields are already selected"
-									>
-										Add filter fields
-									</Button>
+								<div class="row">
+									<label class="field-label" for="qb-collection">Collection</label>
+									<select id="qb-collection" class="select" bind:value={collection}>
+										{#each COLLECTIONS as c (c)}
+											<option value={c}>{c}</option>
+										{/each}
+									</select>
 								</div>
-								{#if columns.length === 0}
-									<p class="hint cell-hint">
-										All fields returned when empty (same as no <code>.select()</code>).
-									</p>
-								{/if}
-								<ColumnBar
-									bind:columns
+							</td>
+						</tr>
+
+						<tr>
+							<th class="pipeline-label" scope="row">Filters</th>
+							<td class="pipeline-cell">
+								<FilterBar
+									bind:filters
 									{fields}
 									{fieldGroups}
 									inline
 									isOpen={true}
-									pipelineSection="columns"
+									pipelineSection="filters"
 									enableCrossSectionDrag
-									onCrossSectionDrop={(field) => onCrossSectionDrop('columns', field)}
+									onCrossSectionDrop={(field) => onCrossSectionDrop('filters', field)}
 									onchange={clearResult}
 									ontoggle={() => {}}
 								/>
 							</td>
 						</tr>
-					{/if}
 
-					{#if outputMode === 'toArray' || outputMode === 'countBy'}
+						{#if outputMode === 'toArray'}
+							<tr>
+								<th class="pipeline-label" scope="row">Columns</th>
+								<td class="pipeline-cell">
+									<div class="cell-toolbar">
+										<span class="hint">{columns.length} selected</span>
+										<Button
+											variant="subtle"
+											size="sm"
+											onclick={addFilterColumns}
+											disabled={!canAddFilterColumns}
+											disabledReason="All active filter fields are already selected"
+										>
+											Add filter fields
+										</Button>
+									</div>
+									{#if columns.length === 0}
+										<p class="hint cell-hint">
+											All fields returned when empty (same as no <code>.select()</code>).
+										</p>
+									{/if}
+									<ColumnBar
+										bind:columns
+										{fields}
+										{fieldGroups}
+										inline
+										isOpen={true}
+										pipelineSection="columns"
+										enableCrossSectionDrag
+										onCrossSectionDrop={(field) => onCrossSectionDrop('columns', field)}
+										onchange={clearResult}
+										ontoggle={() => {}}
+									/>
+								</td>
+							</tr>
+						{/if}
+
+						{#if outputMode === 'toArray' || outputMode === 'countBy'}
+							<tr>
+								<th class="pipeline-label" scope="row">Sort</th>
+								<td class="pipeline-cell">
+									{#if outputMode === 'countBy'}
+										<p class="hint cell-hint">
+											Sorts the grouped result (e.g. by <code>tablets</code> count).
+										</p>
+									{/if}
+									<SortBar
+										bind:sorts
+										fields={sortPickerFields}
+										fieldGroups={sortPickerGroups}
+										inline
+										isOpen={true}
+										pipelineSection="sort"
+										enableCrossSectionDrag
+										onCrossSectionDrop={(field) => onCrossSectionDrop('sort', field)}
+										onchange={clearResult}
+										ontoggle={() => {}}
+									/>
+								</td>
+							</tr>
+						{/if}
+
+						{#if outputMode === 'toArray'}
+							<tr>
+								<th class="pipeline-label" scope="row">Limit</th>
+								<td class="pipeline-cell">
+									<div class="row compact">
+										<label class="field-label" for="qb-skip">Skip</label>
+										<input
+											id="qb-skip"
+											class="input narrow"
+											type="number"
+											min="0"
+											bind:value={skip}
+										/>
+										<label class="field-label" for="qb-take">Take</label>
+										<input
+											id="qb-take"
+											class="input narrow"
+											type="number"
+											min="0"
+											bind:value={take}
+										/>
+									</div>
+								</td>
+							</tr>
+						{/if}
+
 						<tr>
-							<th class="pipeline-label" scope="row">Sort</th>
+							<th class="pipeline-label" scope="row">Output</th>
 							<td class="pipeline-cell">
-								{#if outputMode === 'countBy'}
-									<p class="hint cell-hint">
-										Sorts the grouped result (e.g. by <code>tablets</code> count).
-									</p>
+								<SegmentedControl
+									options={[
+										{ value: 'toArray', label: 'Rows' },
+										{ value: 'distinct', label: 'Distinct' },
+										{ value: 'countBy', label: 'Count by' },
+										{ value: 'count', label: 'Count' },
+									]}
+									bind:value={outputMode}
+									ariaLabel="Output mode"
+								/>
+								{#if outputMode === 'distinct'}
+									<div class="row compact">
+										<label class="field-label" for="qb-distinct">Field</label>
+										<select id="qb-distinct" class="select" bind:value={distinctField}>
+											{#each fields as fd (fd.key)}
+												<option value={fd.key}>{fieldOptionLabel(fd)}</option>
+											{/each}
+										</select>
+									</div>
+								{:else if outputMode === 'countBy'}
+									<div class="row compact">
+										<label class="field-label" for="qb-countby">Group by</label>
+										<input
+											id="qb-countby"
+											class="input wide"
+											placeholder="comma-separated keys"
+											bind:value={countByFields}
+										/>
+									</div>
 								{/if}
-								<SortBar
-									bind:sorts
-									fields={sortPickerFields}
-									fieldGroups={sortPickerGroups}
-									inline
-									isOpen={true}
-									pipelineSection="sort"
-									enableCrossSectionDrag
-									onCrossSectionDrop={(field) => onCrossSectionDrop('sort', field)}
-									onchange={clearResult}
-									ontoggle={() => {}}
-								/>
 							</td>
 						</tr>
-					{/if}
 
-					{#if outputMode === 'toArray'}
-						<tr>
-							<th class="pipeline-label" scope="row">Limit</th>
+						<tr class="query-code-row">
+							<th class="pipeline-label" scope="row">Query</th>
 							<td class="pipeline-cell">
-								<div class="row compact">
-									<label class="field-label" for="qb-skip">Skip</label>
-									<input
-										id="qb-skip"
-										class="input narrow"
-										type="number"
-										min="0"
-										bind:value={skip}
-									/>
-									<label class="field-label" for="qb-take">Take</label>
-									<input
-										id="qb-take"
-										class="input narrow"
-										type="number"
-										min="0"
-										bind:value={take}
-									/>
-								</div>
+								<details class="query-code">
+									<summary>Generated code</summary>
+									<p class="hint query-code-hint">
+										API Explorer runs this as the body of an async function with <code>ds</code> in
+										scope.
+										<a href="/api-explorer">Open API Explorer</a> to paste and experiment.
+									</p>
+									<div class="query-code-toolbar">
+										<Button variant="subtle" size="sm" onclick={copyQueryCode}>Copy</Button>
+									</div>
+									<pre class="code"><code>{codePreview}</code></pre>
+								</details>
 							</td>
 						</tr>
-					{/if}
-
-					<tr>
-						<th class="pipeline-label" scope="row">Output</th>
-						<td class="pipeline-cell">
-							<SegmentedControl
-								options={[
-									{ value: 'toArray', label: 'Rows' },
-									{ value: 'distinct', label: 'Distinct' },
-									{ value: 'countBy', label: 'Count by' },
-									{ value: 'count', label: 'Count' },
-								]}
-								bind:value={outputMode}
-								ariaLabel="Output mode"
-							/>
-							{#if outputMode === 'distinct'}
-								<div class="row compact">
-									<label class="field-label" for="qb-distinct">Field</label>
-									<select id="qb-distinct" class="select" bind:value={distinctField}>
-										{#each fields as fd (fd.key)}
-											<option value={fd.key}>{fieldOptionLabel(fd)}</option>
-										{/each}
-									</select>
-								</div>
-							{:else if outputMode === 'countBy'}
-								<div class="row compact">
-									<label class="field-label" for="qb-countby">Group by</label>
-									<input
-										id="qb-countby"
-										class="input wide"
-										placeholder="comma-separated keys"
-										bind:value={countByFields}
-									/>
-								</div>
-							{/if}
-						</td>
-					</tr>
-
-					<tr class="query-code-row">
-						<th class="pipeline-label" scope="row">Query</th>
-						<td class="pipeline-cell">
-							<details class="query-code">
-								<summary>Generated code</summary>
-								<p class="hint query-code-hint">
-									API Explorer runs this as the body of an async function with <code>ds</code> in
-									scope.
-									<a href="/api-explorer">Open API Explorer</a> to paste and experiment.
-								</p>
-								<div class="query-code-toolbar">
-									<Button variant="subtle" size="sm" onclick={copyQueryCode}>Copy</Button>
-								</div>
-								<pre class="code"><code>{codePreview}</code></pre>
-							</details>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+					</tbody>
+				</table>
+			</div>
 		</section>
 
 		<aside class="preview">
@@ -618,14 +620,19 @@
 		gap: 10px;
 	}
 
+	.pipeline-table-wrap {
+		border: 1px solid var(--border-light);
+		border-radius: 8px;
+		background: var(--bg-card);
+		overflow: visible;
+	}
+
 	.pipeline-table {
 		width: 100%;
 		border-collapse: collapse;
 		font-size: 14px;
-		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 8px;
-		overflow: hidden;
+		background: transparent;
+		overflow: visible;
 	}
 
 	.pipeline-table tr + tr {
@@ -649,6 +656,7 @@
 		padding: 8px 12px;
 		vertical-align: top;
 		min-width: 0;
+		overflow: visible;
 	}
 
 	.cell-toolbar {

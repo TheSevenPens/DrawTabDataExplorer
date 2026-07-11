@@ -200,7 +200,7 @@
 							: 'Right-click to remove. Drag to reorder.'}>{getLabel(col)}</button
 					>
 				{/each}
-				<div class="add-wrapper" role="none">
+				<div class="add-wrapper" class:picker-open={showPicker} role="none">
 					<button class="add-btn col-add" onclick={() => (showPicker = !showPicker)}>+</button>
 					{#if showPicker}
 						<FieldPicker
@@ -376,5 +376,10 @@
 	}
 	.add-wrapper {
 		position: relative;
+		z-index: 1;
+	}
+
+	.add-wrapper.picker-open {
+		z-index: 200;
 	}
 </style>

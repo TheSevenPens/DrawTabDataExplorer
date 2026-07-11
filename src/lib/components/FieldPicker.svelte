@@ -98,7 +98,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		z-index: 99;
+		z-index: 199;
 	}
 
 	.field-picker {
@@ -110,9 +110,11 @@
 		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-		z-index: 100;
+		z-index: 200;
 		padding: 8px;
 		min-width: 300px;
+		max-height: min(70vh, 480px);
+		overflow-y: auto;
 	}
 
 	.groups {

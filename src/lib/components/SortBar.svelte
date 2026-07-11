@@ -234,7 +234,7 @@
 						{getLabel(sort.field)}<span class="arrow">{sort.direction === 'asc' ? '▲' : '▼'}</span>
 					</button>
 				{/each}
-				<div class="add-wrapper" role="none">
+				<div class="add-wrapper" class:picker-open={showPicker} role="none">
 					<button class="add-btn sort-add" onclick={() => (showPicker = !showPicker)}>+</button>
 					{#if showPicker}
 						<FieldPicker
@@ -422,5 +422,10 @@
 	}
 	.add-wrapper {
 		position: relative;
+		z-index: 1;
+	}
+
+	.add-wrapper.picker-open {
+		z-index: 200;
 	}
 </style>

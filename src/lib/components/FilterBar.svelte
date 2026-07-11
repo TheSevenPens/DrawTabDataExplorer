@@ -249,7 +249,7 @@
 						>{pillText(filter)}</button
 					>
 				{/each}
-				<div class="add-wrapper" role="none">
+				<div class="add-wrapper" class:picker-open={showAddPicker} role="none">
 					<button
 						class="add-btn filter-add"
 						onclick={() => (inline ? (showAddPicker = !showAddPicker) : addFilter())}
@@ -277,7 +277,7 @@
 				{@const operators = fieldDef ? getOperatorsForField(fieldDef) : []}
 				{@const needsValue = filter.operator !== 'empty' && filter.operator !== 'notempty'}
 				<div class="editor">
-					<div class="field-select-wrapper">
+					<div class="field-select-wrapper" class:picker-open={showFieldPicker}>
 						<button class="field-select-btn" onclick={() => (showFieldPicker = !showFieldPicker)}>
 							{getLabel(filter.field)} ▾
 						</button>
@@ -507,6 +507,11 @@
 	}
 	.add-wrapper {
 		position: relative;
+		z-index: 1;
+	}
+
+	.add-wrapper.picker-open {
+		z-index: 200;
 	}
 
 	.editor {
@@ -532,6 +537,11 @@
 	}
 	.field-select-wrapper {
 		position: relative;
+		z-index: 1;
+	}
+
+	.field-select-wrapper.picker-open {
+		z-index: 200;
 	}
 	.field-select-btn {
 		padding: 4px 10px;

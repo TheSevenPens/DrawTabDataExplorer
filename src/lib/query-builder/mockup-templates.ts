@@ -46,6 +46,8 @@ export const TEMPLATE_GROUPS: { group: string; labels: string[] }[] = [
 			'Multi-key sort (brand asc, year desc)',
 			'Apple tablets, newest first',
 			'Cintiq tablets by name',
+			'Tablets from 2020 onward',
+			'Professional audience tablets',
 		],
 	},
 	{
@@ -64,19 +66,29 @@ export const TEMPLATE_GROUPS: { group: string; labels: string[] }[] = [
 	},
 	{
 		group: 'Pens',
-		labels: ['Pens tagged UDEMR'],
+		labels: [
+			'Find pen by Pen ID',
+			'Wacom pens by year (newest first)',
+			'Count pens per brand',
+			'Pens with notes',
+			'Pens tagged UDEMR',
+		],
 	},
 	{
 		group: 'Pen compatibility',
-		labels: ['Pens for tablet PL-550', 'Compat rows per brand'],
+		labels: ['Pens for tablet PL-550', 'Tablets for pen UP-911E', 'Compat rows per brand'],
 	},
 	{
 		group: 'Drivers',
-		labels: ['Latest Wacom macOS drivers'],
+		labels: ['Latest Wacom macOS drivers', 'Latest Wacom Windows drivers'],
 	},
 	{
 		group: 'Pressure response',
-		labels: ['Top 10 worst Piaf sessions'],
+		labels: [
+			'Top 10 worst Piaf sessions',
+			'Top 10 worst Pmax sessions',
+			'Pressure sessions per brand',
+		],
 	},
 ];
 
@@ -150,6 +162,22 @@ export const BASIC_TEMPLATES: QueryBuilderTemplate[] = [
 		output: { mode: 'toArray' },
 	},
 	{
+		label: 'Tablets from 2020 onward',
+		collection: 'Tablets',
+		filters: [{ field: 'ModelLaunchYear', operator: '>=', value: '2020' }],
+		sorts: [{ field: 'ModelLaunchYear', direction: 'desc' }],
+		columns: ['Brand', 'ModelId', 'ModelName', 'ModelLaunchYear'],
+		output: { mode: 'toArray' },
+	},
+	{
+		label: 'Professional audience tablets',
+		collection: 'Tablets',
+		filters: [{ field: 'ModelAudience', operator: '==', value: 'Professional' }],
+		sorts: [{ field: 'ModelLaunchYear', direction: 'desc' }],
+		columns: ['Brand', 'ModelId', 'ModelName', 'ModelAudience', 'ModelLaunchYear'],
+		output: { mode: 'toArray' },
+	},
+	{
 		label: 'High digitizer density tablets',
 		collection: 'Tablets',
 		filters: [{ field: 'DigitizerDensity', operator: '>', value: '100' }],
@@ -215,11 +243,53 @@ export const BASIC_TEMPLATES: QueryBuilderTemplate[] = [
 		output: { mode: 'toArray' },
 	},
 	{
+		label: 'Find pen by Pen ID',
+		collection: 'Pens',
+		filters: [{ field: 'PenId', operator: '==', value: 'UP-911E' }],
+		sorts: [],
+		columns: ['FullName', 'PenId', 'Brand', 'PenYear'],
+		take: 1,
+		output: { mode: 'toArray' },
+	},
+	{
+		label: 'Wacom pens by year (newest first)',
+		collection: 'Pens',
+		filters: [{ field: 'Brand', operator: '==', value: 'WACOM' }],
+		sorts: [{ field: 'PenYear', direction: 'desc' }],
+		columns: ['Brand', 'PenId', 'PenName', 'PenYear'],
+		take: 15,
+		output: { mode: 'toArray' },
+	},
+	{
+		label: 'Count pens per brand',
+		collection: 'Pens',
+		filters: [],
+		sorts: [{ field: 'count', direction: 'desc' }],
+		columns: [],
+		output: { mode: 'countBy', fields: ['Brand'] },
+	},
+	{
+		label: 'Pens with notes',
+		collection: 'Pens',
+		filters: [{ field: 'Notes', operator: 'notempty', value: '' }],
+		sorts: [{ field: 'Brand', direction: 'asc' }],
+		columns: ['Brand', 'PenId', 'PenName', 'Notes'],
+		output: { mode: 'toArray' },
+	},
+	{
 		label: 'Pens for tablet PL-550',
 		collection: 'PenCompat',
 		filters: [{ field: 'TabletId', operator: '==', value: 'PL-550' }],
 		sorts: [{ field: 'PenFullName', direction: 'asc' }],
 		columns: ['TabletId', 'PenId', 'PenFullName', 'Brand'],
+		output: { mode: 'toArray' },
+	},
+	{
+		label: 'Tablets for pen UP-911E',
+		collection: 'PenCompat',
+		filters: [{ field: 'PenId', operator: '==', value: 'UP-911E' }],
+		sorts: [{ field: 'TabletFullName', direction: 'asc' }],
+		columns: ['PenId', 'TabletId', 'TabletFullName', 'Brand'],
 		output: { mode: 'toArray' },
 	},
 	{
@@ -243,6 +313,18 @@ export const BASIC_TEMPLATES: QueryBuilderTemplate[] = [
 		output: { mode: 'toArray' },
 	},
 	{
+		label: 'Latest Wacom Windows drivers',
+		collection: 'Drivers',
+		filters: [
+			{ field: 'Brand', operator: '==', value: 'WACOM' },
+			{ field: 'OSFamily', operator: '==', value: 'WINDOWS' },
+		],
+		sorts: [{ field: 'ReleaseDate', direction: 'desc' }],
+		columns: ['Brand', 'DriverVersion', 'DriverName', 'OSFamily', 'ReleaseDate'],
+		take: 10,
+		output: { mode: 'toArray' },
+	},
+	{
 		label: 'Top 10 worst Piaf sessions',
 		collection: 'PressureResponse',
 		filters: [{ field: 'IsDefective', operator: '==', value: 'NO' }],
@@ -250,6 +332,23 @@ export const BASIC_TEMPLATES: QueryBuilderTemplate[] = [
 		columns: ['PenEntityId', 'InventoryId', 'Date', 'Piaf', 'IsDefective'],
 		take: 10,
 		output: { mode: 'toArray' },
+	},
+	{
+		label: 'Top 10 worst Pmax sessions',
+		collection: 'PressureResponse',
+		filters: [{ field: 'IsDefective', operator: '==', value: 'NO' }],
+		sorts: [{ field: 'Pmax', direction: 'desc' }],
+		columns: ['PenEntityId', 'InventoryId', 'Date', 'Pmax', 'IsDefective'],
+		take: 10,
+		output: { mode: 'toArray' },
+	},
+	{
+		label: 'Pressure sessions per brand',
+		collection: 'PressureResponse',
+		filters: [{ field: 'IsDefective', operator: '==', value: 'NO' }],
+		sorts: [{ field: 'count', direction: 'desc' }],
+		columns: [],
+		output: { mode: 'countBy', fields: ['Brand'] },
 	},
 ];
 
