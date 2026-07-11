@@ -6,6 +6,16 @@
 	} from '@thesevenpens/queriton';
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 	import PopoverMenu from '$lib/components/PopoverMenu.svelte';
+	import { fieldOptionLabelForKey } from '$lib/field-option-label.js';
+	import {
+		type PipelineSection,
+		setPipelineFieldDragData,
+		readPipelineFieldDragData,
+		canAcceptPipelineFieldAt,
+		clearPipelineFieldDrag,
+		markPipelineCrossDropHandled,
+		consumePipelineCrossDropHandled,
+	} from '$lib/query-builder/pipeline-field-drag.js';
 
 	interface FilterItem {
 		field: string;
@@ -20,6 +30,10 @@
 		fieldGroups,
 		defaultFilterField,
 		isOpen,
+		inline = false,
+		pipelineSection,
+		enableCrossSectionDrag = false,
+		onCrossSectionDrop,
 		onchange,
 		ontoggle,
 	}: {
@@ -28,20 +42,27 @@
 		fieldGroups: string[];
 		defaultFilterField?: string;
 		isOpen: boolean;
+		/** When true, render pills + picker inline (no toolbar toggle). */
+		inline?: boolean;
+		pipelineSection?: PipelineSection;
+		enableCrossSectionDrag?: boolean;
+		onCrossSectionDrop?: (field: string, source: PipelineSection) => void;
 		onchange: () => void;
 		ontoggle: () => void;
 	} = $props();
 
 	let editingIndex: number | null = $state(null);
 	let showFieldPicker = $state(false);
+	let showAddPicker = $state(false);
 	let contextMenu: { index: number; x: number; y: number } | null = $state(null);
 	let dragIndex: number | null = $state(null);
 	let droppedInside = false;
+	let crossDropTarget = $state(false);
 
 	let activeCount = $derived(filters.filter((f) => !f.disabled).length);
 
 	function getLabel(key: string) {
-		return fields.find((f) => f.key === key)?.label ?? key;
+		return fieldOptionLabelForKey(key, fields);
 	}
 
 	function getOpLabel(op: string): string {
@@ -74,9 +95,17 @@
 			defaultFilterField && fields.some((f) => f.key === defaultFilterField)
 				? defaultFilterField
 				: (fields[0]?.key ?? '');
-		filters.push({ field: initialField, operator: '==', value: '' });
+		addFilterWithField(initialField);
+		if (!inline && !isOpen) ontoggle();
+	}
+
+	function addFilterWithField(key: string) {
+		const fieldDef = getFieldDef(key, fields);
+		const ops = fieldDef ? getOperatorsForField(fieldDef) : [];
+		filters.push({ field: key, operator: ops[0]?.value ?? '==', value: '' });
 		editingIndex = filters.length - 1;
-		if (!isOpen) ontoggle();
+		showAddPicker = false;
+		onchange();
 	}
 
 	function removeFilter(index: number) {
@@ -120,29 +149,83 @@
 		contextMenu = { index, x: e.clientX, y: e.clientY };
 	}
 
-	function onDragStart(index: number) {
+	function onDragStart(e: DragEvent, index: number) {
 		dragIndex = index;
 		droppedInside = false;
+		if (enableCrossSectionDrag && pipelineSection) {
+			setPipelineFieldDragData(e, filters[index]!.field, pipelineSection);
+		}
 	}
 	function onDragEnd() {
+		if (enableCrossSectionDrag && consumePipelineCrossDropHandled()) {
+			dragIndex = null;
+			crossDropTarget = false;
+			clearPipelineFieldDrag();
+			return;
+		}
 		if (!droppedInside && dragIndex !== null) removeFilter(dragIndex);
 		dragIndex = null;
+		crossDropTarget = false;
+		clearPipelineFieldDrag();
+	}
+
+	function onPanelDragEnter(e: DragEvent) {
+		if (!enableCrossSectionDrag || !pipelineSection) return;
+		if (!canAcceptPipelineFieldAt(pipelineSection)) return;
+		e.preventDefault();
+	}
+
+	function onPanelDragOver(e: DragEvent) {
+		if (!enableCrossSectionDrag || !pipelineSection) return;
+		if (!canAcceptPipelineFieldAt(pipelineSection)) return;
+		e.preventDefault();
+		if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+		crossDropTarget = true;
+	}
+
+	function onPanelDragLeave() {
+		crossDropTarget = false;
+	}
+
+	function tryCrossSectionDrop(e: DragEvent): boolean {
+		if (!enableCrossSectionDrag || !pipelineSection) return false;
+		const data = readPipelineFieldDragData(e);
+		if (!data || data.source === pipelineSection) return false;
+		e.preventDefault();
+		e.stopPropagation();
+		crossDropTarget = false;
+		markPipelineCrossDropHandled();
+		onCrossSectionDrop?.(data.field, data.source);
+		return true;
+	}
+
+	function onPanelDrop(e: DragEvent) {
+		tryCrossSectionDrop(e);
 	}
 </script>
 
-<div class="toolbar-item">
-	<button
-		class="toolbar-btn filter-btn"
-		class:has-active={activeCount > 0}
-		class:open={isOpen}
-		onclick={ontoggle}
-	>
-		Filters{#if activeCount > 0}<span class="badge filter-badge">{activeCount}</span>{/if}
-	</button>
+<div class="toolbar-item" class:inline>
+	{#if !inline}
+		<button
+			class="toolbar-btn filter-btn"
+			class:has-active={activeCount > 0}
+			class:open={isOpen}
+			onclick={ontoggle}
+		>
+			Filters{#if activeCount > 0}<span class="badge filter-badge">{activeCount}</span>{/if}
+		</button>
+	{/if}
 
-	{#if isOpen}
-		<div class="panel filter-panel">
-			<div class="panel-pills">
+	{#if inline || isOpen}
+		<div class="panel filter-panel" class:inline-panel={inline} class:cross-drop-target={crossDropTarget}>
+			<div
+				class="panel-pills"
+				ondragenter={onPanelDragEnter}
+				ondragover={onPanelDragOver}
+				ondragleave={onPanelDragLeave}
+				ondrop={onPanelDrop}
+				role="list"
+			>
 				{#each filters as filter, i (i)}
 					<button
 						class="pill filter-pill"
@@ -152,16 +235,40 @@
 						draggable="true"
 						onclick={() => (editingIndex = editingIndex === i ? null : i)}
 						oncontextmenu={(e) => onContextMenu(e, i)}
-						ondragstart={() => onDragStart(i)}
+						ondragstart={(e) => onDragStart(e, i)}
+						ondragover={enableCrossSectionDrag ? onPanelDragOver : undefined}
+						ondrop={enableCrossSectionDrag ? onPanelDrop : undefined}
 						ondragend={onDragEnd}
-						title="Click to edit. Right-click for options. Drag out to remove."
+						title={enableCrossSectionDrag
+							? 'Click to edit. Drag to another section to copy the field there. Drag out to remove.'
+							: 'Click to edit. Right-click for options. Drag out to remove.'}
 						>{pillText(filter)}</button
 					>
 				{/each}
-				<button class="add-btn filter-add" onclick={addFilter} title="Add filter">+</button>
+				<div class="add-wrapper" role="none">
+					<button
+						class="add-btn filter-add"
+						onclick={() =>
+							inline ? (showAddPicker = !showAddPicker) : addFilter()}
+						title="Add filter"
+					>+</button>
+					{#if inline && showAddPicker}
+						<FieldPicker
+							{fields}
+							{fieldGroups}
+							onselect={(key) => addFilterWithField(key)}
+							onselectgroup={(keys) => {
+								for (const k of keys) addFilterWithField(k);
+							}}
+							onclose={() => (showAddPicker = false)}
+						/>
+					{/if}
+				</div>
 			</div>
 			{#if filters.length === 0}
-				<p class="empty-hint">No filters yet. Click + to add one.</p>
+				<p class="empty-hint">
+					{inline ? 'No filters yet. Click + to pick a field.' : 'No filters yet. Click + to add one.'}
+				</p>
 			{/if}
 			{#if editingIndex !== null && filters[editingIndex]}
 				{@const filter = filters[editingIndex]}
@@ -250,6 +357,10 @@
 		position: relative;
 	}
 
+	.toolbar-item.inline {
+		position: static;
+	}
+
 	.toolbar-btn {
 		display: inline-flex;
 		align-items: center;
@@ -313,6 +424,25 @@
 		min-width: 520px;
 	}
 
+	.panel.inline-panel {
+		position: static;
+		border: none;
+		box-shadow: none;
+		padding: 0;
+		min-width: 0;
+		background: transparent;
+	}
+
+	.filter-panel.inline-panel {
+		min-width: 0;
+	}
+
+	.panel.cross-drop-target {
+		outline: 2px dashed var(--link);
+		outline-offset: 4px;
+		border-radius: 6px;
+	}
+
 	.panel-pills {
 		display: flex;
 		align-items: center;
@@ -373,6 +503,9 @@
 	.filter-add:hover {
 		border-color: #d97706;
 		color: #d97706;
+	}
+	.add-wrapper {
+		position: relative;
 	}
 
 	.editor {

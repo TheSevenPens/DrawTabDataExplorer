@@ -3,6 +3,16 @@
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 	import PopoverMenu from '$lib/components/PopoverMenu.svelte';
 	import { moveItem } from '$lib/pill-dnd.js';
+	import { fieldOptionLabelForKey } from '$lib/field-option-label.js';
+	import {
+		type PipelineSection,
+		setPipelineFieldDragData,
+		readPipelineFieldDragData,
+		canAcceptPipelineFieldAt,
+		clearPipelineFieldDrag,
+		markPipelineCrossDropHandled,
+		consumePipelineCrossDropHandled,
+	} from '$lib/query-builder/pipeline-field-drag.js';
 
 	interface SortItem {
 		field: string;
@@ -14,6 +24,10 @@
 		fields,
 		fieldGroups,
 		isOpen,
+		inline = false,
+		pipelineSection,
+		enableCrossSectionDrag = false,
+		onCrossSectionDrop,
 		onchange,
 		ontoggle,
 	}: {
@@ -21,6 +35,11 @@
 		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		isOpen: boolean;
+		/** When true, render pills + picker inline (no toolbar toggle). */
+		inline?: boolean;
+		pipelineSection?: PipelineSection;
+		enableCrossSectionDrag?: boolean;
+		onCrossSectionDrop?: (field: string, source: PipelineSection) => void;
 		onchange: () => void;
 		ontoggle: () => void;
 	} = $props();
@@ -31,9 +50,10 @@
 	let dragOverIndex: number | null = $state(null);
 	let dragOverSide: 'left' | 'right' = $state('left');
 	let droppedInside = false;
+	let crossDropTarget = $state(false);
 
 	function getLabel(key: string) {
-		return fields.find((f) => f.key === key)?.label ?? key;
+		return fieldOptionLabelForKey(key, fields);
 	}
 
 	function addField(key: string) {
@@ -72,9 +92,12 @@
 		contextMenu = { index, x: e.clientX, y: e.clientY };
 	}
 
-	function onDragStart(index: number) {
+	function onDragStart(e: DragEvent, index: number) {
 		dragIndex = index;
 		droppedInside = false;
+		if (enableCrossSectionDrag && pipelineSection) {
+			setPipelineFieldDragData(e, sorts[index]!.field, pipelineSection);
+		}
 	}
 
 	function onDragOver(e: DragEvent, index: number) {
@@ -90,8 +113,13 @@
 		} else if (dragOverIndex !== index) dragOverIndex = index;
 	}
 
-	function onDrop(index: number) {
+	function onDrop(e: DragEvent, index: number) {
 		droppedInside = true;
+		if (tryCrossSectionDrop(e)) {
+			dragIndex = null;
+			dragOverIndex = null;
+			return;
+		}
 		if (dragIndex !== null && dragIndex !== index) {
 			sorts = moveItem(sorts, dragIndex, index, dragOverSide);
 			onchange();
@@ -101,32 +129,84 @@
 	}
 
 	function onDragEnd() {
+		if (enableCrossSectionDrag && consumePipelineCrossDropHandled()) {
+			dragIndex = null;
+			dragOverIndex = null;
+			crossDropTarget = false;
+			clearPipelineFieldDrag();
+			return;
+		}
 		if (!droppedInside && dragIndex !== null) {
 			sorts.splice(dragIndex, 1);
 			onchange();
 		}
 		dragIndex = null;
 		dragOverIndex = null;
+		crossDropTarget = false;
+		clearPipelineFieldDrag();
+	}
+
+	function onPanelDragEnter(e: DragEvent) {
+		if (!enableCrossSectionDrag || !pipelineSection) return;
+		if (!canAcceptPipelineFieldAt(pipelineSection)) return;
+		e.preventDefault();
+	}
+
+	function onPanelDragOver(e: DragEvent) {
+		if (!enableCrossSectionDrag || !pipelineSection) return;
+		if (!canAcceptPipelineFieldAt(pipelineSection)) return;
+		e.preventDefault();
+		if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+		crossDropTarget = true;
+	}
+
+	function onPanelDragLeave() {
+		crossDropTarget = false;
+	}
+
+	function tryCrossSectionDrop(e: DragEvent): boolean {
+		if (!enableCrossSectionDrag || !pipelineSection) return false;
+		const data = readPipelineFieldDragData(e);
+		if (!data || data.source === pipelineSection) return false;
+		e.preventDefault();
+		e.stopPropagation();
+		crossDropTarget = false;
+		markPipelineCrossDropHandled();
+		onCrossSectionDrop?.(data.field, data.source);
+		return true;
+	}
+
+	function onPanelDrop(e: DragEvent) {
+		tryCrossSectionDrop(e);
 	}
 </script>
 
-<div class="toolbar-item">
-	<button
-		class="toolbar-btn sort-btn"
-		class:has-active={sorts.length > 0}
-		class:open={isOpen}
-		onclick={ontoggle}
-	>
-		Sort{#if sorts.length > 0}<span class="sort-summary"
-				>{getLabel(sorts[0]!.field)}&nbsp;{sorts[0]!.direction === 'asc'
-					? '▲'
-					: '▼'}{#if sorts.length > 1}&nbsp;+{sorts.length - 1}{/if}</span
-			>{/if}
-	</button>
+<div class="toolbar-item" class:inline>
+	{#if !inline}
+		<button
+			class="toolbar-btn sort-btn"
+			class:has-active={sorts.length > 0}
+			class:open={isOpen}
+			onclick={ontoggle}
+		>
+			Sort{#if sorts.length > 0}<span class="sort-summary"
+					>{getLabel(sorts[0]!.field)}&nbsp;{sorts[0]!.direction === 'asc'
+						? '▲'
+						: '▼'}{#if sorts.length > 1}&nbsp;+{sorts.length - 1}{/if}</span
+				>{/if}
+		</button>
+	{/if}
 
-	{#if isOpen}
-		<div class="panel">
-			<div class="panel-pills">
+	{#if inline || isOpen}
+		<div class="panel" class:inline-panel={inline} class:cross-drop-target={crossDropTarget}>
+			<div
+				class="panel-pills"
+				ondragenter={onPanelDragEnter}
+				ondragover={onPanelDragOver}
+				ondragleave={onPanelDragLeave}
+				ondrop={onPanelDrop}
+				role="list"
+			>
 				{#each sorts as sort, i (sort.field)}
 					<button
 						class="pill sort-pill"
@@ -142,12 +222,14 @@
 						draggable="true"
 						onclick={() => toggleDirection(i)}
 						oncontextmenu={(e) => onContextMenu(e, i)}
-						ondragstart={() => onDragStart(i)}
+						ondragstart={(e) => onDragStart(e, i)}
 						ondragover={(e) => onDragOver(e, i)}
 						ondragleave={() => {}}
-						ondrop={() => onDrop(i)}
+						ondrop={(e) => onDrop(e, i)}
 						ondragend={onDragEnd}
-						title="Click to toggle direction. Right-click for options. Drag to reorder."
+						title={enableCrossSectionDrag
+							? 'Click to toggle direction. Drag to reorder or drop on Filters/Columns to add there.'
+							: 'Click to toggle direction. Right-click for options. Drag to reorder.'}
 					>
 						{getLabel(sort.field)}<span class="arrow">{sort.direction === 'asc' ? '▲' : '▼'}</span>
 					</button>
@@ -200,6 +282,10 @@
 		position: relative;
 	}
 
+	.toolbar-item.inline {
+		position: static;
+	}
+
 	.toolbar-btn {
 		display: inline-flex;
 		align-items: center;
@@ -247,6 +333,21 @@
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 		padding: 10px 12px;
 		min-width: 260px;
+	}
+
+	.panel.inline-panel {
+		position: static;
+		border: none;
+		box-shadow: none;
+		padding: 0;
+		min-width: 0;
+		background: transparent;
+	}
+
+	.panel.cross-drop-target {
+		outline: 2px dashed var(--link);
+		outline-offset: 4px;
+		border-radius: 6px;
 	}
 	.panel-pills {
 		display: flex;

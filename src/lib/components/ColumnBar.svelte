@@ -3,12 +3,25 @@
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 	import PopoverMenu from '$lib/components/PopoverMenu.svelte';
 	import { moveItem } from '$lib/pill-dnd.js';
+	import { fieldOptionLabelForKey } from '$lib/field-option-label.js';
+	import {
+		type PipelineSection,
+		setPipelineFieldDragData,
+		readPipelineFieldDragData,
+		canAcceptPipelineFieldAt,
+		clearPipelineFieldDrag,
+		markPipelineCrossDropHandled,
+	} from '$lib/query-builder/pipeline-field-drag.js';
 
 	let {
 		columns = $bindable(),
 		fields,
 		fieldGroups,
 		isOpen,
+		inline = false,
+		pipelineSection,
+		enableCrossSectionDrag = false,
+		onCrossSectionDrop,
 		onchange,
 		ontoggle,
 	}: {
@@ -16,6 +29,11 @@
 		fields: AnyFieldDisplayDef[];
 		fieldGroups: string[];
 		isOpen: boolean;
+		/** When true, render pills + picker inline (no toolbar toggle). */
+		inline?: boolean;
+		pipelineSection?: PipelineSection;
+		enableCrossSectionDrag?: boolean;
+		onCrossSectionDrop?: (field: string, source: PipelineSection) => void;
 		onchange: () => void;
 		ontoggle: () => void;
 	} = $props();
@@ -25,9 +43,10 @@
 	let dragIndex: number | null = $state(null);
 	let dragOverIndex: number | null = $state(null);
 	let dragOverSide: 'left' | 'right' = $state('left');
+	let crossDropTarget = $state(false);
 
 	function getLabel(key: string) {
-		return fields.find((f) => f.key === key)?.label ?? key;
+		return fieldOptionLabelForKey(key, fields);
 	}
 
 	function addField(key: string) {
@@ -63,8 +82,45 @@
 		contextMenu = { index, x: e.clientX, y: e.clientY };
 	}
 
-	function onDragStart(index: number) {
+	function onDragStart(e: DragEvent, index: number) {
 		dragIndex = index;
+		if (enableCrossSectionDrag && pipelineSection) {
+			setPipelineFieldDragData(e, columns[index]!, pipelineSection);
+		}
+	}
+
+	function onPanelDragEnter(e: DragEvent) {
+		if (!enableCrossSectionDrag || !pipelineSection) return;
+		if (!canAcceptPipelineFieldAt(pipelineSection)) return;
+		e.preventDefault();
+	}
+
+	function onPanelDragOver(e: DragEvent) {
+		if (!enableCrossSectionDrag || !pipelineSection) return;
+		if (!canAcceptPipelineFieldAt(pipelineSection)) return;
+		e.preventDefault();
+		if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+		crossDropTarget = true;
+	}
+
+	function onPanelDragLeave() {
+		crossDropTarget = false;
+	}
+
+	function tryCrossSectionDrop(e: DragEvent): boolean {
+		if (!enableCrossSectionDrag || !pipelineSection) return false;
+		const data = readPipelineFieldDragData(e);
+		if (!data || data.source === pipelineSection) return false;
+		e.preventDefault();
+		e.stopPropagation();
+		crossDropTarget = false;
+		markPipelineCrossDropHandled();
+		onCrossSectionDrop?.(data.field, data.source);
+		return true;
+	}
+
+	function onPanelDrop(e: DragEvent) {
+		tryCrossSectionDrop(e);
 	}
 
 	function onDragOver(e: DragEvent, index: number) {
@@ -80,7 +136,12 @@
 		} else if (dragOverIndex !== index) dragOverIndex = index;
 	}
 
-	function onDrop(index: number) {
+	function onDrop(e: DragEvent, index: number) {
+		if (tryCrossSectionDrop(e)) {
+			dragIndex = null;
+			dragOverIndex = null;
+			return;
+		}
 		if (dragIndex !== null && dragIndex !== index) {
 			columns = moveItem(columns, dragIndex, index, dragOverSide);
 			onchange();
@@ -93,17 +154,28 @@
 		// Columns are removed via context menu only; no drag-outside-to-remove
 		dragIndex = null;
 		dragOverIndex = null;
+		crossDropTarget = false;
+		clearPipelineFieldDrag();
 	}
 </script>
 
-<div class="toolbar-item">
-	<button class="toolbar-btn col-btn" class:open={isOpen} onclick={ontoggle}>
-		Columns<span class="badge col-badge">{columns.length}</span>
-	</button>
+<div class="toolbar-item" class:inline>
+	{#if !inline}
+		<button class="toolbar-btn col-btn" class:open={isOpen} onclick={ontoggle}>
+			Columns<span class="badge col-badge">{columns.length}</span>
+		</button>
+	{/if}
 
-	{#if isOpen}
-		<div class="panel">
-			<div class="panel-pills">
+	{#if inline || isOpen}
+		<div class="panel" class:inline-panel={inline} class:cross-drop-target={crossDropTarget}>
+			<div
+				class="panel-pills"
+				ondragenter={onPanelDragEnter}
+				ondragover={onPanelDragOver}
+				ondragleave={onPanelDragLeave}
+				ondrop={onPanelDrop}
+				role="list"
+			>
 				{#each columns as col, i (col)}
 					<button
 						class="pill col-pill"
@@ -118,12 +190,14 @@
 							dragIndex !== i}
 						draggable="true"
 						oncontextmenu={(e) => onContextMenu(e, i)}
-						ondragstart={() => onDragStart(i)}
+						ondragstart={(e) => onDragStart(e, i)}
 						ondragover={(e) => onDragOver(e, i)}
 						ondragleave={() => {}}
-						ondrop={() => onDrop(i)}
+						ondrop={(e) => onDrop(e, i)}
 						ondragend={onDragEnd}
-						title="Right-click to remove. Drag to reorder.">{getLabel(col)}</button
+						title={enableCrossSectionDrag
+							? 'Right-click to remove. Drag to reorder or drop on Filters/Sort to add there.'
+							: 'Right-click to remove. Drag to reorder.'}>{getLabel(col)}</button
 					>
 				{/each}
 				<div class="add-wrapper" role="none">
@@ -168,6 +242,10 @@
 <style>
 	.toolbar-item {
 		position: relative;
+	}
+
+	.toolbar-item.inline {
+		position: static;
 	}
 
 	.toolbar-btn {
@@ -220,6 +298,21 @@
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 		padding: 10px 12px;
 		min-width: 260px;
+	}
+
+	.panel.inline-panel {
+		position: static;
+		border: none;
+		box-shadow: none;
+		padding: 0;
+		min-width: 0;
+		background: transparent;
+	}
+
+	.panel.cross-drop-target {
+		outline: 2px dashed var(--link);
+		outline-offset: 4px;
+		border-radius: 6px;
 	}
 	.panel-pills {
 		display: flex;

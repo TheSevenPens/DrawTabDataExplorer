@@ -25,6 +25,7 @@ export function dataSubNavTabs(): SubNavTab[] {
 		{ href: '/timeline', label: 'Timeline' },
 		{ href: '/pressure-response', label: 'Pressure Response' },
 		{ href: '/api-explorer', label: 'API Explorer' },
+		{ href: '/query-builder', label: 'Query Builder' },
 		{ href: '/data-quality', label: 'Data Quality' },
 	];
 }
