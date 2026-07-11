@@ -72,9 +72,11 @@ export async function executeBuilderQuery(
 	}
 
 	if (state.output.mode === 'countBy') {
-		const by =
-			state.output.fields.length === 1 ? state.output.fields[0] : state.output.fields;
-		q = q.countBy(by, { countAlias: countAliasForSorts(state.sorts), sort: 'none' }) as Query<unknown>;
+		const by = state.output.fields.length === 1 ? state.output.fields[0] : state.output.fields;
+		q = q.countBy(by, {
+			countAlias: countAliasForSorts(state.sorts),
+			sort: 'none',
+		}) as Query<unknown>;
 		for (const s of state.sorts.filter((x) => !x.disabled)) {
 			q = q.sort(s.field, s.direction) as Query<unknown>;
 		}

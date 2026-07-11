@@ -11,10 +11,7 @@ export function fieldOptionLabel(field: FieldLike): string {
 }
 
 /** Resolve a field key to the same dropdown label used in pickers. */
-export function fieldOptionLabelForKey(
-	key: string,
-	fields: FieldLike[],
-): string {
+export function fieldOptionLabelForKey(key: string, fields: FieldLike[]): string {
 	const field = fields.find((f) => f.key === key);
 	return field ? fieldOptionLabel(field) : key;
 }

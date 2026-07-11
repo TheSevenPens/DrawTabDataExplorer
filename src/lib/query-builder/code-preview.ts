@@ -60,8 +60,7 @@ export function buildQueryCode(opts: {
 				? `'${opts.output.fields[0]}'`
 				: `[${opts.output.fields.map((f) => `'${f}'`).join(', ')}]`;
 		const alias = countAliasForSorts(opts.sorts);
-		const countByOpts =
-			alias === 'count' ? '' : `, { countAlias: '${alias}', sort: 'none' }`;
+		const countByOpts = alias === 'count' ? '' : `, { countAlias: '${alias}', sort: 'none' }`;
 		lines.push(`  .countBy(${by}${countByOpts})`);
 	} else if (opts.columns.length > 0) {
 		lines.push(`  .select([${opts.columns.map((c) => `'${c}'`).join(', ')}])`);

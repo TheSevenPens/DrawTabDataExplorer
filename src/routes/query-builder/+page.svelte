@@ -8,10 +8,7 @@
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import { buildTableShape, stripMetaNoise } from '$lib/api-explorer/result-table.js';
-	import {
-		TABLET_FIELDS,
-		TABLET_FIELD_GROUPS,
-	} from '$data/lib/entities/tablet-fields.js';
+	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
 	import {
 		PEN_COMPAT_FIELDS,
@@ -232,9 +229,7 @@
 		}
 	}
 
-	let filterFieldKeys = $derived(
-		filters.filter((f) => !f.disabled).map((f) => f.field),
-	);
+	let filterFieldKeys = $derived(filters.filter((f) => !f.disabled).map((f) => f.field));
 
 	let canAddFilterColumns = $derived(
 		filterFieldKeys.some((key) => fields.some((f) => f.key === key) && !columns.includes(key)),
@@ -284,9 +279,9 @@
 <ChromeLayout subNavTabs={dataTabs}>
 	<h1>Query Builder</h1>
 	<p class="blurb">
-		Build <code>DrawTabDataSet</code> queries without typing. Pipeline order matches the API:
-		filter → columns → sort → limit → output. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> runs.
-		Compare with <a href="/api-explorer">API Explorer</a>.
+		Build <code>DrawTabDataSet</code> queries without typing. Pipeline order matches the API: filter
+		→ columns → sort → limit → output. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> runs. Compare with
+		<a href="/api-explorer">API Explorer</a>.
 	</p>
 
 	<div class="layout">
@@ -497,76 +492,76 @@
 			</div>
 
 			<div class="result-toolbar">
-					{#if elapsedMs !== null}
-						<span class="meta">{elapsedMs} ms</span>
+				{#if elapsedMs !== null}
+					<span class="meta">{elapsedMs} ms</span>
+				{/if}
+				{#if resultMeta}
+					<span class="meta">{resultMeta}</span>
+				{/if}
+				<SegmentedControl
+					options={[
+						{ value: 'table', label: 'Table' },
+						{ value: 'json', label: 'JSON' },
+					]}
+					bind:value={viewMode}
+					ariaLabel="Result view"
+				/>
+				{#if resultJson}
+					<label
+						class="meta-toggle"
+						title="Show loader-internal Meta._id, _CreateDate, _ModifiedDate fields"
+					>
+						<input type="checkbox" bind:checked={showMeta} />
+						Show meta
+					</label>
+					{#if viewMode === 'table' && exportTable}
+						<ExportTableButton
+							entityType="query-builder"
+							title="Query Builder result"
+							filename="query-builder-result"
+							headers={exportTable.headers}
+							rows={exportTable.rows}
+						/>
 					{/if}
-					{#if resultMeta}
-						<span class="meta">{resultMeta}</span>
-					{/if}
-					<SegmentedControl
-						options={[
-							{ value: 'table', label: 'Table' },
-							{ value: 'json', label: 'JSON' },
-						]}
-						bind:value={viewMode}
-						ariaLabel="Result view"
-					/>
-					{#if resultJson}
-						<label
-							class="meta-toggle"
-							title="Show loader-internal Meta._id, _CreateDate, _ModifiedDate fields"
-						>
-							<input type="checkbox" bind:checked={showMeta} />
-							Show meta
-						</label>
-						{#if viewMode === 'table' && exportTable}
-							<ExportTableButton
-								entityType="query-builder"
-								title="Query Builder result"
-								filename="query-builder-result"
-								headers={exportTable.headers}
-								rows={exportTable.rows}
-							/>
-						{/if}
-						<Button variant="subtle" size="sm" onclick={copyResult}>Copy</Button>
-					{/if}
-				</div>
-				{#if error}
-					<pre class="result-pane error">{error}</pre>
-				{:else if resultJson}
-					{#if viewMode === 'json'}
-						<pre class="result-pane">{resultJson}</pre>
-					{:else if tableShape}
-						{#if tableShape.kind === 'not-tabular'}
-							<p class="placeholder">{tableShape.reason} Switch to JSON to see this result.</p>
-						{:else}
-							<div class="result-pane table-wrap">
-								<table class="result-table">
-									<thead>
+					<Button variant="subtle" size="sm" onclick={copyResult}>Copy</Button>
+				{/if}
+			</div>
+			{#if error}
+				<pre class="result-pane error">{error}</pre>
+			{:else if resultJson}
+				{#if viewMode === 'json'}
+					<pre class="result-pane">{resultJson}</pre>
+				{:else if tableShape}
+					{#if tableShape.kind === 'not-tabular'}
+						<p class="placeholder">{tableShape.reason} Switch to JSON to see this result.</p>
+					{:else}
+						<div class="result-pane table-wrap">
+							<table class="result-table">
+								<thead>
+									<tr>
+										{#each tableShape.columns as col (col)}
+											<th>{col}</th>
+										{/each}
+									</tr>
+								</thead>
+								<tbody>
+									{#each tableShape.rows as row, i (i)}
 										<tr>
 											{#each tableShape.columns as col (col)}
-												<th>{col}</th>
+												<td>{(row as Record<string, string>)[col] ?? ''}</td>
 											{/each}
 										</tr>
-									</thead>
-									<tbody>
-										{#each tableShape.rows as row, i (i)}
-											<tr>
-												{#each tableShape.columns as col (col)}
-													<td>{(row as Record<string, string>)[col] ?? ''}</td>
-												{/each}
-											</tr>
-										{/each}
-									</tbody>
-								</table>
-							</div>
-						{/if}
+									{/each}
+								</tbody>
+							</table>
+						</div>
 					{/if}
-				{:else if running}
-					<p class="placeholder">Running…</p>
-				{:else}
-					<p class="placeholder">Configure the pipeline and press Run (or Ctrl+Enter).</p>
 				{/if}
+			{:else if running}
+				<p class="placeholder">Running…</p>
+			{:else}
+				<p class="placeholder">Configure the pipeline and press Run (or Ctrl+Enter).</p>
+			{/if}
 		</aside>
 	</div>
 </ChromeLayout>

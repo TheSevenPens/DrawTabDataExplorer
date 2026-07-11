@@ -217,7 +217,11 @@
 	{/if}
 
 	{#if inline || isOpen}
-		<div class="panel filter-panel" class:inline-panel={inline} class:cross-drop-target={crossDropTarget}>
+		<div
+			class="panel filter-panel"
+			class:inline-panel={inline}
+			class:cross-drop-target={crossDropTarget}
+		>
 			<div
 				class="panel-pills"
 				ondragenter={onPanelDragEnter}
@@ -248,10 +252,9 @@
 				<div class="add-wrapper" role="none">
 					<button
 						class="add-btn filter-add"
-						onclick={() =>
-							inline ? (showAddPicker = !showAddPicker) : addFilter()}
-						title="Add filter"
-					>+</button>
+						onclick={() => (inline ? (showAddPicker = !showAddPicker) : addFilter())}
+						title="Add filter">+</button
+					>
 					{#if inline && showAddPicker}
 						<FieldPicker
 							{fields}
@@ -266,9 +269,7 @@
 				</div>
 			</div>
 			{#if filters.length === 0 && !inline}
-				<p class="empty-hint">
-					No filters yet. Click + to add one.
-				</p>
+				<p class="empty-hint">No filters yet. Click + to add one.</p>
 			{/if}
 			{#if editingIndex !== null && filters[editingIndex]}
 				{@const filter = filters[editingIndex]}

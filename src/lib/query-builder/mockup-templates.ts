@@ -1,12 +1,7 @@
 // Starter templates for the Query Builder prototype — maps to API Explorer
 // "basic tier" examples (single collection, linear filter → sort → project → limit).
 
-export type BuilderCollection =
-	| 'Tablets'
-	| 'Pens'
-	| 'PenCompat'
-	| 'Drivers'
-	| 'PressureResponse';
+export type BuilderCollection = 'Tablets' | 'Pens' | 'PenCompat' | 'Drivers' | 'PressureResponse';
 
 export interface BuilderFilter {
 	field: string;
