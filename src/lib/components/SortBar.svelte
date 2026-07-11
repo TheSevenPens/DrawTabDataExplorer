@@ -255,7 +255,7 @@
 					{/if}
 				</div>
 			</div>
-			{#if sorts.length === 0}
+			{#if sorts.length === 0 && !inline}
 				<p class="empty-hint">No sort yet. Click + to add one.</p>
 			{/if}
 		</div>

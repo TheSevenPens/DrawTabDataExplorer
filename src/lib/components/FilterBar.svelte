@@ -265,9 +265,9 @@
 					{/if}
 				</div>
 			</div>
-			{#if filters.length === 0}
+			{#if filters.length === 0 && !inline}
 				<p class="empty-hint">
-					{inline ? 'No filters yet. Click + to pick a field.' : 'No filters yet. Click + to add one.'}
+					No filters yet. Click + to add one.
 				</p>
 			{/if}
 			{#if editingIndex !== null && filters[editingIndex]}

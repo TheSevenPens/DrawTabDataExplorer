@@ -182,6 +182,7 @@
 		error = null;
 		result = undefined;
 		elapsedMs = null;
+		viewMode = 'table';
 		const start = performance.now();
 		try {
 			result = await executeBuilderQuery(ds, {
@@ -290,14 +291,8 @@
 
 	<div class="layout">
 		<section class="builder">
-			<div class="row">
-				<label class="field-label" for="qb-collection">Source</label>
-				<select id="qb-collection" class="select" bind:value={collection}>
-					{#each COLLECTIONS as c (c)}
-						<option value={c}>{c}</option>
-					{/each}
-				</select>
-				<label class="field-label" for="qb-template">Load example</label>
+			<div class="builder-toolbar">
+				<label class="field-label" for="qb-template">Example</label>
 				<select
 					id="qb-template"
 					class="select wide"
@@ -308,152 +303,193 @@
 						(e.currentTarget as HTMLSelectElement).value = '';
 					}}
 				>
-					<option value="">Basic tier example…</option>
+					<option value="">Load example…</option>
 					{#each BASIC_TEMPLATES as t (t.label)}
 						<option value={t.label}>{t.label}</option>
 					{/each}
 				</select>
 			</div>
+			<table class="pipeline-table">
+				<tbody>
+					<tr>
+						<th class="pipeline-label" scope="row">Source</th>
+						<td class="pipeline-cell">
+							<div class="row">
+								<label class="field-label" for="qb-collection">Collection</label>
+								<select id="qb-collection" class="select" bind:value={collection}>
+									{#each COLLECTIONS as c (c)}
+										<option value={c}>{c}</option>
+									{/each}
+								</select>
+							</div>
+						</td>
+					</tr>
 
-			<div class="block">
-				<div class="block-header">
-					<h2>Filters</h2>
-				</div>
-				<FilterBar
-					bind:filters
-					{fields}
-					{fieldGroups}
-					inline
-					isOpen={true}
-					pipelineSection="filters"
-					enableCrossSectionDrag
-					onCrossSectionDrop={(field) => onCrossSectionDrop('filters', field)}
-					onchange={clearResult}
-					ontoggle={() => {}}
-				/>
-			</div>
+					<tr>
+						<th class="pipeline-label" scope="row">Filters</th>
+						<td class="pipeline-cell">
+							<FilterBar
+								bind:filters
+								{fields}
+								{fieldGroups}
+								inline
+								isOpen={true}
+								pipelineSection="filters"
+								enableCrossSectionDrag
+								onCrossSectionDrop={(field) => onCrossSectionDrop('filters', field)}
+								onchange={clearResult}
+								ontoggle={() => {}}
+							/>
+						</td>
+					</tr>
 
-			{#if outputMode === 'toArray'}
-				<div class="block columns-block">
-					<div class="block-header">
-						<h2>Columns</h2>
-						<div class="block-actions">
-							<span class="hint">{columns.length} selected</span>
-							<Button
-								variant="subtle"
-								size="sm"
-								onclick={addFilterColumns}
-								disabled={!canAddFilterColumns}
-								disabledReason="All active filter fields are already selected"
-							>
-								Add filter fields
-							</Button>
-						</div>
-					</div>
-					{#if columns.length === 0}
-						<p class="hint columns-hint">
-							All fields returned when empty (same as no <code>.select()</code>).
-						</p>
+					{#if outputMode === 'toArray'}
+						<tr>
+							<th class="pipeline-label" scope="row">Columns</th>
+							<td class="pipeline-cell">
+								<div class="cell-toolbar">
+									<span class="hint">{columns.length} selected</span>
+									<Button
+										variant="subtle"
+										size="sm"
+										onclick={addFilterColumns}
+										disabled={!canAddFilterColumns}
+										disabledReason="All active filter fields are already selected"
+									>
+										Add filter fields
+									</Button>
+								</div>
+								{#if columns.length === 0}
+									<p class="hint cell-hint">
+										All fields returned when empty (same as no <code>.select()</code>).
+									</p>
+								{/if}
+								<ColumnBar
+									bind:columns
+									{fields}
+									{fieldGroups}
+									inline
+									isOpen={true}
+									pipelineSection="columns"
+									enableCrossSectionDrag
+									onCrossSectionDrop={(field) => onCrossSectionDrop('columns', field)}
+									onchange={clearResult}
+									ontoggle={() => {}}
+								/>
+							</td>
+						</tr>
 					{/if}
-					<ColumnBar
-						bind:columns
-						{fields}
-						{fieldGroups}
-						inline
-						isOpen={true}
-						pipelineSection="columns"
-						enableCrossSectionDrag
-						onCrossSectionDrop={(field) => onCrossSectionDrop('columns', field)}
-						onchange={clearResult}
-						ontoggle={() => {}}
-					/>
-				</div>
-			{/if}
 
-			{#if outputMode === 'toArray' || outputMode === 'countBy'}
-				<div class="block">
-					<div class="block-header">
-						<h2>Sort</h2>
-					</div>
-					{#if outputMode === 'countBy'}
-						<p class="hint sort-hint">Sorts the grouped result (e.g. by <code>tablets</code> count).</p>
+					{#if outputMode === 'toArray' || outputMode === 'countBy'}
+						<tr>
+							<th class="pipeline-label" scope="row">Sort</th>
+							<td class="pipeline-cell">
+								{#if outputMode === 'countBy'}
+									<p class="hint cell-hint">
+										Sorts the grouped result (e.g. by <code>tablets</code> count).
+									</p>
+								{/if}
+								<SortBar
+									bind:sorts
+									fields={sortPickerFields}
+									fieldGroups={sortPickerGroups}
+									inline
+									isOpen={true}
+									pipelineSection="sort"
+									enableCrossSectionDrag
+									onCrossSectionDrop={(field) => onCrossSectionDrop('sort', field)}
+									onchange={clearResult}
+									ontoggle={() => {}}
+								/>
+							</td>
+						</tr>
 					{/if}
-					<SortBar
-						bind:sorts
-						fields={sortPickerFields}
-						fieldGroups={sortPickerGroups}
-						inline
-						isOpen={true}
-						pipelineSection="sort"
-						enableCrossSectionDrag
-						onCrossSectionDrop={(field) => onCrossSectionDrop('sort', field)}
-						onchange={clearResult}
-						ontoggle={() => {}}
-					/>
-				</div>
-			{/if}
 
-			{#if outputMode === 'toArray'}
-				<div class="block">
-					<div class="block-header">
-						<h2>Limit</h2>
-					</div>
-					<div class="row compact">
-						<label class="field-label" for="qb-skip">Skip</label>
-						<input id="qb-skip" class="input narrow" type="number" min="0" bind:value={skip} />
-						<label class="field-label" for="qb-take">Take</label>
-						<input id="qb-take" class="input narrow" type="number" min="0" bind:value={take} />
-					</div>
-				</div>
-			{/if}
+					{#if outputMode === 'toArray'}
+						<tr>
+							<th class="pipeline-label" scope="row">Limit</th>
+							<td class="pipeline-cell">
+								<div class="row compact">
+									<label class="field-label" for="qb-skip">Skip</label>
+									<input
+										id="qb-skip"
+										class="input narrow"
+										type="number"
+										min="0"
+										bind:value={skip}
+									/>
+									<label class="field-label" for="qb-take">Take</label>
+									<input
+										id="qb-take"
+										class="input narrow"
+										type="number"
+										min="0"
+										bind:value={take}
+									/>
+								</div>
+							</td>
+						</tr>
+					{/if}
 
-			<div class="block">
-				<div class="block-header">
-					<h2>Output</h2>
-				</div>
-				<p class="hint">Terminal step — what the pipeline returns.</p>
-				<SegmentedControl
-					options={[
-						{ value: 'toArray', label: 'Rows' },
-						{ value: 'distinct', label: 'Distinct' },
-						{ value: 'countBy', label: 'Count by' },
-						{ value: 'count', label: 'Count' },
-					]}
-					bind:value={outputMode}
-					ariaLabel="Output mode"
-				/>
-				{#if outputMode === 'distinct'}
-					<div class="row compact">
-						<label class="field-label" for="qb-distinct">Field</label>
-						<select id="qb-distinct" class="select" bind:value={distinctField}>
-							{#each fields as fd (fd.key)}
-								<option value={fd.key}>{fieldOptionLabel(fd)}</option>
-							{/each}
-						</select>
-					</div>
-				{:else if outputMode === 'countBy'}
-					<div class="row compact">
-						<label class="field-label" for="qb-countby">Group by (comma-separated keys)</label>
-						<input id="qb-countby" class="input wide" bind:value={countByFields} />
-					</div>
-				{/if}
-			</div>
+					<tr>
+						<th class="pipeline-label" scope="row">Output</th>
+						<td class="pipeline-cell">
+							<SegmentedControl
+								options={[
+									{ value: 'toArray', label: 'Rows' },
+									{ value: 'distinct', label: 'Distinct' },
+									{ value: 'countBy', label: 'Count by' },
+									{ value: 'count', label: 'Count' },
+								]}
+								bind:value={outputMode}
+								ariaLabel="Output mode"
+							/>
+							{#if outputMode === 'distinct'}
+								<div class="row compact">
+									<label class="field-label" for="qb-distinct">Field</label>
+									<select id="qb-distinct" class="select" bind:value={distinctField}>
+										{#each fields as fd (fd.key)}
+											<option value={fd.key}>{fieldOptionLabel(fd)}</option>
+										{/each}
+									</select>
+								</div>
+							{:else if outputMode === 'countBy'}
+								<div class="row compact">
+									<label class="field-label" for="qb-countby">Group by</label>
+									<input
+										id="qb-countby"
+										class="input wide"
+										placeholder="comma-separated keys"
+										bind:value={countByFields}
+									/>
+								</div>
+							{/if}
+						</td>
+					</tr>
 
-			<details class="block query-code">
-				<summary>Generated query</summary>
-				<p class="hint query-code-hint">
-					API Explorer runs this as the body of an async function with <code>ds</code> in scope.
-					<a href="/api-explorer">Open API Explorer</a> to paste and experiment.
-				</p>
-				<div class="query-code-toolbar">
-					<Button variant="subtle" size="sm" onclick={copyQueryCode}>Copy</Button>
-				</div>
-				<pre class="code"><code>{codePreview}</code></pre>
-			</details>
+					<tr class="query-code-row">
+						<th class="pipeline-label" scope="row">Query</th>
+						<td class="pipeline-cell">
+							<details class="query-code">
+								<summary>Generated code</summary>
+								<p class="hint query-code-hint">
+									API Explorer runs this as the body of an async function with <code>ds</code> in
+									scope.
+									<a href="/api-explorer">Open API Explorer</a> to paste and experiment.
+								</p>
+								<div class="query-code-toolbar">
+									<Button variant="subtle" size="sm" onclick={copyQueryCode}>Copy</Button>
+								</div>
+								<pre class="code"><code>{codePreview}</code></pre>
+							</details>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 		</section>
 
 		<aside class="preview">
-			<div class="block-header">
+			<div class="preview-header">
 				<span class="preview-label">Result</span>
 				<Button variant="primary" size="md" onclick={runQuery} disabled={running}>
 					{running ? 'Running…' : 'Run'}
@@ -467,6 +503,14 @@
 					{#if resultMeta}
 						<span class="meta">{resultMeta}</span>
 					{/if}
+					<SegmentedControl
+						options={[
+							{ value: 'table', label: 'Table' },
+							{ value: 'json', label: 'JSON' },
+						]}
+						bind:value={viewMode}
+						ariaLabel="Result view"
+					/>
 					{#if resultJson}
 						<label
 							class="meta-toggle"
@@ -475,14 +519,6 @@
 							<input type="checkbox" bind:checked={showMeta} />
 							Show meta
 						</label>
-						<SegmentedControl
-							options={[
-								{ value: 'json', label: 'JSON' },
-								{ value: 'table', label: 'Table' },
-							]}
-							bind:value={viewMode}
-							ariaLabel="Result view"
-						/>
 						{#if viewMode === 'table' && exportTable}
 							<ExportTableButton
 								entityType="query-builder"
@@ -571,7 +607,64 @@
 	.preview {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 12px;
+	}
+
+	.builder-toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.pipeline-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 14px;
+		background: var(--bg-card);
+		border: 1px solid var(--border-light);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.pipeline-table tr + tr {
+		border-top: 1px solid var(--border-light);
+	}
+
+	.pipeline-label {
+		width: 7rem;
+		padding: 10px 12px;
+		text-align: left;
+		vertical-align: top;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--text-dim);
+		white-space: nowrap;
+		background: color-mix(in srgb, var(--bg-card) 88%, var(--border));
+		border-right: 1px solid var(--border-light);
+	}
+
+	.pipeline-cell {
+		padding: 8px 12px;
+		vertical-align: top;
+		min-width: 0;
+	}
+
+	.cell-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex-wrap: wrap;
+		margin-bottom: 6px;
+	}
+
+	.cell-hint {
+		margin-bottom: 6px;
+	}
+
+	.cell-hint code {
+		font-size: 12px;
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 	}
 
 	.preview {
@@ -582,20 +675,13 @@
 		flex-direction: column;
 	}
 
-	.block {
-		border: 1px solid var(--border-light);
-		border-radius: 8px;
-		padding: 12px;
-		background: var(--bg-card);
-	}
-
 	.query-code {
-		margin-top: 4px;
+		margin: 0;
 	}
 
 	.query-code > summary {
 		cursor: pointer;
-		font-size: 15px;
+		font-size: 13px;
 		font-weight: 600;
 		color: var(--text);
 		list-style: none;
@@ -635,34 +721,21 @@
 	}
 
 	.query-code .code {
-		max-height: 280px;
+		max-height: 220px;
 		min-height: 0;
+	}
+
+	.preview-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
 	}
 
 	.preview-label {
 		font-weight: 600;
 		font-size: 15px;
 		color: var(--text);
-	}
-
-	.block-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		margin-bottom: 10px;
-	}
-
-	.block-header h2 {
-		margin: 0;
-		font-size: 15px;
-	}
-
-	.block-actions {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		flex-wrap: wrap;
 	}
 
 	.row {
@@ -673,7 +746,7 @@
 	}
 
 	.row.compact {
-		margin-top: 10px;
+		margin-top: 8px;
 	}
 
 	.field-label {
@@ -703,17 +776,10 @@
 
 	.hint {
 		margin: 0;
-		font-size: 13px;
+		font-size: 12px;
 		color: var(--text-dim);
 	}
 
-	.columns-hint {
-		margin-bottom: 8px;
-	}
-
-	.sort-hint {
-		margin-bottom: 8px;
-	}
 	.code {
 		margin: 0;
 		padding: 12px;
@@ -838,6 +904,15 @@
 
 		.preview {
 			position: static;
+		}
+
+		.pipeline-label {
+			width: 5.5rem;
+			padding: 8px 10px;
+		}
+
+		.pipeline-cell {
+			padding: 8px 10px;
 		}
 	}
 </style>
