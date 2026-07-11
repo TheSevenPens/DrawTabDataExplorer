@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { createExportDialogHost } from '$lib/export-dialog-host.svelte.js';
+	import { resolve } from '$app/paths';
 	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { flaggedCount } from '$lib/flagged-store.js';
 	import {
 		getDiagonal,
+		brandName,
 		type Tablet,
 		type ISOPaperSize,
 		type USPaperSize,
@@ -61,6 +65,8 @@
 			label: 'Pen Displays — by Category',
 		},
 		{ id: 'digitizer-density', category: 'Digitizer', label: 'Density' },
+		{ id: 'digitizer-density-lowest', category: 'Digitizer', label: 'Density — Lowest' },
+		{ id: 'digitizer-density-highest', category: 'Digitizer', label: 'Density — Highest' },
 		{ id: 'digitizer-accuracy-center', category: 'Digitizer', label: 'Accuracy (Center)' },
 		{ id: 'digitizer-accuracy-corner', category: 'Digitizer', label: 'Accuracy (Corner)' },
 		{ id: 'digitizer-report-rate', category: 'Digitizer', label: 'Report Rate' },
@@ -113,6 +119,56 @@
 	});
 
 	let numericSections = $derived(buildAnalysisSections(allTablets, penDisplays, yearFilters));
+
+	// --- Digitizer density ranking (lowest / highest) ---
+
+	type DensityRow = {
+		entityId: string;
+		name: string;
+		id: string;
+		brand: string;
+		year: string;
+		density: number;
+	};
+	let densityTablets = $derived<DensityRow[]>(
+		allTablets
+			.map((t) => {
+				const raw = t.Digitizer?.Density;
+				const density = Number(raw);
+				if (raw == null || raw === '' || !Number.isFinite(density)) return null;
+				return {
+					entityId: t.Meta.EntityId,
+					name: t.Model.Name,
+					id: t.Model.Id,
+					brand: t.Model.Brand as string,
+					year: t.Model.LaunchYear ?? '',
+					density,
+				};
+			})
+			.filter((r): r is DensityRow => r !== null),
+	);
+	let densityBrands = $derived(
+		[...new Set(densityTablets.map((r) => r.brand))].sort((a, b) =>
+			brandName(a).localeCompare(brandName(b)),
+		),
+	);
+
+	const DENSITY_COUNT_OPTIONS = [10, 20, 30];
+	let lowestDensityCount = $state(10);
+	let highestDensityCount = $state(10);
+	let lowestDensityBrand = $state('');
+	let highestDensityBrand = $state('');
+
+	function densityRankRows(brand: string, dir: 'asc' | 'desc', count: number): DensityRow[] {
+		const filtered = brand ? densityTablets.filter((r) => r.brand === brand) : densityTablets;
+		return [...filtered]
+			.sort((a, b) => (dir === 'asc' ? a.density - b.density : b.density - a.density))
+			.slice(0, count);
+	}
+	let lowestDensityRows = $derived(densityRankRows(lowestDensityBrand, 'asc', lowestDensityCount));
+	let highestDensityRows = $derived(
+		densityRankRows(highestDensityBrand, 'desc', highestDensityCount),
+	);
 
 	// --- Pressure Levels ---
 
@@ -198,6 +254,90 @@
 	let ptMarkers = $derived(markersFor(ptOverlay));
 	let pdMarkers = $derived(markersFor(pdOverlay));
 </script>
+
+{#snippet densityRankSection(p: {
+	rows: DensityRow[];
+	title: string;
+	filename: string;
+	brand: string;
+	onBrandChange: (b: string) => void;
+	count: number;
+	onCountChange: (n: number) => void;
+})}
+	<h2>{p.title}</h2>
+	<p class="description">
+		Tablets ranked by digitizer density (lines per mm). Higher density gives finer positional
+		resolution under the pen tip.
+	</p>
+	{#if densityTablets.length === 0}
+		<EmptyState>No tablets with a recorded digitizer density.</EmptyState>
+	{:else}
+		<div class="rank-controls">
+			<div class="controls-left">
+				<label class="show-count">
+					Brand
+					<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
+						<option value="" selected={p.brand === ''}>All brands</option>
+						{#each densityBrands as b (b)}
+							<option value={b} selected={p.brand === b}>{brandName(b)}</option>
+						{/each}
+					</select>
+				</label>
+				<label class="show-count">
+					Show
+					<select onchange={(e) => p.onCountChange(Number(e.currentTarget.value))}>
+						{#each DENSITY_COUNT_OPTIONS as n (n)}
+							<option value={n} selected={p.count === n}>{n}</option>
+						{/each}
+					</select>
+				</label>
+			</div>
+			<ExportTableButton
+				entityType="analysis"
+				title={p.title}
+				filename={p.filename}
+				headers={['Rank', 'Tablet', 'Brand', 'Year', 'Density (LPmm)']}
+				rows={p.rows.map((r, i) => [
+					i + 1,
+					`${r.name} (${r.id})`,
+					brandName(r.brand),
+					r.year,
+					r.density,
+				])}
+			/>
+		</div>
+		{#if p.rows.length === 0}
+			<EmptyState>No tablets match this brand.</EmptyState>
+		{:else}
+			<table class="rank-table">
+				<thead>
+					<tr>
+						<th class="num">#</th>
+						<th>Tablet</th>
+						<th>Brand</th>
+						<th class="num">Year</th>
+						<th class="num">Density <span class="unit">(LPmm)</span></th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each p.rows as r, i (r.entityId)}
+						<tr>
+							<td class="num mono">{i + 1}</td>
+							<td>
+								<a href={resolve('/entity/[entityId]', { entityId: r.entityId })}>
+									{r.name} ({r.id})
+								</a>
+							</td>
+							<td>{brandName(r.brand)}</td>
+							<td class="num mono">{r.year || '—'}</td>
+							<td class="num mono">{r.density}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		{/if}
+	{/if}
+{/snippet}
 
 <ChromeLayout subNavTabs={tabletTabs}>
 	<h1>Analysis</h1>
@@ -343,6 +483,34 @@
 				</section>
 			{/if}
 
+			{#if activeSection === 'digitizer-density-lowest'}
+				<section class="section">
+					{@render densityRankSection({
+						rows: lowestDensityRows,
+						title: 'Lowest Digitizer Density',
+						filename: 'analysis-digitizer-density-lowest',
+						brand: lowestDensityBrand,
+						onBrandChange: (b) => (lowestDensityBrand = b),
+						count: lowestDensityCount,
+						onCountChange: (n) => (lowestDensityCount = n),
+					})}
+				</section>
+			{/if}
+
+			{#if activeSection === 'digitizer-density-highest'}
+				<section class="section">
+					{@render densityRankSection({
+						rows: highestDensityRows,
+						title: 'Highest Digitizer Density',
+						filename: 'analysis-digitizer-density-highest',
+						brand: highestDensityBrand,
+						onBrandChange: (b) => (highestDensityBrand = b),
+						count: highestDensityCount,
+						onCountChange: (n) => (highestDensityCount = n),
+					})}
+				</section>
+			{/if}
+
 			{#if activeSection === 'sizes-pen-tablet'}
 				<section class="section">
 					<TabletDiagonalSection
@@ -415,5 +583,80 @@
 		font-size: 13px;
 		color: var(--text-dim);
 		margin-bottom: 8px;
+	}
+
+	.rank-controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 4px;
+	}
+	.controls-left {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+	.show-count {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+		color: var(--text-muted);
+	}
+	.show-count select {
+		font-size: 12px;
+		padding: 3px 6px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg-card);
+		color: var(--text);
+	}
+	.rank-controls :global(.table-export) {
+		margin-bottom: 0;
+	}
+	.rank-table {
+		border-collapse: collapse;
+		font-size: 13px;
+		margin: 8px 0 16px;
+		width: fit-content;
+	}
+	.rank-table th {
+		text-align: left;
+		padding: 6px 14px;
+		font-weight: 600;
+		color: var(--text-muted);
+		border-bottom: 2px solid var(--border);
+	}
+	.rank-table th.num {
+		text-align: right;
+	}
+	.rank-table th .unit {
+		font-size: 11px;
+		font-weight: 400;
+	}
+	.rank-table td {
+		padding: 5px 14px;
+		border-bottom: 1px solid var(--border);
+		font-variant-numeric: tabular-nums;
+	}
+	.rank-table td.num {
+		text-align: right;
+	}
+	.rank-table tr:last-child td {
+		border-bottom: none;
+	}
+	.rank-table tr:hover td {
+		background: var(--hover-bg);
+	}
+	.rank-table a {
+		color: var(--link);
+		text-decoration: none;
+	}
+	.rank-table a:hover {
+		text-decoration: underline;
+	}
+	.mono {
+		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 	}
 </style>
