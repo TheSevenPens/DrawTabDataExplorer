@@ -26,6 +26,7 @@
 	} from '@thesevenpens/queriton';
 	import {
 		BASIC_TEMPLATES,
+		buildGroupedTemplates,
 		type BuilderCollection,
 		type BuilderFilter,
 		type BuilderOutput,
@@ -41,6 +42,8 @@
 	let { data } = $props();
 
 	const dataTabs = dataSubNavTabs();
+
+	const groupedTemplates = buildGroupedTemplates();
 
 	const COLLECTIONS: BuilderCollection[] = [
 		'Tablets',
@@ -299,8 +302,12 @@
 					}}
 				>
 					<option value="">Load example…</option>
-					{#each BASIC_TEMPLATES as t (t.label)}
-						<option value={t.label}>{t.label}</option>
+					{#each groupedTemplates as g (g.group)}
+						<optgroup label={g.group}>
+							{#each g.templates as t (t.label)}
+								<option value={t.label}>{t.label}</option>
+							{/each}
+						</optgroup>
 					{/each}
 				</select>
 			</div>
@@ -592,10 +599,9 @@
 	}
 
 	.layout {
-		display: grid;
-		grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-		gap: 20px;
-		align-items: start;
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
 	}
 
 	.builder,
@@ -663,11 +669,11 @@
 	}
 
 	.preview {
-		position: sticky;
-		top: 12px;
-		min-height: 360px;
+		min-height: 200px;
 		display: flex;
 		flex-direction: column;
+		border-top: 1px solid var(--border-light);
+		padding-top: 16px;
 	}
 
 	.query-code {
@@ -893,14 +899,6 @@
 	}
 
 	@media (max-width: 960px) {
-		.layout {
-			grid-template-columns: 1fr;
-		}
-
-		.preview {
-			position: static;
-		}
-
 		.pipeline-label {
 			width: 5.5rem;
 			padding: 8px 10px;
