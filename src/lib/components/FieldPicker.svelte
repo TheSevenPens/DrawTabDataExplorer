@@ -1,5 +1,12 @@
 <script lang="ts">
 	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
+	import {
+		fieldLabelBoldWhenKeyMatch,
+		fieldMatchesQuery,
+		highlightFieldLabel,
+		normalizeFieldSearch,
+	} from '$lib/field-picker-search.js';
+	import { onMount } from 'svelte';
 
 	let {
 		fields,
@@ -21,7 +28,15 @@
 		onclose: () => void;
 	} = $props();
 
+	let searchQuery = $state('');
+	let searchInput = $state<HTMLInputElement | null>(null);
+
 	let excludeSet = $derived(new Set(exclude));
+	let hasSearch = $derived(normalizeFieldSearch(searchQuery) !== '');
+
+	onMount(() => {
+		searchInput?.focus();
+	});
 
 	function pick(key: string) {
 		onselect(key);
@@ -39,7 +54,14 @@
 	}
 
 	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
+		if (e.key === 'Escape') {
+			if (hasSearch) {
+				searchQuery = '';
+				e.preventDefault();
+			} else {
+				onclose();
+			}
+		}
 	}
 </script>
 
@@ -51,6 +73,26 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="backdrop" onclick={onclose}></div>
 <div class="field-picker">
+	<div class="search-row">
+		<div class="search-wrap">
+			<input
+				bind:this={searchInput}
+				class="search-input"
+				type="search"
+				placeholder="Search fields…"
+				bind:value={searchQuery}
+				aria-label="Search fields"
+			/>
+			{#if hasSearch}
+				<button
+					type="button"
+					class="search-clear"
+					aria-label="Clear search"
+					onclick={() => (searchQuery = '')}>×</button
+				>
+			{/if}
+		</div>
+	</div>
 	<div class="groups">
 		{#each fieldGroups as group (group)}
 			{@const allGroupFields = fields.filter((f) => f.group === group)}
@@ -72,16 +114,28 @@
 					</div>
 					{#each allGroupFields as f (f.key)}
 						{@const chosen = excludeSet.has(f.key)}
+						{@const matches = hasSearch && fieldMatchesQuery(f, searchQuery)}
+						{@const labelSegments = hasSearch ? highlightFieldLabel(f.label, searchQuery) : null}
+						{@const boldWholeLabel = hasSearch && fieldLabelBoldWhenKeyMatch(f, searchQuery)}
 						<button
 							class="field-item"
 							class:selected={f.key === selected}
 							class:chosen
+							class:search-dim={hasSearch && !matches}
 							disabled={chosen}
 							onclick={() => {
 								if (!chosen) pick(f.key);
 							}}
 						>
-							{f.label}{#if chosen}
+							{#if boldWholeLabel}
+								<mark class="search-hit">{f.label}</mark>
+							{:else if labelSegments}
+								{#each labelSegments as seg, i (i)}
+									{#if seg.match}<mark class="search-hit">{seg.text}</mark>{:else}{seg.text}{/if}
+								{/each}
+							{:else}
+								{f.label}
+							{/if}{#if chosen}
 								✓{/if}
 						</button>
 					{/each}
@@ -115,6 +169,56 @@
 		min-width: 300px;
 		max-height: min(70vh, 480px);
 		overflow-y: auto;
+	}
+
+	.search-row {
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		background: var(--bg-card);
+		padding-bottom: 8px;
+		margin-bottom: 4px;
+		border-bottom: 1px solid var(--border-light);
+	}
+
+	.search-wrap {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	.search-input {
+		width: 100%;
+		padding: 5px 26px 5px 10px;
+		font-size: 13px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg);
+		color: var(--text);
+	}
+
+	.search-input:focus {
+		outline: 2px solid color-mix(in srgb, var(--link) 35%, transparent);
+		outline-offset: 0;
+		border-color: var(--link);
+	}
+
+	.search-clear {
+		position: absolute;
+		right: 6px;
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--text-muted);
+		font-size: 16px;
+		line-height: 1;
+		padding: 0 2px;
+		display: flex;
+		align-items: center;
+	}
+
+	.search-clear:hover {
+		color: var(--text);
 	}
 
 	.groups {
@@ -186,5 +290,30 @@
 	.field-item.chosen {
 		opacity: 0.4;
 		cursor: default;
+	}
+
+	.field-item.search-dim {
+		color: var(--text-muted);
+		opacity: 0.45;
+	}
+
+	.field-item.search-dim:hover {
+		opacity: 0.65;
+		color: var(--text-dim);
+	}
+
+	.search-hit {
+		font-weight: 700;
+		background: #fde68a;
+		color: #713f12;
+		border-radius: 2px;
+		padding: 0 2px;
+		box-decoration-break: clone;
+		-webkit-box-decoration-break: clone;
+	}
+
+	:global([data-theme='dark']) .search-hit {
+		background: #854d0e;
+		color: #fef9c3;
 	}
 </style>

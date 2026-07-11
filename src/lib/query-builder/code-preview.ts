@@ -6,6 +6,7 @@ import type {
 } from './mockup-templates.js';
 import { countAliasForSorts } from './execute-builder-query.js';
 import { completeBuilderFilters } from './filter-complete.js';
+import { buildSummarizeSpec, formatSummarizeSpec } from './summarize-spec.js';
 
 const COLLECTION_DS: Record<BuilderCollection, string> = {
 	Tablets: 'ds.Tablets',
@@ -34,6 +35,7 @@ export function buildQueryCode(opts: {
 	columns: string[];
 	skip?: number;
 	take?: number;
+	havingFilters?: BuilderFilter[];
 	output: BuilderOutput;
 }): string {
 	const lines: string[] = [`let q = ${COLLECTION_DS[opts.collection]}`];
@@ -62,6 +64,14 @@ export function buildQueryCode(opts: {
 		const alias = countAliasForSorts(opts.sorts);
 		const countByOpts = alias === 'count' ? '' : `, { countAlias: '${alias}', sort: 'none' }`;
 		lines.push(`  .countBy(${by}${countByOpts})`);
+	} else if (opts.output.mode === 'summarize') {
+		const spec = buildSummarizeSpec(opts.output.groupBy, opts.output.aggregators);
+		if (spec) {
+			lines.push(`  .summarize(${formatSummarizeSpec(spec)})`);
+		}
+		for (const f of completeBuilderFilters(opts.havingFilters ?? [])) {
+			lines.push(`  ${renderFilter(f)}`);
+		}
 	} else if (opts.columns.length > 0) {
 		lines.push(`  .select([${opts.columns.map((c) => `'${c}'`).join(', ')}])`);
 	}
@@ -77,11 +87,7 @@ export function buildQueryCode(opts: {
 		lines.push(`  .take(${opts.take})`);
 	}
 
-	if (opts.output.mode === 'countBy') {
-		lines.push('  .toArray()');
-	} else {
-		lines.push('  .toArray()');
-	}
+	lines.push('  .toArray()');
 
 	lines.push('return await q;');
 	return lines.join('\n');

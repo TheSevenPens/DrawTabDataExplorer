@@ -33,6 +33,9 @@
 		type BuilderSort,
 		type QueryBuilderTemplate,
 	} from '$lib/query-builder/mockup-templates.js';
+	import type { BuilderAggregator } from '$lib/query-builder/aggregator-types.js';
+	import SummarizeEditor from '$lib/query-builder/SummarizeEditor.svelte';
+	import { summarizeOutputFieldKeys } from '$lib/query-builder/summarize-spec.js';
 	import { buildQueryCode } from '$lib/query-builder/code-preview.js';
 	import { executeBuilderQuery } from '$lib/query-builder/execute-builder-query.js';
 	import { fieldOptionLabel } from '$lib/field-option-label.js';
@@ -75,7 +78,10 @@
 	let take = $state<number | ''>(5);
 	let outputMode = $state<BuilderOutput['mode']>('toArray');
 	let distinctField = $state('ModelType');
-	let countByFields = $state('Brand');
+	let countByFields = $state<string[]>(['Brand']);
+	let summarizeGroupBy = $state<string[]>(['Brand']);
+	let summarizeAggregators = $state<BuilderAggregator[]>([{ op: 'count', name: 'count' }]);
+	let havingFilters = $state<BuilderFilter[]>([]);
 
 	let fields = $derived(collectionMeta[collection].fields);
 	let fieldGroups = $derived(collectionMeta[collection].groups);
@@ -84,11 +90,14 @@
 		if (outputMode === 'distinct') return { mode: 'distinct', field: distinctField };
 		if (outputMode === 'count') return { mode: 'count' };
 		if (outputMode === 'countBy') {
-			const parts = countByFields
-				.split(',')
-				.map((s) => s.trim())
-				.filter(Boolean);
-			return { mode: 'countBy', fields: parts.length ? parts : ['Brand'] };
+			return { mode: 'countBy', fields: countByFields.length ? countByFields : ['Brand'] };
+		}
+		if (outputMode === 'summarize') {
+			return {
+				mode: 'summarize',
+				groupBy: summarizeGroupBy.length ? summarizeGroupBy : ['Brand'],
+				aggregators: summarizeAggregators,
+			};
 		}
 		return { mode: 'toArray' };
 	});
@@ -101,6 +110,7 @@
 			columns,
 			skip: skip === '' ? undefined : Number(skip),
 			take: take === '' ? undefined : Number(take),
+			havingFilters: outputMode === 'summarize' ? havingFilters : undefined,
 			output,
 		}),
 	);
@@ -116,7 +126,26 @@
 
 	const AGGREGATE_GROUP = 'Aggregate';
 
+	function syntheticSummarizeFields(keys: string[]): AnyFieldDisplayDef[] {
+		return keys.map((key) => {
+			const existing = fields.find((f) => f.key === key);
+			if (existing) return existing;
+			return {
+				key,
+				label: key,
+				group: AGGREGATE_GROUP,
+				type: 'number',
+				getValue: () => '',
+			};
+		});
+	}
+
 	let sortPickerFields = $derived.by((): AnyFieldDisplayDef[] => {
+		if (outputMode === 'summarize') {
+			return syntheticSummarizeFields(
+				summarizeOutputFieldKeys(summarizeGroupBy, summarizeAggregators),
+			);
+		}
 		if (outputMode !== 'countBy') return fields;
 		return [
 			...fields,
@@ -138,7 +167,9 @@
 	});
 
 	let sortPickerGroups = $derived(
-		outputMode === 'countBy' ? [...fieldGroups, AGGREGATE_GROUP] : fieldGroups,
+		outputMode === 'countBy' || outputMode === 'summarize'
+			? [...fieldGroups, AGGREGATE_GROUP]
+			: fieldGroups,
 	);
 
 	function formatResult(value: unknown): string {
@@ -192,6 +223,7 @@
 				columns,
 				skip: skip === '' ? undefined : Number(skip),
 				take: take === '' ? undefined : Number(take),
+				havingFilters: outputMode === 'summarize' ? havingFilters : undefined,
 				output,
 			});
 			elapsedMs = Math.round(performance.now() - start);
@@ -221,7 +253,12 @@
 		take = t.take ?? '';
 		outputMode = t.output.mode;
 		if (t.output.mode === 'distinct') distinctField = t.output.field;
-		if (t.output.mode === 'countBy') countByFields = t.output.fields.join(', ');
+		if (t.output.mode === 'countBy') countByFields = [...t.output.fields];
+		if (t.output.mode === 'summarize') {
+			summarizeGroupBy = [...t.output.groupBy];
+			summarizeAggregators = JSON.parse(JSON.stringify(t.output.aggregators));
+		}
+		havingFilters = t.havingFilters ? JSON.parse(JSON.stringify(t.havingFilters)) : [];
 		clearResult();
 	}
 
@@ -383,13 +420,17 @@
 							</tr>
 						{/if}
 
-						{#if outputMode === 'toArray' || outputMode === 'countBy'}
+						{#if outputMode === 'toArray' || outputMode === 'countBy' || outputMode === 'summarize'}
 							<tr>
 								<th class="pipeline-label" scope="row">Sort</th>
 								<td class="pipeline-cell">
 									{#if outputMode === 'countBy'}
 										<p class="hint cell-hint">
 											Sorts the grouped result (e.g. by <code>tablets</code> count).
+										</p>
+									{:else if outputMode === 'summarize'}
+										<p class="hint cell-hint">
+											Sorts summary rows by group keys or aggregate column names.
 										</p>
 									{/if}
 									<SortBar
@@ -408,7 +449,28 @@
 							</tr>
 						{/if}
 
-						{#if outputMode === 'toArray'}
+						{#if outputMode === 'summarize'}
+							<tr>
+								<th class="pipeline-label" scope="row">Having</th>
+								<td class="pipeline-cell">
+									<p class="hint cell-hint">
+										Filters summary rows after <code>.summarize()</code> (SQL HAVING).
+									</p>
+									<FilterBar
+										bind:filters={havingFilters}
+										fields={sortPickerFields}
+										fieldGroups={sortPickerGroups}
+										inline
+										isOpen={true}
+										pipelineSection="filters"
+										onchange={clearResult}
+										ontoggle={() => {}}
+									/>
+								</td>
+							</tr>
+						{/if}
+
+						{#if outputMode === 'toArray' || outputMode === 'summarize'}
 							<tr>
 								<th class="pipeline-label" scope="row">Limit</th>
 								<td class="pipeline-cell">
@@ -442,6 +504,7 @@
 										{ value: 'toArray', label: 'Rows' },
 										{ value: 'distinct', label: 'Distinct' },
 										{ value: 'countBy', label: 'Count by' },
+										{ value: 'summarize', label: 'Summarize' },
 										{ value: 'count', label: 'Count' },
 									]}
 									bind:value={outputMode}
@@ -457,15 +520,26 @@
 										</select>
 									</div>
 								{:else if outputMode === 'countBy'}
-									<div class="row compact">
-										<label class="field-label" for="qb-countby">Group by</label>
-										<input
-											id="qb-countby"
-											class="input wide"
-											placeholder="comma-separated keys"
-											bind:value={countByFields}
+									<div class="group-by-picker">
+										<span class="field-label">Group by</span>
+										<ColumnBar
+											bind:columns={countByFields}
+											{fields}
+											{fieldGroups}
+											inline
+											isOpen={true}
+											onchange={clearResult}
+											ontoggle={() => {}}
 										/>
 									</div>
+								{:else if outputMode === 'summarize'}
+									<SummarizeEditor
+										bind:groupBy={summarizeGroupBy}
+										bind:aggregators={summarizeAggregators}
+										{fields}
+										{fieldGroups}
+										onchange={clearResult}
+									/>
 								{/if}
 							</td>
 						</tr>
@@ -758,6 +832,13 @@
 		margin-top: 8px;
 	}
 
+	.group-by-picker {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		margin-top: 8px;
+	}
+
 	.field-label {
 		font-size: 13px;
 		color: var(--text-dim);
@@ -773,8 +854,7 @@
 		font-size: 14px;
 	}
 
-	.select.wide,
-	.input.wide {
+	.select.wide {
 		min-width: 220px;
 		flex: 1;
 	}

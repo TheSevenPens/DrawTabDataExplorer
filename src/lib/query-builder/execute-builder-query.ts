@@ -7,6 +7,7 @@ import type {
 	BuilderSort,
 } from './mockup-templates.js';
 import { completeBuilderFilters } from './filter-complete.js';
+import { buildSummarizeSpec } from './summarize-spec.js';
 
 export interface BuilderQueryState {
 	collection: BuilderCollection;
@@ -15,6 +16,8 @@ export interface BuilderQueryState {
 	columns: string[];
 	skip?: number;
 	take?: number;
+	/** Filters on summary rows after .summarize() (SQL HAVING). */
+	havingFilters?: BuilderFilter[];
 	output: BuilderOutput;
 }
 
@@ -79,6 +82,25 @@ export async function executeBuilderQuery(
 		}) as Query<unknown>;
 		for (const s of state.sorts.filter((x) => !x.disabled)) {
 			q = q.sort(s.field, s.direction) as Query<unknown>;
+		}
+		return q.toArray();
+	}
+
+	if (state.output.mode === 'summarize') {
+		const spec = buildSummarizeSpec(state.output.groupBy, state.output.aggregators);
+		if (!spec) {
+			throw new Error('Summarize requires at least one complete aggregator.');
+		}
+		q = q.summarize(spec) as Query<unknown>;
+		q = applyFilters(q, state.havingFilters ?? []);
+		for (const s of state.sorts.filter((x) => !x.disabled)) {
+			q = q.sort(s.field, s.direction);
+		}
+		if (state.skip != null && state.skip > 0) {
+			q = q.skip(state.skip);
+		}
+		if (state.take != null && state.take > 0) {
+			q = q.take(state.take);
 		}
 		return q.toArray();
 	}

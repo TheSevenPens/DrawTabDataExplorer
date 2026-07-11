@@ -2,6 +2,8 @@
 // (filter → columns → sort → limit → output). Group labels feed the Example
 // dropdown; buildGroupedTemplates() keeps groups and BASIC_TEMPLATES in sync.
 
+import type { BuilderAggregator } from './aggregator-types.js';
+
 export type BuilderCollection = 'Tablets' | 'Pens' | 'PenCompat' | 'Drivers' | 'PressureResponse';
 
 export interface BuilderFilter {
@@ -21,7 +23,8 @@ export type BuilderOutput =
 	| { mode: 'toArray' }
 	| { mode: 'distinct'; field: string }
 	| { mode: 'count' }
-	| { mode: 'countBy'; fields: string[] };
+	| { mode: 'countBy'; fields: string[] }
+	| { mode: 'summarize'; groupBy: string[]; aggregators: BuilderAggregator[] };
 
 export interface QueryBuilderTemplate {
 	label: string;
@@ -31,6 +34,8 @@ export interface QueryBuilderTemplate {
 	columns: string[];
 	skip?: number;
 	take?: number;
+	/** Post-summarize filters (SQL HAVING) — only when output.mode is summarize. */
+	havingFilters?: BuilderFilter[];
 	output: BuilderOutput;
 }
 
@@ -62,6 +67,9 @@ export const TEMPLATE_GROUPS: { group: string; labels: string[] }[] = [
 			'Launch year between 2018–2022 → count per brand',
 			'Tablets per brand and type',
 			'Distinct tablet types (Wacom)',
+			'Wacom launch-year stats (avg/min/max)',
+			'Brands with > 30 tablets (HAVING)',
+			'Pen displays per brand (countIf)',
 		],
 	},
 	{
@@ -233,6 +241,64 @@ export const BASIC_TEMPLATES: QueryBuilderTemplate[] = [
 		sorts: [],
 		columns: [],
 		output: { mode: 'distinct', field: 'ModelType' },
+	},
+	{
+		label: 'Wacom launch-year stats (avg/min/max)',
+		collection: 'Tablets',
+		filters: [{ field: 'Brand', operator: '==', value: 'WACOM' }],
+		sorts: [],
+		columns: [],
+		output: {
+			mode: 'summarize',
+			groupBy: ['Brand'],
+			aggregators: [
+				{ op: 'count', name: 'tablets' },
+				{ op: 'avg', name: 'avgYear', field: 'ModelLaunchYear' },
+				{ op: 'min', name: 'firstYear', field: 'ModelLaunchYear' },
+				{ op: 'max', name: 'lastYear', field: 'ModelLaunchYear' },
+			],
+		},
+	},
+	{
+		label: 'Brands with > 30 tablets (HAVING)',
+		collection: 'Tablets',
+		filters: [],
+		havingFilters: [{ field: 'tablets', operator: '>', value: '30' }],
+		sorts: [{ field: 'tablets', direction: 'desc' }],
+		columns: [],
+		output: {
+			mode: 'summarize',
+			groupBy: ['Brand'],
+			aggregators: [{ op: 'count', name: 'tablets' }],
+		},
+	},
+	{
+		label: 'Pen displays per brand (countIf)',
+		collection: 'Tablets',
+		filters: [],
+		sorts: [{ field: 'total', direction: 'desc' }],
+		columns: [],
+		output: {
+			mode: 'summarize',
+			groupBy: ['Brand'],
+			aggregators: [
+				{ op: 'count', name: 'total' },
+				{
+					op: 'countIf',
+					name: 'penDisplays',
+					filterField: 'ModelType',
+					filterOperator: '==',
+					filterValue: 'PENDISPLAY',
+				},
+				{
+					op: 'countIf',
+					name: 'penTablets',
+					filterField: 'ModelType',
+					filterOperator: '==',
+					filterValue: 'PENTABLET',
+				},
+			],
+		},
 	},
 	{
 		label: 'Pens tagged UDEMR',
