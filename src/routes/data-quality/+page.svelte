@@ -51,6 +51,7 @@
 	let remeasureRecommendations = $derived(analysis.remeasureRecommendations);
 	let iafEstimatedNoMeasurement = $derived(analysis.iafEstimatedNoMeasurement);
 	let tabletsMissingExactReleaseDate = $derived(analysis.tabletsMissingExactReleaseDate);
+	let lowDensityTablets = $derived(analysis.lowDensityTablets);
 
 	// Brand + Missing filters for the "Tablets — No Exact Release Date" section.
 	let releaseDateBrand = $state('');
@@ -191,6 +192,24 @@
 			mono: true,
 		},
 	];
+	const lowDensityCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (t) => t.brand },
+		{
+			key: 'tablet',
+			label: 'Tablet',
+			get: (t) => `${t.name} (${t.id})`,
+			sortValue: (t) => t.name,
+			href: (t) => resolve('/entity/[entityId]', { entityId: t.entityId }),
+		},
+		{
+			key: 'density',
+			label: 'Density (LPmm)',
+			get: (t) => t.density,
+			sortValue: (t) => Number(t.density),
+			num: true,
+			mono: true,
+		},
+	];
 	const releaseDateCols: SortableColumn[] = [
 		{ key: 'brand', label: 'Brand', get: (t) => t.brand },
 		{
@@ -312,6 +331,12 @@
 			category: 'Field Completion',
 			label: 'Tablet Release Dates',
 			count: tabletsMissingExactReleaseDate.length,
+		},
+		{
+			id: 'low-digitizer-density',
+			category: 'Field Completion',
+			label: 'Low Digitizer Density',
+			count: lowDensityTablets.length,
 		},
 		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
 		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
@@ -711,6 +736,35 @@
 											t.releaseDate,
 											t.missing,
 										]),
+									)}
+							/>
+						{/if}
+					</section>
+				{/if}
+
+				{#if activeSection === 'low-digitizer-density'}
+					<section class="section">
+						<SectionHeader title="Low Digitizer Density" count={lowDensityTablets.length} />
+						<p class="description">
+							Tablets whose <code>Digitizer.Density</code> is below 20 LPmm — almost always a unit-entry
+							error (lines-per-mm confused with another unit).
+						</p>
+						{#if lowDensityTablets.length === 0}
+							<StatusMessage variant="good">
+								Every tablet with a recorded digitizer density is ≥ 20 LPmm.
+							</StatusMessage>
+						{:else}
+							<SortableTable
+								columns={lowDensityCols}
+								rows={lowDensityTablets}
+								rowKey={(t) => t.entityId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Tablets with Low Digitizer Density',
+										'data-quality-low-digitizer-density',
+										['Brand', 'Model ID', 'Name', 'Density (LPmm)'],
+										lowDensityTablets.map((t) => [t.brand, t.id, t.name, t.density]),
 									)}
 							/>
 						{/if}

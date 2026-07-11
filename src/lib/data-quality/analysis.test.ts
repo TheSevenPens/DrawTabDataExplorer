@@ -143,6 +143,31 @@ describe('analyzeData — tabletsMissingExactReleaseDate', () => {
 	});
 });
 
+const tabletWithDensity = (id: string, density?: string): Tablet =>
+	({
+		Meta: { EntityId: `wacom.tablet.${id.toLowerCase()}` },
+		Model: { Brand: 'WACOM', Id: id, Name: id, Type: 'PENTABLET' },
+		Digitizer: density === undefined ? undefined : { Density: density },
+	}) as unknown as Tablet;
+
+describe('analyzeData — lowDensityTablets', () => {
+	it('flags density < 20 LPmm ascending; ignores ≥ 20 and missing', () => {
+		const input: AnalysisInput = {
+			...emptyInput(),
+			tablets: [
+				tabletWithDensity('LOW1', '5.08'),
+				tabletWithDensity('LOW2', '0.508'),
+				tabletWithDensity('EDGE', '20'), // not < 20 → excluded
+				tabletWithDensity('OK', '200'), // excluded
+				tabletWithDensity('NONE'), // no density → excluded
+			],
+		};
+		const r = analyzeData(input);
+		expect(r.lowDensityTablets.map((t) => t.id)).toEqual(['LOW2', 'LOW1']);
+		expect(r.lowDensityTablets[0].density).toBe('0.508');
+	});
+});
+
 describe('analyzeData — duplicate inventory ids', () => {
 	it('flags duplicate pen and tablet inventory ids independently, exempting UNASSIGNED', () => {
 		const input: AnalysisInput = {

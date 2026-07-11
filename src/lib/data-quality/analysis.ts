@@ -301,10 +301,24 @@ export function analyzeData(data: AnalysisInput) {
 				a.id.localeCompare(b.id),
 		);
 
+	// Tablets whose Digitizer.Density is implausibly low (< 20 LPmm) — almost
+	// always a unit-entry error (lines-per-mm confused with another unit).
+	const lowDensityTablets = ds.tablets
+		.map((t) => ({
+			brand: t.Model.Brand,
+			id: t.Model.Id,
+			name: t.Model.Name,
+			entityId: t.Meta.EntityId,
+			density: t.Digitizer?.Density ?? '',
+		}))
+		.filter((t) => t.density !== '' && Number.isFinite(Number(t.density)) && Number(t.density) < 20)
+		.sort((a, b) => Number(a.density) - Number(b.density) || a.brand.localeCompare(b.brand));
+
 	return {
 		ds,
 		inventoryPenCount: invPens.length,
 		tabletsMissingExactReleaseDate,
+		lowDensityTablets,
 		inventoryTabletCount: invTablets.length,
 		issues: allIssues,
 		nonMonotonicSessions: findNonMonotonicSessions(ds.pressureResponse),
