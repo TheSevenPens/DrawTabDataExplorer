@@ -45,8 +45,10 @@
 		ownedOnlyFilter,
 		flaggedIds,
 		onToggleFlag,
-		titleTag,
 	}: {
+		/** Page title. Rendered for assistive tech and the document
+		 * outline only — the Metro Nav already states the section in
+		 * type, so painting it again here was pure duplication. */
 		title: string;
 		entityType: string;
 		entityLabel: string;
@@ -75,10 +77,7 @@
 		ownedOnlyFilter?: { field: string; label: string };
 		flaggedIds?: Set<string>;
 		onToggleFlag?: (entityId: string) => void;
-		titleTag?: 'h1' | 'h2';
 	} = $props();
-
-	let resolvedTitleTag = $derived(titleTag ?? 'h1');
 
 	function getInitialColumns(): string[] {
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
@@ -208,7 +207,7 @@
 </script>
 
 <div class="title-row">
-	<svelte:element this={resolvedTitleTag}>{title}</svelte:element>
+	<h1 class="sr-only">{title}</h1>
 	<span class="results-count">Showing {result.data.length} of {data.length} {entityLabel}</span>
 </div>
 
@@ -275,29 +274,20 @@
 />
 
 <style>
+	/* The h1 is .sr-only, so this row paints only the count. */
 	.title-row {
 		display: flex;
 		align-items: baseline;
-		gap: 12px;
-		margin-bottom: 8px;
-	}
-
-	h1 {
-		margin: 0;
-	}
-
-	h2 {
-		margin: 0;
-		font-size: 14px;
-		font-weight: 600;
-		color: var(--text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.4px;
+		gap: 16px;
+		margin-bottom: 10px;
 	}
 
 	.results-count {
-		font-size: 14px;
+		font-size: var(--type-caption);
 		color: var(--text-dim);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
+		white-space: nowrap;
 	}
 
 	.export-btn {
@@ -306,16 +296,18 @@
 		align-items: center;
 		gap: 5px;
 		padding: 4px 10px;
-		font-size: 12px;
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
 	}
 	.export-btn:hover {
-		border-color: var(--text-dim);
-		color: var(--text);
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 
 	.top-bar {

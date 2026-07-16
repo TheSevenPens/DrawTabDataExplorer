@@ -253,11 +253,13 @@
 		align-items: center;
 		gap: 5px;
 		padding: 5px 10px;
-		font-size: 13px;
+		font-size: var(--type-caption);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		min-height: 28px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
 		white-space: nowrap;
@@ -277,9 +279,9 @@
 		min-width: 18px;
 		height: 18px;
 		padding: 0 4px;
-		font-size: 11px;
+		font-size: var(--type-micro);
 		font-weight: 600;
-		border-radius: 9px;
+		border-radius: var(--radius);
 		line-height: 1;
 	}
 	.col-badge {
@@ -293,9 +295,8 @@
 		left: 0;
 		z-index: 100;
 		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 6px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		padding: 10px 12px;
 		min-width: 260px;
 	}
@@ -310,9 +311,9 @@
 	}
 
 	.panel.cross-drop-target {
-		outline: 2px dashed var(--link);
+		outline: 2px dashed var(--accent);
 		outline-offset: 4px;
-		border-radius: 6px;
+		border-radius: var(--radius);
 	}
 	.panel-pills {
 		display: flex;
@@ -326,7 +327,7 @@
 		align-items: center;
 		padding: 3px 10px;
 		font-size: 13px;
-		border-radius: 16px;
+		border-radius: var(--radius);
 		cursor: pointer;
 		color: var(--text);
 		user-select: none;
@@ -353,15 +354,15 @@
 	}
 	.col-pill:hover {
 		background: var(--pill-col-hover);
-		border-color: #86efac;
+		border-color: var(--accent);
 	}
 
 	.add-btn {
 		width: 26px;
 		height: 26px;
 		border: 1px dashed var(--border);
-		border-radius: 50%;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		cursor: pointer;
 		font-size: 14px;
 		color: var(--text-muted);
@@ -371,8 +372,8 @@
 		flex-shrink: 0;
 	}
 	.col-add:hover {
-		border-color: #16a34a;
-		color: #16a34a;
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 	.add-wrapper {
 		position: relative;

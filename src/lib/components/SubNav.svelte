@@ -17,44 +17,41 @@
 </div>
 
 <style>
+	/* The Nav word list one step down the scale: same brightness-not-chrome
+	   rule for active state, with the accent reserved for the badge. */
 	.sub-nav {
 		display: flex;
-		gap: 0;
-		border-bottom: 1px solid var(--border);
-		margin-bottom: 14px;
+		gap: 20px;
+		margin-bottom: 22px;
+		flex-wrap: wrap;
 	}
 	a {
-		padding: 7px 16px;
-		font-size: 16px;
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
-		color: var(--text-muted);
+		padding: 0;
+		font-size: var(--type-subhead);
+		font-weight: 400;
+		letter-spacing: var(--track-tight);
+		text-transform: lowercase;
+		color: var(--text-dim);
 		text-decoration: none;
 		background: transparent;
-		position: relative;
-		bottom: -1px;
+		transition: color 120ms ease-out;
 	}
 	a:hover {
-		color: #2563eb;
-		background: var(--bg-card);
+		color: var(--text-muted);
 	}
 	a.active {
-		background: var(--bg);
-		color: #2563eb;
-		border-color: var(--border);
-		font-weight: 600;
+		color: var(--text);
 	}
 	.badge {
 		display: inline-block;
 		margin-left: 6px;
-		padding: 0 7px;
-		font-size: 12px;
+		padding: 0 6px;
+		font-size: var(--type-micro);
 		font-weight: 700;
-		line-height: 18px;
-		background: #d97706;
-		color: #fff;
-		border-radius: 9px;
+		line-height: 16px;
+		background: var(--accent);
+		color: var(--accent-contrast);
+		border-radius: var(--radius);
 		vertical-align: middle;
 	}
 </style>

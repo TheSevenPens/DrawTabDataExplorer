@@ -188,54 +188,93 @@
 		text-decoration: underline;
 	}
 
+	/*
+	 * Metro design tokens.
+	 *
+	 * Hierarchy comes from type scale and opacity, not from cards and
+	 * borders — so surface tokens sit very close to --bg and borders are
+	 * near-invisible by design. If something looks flat and undivided,
+	 * that is the intent; reach for type scale or whitespace to separate
+	 * it, not for a box.
+	 *
+	 * --accent is the single emphasis colour (Zune orange). It is
+	 * deliberately the only chromatic token: swapping these two
+	 * declarations re-accents the whole app.
+	 */
 	:global(:root) {
-		--bg: #f5f5f5;
-		--bg-card: #fff;
-		--text: #222;
-		--text-muted: #666;
-		--text-dim: #999;
-		--border: #e0e0e0;
-		--border-light: #ddd;
-		--th-bg: #f3f4f6;
-		--th-text: #555;
-		--hover-bg: #f0f7ff;
-		--link: #2563eb;
-		--pill-filter-bg: #fef3c7;
-		--pill-filter-border: #fcd34d;
-		--pill-filter-hover: #fde68a;
-		--pill-sort-bg: #eef2ff;
-		--pill-sort-border: #c7d2fe;
-		--pill-sort-hover: #dbeafe;
-		--pill-col-bg: #f0fdf4;
-		--pill-col-border: #bbf7d0;
-		--pill-col-hover: #dcfce7;
-		--editor-bg: #fffbeb;
-		--separator-color: #ddd;
+		/* Type scale */
+		--type-display: clamp(44px, 6.5vw, 76px);
+		--type-title: 34px;
+		--type-heading: 24px;
+		--type-subhead: 18px;
+		--type-body: 14px;
+		--type-caption: 12px;
+		--type-micro: 11px;
+
+		/* Metro sets big type tight and small caps-labels loose. */
+		--track-display: -0.03em;
+		--track-tight: -0.015em;
+		--track-wide: 0.12em;
+
+		--weight-display: 300;
+
+		/* Metro is square. */
+		--radius: 0;
+
+		/* Light theme */
+		--accent: #a85400;
+		--accent-hover: #d06a00;
+		--accent-contrast: #fff;
+		--bg: #fff;
+		--bg-card: #fafafa;
+		--text: #111;
+		--text-muted: #5c5c5c;
+		--text-dim: #8e8e8e;
+		--border: #e6e6e6;
+		--border-light: #f0f0f0;
+		--th-bg: transparent;
+		--th-text: #8e8e8e;
+		--hover-bg: #f5f5f5;
+		--link: var(--accent);
+		--pill-filter-bg: #fdf6ee;
+		--pill-filter-border: #e8c9a4;
+		--pill-filter-hover: #f8ead9;
+		--pill-sort-bg: #f2f2f2;
+		--pill-sort-border: #d6d6d6;
+		--pill-sort-hover: #e8e8e8;
+		--pill-col-bg: #f2f2f2;
+		--pill-col-border: #d6d6d6;
+		--pill-col-hover: #e8e8e8;
+		--editor-bg: #fafafa;
+		--separator-color: #e6e6e6;
 	}
 
 	:global([data-theme='dark']) {
-		--bg: #1a1a2e;
-		--bg-card: #16213e;
-		--text: #e0e0e0;
-		--text-muted: #a0a0a0;
-		--text-dim: #666;
-		--border: #2a2a4a;
-		--border-light: #2a2a4a;
-		--th-bg: #1e2a45;
-		--th-text: #c0c0c0;
-		--hover-bg: #1e2a45;
-		--link: #60a5fa;
-		--pill-filter-bg: #4a3728;
-		--pill-filter-border: #78591f;
-		--pill-filter-hover: #5a4530;
-		--pill-sort-bg: #1e2a45;
-		--pill-sort-border: #3b5998;
-		--pill-sort-hover: #253555;
-		--pill-col-bg: #1a3328;
-		--pill-col-border: #2d6b4f;
-		--pill-col-hover: #234538;
-		--editor-bg: #2a2218;
-		--separator-color: #3a3a5a;
+		--accent: #f09609;
+		--accent-hover: #ffb03a;
+		--accent-contrast: #000;
+		--bg: #0a0a0a;
+		--bg-card: #141414;
+		--text: #fff;
+		--text-muted: #9a9a9a;
+		--text-dim: #5e5e5e;
+		--border: #242424;
+		--border-light: #1c1c1c;
+		--th-bg: transparent;
+		--th-text: #7d7d7d;
+		--hover-bg: #171717;
+		--link: var(--accent);
+		--pill-filter-bg: #1e1508;
+		--pill-filter-border: #6b4a12;
+		--pill-filter-hover: #2a1e0c;
+		--pill-sort-bg: #161616;
+		--pill-sort-border: #333;
+		--pill-sort-hover: #1f1f1f;
+		--pill-col-bg: #161616;
+		--pill-col-border: #333;
+		--pill-col-hover: #1f1f1f;
+		--editor-bg: #141414;
+		--separator-color: #242424;
 	}
 
 	:global(*) {
@@ -246,16 +285,21 @@
 	}
 
 	:global(body) {
+		/* Open Sans shares its designer (Steve Matteson) and humanist
+		   skeleton with Segoe UI; Segoe is kept next in the stack so
+		   Windows can serve the real thing before the webfont lands. */
 		font-family:
-			'Google Sans',
+			'Open Sans',
+			'Segoe UI',
 			-apple-system,
 			BlinkMacSystemFont,
-			'Segoe UI',
 			Roboto,
 			sans-serif;
 		padding: 24px;
 		background: var(--bg);
 		color: var(--text);
+		font-size: var(--type-body);
+		letter-spacing: var(--track-tight);
 	}
 
 	:global(.step) {
@@ -332,25 +376,30 @@
 	:global(table) {
 		width: 100%;
 		border-collapse: collapse;
-		background: var(--bg-card);
+		background: transparent;
 		font-size: 13px;
 	}
 
 	:global(th),
 	:global(td) {
 		text-align: left;
-		padding: 6px 10px;
-		border-bottom: 1px solid var(--border);
+		padding: 7px 10px;
+		border-bottom: 1px solid var(--border-light);
 		white-space: nowrap;
 	}
 
+	/* Metro column headers: small, wide-tracked caps carrying no fill or
+	   rule of their own — the type does the work. */
 	:global(th) {
-		background: var(--th-bg);
+		background: var(--bg);
 		color: var(--th-text);
 		font-weight: 600;
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		position: sticky;
 		top: 0;
-		border-bottom: 2px solid var(--border);
+		border-bottom: 1px solid var(--border);
 	}
 
 	:global(tr:hover td) {
@@ -359,6 +408,22 @@
 
 	:global(.dim) {
 		color: var(--text-dim);
+	}
+
+	/* Available to screen readers and the document outline, painted
+	   nowhere. Used where Metro drops a visible heading that the page
+	   still needs structurally (e.g. EntityExplorer's page title, which
+	   the Nav already states in type). */
+	:global(.sr-only) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 
 	:global(a) {

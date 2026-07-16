@@ -113,48 +113,47 @@
 </nav>
 
 <style>
+	/*
+	 * Metro word-list nav: no tab chrome, no rules, no fills. The active
+	 * section is simply the bright word among dim ones — brightness and
+	 * scale carry the state that a tab outline used to.
+	 */
 	nav {
 		display: flex;
-		align-items: flex-end;
+		align-items: baseline;
 		justify-content: space-between;
-		border-bottom: 2px solid var(--border);
-		margin-bottom: 16px;
+		margin-bottom: 10px;
 		flex-wrap: wrap;
 		gap: 0;
 	}
 
 	.nav-links {
 		display: flex;
-		gap: 0;
+		gap: 28px;
 		flex-wrap: wrap;
-		align-items: flex-end;
+		align-items: baseline;
 	}
 
 	a {
-		padding: 10px 18px;
-		font-size: 22px;
-		font-weight: 600;
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
-		color: var(--text-muted);
+		padding: 0;
+		font-size: var(--type-title);
+		font-weight: var(--weight-display);
+		letter-spacing: var(--track-display);
+		text-transform: lowercase;
+		color: var(--text-dim);
 		text-decoration: none;
 		background: transparent;
-		position: relative;
-		bottom: -2px;
+		transition:
+			color 120ms ease-out,
+			opacity 120ms ease-out;
 	}
 
 	a:hover {
-		color: #2563eb;
-		background: var(--bg-card);
-		border-color: var(--border);
+		color: var(--text-muted);
 	}
 
 	a.active {
-		background: var(--bg);
-		color: #2563eb;
-		border-color: var(--border);
-		font-weight: 700;
+		color: var(--text);
 	}
 
 	.nav-toggles {
@@ -174,17 +173,16 @@
 		justify-content: center;
 		width: 30px;
 		height: 30px;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
-		color: var(--text-muted);
+		border: none;
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--text-dim);
 		cursor: pointer;
 		padding: 0;
 	}
 
 	.settings-btn:hover {
-		border-color: #2563eb;
-		color: #2563eb;
+		color: var(--accent);
 	}
 
 	.settings-dropdown {
@@ -193,9 +191,8 @@
 		top: calc(100% + 6px);
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 6px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-		padding: 8px;
+		border-radius: var(--radius);
+		padding: 10px;
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
@@ -211,17 +208,19 @@
 	}
 
 	.settings-label {
-		font-size: 12px;
-		color: var(--text-muted);
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
+		color: var(--text-dim);
 		white-space: nowrap;
 	}
 
 	.toggle-btn {
 		padding: 3px 10px;
-		font-size: 12px;
+		font-size: var(--type-caption);
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
 		cursor: pointer;
 		font-weight: 600;
@@ -229,7 +228,7 @@
 	}
 
 	.toggle-btn:hover {
-		border-color: #2563eb;
-		color: #2563eb;
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 </style>

@@ -291,11 +291,13 @@
 		align-items: center;
 		gap: 5px;
 		padding: 5px 10px;
-		font-size: 13px;
+		font-size: var(--type-caption);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		min-height: 28px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
 		white-space: nowrap;
@@ -308,29 +310,31 @@
 		background: var(--hover-bg);
 	}
 	.sort-btn.has-active {
-		border-color: #2563eb;
-		color: #2563eb;
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 	.sort-btn.has-active:hover,
 	.sort-btn.has-active.open {
-		background: #eff6ff;
+		background: var(--hover-bg);
 	}
 
 	.sort-summary {
-		font-size: 11px;
-		color: #2563eb;
+		font-size: var(--type-micro);
+		color: var(--accent);
 		font-weight: 500;
+		letter-spacing: 0;
+		text-transform: none;
 	}
 
+	/* Metro flyout: flat, square, bordered — no shadow, no radius. */
 	.panel {
 		position: absolute;
 		top: calc(100% + 4px);
 		left: 0;
 		z-index: 100;
 		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 6px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		padding: 10px 12px;
 		min-width: 260px;
 	}
@@ -345,9 +349,9 @@
 	}
 
 	.panel.cross-drop-target {
-		outline: 2px dashed var(--link);
+		outline: 2px dashed var(--accent);
 		outline-offset: 4px;
-		border-radius: 6px;
+		border-radius: var(--radius);
 	}
 	.panel-pills {
 		display: flex;
@@ -367,7 +371,7 @@
 		align-items: center;
 		padding: 3px 10px;
 		font-size: 13px;
-		border-radius: 16px;
+		border-radius: var(--radius);
 		cursor: pointer;
 		color: var(--text);
 		user-select: none;
@@ -395,7 +399,7 @@
 	}
 	.sort-pill:hover {
 		background: var(--pill-sort-hover);
-		border-color: #93c5fd;
+		border-color: var(--accent);
 	}
 	.sort-pill .arrow {
 		font-size: 10px;
@@ -406,8 +410,8 @@
 		width: 26px;
 		height: 26px;
 		border: 1px dashed var(--border);
-		border-radius: 50%;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		cursor: pointer;
 		font-size: 14px;
 		color: var(--text-muted);
@@ -417,8 +421,8 @@
 		flex-shrink: 0;
 	}
 	.sort-add:hover {
-		border-color: #2563eb;
-		color: #2563eb;
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 	.add-wrapper {
 		position: relative;

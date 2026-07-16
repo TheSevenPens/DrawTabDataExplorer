@@ -33,7 +33,6 @@
 		alwaysSearchFields?: string[];
 		flaggedIds?: Set<string>;
 		onToggleFlag?: (entityId: string) => void;
-		titleTag?: 'h1' | 'h2';
 	}
 
 	let { subNavTabs, ...explorerProps }: { subNavTabs?: SubNavTab[] } & ExplorerProps = $props();

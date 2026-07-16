@@ -138,13 +138,23 @@
 </div>
 
 <style>
+	/*
+	 * Metro list rows read as content, not as a field of links: the whole
+	 * column is clickable, so colouring every row accent just adds noise.
+	 * Rows stay text-coloured and the accent marks the row you are on —
+	 * the same way a Zune track list highlighted only the active item.
+	 */
 	.entity-link {
-		color: var(--link);
+		color: var(--text);
 		text-decoration: none;
 	}
 
 	.entity-link:hover {
-		text-decoration: underline;
+		color: var(--accent);
+	}
+
+	tr:hover .entity-link {
+		color: var(--accent);
 	}
 
 	.th-content {
@@ -164,7 +174,7 @@
 	}
 
 	.resize-handle:hover {
-		border-right-color: var(--link);
+		border-right-color: var(--accent);
 	}
 
 	td {

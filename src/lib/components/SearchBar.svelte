@@ -80,13 +80,18 @@
 	}
 
 	.search-bar input[type='text'] {
-		padding: 5px 26px 5px 10px;
+		padding: 6px 26px 6px 10px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
 		width: 260px;
+	}
+
+	.search-bar input[type='text']:focus {
+		outline: none;
+		border-color: var(--accent);
 	}
 
 	.input-clear {
@@ -108,12 +113,17 @@
 	}
 
 	.search-bar select {
-		padding: 5px 10px;
+		padding: 6px 10px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
+	}
+
+	.search-bar select:focus {
+		outline: none;
+		border-color: var(--accent);
 	}
 
 	.owned-toggle {

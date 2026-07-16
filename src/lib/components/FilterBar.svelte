@@ -367,11 +367,13 @@
 		align-items: center;
 		gap: 5px;
 		padding: 5px 10px;
-		font-size: 13px;
+		font-size: var(--type-caption);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		min-height: 28px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
 		white-space: nowrap;
@@ -384,12 +386,12 @@
 		background: var(--hover-bg);
 	}
 	.filter-btn.has-active {
-		border-color: #d97706;
-		color: #d97706;
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 	.filter-btn.has-active:hover,
 	.filter-btn.has-active.open {
-		background: #fffbeb;
+		background: var(--hover-bg);
 	}
 
 	.badge {
@@ -399,14 +401,14 @@
 		min-width: 18px;
 		height: 18px;
 		padding: 0 4px;
-		font-size: 11px;
+		font-size: var(--type-micro);
 		font-weight: 600;
-		border-radius: 9px;
+		border-radius: var(--radius);
 		line-height: 1;
 	}
 	.filter-badge {
-		background: #d97706;
-		color: #fff;
+		background: var(--accent);
+		color: var(--accent-contrast);
 	}
 
 	.panel {
@@ -415,9 +417,8 @@
 		left: 0;
 		z-index: 100;
 		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 6px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		padding: 10px 12px;
 		min-width: 260px;
 	}
@@ -439,9 +440,9 @@
 	}
 
 	.panel.cross-drop-target {
-		outline: 2px dashed var(--link);
+		outline: 2px dashed var(--accent);
 		outline-offset: 4px;
-		border-radius: 6px;
+		border-radius: var(--radius);
 	}
 
 	.panel-pills {
@@ -462,7 +463,7 @@
 		align-items: center;
 		padding: 3px 10px;
 		font-size: 13px;
-		border-radius: 16px;
+		border-radius: var(--radius);
 		cursor: pointer;
 		color: var(--text);
 		user-select: none;
@@ -476,11 +477,13 @@
 	}
 	.filter-pill:hover {
 		background: var(--pill-filter-hover);
-		border-color: #f59e0b;
+		border-color: var(--accent);
 	}
+	/* Metro has no glow: the selected pill states itself with a solid
+	   accent edge rather than a halo. */
 	.filter-pill.active {
-		border-color: #d97706;
-		box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+		border-color: var(--accent);
+		background: var(--pill-filter-hover);
 	}
 	.filter-pill.disabled {
 		opacity: 0.45;
@@ -491,8 +494,8 @@
 		width: 26px;
 		height: 26px;
 		border: 1px dashed var(--border);
-		border-radius: 50%;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		cursor: pointer;
 		font-size: 14px;
 		color: var(--text-muted);
@@ -502,8 +505,8 @@
 		flex-shrink: 0;
 	}
 	.filter-add:hover {
-		border-color: #d97706;
-		color: #d97706;
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 	.add-wrapper {
 		position: relative;
@@ -528,9 +531,14 @@
 		padding: 4px 8px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
+	}
+	.editor select:focus,
+	.editor input:focus {
+		outline: none;
+		border-color: var(--accent);
 	}
 	.editor input {
 		width: 160px;
@@ -547,25 +555,25 @@
 		padding: 4px 10px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
 		cursor: pointer;
 	}
 	.field-select-btn:hover {
-		border-color: var(--link);
+		border-color: var(--accent);
 	}
 	.done-btn {
 		padding: 4px 10px;
 		font-size: 13px;
-		border: 1px solid #d97706;
-		background: var(--bg-card);
-		border-radius: 4px;
+		border: 1px solid var(--accent);
+		background: transparent;
+		border-radius: var(--radius);
 		cursor: pointer;
-		color: #d97706;
+		color: var(--accent);
 	}
 	.done-btn:hover {
-		background: #d97706;
-		color: #fff;
+		background: var(--accent);
+		color: var(--accent-contrast);
 	}
 </style>
