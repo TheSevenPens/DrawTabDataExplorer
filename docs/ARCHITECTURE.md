@@ -93,6 +93,35 @@ conversion are imported via `$data/lib/...`.
 to `data-repo/data/` subdirectories so SvelteKit serves the JSON files.
 These junctions are gitignored.
 
+## Design system (Metro)
+
+The UI is Metro / Zune-era: content over chrome, hierarchy from type scale
+and opacity rather than cards and borders, one accent, square edges, no
+shadows.
+
+**Everything visual is a token**, defined once in
+[src/routes/+layout.svelte](../src/routes/+layout.svelte) and switched by the
+`data-theme` attribute: `--accent` (+ `-hover` / `-contrast` / `-wash`),
+`--good` / `--warning` / `--danger` (+ `--danger-wash`), the `--type-*`
+scale, `--track-*`, `--weight-display`, `--radius`, and the ink/surface
+tokens. Both light and dark are Metro; the toggle is unchanged.
+
+That file is the whole leverage point — two `--accent` declarations
+re-accent the app. The corollary is the rule in
+[CLAUDE.md](../CLAUDE.md) § Design tokens: **a literal hex in a component
+opts out of theming**, which is exactly how six components ended up
+rendering wrong in dark mode (`SortableTable` painted `/data-quality`'s
+tables white-on-white).
+
+Typeface is **Open Sans** — same designer as Segoe UI (Steve Matteson) and
+the same humanist skeleton, but a variable font with the 300 weight Metro's
+display type needs and better hinting at the 12–13px the tables live at.
+Segoe UI stays next in the stack.
+
+Chart colour is the one exception to the token rule: it encodes data. See
+[CLAUDE.md](../CLAUDE.md) § Chart colours and
+[src/lib/chart-palette.ts](../src/lib/chart-palette.ts).
+
 ## Key components
 
 **EntityExplorer** — Generic page component that wires together the
@@ -158,9 +187,13 @@ The root SVG carries an explicit `font-family` attribute matching the
 page body so standalone-rendered exports use the sans-serif stack
 instead of the browser's default serif fallback.
 
-**Nav** — Top-level navigation bar. Related routes are collapsed
-under a single parent link via the `LinkSpec.altActive` array, which
-lists additional pathnames that should also mark the link as active:
+**Nav** — Top-level navigation as a Zune word list: display-size
+lowercase words, no tab chrome, the active section simply the bright
+word among dim ones. On routes without a SubNav the nav word _is_ the
+page title, which is why `EntityExplorer`'s h1 is `.sr-only`. Related
+routes are collapsed under a single parent link via the
+`LinkSpec.altActive` array, which lists additional pathnames that
+should also mark the link as active:
 
 - **Tablets** (`/tablets`) — also active on `/tablet-families`,
   `/tablet-analysis`, `/tablet-inventory`, `/tablet-compare` (the bare
@@ -271,6 +304,11 @@ several files:
   them from the session `DrawTabDataSet` exposed as `ds` via
   `await parent()` — see "One DataSet per session" in
   [CLAUDE.md](../CLAUDE.md) — not a load-all helper.)
+
+- **`src/lib/chart-palette.ts`** — the validated categorical chart palette
+  (series identity), one array per theme, plus `paletteColor(i, mode)`.
+  Derived by search and checked with the dataviz validator, not hand-picked;
+  re-run it if you change a slot. Tests in `chart-palette.test.ts`.
 
 - **`src/lib/storage.ts`** — `getItem<T>(key)` / `setItem(key, value)`
   helpers wrapping `localStorage` with JSON parse/stringify and

@@ -175,6 +175,69 @@ What's automated (no manual action needed):
 - **Cross-entity orphan checks** — typos in `Model.Family`, `PenFamily`,
   `PenCompat.PenId`, or `PenCompat.TabletIds` fail validation.
 
+## Design tokens — never hard-code a colour
+
+The UI is Metro (Zune-era): content over chrome, hierarchy from type scale
+and opacity rather than cards and borders, one accent, square edges. Every
+colour, type size, tracking value and radius comes from CSS custom
+properties defined **once** in [`src/routes/+layout.svelte`](src/routes/+layout.svelte).
+
+**Rule: no literal hex in a component.** Use a token. This is not style
+policing — six separate dark-mode bugs came from components restating
+colours locally and overriding the globals. `SortableTable` hard-coded a
+`#fff` ground and `#333` header, so every table on `/data-quality`
+rendered white-on-white and the rows were invisible in dark mode. Same
+root cause in `TabletFamilyDetail`, `SectionedPage`, `CompletionSection`,
+`data-dictionary`, and `api-explorer`/`query-builder`. If you find
+yourself writing a hex, you are probably re-creating one of those bugs.
+
+| Token group       | Tokens                                                                     |
+| ----------------- | -------------------------------------------------------------------------- |
+| Emphasis          | `--accent`, `--accent-hover`, `--accent-contrast`, `--accent-wash`         |
+| Status            | `--good`, `--warning`, `--danger`, `--danger-wash`                         |
+| Type scale        | `--type-display/title/heading/subhead/body/caption/micro`                  |
+| Tracking / weight | `--track-display`, `--track-tight`, `--track-wide`, `--weight-display`     |
+| Shape             | `--radius` (0 — Metro is square)                                           |
+| Ink & surfaces    | `--text`, `--text-muted`, `--text-dim`, `--bg`, `--bg-card`, `--border`, … |
+
+Rules that follow from the design, in rough order of how often they bite:
+
+- **Status is not the accent.** "This is emphasis" and "this is wrong" must
+  not look alike. Never spend `--accent` on an error, or `--danger` on a
+  series. The accent is cyan (not the Zune orange we started with) precisely
+  because orange sat ~3° from `--warning` amber and the two collapsed —
+  see the token comment in `+layout.svelte` for the measured gaps.
+- **The accent is scarce.** It marks _where you are_ / _what you clicked_,
+  not every clickable thing. Table rows are `--text` and turn accent on
+  hover; only `Button variant="primary"`, `FieldPicker`'s search hit, and
+  `FlagButton`'s flagged state spend it as a fill.
+- **Don't restate table styles locally.** `:global(table)` /
+  `:global(th)` / `:global(td)` in `+layout.svelte` own the look. A local
+  `table { background: … }` block is the exact shape of the bug above.
+- **No shadows, no radius, no glow.** Panels sit on the backdrop; focus is
+  an accent edge, not a halo. Reach for `var(--radius)`, not `0`.
+- **Colour that restates adjacent text is redundant.** A type badge that
+  prints its own label doesn't also need a per-type hue; a timeline group
+  under a "Pens (n)" heading doesn't need a "pen" colour. Metro deletes
+  the hue and keeps the word.
+
+### Lowercase is presentational
+
+Nav / SubNav / Tabs render lowercase via CSS `text-transform`, never in the
+DOM, so the authored label ("IAF", "JSON") stays intact for assistive tech
+and search. Chrome words are lowercase; **content keeps its authored case**
+— a detail page title renders "KP-503E" as written, because that's data.
+
+### Pages named by the Nav keep an `.sr-only` h1
+
+The Metro nav word _is_ the page title, so a visible h1 restating it was
+pure duplication and is gone from every list route and every page whose
+SubNav tab names it (see `dataSubNavTabs()`). The h1 stays in the DOM as
+`.sr-only` (utility in `+layout.svelte`) — **don't delete it**: the nav
+word is a link, not a heading, so removing it leaves the page with no
+heading at all for screen-reader users. Pages the nav does _not_ name (the
+session detail, `+error`, the dev-only routes) keep a visible title.
+
 ## UI component architecture
 
 ### Shared primitives & frames (use these, don't re-roll)
@@ -270,6 +333,48 @@ To audit the dataset for new entities matching either rule:
 node scripts/find-name-contains-id.mjs   # id in name
 node scripts/find-brand-in-name.mjs      # name starts with brand
 ```
+
+## Chart colours are data — validate, don't eyeball
+
+Chart colour is the **one exception** to "use a token": it encodes data, so
+it can't collapse into the single accent. Every chart colour does exactly
+one job, and mixing them up is the mistake:
+
+| Job                      | Where                                    | What to use                                                            |
+| ------------------------ | ---------------------------------------- | ---------------------------------------------------------------------- |
+| **Identity** (series)    | pressure-response sessions / pens        | `paletteColor(i, mode)` — [chart-palette.ts](src/lib/chart-palette.ts) |
+| **Magnitude** (1 series) | histogram bars, KDE curve                | `var(--accent)`                                                        |
+| **Annotation / zones**   | S/A/B/C/D bands, size-category ranges    | neutral chrome (`--text-dim`, `--bg-card`)                             |
+| **Reference marks**      | "this tablet", ISO sizes, min/median/max | `var(--text)` — ink, _not_ `--danger`                                  |
+
+**If you change a slot in `CHART_PALETTE`, re-run the validator.** The
+palette is derived, not chosen: a beam search over the Metro hues scored on
+worst all-pairs CVD ΔE in both modes. The palette it replaced failed —
+`#ca8a04` and `#d97706` collapsed to ΔE 1.5 under deuteranopia, i.e. two
+sessions ~5% of men could not tell apart.
+
+```bash
+# from the dataviz skill's directory; --pairs all because the chart is a scatter
+node scripts/validate_palette.js "<light hexes>" --mode light --surface "#ffffff" --pairs all
+node scripts/validate_palette.js "<dark hexes>"  --mode dark  --surface "#0a0a0a" --pairs all
+```
+
+Three constraints that are load-bearing — read the header comment in
+[chart-palette.ts](src/lib/chart-palette.ts) before touching it:
+
+- **Light and dark are separate arrays, not a flip.** One set can't sit in
+  both OKLCH lightness bands (0.43–0.77 vs 0.48–0.67). Same hue families,
+  different steps, so a series is "the magenta one" in either theme. The
+  mode is threaded from `$theme` so a switch repaints live.
+- **Slots are never cycled.** Past slot 8, series fold into one neutral
+  "other" grey. The old `i % 8` handed a 9th series slot 1's hue.
+- **A few slots sit just under 3:1 on their surface.** That is only legal
+  because every `PressureResponseChart` ships a
+  `PressureResponseChartLegendTable` naming each series. **Never render one
+  without the other** — the palette stops being accessible.
+
+`src/lib/chart-palette.test.ts` guards the no-cycling rule, the light/dark
+split, and slot 1 tracking the accent.
 
 ## Pressure response chart gotchas
 

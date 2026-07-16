@@ -17,17 +17,19 @@
 
 ## Read order by task
 
-| Task                     | Read first                                       | Then                                                                                                                    |
-| ------------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Any change               | This file + `CLAUDE.md`                          | [`docs/WHERE.md`](docs/WHERE.md)                                                                                        |
-| UI / routes / components | `CLAUDE.md` § Data loading, Svelte 5             | [`docs/UXCOMPONENTS.md`](docs/UXCOMPONENTS.md) (catalog w/ screenshots), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
-| Step-by-step workflows   | [`docs/RECIPES.md`](docs/RECIPES.md)             | Files listed in recipe                                                                                                  |
-| Data shape / validation  | `data-repo/docs/ARCHITECTURE.md`                 | `data-repo/lib/schemas.ts`, `FIELDS.txt`                                                                                |
-| Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`            | `CLAUDE.md` § Adding a brand                                                                                            |
-| Pressure / charts        | `CLAUDE.md` § Pressure response                  | `PressureResponseChart.svelte`                                                                                          |
-| Tests / verify           | [`docs/TESTING.md`](docs/TESTING.md)             | Run commands below                                                                                                      |
-| Planned work             | [`docs/FUTURES.txt`](docs/FUTURES.txt)           | GitHub issue bodies                                                                                                     |
-| Don'ts (quick scan)      | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md) | `CLAUDE.md` for detail                                                                                                  |
+| Task                     | Read first                                          | Then                                                                                                                    |
+| ------------------------ | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Any change               | This file + `CLAUDE.md`                             | [`docs/WHERE.md`](docs/WHERE.md)                                                                                        |
+| UI / routes / components | `CLAUDE.md` § Design tokens, Data loading, Svelte 5 | [`docs/UXCOMPONENTS.md`](docs/UXCOMPONENTS.md) (catalog w/ screenshots), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Any styling / colour     | `CLAUDE.md` § Design tokens                         | Tokens live in `src/routes/+layout.svelte`; never hard-code a hex                                                       |
+| Chart colours            | `CLAUDE.md` § Chart colours                         | [`src/lib/chart-palette.ts`](src/lib/chart-palette.ts) — validate, don't eyeball                                        |
+| Step-by-step workflows   | [`docs/RECIPES.md`](docs/RECIPES.md)                | Files listed in recipe                                                                                                  |
+| Data shape / validation  | `data-repo/docs/ARCHITECTURE.md`                    | `data-repo/lib/schemas.ts`, `FIELDS.txt`                                                                                |
+| Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`               | `CLAUDE.md` § Adding a brand                                                                                            |
+| Pressure / charts        | `CLAUDE.md` § Pressure response                     | `PressureResponseChart.svelte`                                                                                          |
+| Tests / verify           | [`docs/TESTING.md`](docs/TESTING.md)                | Run commands below                                                                                                      |
+| Planned work             | [`docs/FUTURES.txt`](docs/FUTURES.txt)              | GitHub issue bodies                                                                                                     |
+| Don'ts (quick scan)      | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md)    | `CLAUDE.md` for detail                                                                                                  |
 
 ## Doc roles (what to load)
 

@@ -3,6 +3,8 @@
 **Audience:** contributors and agents touching the UI.
 **Source of truth:** [src/lib/components/](../src/lib/components/) (58 components). Each entry below points back to the file.
 
+**Before styling anything, read [CLAUDE.md](../CLAUDE.md) § Design tokens.** The UI is Metro (Zune-era): content over chrome, hierarchy from type scale and opacity rather than cards and borders, one accent, square edges, no shadows. Every colour and type size comes from tokens in [src/routes/+layout.svelte](../src/routes/+layout.svelte) — a literal hex in a component is the bug that broke dark mode in six places.
+
 Components are grouped by role. Each entry has a one-line purpose, key props, and pointers to where it's used. Screenshots will be added later — [scripts/capture-component-screenshots.mjs](../scripts/capture-component-screenshots.mjs) is wired up to drive Playwright against the running dev server and drop PNGs into `docs/images/components/` when we want to regenerate them.
 
 ---
@@ -14,6 +16,8 @@ The reusable building blocks from the UX-architecture pass (GitHub #228). Prefer
 ### `Button`
 
 Shared command button. _Props:_ `variant` (`primary` / `secondary` / `subtle` / `danger` / `icon` / `menu-trigger`), `size` (`sm` / `md`), `pressed?` (aria-pressed for toggles), `disabled`, `disabledReason?` (surfaced as the tooltip when disabled). The one bit of logic — `resolveButtonTitle` — lives in [button-helpers.ts](../src/lib/components/button-helpers.ts) with tests.
+
+Metro: square outlines on the page ground, no fill by default. **Only `primary` spends the accent as a fill** — everything else states itself with an edge, so a screen full of commands stays quiet. `danger` reads from `--danger`, never the accent. Labels are wide-tracked caps at `sm`.
 
 ### `SegmentedControl`
 
@@ -49,11 +53,15 @@ These wrap every page. The top-level layout file ([src/routes/+layout.svelte](..
 
 Top navigation bar with primary section links and the settings dropdown (gear icon: units / theme / alt-units toggles). Related routes are collapsed under a single parent via `LinkSpec.altActive`.
 
+A Zune word list: display-size lowercase words, no tab chrome, no rules, no fills — **the active section is simply the bright word among dim ones**, and brightness carries the state a tab outline used to. Lowercasing is CSS-only so the DOM keeps the authored label. On routes without a SubNav the nav word _is_ the page title (see § `EntityExplorer`).
+
 _Used by:_ every list and detail page · _Props:_ none (reads `$page.url` for active state).
 
 ### `SubNav`
 
 Generic sub-tab row rendered beneath `Nav` on every page that shares a top-level entry. Highlights the entry whose href matches the current pathname.
+
+The `Nav` word list one step down the scale — same brightness-not-chrome rule for the active state, with the accent reserved for the count badge.
 
 _Props:_ `tabs: { href, label, badge? }[]`.
 _Used by:_ Tablets ▸ {Models, Families, Analysis, Inventory, Compare}, Pens ▸ {Models, Families, Analysis, Inventory, Flagged, Compare, Pressure Response}, Data ▸ {Reference, Data Dictionary, API Explorer, Data Quality, Pen Compat, Driver Compat}.
@@ -63,6 +71,8 @@ Sub-tab definitions are centralised in [src/lib/nav/subnav-tabs.ts](../src/lib/n
 ### `Tabs`
 
 Detail-page tab strip used inside the various `*Detail` components. Each tab corresponds to a section of the detail page; the active tab is mirrored to the URL hash so `back/forward` navigation works.
+
+Same Metro word list as `Nav` / `SubNav`. Lowercased in CSS only, so "IAF" / "JSON" stay authored in the DOM for assistive tech and search.
 
 _Props:_ `tabs: { id, label, badge?, visible? }[]`, `activeId = $bindable()`.
 _Used by:_ `TabletDetail`, `PenDetail`, `PenFamilyDetail`, `TabletFamilyDetail`, `BrandDetail`, `SessionDetail`.
@@ -79,7 +89,9 @@ _Props:_ `subNavTabs?`, plus passthroughs to `EntityExplorer`.
 
 ### `DetailPageFrame`
 
-`Nav` + a detail-page title row with an optional right-aligned `actions` slot (flag / copy / export). The page body stays a sibling after it (not wrapped as children), so each detail page keeps its own structure. _Props:_ `title`, `actions?`. _Used by:_ `PenDetail`, `TabletDetail`, `PenFamilyDetail`, `TabletFamilyDetail`, `BrandDetail`, `DriverDetail`. (`SessionDetail` keeps a bespoke `Nav`+`SubNav` header; the inventory detail headers carry a model link rather than an action.)
+`Nav` + a detail-page title row with an optional right-aligned `actions` slot (flag / copy / export). The page body stays a sibling after it (not wrapped as children), so each detail page keeps its own structure. _Props:_ `title`, `actions?`.
+
+This is the one place the Metro display type is _visible_: an entity's name isn't restated by the Nav, so unlike the list routes it earns the big light type. Deliberately **not** lowercased — chrome words are lowercase, content keeps its authored case ("KP-503E" is data). _Used by:_ `PenDetail`, `TabletDetail`, `PenFamilyDetail`, `TabletFamilyDetail`, `BrandDetail`, `DriverDetail`. (`SessionDetail` keeps a bespoke `Nav`+`SubNav` header; the inventory detail headers carry a model link rather than an action.)
 
 ### `SectionHeader`
 
@@ -93,7 +105,9 @@ _Used by:_ `/reference`, `/data-quality`, `/tablet-analysis`, `/pen-analysis`.
 
 ### `ModalRoot`
 
-Application-wide modal portal. Listens on a Svelte store for modal-open requests and renders the active modal as a centered card over a backdrop.
+Application-wide modal portal. Listens on a Svelte store for modal-open requests and renders the active modal as a centered panel over a backdrop.
+
+Metro dialogs are square panels with no radius and no drop shadow — the backdrop supplies the depth. Same for `PickerModalShell`, `ExportDialog`, `PopoverMenu`, and the FilterBar/SortBar/ColumnBar flyouts. Focus is an accent edge, never a glow.
 
 _Used by:_ `confirmModal`, `promptModal`, `alertModal` in [src/lib/modal-store.ts](../src/lib/modal-store.ts) (rendered from the root layout). See `ExportDialog` and the pickers below for examples of components that render through `ModalRoot`.
 
@@ -112,6 +126,8 @@ The query-pipeline-driven list page is shared by tablets, pens, drivers, brands,
 ### `EntityExplorer`
 
 The list-page workhorse. Owns the query pipeline, decoded view state, results count, and the embedded table. Pages pass their fields, default columns, default view, and `cellLinks` (link generators per row); the component wires everything together.
+
+`title` is rendered as an **`.sr-only` h1**, not painted: the Nav/SubNav word above already states it. It stays in the DOM because a nav link is not a heading — deleting it would leave the page with no heading for screen-reader users. The visible line under the nav is just the result count.
 
 _Props:_ `entityType`, `fields`, `data`, `defaultColumns`, `defaultView`, `defaultFilterField?`, `cellLinks?`, ...
 
@@ -138,6 +154,8 @@ Column pills with drag-to-reorder, hide/show, and the field picker for adding ne
 ### `ResultsTable`
 
 The data table itself: header row from the active columns, body rows from the pipeline output, cell rendering via each field's `FieldDef.display`, optional `cellLinks` for clickable IDs.
+
+Rows are `--text`, **not** accent-coloured: the whole column is clickable, so painting every row accent is noise. The accent marks the row you're on (hover), the way a Zune track list highlighted only the active item. Table chrome itself comes from `:global(table)` in `+layout.svelte` — don't restate it locally.
 
 ### `SavedViews`
 
@@ -221,7 +239,9 @@ Pure presentation components. Each has clear inputs and produces an SVG or canva
 
 Chart.js scatter of physical force (gf) vs logical pressure (%). View modes: _Raw_ / _Raw + estimates_ / _Standardized_ / _Envelope_. Zoom modes: _Normal_ / _Piaf detail (0-20 gf)_ / _Pmax detail (95-100%)_. Optional `lockedZoom` hides the dropdown and forces a preset (used by the `/pen-compare` combined Pmax comparison).
 
-**Must-read before editing:** [CLAUDE.md § Pressure response charts](../CLAUDE.md) (envelope `fill: 'shape'` polygon and dynamic Pmax x-axis are non-obvious).
+Series colours come from [chart-palette.ts](../src/lib/chart-palette.ts) via `paletteColor(i, $theme)` — a validated categorical palette, per theme, never cycled. **Always render this chart with its `PressureResponseChartLegendTable`**: a few palette slots sit just under 3:1 on their surface, and the legend is the relief channel that keeps them accessible.
+
+**Must-read before editing:** [CLAUDE.md § Pressure response charts](../CLAUDE.md) (envelope `fill: 'shape'` polygon and dynamic Pmax x-axis are non-obvious) and [CLAUDE.md § Chart colours](../CLAUDE.md).
 
 ### `PressureResponseChartLegendTable`
 
@@ -229,13 +249,17 @@ Per-session legend table that sits below a `PressureResponseChart` when multiple
 
 ### `PressureBandsChart`
 
-Pure-SVG horizontal range-bands chart. One band per record; optional `markers` (red vertical lines, dashed or solid, with labels), `shadedRange` (semi-transparent red rectangle for highlighting a min↔max span), and `heading` (rendered _inside_ the SVG so it survives PNG/SVG export).
+Pure-SVG horizontal range-bands chart. One band per record; optional `markers` (ink vertical lines, dashed or solid, with labels), `shadedRange` (accent-tinted rectangle highlighting a min↔max span), and `heading` (rendered _inside_ the SVG so it survives PNG/SVG export).
+
+The S/A/B/C/D zones are graded axis annotation, not marks, so they stay neutral chrome and the plotted ranges/markers carry the ink and accent.
 
 _Used by:_ Reference page (IAF Ranking, MAX Ranking), `PressureRangeTab` (IAF / MAX tabs), and the pen-analysis distribution sections.
 
 ### `ValueHistogram`
 
-SVG histogram with KDE-curve overlay, range backgrounds, optional `currentValue` (red solid line for a specific tablet), `markers` (red dashed lines, e.g. ISO paper sizes), and an optional `compareYears` dropdown.
+SVG histogram with KDE-curve overlay, range backgrounds, optional `currentValue` (solid ink line for a specific tablet), `markers` (dashed ink lines, e.g. ISO paper sizes), and an optional `compareYears` dropdown.
+
+Colour by job: bars + KDE are one series → the accent. Range backgrounds are graded _annotation behind_ the data → neutral zebra, not a hue. `currentValue` / `markers` are reference marks → ink, so they pop against the accent. (They were red, which spent a status colour on something that isn't a status.)
 
 _Used by:_ Tablet detail's Size tab, Reference page's Tablet Sizes / ISO Paper Sizes tabs.
 
@@ -255,7 +279,9 @@ Side-by-side SVG outlines of flagged tablets at their actual proportions, drawn 
 
 ### `ForceProportionsView`
 
-Visualises the active-area loss when "Force Proportions" is applied against 16:9 and 16:10 monitor aspect ratios. Renders three SVG panels per ratio: tablet at its actual proportions → target ratio shape → result with USED region inscribed and LOST strip drawn. Pen-display / standalone tablets are skipped (they already match their own screen ratio).
+Visualises the active-area loss when "Force Proportions" is applied against 16:9 and 16:10 monitor aspect ratios. Renders three SVG panels per ratio: tablet at its actual proportions → target ratio frame → result with USED region inscribed and LOST strip drawn. Pen-display / standalone tablets are skipped (they already match their own screen ratio).
+
+A real two-category split: USED is the accent (what you keep), LOST is neutral, and the legend names both so identity is never colour-alone. The target ratio is a dashed outline — it's a constraint, not a measured quantity.
 
 _Used by:_ TabletDetail's _Force Proportions_ tab (`PENTABLET` type only).
 
@@ -310,7 +336,7 @@ Small reusable controls.
 
 ### `FlagButton`
 
-The single flag / un-flag toggle (⚐ / ⚑). Two variants: default (bordered, detail-page headers) and `compact` (borderless, dense table cells). Every flag affordance routes through it — `ResultsTable` cells (`compact`), `TabletDetail` / `PenDetail` / `PenFamilyDetail` headers, and the `/pen-flagged` lists — so they look and behave consistently (#235). The flag is stored per entity type via [src/lib/flagged-store.ts](../src/lib/flagged-store.ts). Tablets cap at 6 flags (for the Compare page's SVG outlines); pens are uncapped (the `/pen-flagged` pressure overlay benefits from more).
+The single flag / un-flag toggle (⚐ / ⚑). Two variants: default (bordered, detail-page headers) and `compact` (borderless, dense table cells). Every flag affordance routes through it — `ResultsTable` cells (`compact`), `TabletDetail` / `PenDetail` / `PenFamilyDetail` headers, and the `/pen-flagged` lists — so they look and behave consistently (#235). The flag is stored per entity type via [src/lib/flagged-store.ts](../src/lib/flagged-store.ts). Tablets cap at 6 flags (for the Compare page's SVG outlines); pens are uncapped (the `/pen-flagged` pressure overlay benefits from more). Flagged is one of the few places Metro spends the accent as a _fill_ — the state has to be findable while scanning.
 
 ### `ExportTableButton`
 
@@ -348,5 +374,7 @@ Visual test harness for `ValueHistogram` marker / range rendering — a grid of 
 | The exporter formats                           | [src/lib/export/](../src/lib/export/) — _then_ `ExportDialog`                                            |
 | The flag store (which entities can be flagged) | [src/lib/flagged-store.ts](../src/lib/flagged-store.ts) — _then_ `FlagButton` / picker UIs               |
 | The pressure-chart visual quirks               | **First read [CLAUDE.md § Pressure response charts](../CLAUDE.md)**, then `PressureResponseChart.svelte` |
+| Any colour, type size, or radius               | [src/routes/+layout.svelte](../src/routes/+layout.svelte) tokens — never a literal hex in a component    |
+| Chart series colours                           | [src/lib/chart-palette.ts](../src/lib/chart-palette.ts) — re-run the dataviz validator, don't eyeball    |
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the runtime data-flow picture and [WHERE.md](WHERE.md) for the goal→files lookup.
