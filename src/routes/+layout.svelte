@@ -104,9 +104,10 @@
 
 <style>
 	/* A real warning, so it uses --warning rather than the accent, and
-	   states itself with a heavy edge instead of a tinted panel. */
+	   states itself with a heavy edge instead of a tinted panel. Ground is
+	   neutral: an accent-tinted one would undercut the warning. */
 	.schema-banner {
-		background: var(--accent-wash);
+		background: var(--bg-card);
 		color: var(--text);
 		border-left: 4px solid var(--warning);
 		padding: 10px 16px;
@@ -202,9 +203,16 @@
 	 * that is the intent; reach for type scale or whitespace to separate
 	 * it, not for a box.
 	 *
-	 * --accent is the single emphasis colour (Zune orange). It is
+	 * --accent is the single emphasis colour (Metro cyan). It is
 	 * deliberately the only chromatic token: swapping these two
 	 * declarations re-accents the whole app.
+	 *
+	 * Cyan rather than the Zune orange we started with: orange sits ~3deg
+	 * from --warning amber, so emphasis and "something is wrong" read as
+	 * the same colour — fatal on a page like /data-quality. Cyan is ~160deg
+	 * from --warning, ~169deg from --danger and ~112deg from --good, the
+	 * widest separation available in the Metro palette, while still
+	 * clearing 6.8:1 on the near-black ground.
 	 */
 	:global(:root) {
 		/* Type scale */
@@ -227,18 +235,14 @@
 		--radius: 0;
 
 		/* Light theme */
-		--accent: #a85400;
-		--accent-hover: #d06a00;
+		--accent: #157db0;
+		--accent-hover: #0f5f86;
 		--accent-contrast: #fff;
 
 		/*
 		 * Status colours are deliberately NOT --accent: "this is emphasis"
 		 * and "this is wrong" must not look alike. Values are darkened from
 		 * the Metro palette for contrast on white.
-		 *
-		 * Caveat: --warning is amber and --accent is orange, so they are
-		 * close in hue by construction. Status here leans on wording and
-		 * placement, not hue alone.
 		 */
 		--good: #2e7d0e;
 		--warning: #8a5a00;
@@ -246,7 +250,7 @@
 
 		/* Faint accent-tinted ground for "this cell matters" highlights
 		   (compare diffs, filter pills). Not for text — pair with --text. */
-		--accent-wash: #fdf6ee;
+		--accent-wash: #eef6fb;
 		--danger-wash: #fdf0ef;
 		--bg: #fff;
 		--bg-card: #fafafa;
@@ -259,9 +263,9 @@
 		--th-text: #8e8e8e;
 		--hover-bg: #f5f5f5;
 		--link: var(--accent);
-		--pill-filter-bg: #fdf6ee;
-		--pill-filter-border: #e8c9a4;
-		--pill-filter-hover: #f8ead9;
+		--pill-filter-bg: #eef6fb;
+		--pill-filter-border: #a9cfe6;
+		--pill-filter-hover: #dceefa;
 		--pill-sort-bg: #f2f2f2;
 		--pill-sort-border: #d6d6d6;
 		--pill-sort-hover: #e8e8e8;
@@ -273,8 +277,8 @@
 	}
 
 	:global([data-theme='dark']) {
-		--accent: #f09609;
-		--accent-hover: #ffb03a;
+		--accent: #1ba1e2;
+		--accent-hover: #5cc0f0;
 		--accent-contrast: #000;
 
 		/* Metro palette greens/reds, lifted for contrast on near-black. */
@@ -282,7 +286,7 @@
 		--warning: #f0a30a;
 		--danger: #ff4d2e;
 
-		--accent-wash: #1e1508;
+		--accent-wash: #0c1a22;
 		--danger-wash: #2a1210;
 		--bg: #0a0a0a;
 		--bg-card: #141414;
@@ -295,9 +299,9 @@
 		--th-text: #7d7d7d;
 		--hover-bg: #171717;
 		--link: var(--accent);
-		--pill-filter-bg: #1e1508;
-		--pill-filter-border: #6b4a12;
-		--pill-filter-hover: #2a1e0c;
+		--pill-filter-bg: #0c1a22;
+		--pill-filter-border: #1c4a63;
+		--pill-filter-hover: #123040;
 		--pill-sort-bg: #161616;
 		--pill-sort-border: #333;
 		--pill-sort-hover: #1f1f1f;
