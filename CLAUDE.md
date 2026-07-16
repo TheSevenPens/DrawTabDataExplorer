@@ -376,6 +376,44 @@ Three constraints that are load-bearing — read the header comment in
 `src/lib/chart-palette.test.ts` guards the no-cycling rule, the light/dark
 split, and slot 1 tracking the accent.
 
+## Chart typography — name a role, never a size
+
+All chart text traces to one file, [`src/lib/chart-type.ts`](src/lib/chart-type.ts):
+a role table (`title` / `subtitle` / `axisTitle` / `axisTick` / `zoneTier`
+/ `zoneLabel` / `seriesLabel` / `annotation`), each carrying size + weight
+
+- tracking + a Metro caps flag. **A chart names a role, not a number.**
+
+Why a whole module instead of `var(--type-*)`: chart text renders on four
+surfaces with different mechanisms.
+
+- **HTML companions** (legend tables, ChartFrame, SessionStats) — plain
+  `var(--type-*)`, nothing special.
+- **In-document SVG `<text>`** — `style={svgTextStyle('axisTick')}`. Literal
+  px, not a token, because…
+- **Standalone SVG / PNG export** — a serialised chart has no `:root`, so
+  `var()` wouldn't resolve and a scoped `<style>` block isn't serialised at
+  all. `svgTextStyle` bakes literal px + an explicit family inline (survives
+  serialisation), and the export flatten in `ChartExportButton` bakes each
+  node's _computed_ font + colour onto the clone — so the exported file is
+  self-contained and matches the screen, current theme included.
+- **Chart.js canvas** — no CSS; `Chart.defaults.font` is pointed at
+  `CHART_FONT_FAMILY` + the scale in `PressureResponseChart.svelte`.
+
+Rules:
+
+- Sizes mirror the `--type-*` scale; `chart-type.test.ts` asserts they can't
+  drift and that the family leads with the face `app.html` ships (a stale
+  `'Google Sans'` is the exact bug it catches).
+- **Never `font-family="inherit"` on SVG text** — it renders serif once
+  exported (no ancestor). Use `svgTextStyle` (bakes the stack) or, for
+  export, the flatten handles it.
+- `chart-typography.guard.test.ts` fails the build on a raw
+  `font-size=`/`font-weight=` SVG attribute or a `'Google Sans'` in a chart.
+- The export flatten (`flattenComputedStyles`) is load-bearing for both
+  colour and type fidelity — don't remove it thinking `var()` fallbacks or
+  CSS classes will carry over to a standalone file. They won't.
+
 ## Pressure response chart gotchas
 
 `PressureResponseChart.svelte` (Chart.js) has two non-obvious behaviors that
