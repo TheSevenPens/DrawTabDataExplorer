@@ -15,9 +15,9 @@ DrawTabDataExplorer/
 │   ├── app.html                  # HTML shell
 │   ├── routes/                   # SvelteKit pages
 │   │   ├── +layout.ts            # Builds the session DrawTabDataSet (ds) + loads version
-│   │   ├── +layout.svelte        # Nav + version banner
+│   │   ├── +layout.svelte        # Design tokens + schema-version banner + ModalRoot
 │   │   ├── +page.ts              # Redirects / -> /tablets
-│   │   ├── about/                # About page (links to related tools)
+│   │   ├── about/                # About page (related tools + dataset version)
 │   │   ├── entity/[entityId]/    # CANONICAL detail route (prerender = false)
 │   │   ├── brands/               # Brands list + detail redirect
 │   │   ├── tablets/              # Tablets list + detail redirect

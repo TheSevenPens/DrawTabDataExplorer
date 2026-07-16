@@ -11,12 +11,12 @@ open the issue for current scope, design notes, and status.
 - Text-based KQL input — #54
 - Type-narrow .filter()/.sort() field parameter — #118
 - Publish queriton to npm (Option C of #139 Phase 4) — #143
-- Audit Map/Set usage in $state contexts — #151
 - SvelteKit major upgrade (clears 3 low-severity advisories) — #152
 - Promote detail-page tabs to nested route segments (currently URL hash) — #211
 
 ## Shipped
 
+- prefer-svelte-reactivity: audited as false positives (reassignment idiom), rule off + convention documented — #151
 - Investigate replacing custom Query API with Arquero (decided: keep queriton; see #213) — #119
 - Remove spring-decay extrapolation; backfill 0%/100% endpoints across 144 sessions — #212
 - Write a user-facing tutorial for queriton — #146

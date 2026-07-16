@@ -1,7 +1,7 @@
 # UX components
 
 **Audience:** contributors and agents touching the UI.
-**Source of truth:** [src/lib/components/](../src/lib/components/) (58 components). Each entry below points back to the file.
+**Source of truth:** [src/lib/components/](../src/lib/components/) (60 components). Each entry below points back to the file.
 
 **Before styling anything, read [CLAUDE.md](../CLAUDE.md) § Design tokens.** The UI is Metro (Zune-era): content over chrome, hierarchy from type scale and opacity rather than cards and borders, one accent, square edges, no shadows. Every colour and type size comes from tokens in [src/routes/+layout.svelte](../src/routes/+layout.svelte) — a literal hex in a component is the bug that broke dark mode in six places.
 
