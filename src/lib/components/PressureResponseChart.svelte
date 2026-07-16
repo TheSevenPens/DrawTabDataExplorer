@@ -24,7 +24,7 @@
 	import { theme } from '$lib/theme-store.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
-	import { CHART_FONT_FAMILY, CHART_TYPE } from '$lib/chart-type.js';
+	import { CHART_FONT_FAMILY, CHART_TYPE, chartJsFont } from '$lib/chart-type.js';
 
 	Chart.register(
 		LineController,
@@ -108,6 +108,34 @@
 		return override ?? paletteColor(i, $theme);
 	}
 
+	// Chart.js draws on a canvas, so it can't read `var()` — and its defaults
+	// (grid rgba(0,0,0,.1), text #666) are fixed, so gridlines vanish on the
+	// near-black theme and axis text stays a wrong gray. Resolve the tokens to
+	// literals per theme. Reading $theme first makes the rebuild reactive; the
+	// layout sets `data-theme` in an ancestor effect before this child effect
+	// runs, so getComputedStyle sees the current theme.
+	function themeAxisColors(): { grid: string; tick: string; title: string } {
+		void $theme;
+		const css = getComputedStyle(document.documentElement);
+		const pick = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+		return {
+			grid: pick('--border', '#e6e6e6'),
+			tick: pick('--text-muted', '#5c5c5c'),
+			title: pick('--text', '#111'),
+		};
+	}
+
+	function axisScale(text: string, range: object): object {
+		const c = themeAxisColors();
+		return {
+			type: 'linear',
+			title: { display: true, text, color: c.title, font: chartJsFont('axisTitle') },
+			ticks: { color: c.tick, font: chartJsFont('axisTick') },
+			grid: { color: c.grid },
+			...range,
+		};
+	}
+
 	function pctValue(sortedAsc: number[], pct: number): number {
 		if (sortedAsc.length === 0) return NaN;
 		if (sortedAsc.length === 1) return sortedAsc[0];
@@ -170,7 +198,10 @@
 
 		if (viewMode === 'envelope') {
 			const { low, mid, high } = buildEnvelope(sessionsToPlot);
-			const color = '#2563eb';
+			// The envelope is the primary (and only) data in this view, so it
+			// takes slot 0 — the accent — per theme, rather than a fixed blue.
+			// colorFor reads $theme, so the rebuild repaints it on a switch.
+			const color = colorFor(0);
 			// Chart.js between-datasets fills are x-axis-parametric, so when the
 			// high line extends past the low line's max x (common at p=99→100),
 			// the fill terminates at the low line's right edge and leaves a
@@ -464,21 +495,14 @@
 		void hiddenIds;
 		void maxPmax;
 		void piafTransition;
+		void $theme; // repaint axes/grid/envelope when the theme switches
 		if (!canvas) return;
 		const datasets = buildDatasets();
 		const { x: xRange, y: yRange } = axisRange();
 		if (chart) {
 			chart.data.datasets = datasets;
-			chart.options.scales!.x = {
-				type: 'linear',
-				title: { display: true, text: 'Physical force (gf)' },
-				...xRange,
-			};
-			chart.options.scales!.y = {
-				type: 'linear',
-				title: { display: true, text: 'Logical pressure (%)' },
-				...yRange,
-			};
+			chart.options.scales!.x = axisScale('Physical force (gf)', xRange);
+			chart.options.scales!.y = axisScale('Logical pressure (%)', yRange);
 			chart.update();
 			return;
 		}
@@ -492,19 +516,18 @@
 				animation: false,
 				parsing: false,
 				scales: {
-					x: {
-						type: 'linear',
-						title: { display: true, text: 'Physical force (gf)' },
-						...xRange,
-					},
-					y: {
-						type: 'linear',
-						title: { display: true, text: 'Logical pressure (%)' },
-						...yRange,
-					},
+					x: axisScale('Physical force (gf)', xRange),
+					y: axisScale('Logical pressure (%)', yRange),
 				},
 				plugins: {
-					title: title ? { display: true, text: title } : undefined,
+					title: title
+						? {
+								display: true,
+								text: title,
+								color: themeAxisColors().title,
+								font: chartJsFont('title'),
+							}
+						: undefined,
 					// Chart.js's native legend is suppressed because the
 					// companion <PressureResponseChartLegendTable> below the chart already
 					// shows colors, labels, and per-series toggles.
