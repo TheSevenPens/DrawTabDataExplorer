@@ -185,34 +185,21 @@
 		color: var(--text);
 		margin-bottom: 8px;
 		padding-bottom: 4px;
-		border-bottom: 2px solid #e0e0e0;
+		border-bottom: 1px solid var(--border);
 	}
 
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		background: #fff;
-		font-size: 13px;
-	}
-	th,
-	td {
-		text-align: left;
-		padding: 6px 10px;
-		border-bottom: 1px solid #e0e0e0;
-	}
-	th {
-		background: #333;
-		color: #fff;
-	}
-	tr:hover td {
-		background: #f0f7ff;
-	}
+	/*
+	 * This table used to restate the whole table style locally with
+	 * hard-coded light-mode colours (#fff ground, #333 header, #e0e0e0
+	 * rules), which overrode the globals and rendered wrong in dark mode.
+	 * The shared :global(table) rules in +layout.svelte cover all of it now.
+	 */
 	td a {
-		color: #2563eb;
+		color: var(--text);
 		text-decoration: none;
 	}
-	td a:hover {
-		text-decoration: underline;
+	tr:hover td a {
+		color: var(--accent);
 	}
 
 	.dim-chart-section {
@@ -234,11 +221,13 @@
 	}
 
 	.stack-toggle {
-		font-size: 11px;
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		padding: 2px 8px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
 	}

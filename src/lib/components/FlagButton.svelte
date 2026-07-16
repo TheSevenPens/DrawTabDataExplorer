@@ -34,19 +34,22 @@
 		font-size: 14px;
 		line-height: 1;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
 	}
 	.flag-btn:hover {
-		border-color: #d97706;
-		color: #d97706;
+		border-color: var(--accent);
+		color: var(--accent);
 	}
+	/* Flagged reads as a filled accent chip — the one place Metro spends
+	   the accent as a fill rather than an outline, because "flagged" is a
+	   state you want findable while scanning. */
 	.flag-btn.on {
-		background: #fff3cd;
-		border-color: #d97706;
-		color: #b45309;
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--accent-contrast);
 	}
 
 	/* Borderless minimal icon for dense table cells. */
@@ -58,10 +61,10 @@
 		color: var(--text-dim);
 	}
 	.flag-btn.compact:hover {
-		color: #d97706;
+		color: var(--accent);
 	}
 	.flag-btn.compact.on {
 		background: none;
-		color: #d97706;
+		color: var(--accent);
 	}
 </style>

@@ -225,6 +225,19 @@
 		--accent: #a85400;
 		--accent-hover: #d06a00;
 		--accent-contrast: #fff;
+
+		/*
+		 * Status colours are deliberately NOT --accent: "this is emphasis"
+		 * and "this is wrong" must not look alike. Values are darkened from
+		 * the Metro palette for contrast on white.
+		 *
+		 * Caveat: --warning is amber and --accent is orange, so they are
+		 * close in hue by construction. Status here leans on wording and
+		 * placement, not hue alone.
+		 */
+		--good: #2e7d0e;
+		--warning: #8a5a00;
+		--danger: #c11200;
 		--bg: #fff;
 		--bg-card: #fafafa;
 		--text: #111;
@@ -253,6 +266,11 @@
 		--accent: #f09609;
 		--accent-hover: #ffb03a;
 		--accent-contrast: #000;
+
+		/* Metro palette greens/reds, lifted for contrast on near-black. */
+		--good: #7cc623;
+		--warning: #f0a30a;
+		--danger: #ff4d2e;
 		--bg: #0a0a0a;
 		--bg-card: #141414;
 		--text: #fff;

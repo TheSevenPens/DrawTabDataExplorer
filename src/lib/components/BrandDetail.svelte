@@ -261,27 +261,30 @@
 		gap: 6px;
 	}
 
+	/*
+	 * tl-tablet / tl-pen used to carry a blue / purple left bar to mark
+	 * category, but each group already sits under its own "Tablets (n)" /
+	 * "Pens (n)" heading — the hue restated what the heading said. Metro
+	 * keeps the one accent and lets the headings do the labelling, so both
+	 * categories now share this single style.
+	 */
 	.tl-item {
 		display: inline-flex;
 		flex-direction: column;
 		padding: 5px 10px;
-		border-radius: 6px;
+		border-radius: var(--radius);
 		font-size: 12px;
 		text-decoration: none;
 		border: 1px solid var(--border-light);
-		background: var(--bg-card);
+		border-left: 3px solid var(--border);
+		background: transparent;
 		min-width: 120px;
 	}
 
-	.tl-tablet {
-		border-left: 3px solid #2563eb;
-	}
-	.tl-pen {
-		border-left: 3px solid #7c3aed;
-	}
 	.tl-item:hover {
 		background: var(--hover-bg);
 		border-color: var(--border);
+		border-left-color: var(--accent);
 	}
 
 	.tl-name {

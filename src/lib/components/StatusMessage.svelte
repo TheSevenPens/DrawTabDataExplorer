@@ -29,13 +29,13 @@
 	}
 
 	.good {
-		color: #16a34a;
+		color: var(--good);
 	}
 	.warning {
-		color: #d97706;
+		color: var(--warning);
 	}
 	.error {
-		color: #dc2626;
+		color: var(--danger);
 	}
 	.info {
 		color: var(--text-muted);

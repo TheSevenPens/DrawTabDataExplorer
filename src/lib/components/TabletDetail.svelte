@@ -155,12 +155,14 @@
 </section>
 
 <style>
+	/* Matches PenDetail: no card, just space and a hairline. */
 	.basics {
 		margin-bottom: 20px;
-		padding: 12px 16px;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: 6px;
+		padding: 0 0 16px;
+		background: transparent;
+		border: none;
+		border-bottom: 1px solid var(--border);
+		border-radius: var(--radius);
 	}
 
 	.basics-grid {
@@ -179,16 +181,18 @@
 	}
 
 	.basics-item dt {
-		font-size: 10px;
-		font-weight: 700;
+		font-size: var(--type-micro);
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: var(--track-wide);
 		color: var(--text-dim);
-		margin-bottom: 2px;
+		margin-bottom: 3px;
 	}
 
 	.basics-item dd {
-		font-size: 13px;
+		font-size: var(--type-subhead);
+		font-weight: var(--weight-display);
+		letter-spacing: var(--track-tight);
 		color: var(--text);
 	}
 

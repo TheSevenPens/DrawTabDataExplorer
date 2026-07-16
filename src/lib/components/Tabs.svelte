@@ -61,33 +61,34 @@
 </div>
 
 <style>
+	/*
+	 * Metro word list, matching Nav / SubNav: no tab outlines, no fills —
+	 * the active tab is simply the bright word. Lowercasing is done in CSS
+	 * so the DOM keeps the authored label ("IAF", "JSON") for assistive
+	 * tech and for search.
+	 */
 	.detail-tabs {
 		display: flex;
-		gap: 0;
-		border-bottom: 2px solid var(--border);
-		margin-bottom: 16px;
+		gap: 18px;
+		margin-bottom: 20px;
+		flex-wrap: wrap;
 	}
 	.detail-tabs button {
-		padding: 6px 16px;
-		font-size: 13px;
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
+		padding: 0;
+		font-size: var(--type-subhead);
+		font-weight: 400;
+		letter-spacing: var(--track-tight);
+		text-transform: lowercase;
+		border: none;
 		background: transparent;
-		color: var(--text-muted);
+		color: var(--text-dim);
 		cursor: pointer;
-		position: relative;
-		bottom: -2px;
+		transition: color 120ms ease-out;
 	}
 	.detail-tabs button:hover {
-		color: #2563eb;
-		background: var(--bg-card);
-		border-color: var(--border);
+		color: var(--text-muted);
 	}
 	.detail-tabs button.active {
-		background: var(--bg);
-		color: #2563eb;
-		border-color: var(--border);
-		font-weight: 600;
+		color: var(--text);
 	}
 </style>

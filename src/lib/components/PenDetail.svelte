@@ -314,12 +314,15 @@
 {/if}
 
 <style>
+	/* Metro drops the card: the key facts are separated from the tabs by
+	   space and a single hairline, not by a boxed surface. */
 	.basics {
 		margin-bottom: 20px;
-		padding: 12px 16px;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: 6px;
+		padding: 0 0 16px;
+		background: transparent;
+		border: none;
+		border-bottom: 1px solid var(--border);
+		border-radius: var(--radius);
 	}
 	.basics-grid {
 		display: flex;
@@ -335,15 +338,17 @@
 		min-width: 100px;
 	}
 	.basics-item dt {
-		font-size: 10px;
-		font-weight: 700;
+		font-size: var(--type-micro);
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: var(--track-wide);
 		color: var(--text-dim);
-		margin-bottom: 2px;
+		margin-bottom: 3px;
 	}
 	.basics-item dd {
-		font-size: 13px;
+		font-size: var(--type-subhead);
+		font-weight: var(--weight-display);
+		letter-spacing: var(--track-tight);
 		color: var(--text);
 	}
 
@@ -377,8 +382,8 @@
 		font-size: 12px;
 		padding: 3px 6px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
 	}
 

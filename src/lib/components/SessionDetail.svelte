@@ -192,14 +192,16 @@
 	.header {
 		margin-bottom: 16px;
 	}
+	/* Metro states a problem with a bar and words, not a tinted panel. The
+	   heavy left edge is what survives from the old banner. */
 	.defect-banner {
 		margin: 8px 0 12px;
 		padding: 10px 14px;
-		background: #fff3cd;
-		border: 1px solid #d97706;
-		border-left: 4px solid #d97706;
-		color: #533f03;
-		border-radius: 4px;
+		background: transparent;
+		border: none;
+		border-left: 4px solid var(--danger);
+		color: var(--text);
+		border-radius: var(--radius);
 		font-size: 13px;
 	}
 	h1 {

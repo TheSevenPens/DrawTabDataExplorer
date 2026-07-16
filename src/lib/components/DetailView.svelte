@@ -68,13 +68,16 @@
 		margin-bottom: 24px;
 	}
 
+	/* Section headings separate by wide-tracked caps and space rather than
+	   by a rule under the text. */
 	h2 {
-		font-size: 15px;
+		font-size: var(--type-micro);
 		font-weight: 600;
-		color: var(--text);
-		margin-bottom: 8px;
-		padding-bottom: 4px;
-		border-bottom: 2px solid var(--border);
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
+		margin-bottom: 10px;
+		padding-bottom: 0;
 	}
 
 	dl {
@@ -87,7 +90,7 @@
 		display: flex;
 		gap: 16px;
 		padding: 6px 0;
-		border-bottom: 1px solid var(--border);
+		border-bottom: 1px solid var(--border-light);
 	}
 
 	dt {
@@ -104,22 +107,24 @@
 	}
 
 	dd a {
-		color: #2563eb;
+		color: var(--accent);
 		text-decoration: none;
 	}
 
 	dd a:hover {
-		text-decoration: underline;
+		color: var(--accent-hover);
 	}
 
 	.computed-badge {
 		display: inline-block;
 		margin-left: 6px;
 		padding: 1px 5px;
-		font-size: 10px;
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		color: var(--text-dim);
-		border: 1px solid var(--border-light);
-		border-radius: 3px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		vertical-align: middle;
 	}
 </style>
