@@ -376,7 +376,7 @@
 
 <Nav />
 <SubNav tabs={penTabs} />
-<h1>Compare Pens</h1>
+<h1 class="sr-only">Compare Pens</h1>
 
 <Tabs
 	tabs={[
@@ -690,10 +690,6 @@
 {/if}
 
 <style>
-	h1 {
-		margin-bottom: 16px;
-	}
-
 	.flagged-actions {
 		display: flex;
 		align-items: center;
@@ -728,13 +724,13 @@
 		border: none;
 		cursor: pointer;
 		font-size: 16px;
-		color: #d97706;
+		color: var(--accent);
 		padding: 0;
 		line-height: 1;
 	}
 
 	.unflag-btn:hover {
-		color: #b45309;
+		color: var(--accent-hover);
 	}
 
 	.compare-toolbar {
@@ -801,7 +797,7 @@
 	}
 
 	.differs {
-		background: #fef3c7;
+		background: var(--accent-wash);
 	}
 
 	.overlay-toolbar {

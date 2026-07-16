@@ -124,7 +124,7 @@
 </script>
 
 <ChromeLayout subNavTabs={dataTabs}>
-	<h1>API Explorer</h1>
+	<h1 class="sr-only">API Explorer</h1>
 
 	<p class="blurb">
 		Interactive playground for the
@@ -252,10 +252,6 @@
 </ChromeLayout>
 
 <style>
-	h1 {
-		margin-bottom: 8px;
-	}
-
 	.blurb {
 		font-size: 13px;
 		color: var(--text-muted);
@@ -372,17 +368,12 @@
 		margin: 0;
 	}
 
+	/* Theme-aware via tokens, so the per-theme override block is gone. */
 	.result-pane.error {
-		background: #fef2f2;
-		color: #991b1b;
-		border-color: #fecaca;
+		background: var(--danger-wash);
+		color: var(--danger);
+		border-color: var(--danger);
 		white-space: pre-wrap;
-	}
-
-	:global([data-theme='dark']) .result-pane.error {
-		background: #3a1818;
-		color: #fca5a5;
-		border-color: #5b2424;
 	}
 
 	.placeholder {

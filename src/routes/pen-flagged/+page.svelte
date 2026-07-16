@@ -77,7 +77,7 @@
 <SubNav tabs={penTabs} />
 
 <div class="header">
-	<h1>Flagged Pens</h1>
+	<h1 class="sr-only">Flagged Pens</h1>
 	<p class="meta">
 		{$flaggedPenTotalCount} item{$flaggedPenTotalCount === 1 ? '' : 's'} flagged across pen units, models,
 		and families. See the pressure-response overlay on
@@ -161,9 +161,6 @@
 <style>
 	.header {
 		margin-bottom: 16px;
-	}
-	h1 {
-		margin: 0 0 8px;
 	}
 	.meta {
 		margin: 0;

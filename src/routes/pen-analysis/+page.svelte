@@ -445,7 +445,7 @@
 {/snippet}
 
 <ChromeLayout subNavTabs={penTabs}>
-	<h1>Pen Analysis</h1>
+	<h1 class="sr-only">Pen Analysis</h1>
 
 	<SectionedPage sections={sectionDefs} defaultSection="iaf">
 		{#snippet content(activeSection: string)}
@@ -733,9 +733,6 @@
 </ChromeLayout>
 
 <style>
-	h1 {
-		margin-bottom: 16px;
-	}
 	.section {
 		margin-bottom: 32px;
 	}

@@ -80,7 +80,7 @@
 <SubNav tabs={dataTabs} />
 
 <div class="header">
-	<h1>Pressure Response</h1>
+	<h1 class="sr-only">Pressure Response</h1>
 	<p class="meta">
 		{sessions.length} measurement sessions across {allBrands.length} brands and {allPens.length} pens.
 	</p>
@@ -181,9 +181,6 @@
 	.header {
 		margin-bottom: 16px;
 	}
-	h1 {
-		margin: 0 0 8px;
-	}
 	.meta {
 		margin: 0;
 		color: var(--text-muted);
@@ -221,8 +218,8 @@
 		cursor: not-allowed;
 	}
 	.sel-controls button:hover:not(:disabled) {
-		border-color: #2563eb;
-		color: #2563eb;
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 	.overlay {
 		margin-bottom: 24px;
@@ -240,7 +237,7 @@
 	.defect-badge {
 		display: inline-block;
 		margin-left: 4px;
-		color: #d97706;
+		color: var(--accent);
 		font-weight: 700;
 		cursor: help;
 	}

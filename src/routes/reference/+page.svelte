@@ -198,7 +198,7 @@
 </script>
 
 <ChromeLayout subNavTabs={dataTabs}>
-	<h1>Reference</h1>
+	<h1 class="sr-only">Reference</h1>
 
 	<SectionedPage sections={sectionDefs} defaultSection="tablet-sizes">
 		{#snippet content(activeSection: string)}
@@ -661,10 +661,6 @@
 </ChromeLayout>
 
 <style>
-	h1 {
-		margin-bottom: 16px;
-	}
-
 	section {
 		margin-bottom: 24px;
 	}

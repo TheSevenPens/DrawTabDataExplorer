@@ -53,15 +53,15 @@
 	.cta {
 		display: inline-block;
 		padding: 8px 16px;
-		background: #2563eb;
-		color: #fff;
+		background: var(--accent);
+		color: var(--accent-contrast);
 		text-decoration: none;
 		border-radius: 4px;
 		font-weight: 500;
 	}
 
 	.cta:hover {
-		background: #1d4ed8;
+		background: var(--accent-hover);
 	}
 
 	.note {

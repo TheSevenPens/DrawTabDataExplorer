@@ -103,10 +103,12 @@
 {/if}
 
 <style>
+	/* A real warning, so it uses --warning rather than the accent, and
+	   states itself with a heavy edge instead of a tinted panel. */
 	.schema-banner {
-		background: #fef3c7;
-		color: #78350f;
-		border-bottom: 2px solid #f59e0b;
+		background: var(--accent-wash);
+		color: var(--text);
+		border-left: 4px solid var(--warning);
 		padding: 10px 16px;
 		font-size: 13px;
 		line-height: 1.4;
@@ -119,9 +121,9 @@
 	}
 
 	.schema-banner code {
-		background: rgba(0, 0, 0, 0.06);
+		background: var(--hover-bg);
 		padding: 1px 5px;
-		border-radius: 3px;
+		border-radius: var(--radius);
 		font-size: 12px;
 	}
 
@@ -130,26 +132,29 @@
 		align-items: center;
 		justify-content: center;
 		gap: 12px;
-		background: #e5e7eb;
-		color: #374151;
+		background: var(--bg-card);
+		color: var(--text-muted);
 		text-align: center;
 		padding: 6px 12px;
-		font-size: 13px;
+		font-size: var(--type-micro);
 		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		margin: -24px -24px 16px -24px;
 	}
 
 	.local-data-banner.active {
-		background: #f97316;
-		color: #fff;
+		background: var(--accent);
+		color: var(--accent-contrast);
 	}
 
 	.local-data-banner button {
 		padding: 3px 10px;
-		font-size: 12px;
+		font-size: var(--type-micro);
 		font-weight: 600;
+		letter-spacing: var(--track-wide);
 		border: 1px solid currentColor;
-		border-radius: 4px;
+		border-radius: var(--radius);
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
@@ -238,6 +243,11 @@
 		--good: #2e7d0e;
 		--warning: #8a5a00;
 		--danger: #c11200;
+
+		/* Faint accent-tinted ground for "this cell matters" highlights
+		   (compare diffs, filter pills). Not for text — pair with --text. */
+		--accent-wash: #fdf6ee;
+		--danger-wash: #fdf0ef;
 		--bg: #fff;
 		--bg-card: #fafafa;
 		--text: #111;
@@ -271,6 +281,9 @@
 		--good: #7cc623;
 		--warning: #f0a30a;
 		--danger: #ff4d2e;
+
+		--accent-wash: #1e1508;
+		--danger-wash: #2a1210;
 		--bg: #0a0a0a;
 		--bg-card: #141414;
 		--text: #fff;

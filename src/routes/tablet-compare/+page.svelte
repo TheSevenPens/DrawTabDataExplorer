@@ -194,7 +194,7 @@
 
 <Nav />
 <SubNav tabs={tabletTabs} />
-<h1>Compare Tablets</h1>
+<h1 class="sr-only">Compare Tablets</h1>
 
 <div class="tabs">
 	<button class:active={activeTab === 'flagged'} onclick={() => (activeTab = 'flagged')}>
@@ -378,10 +378,6 @@
 {/if}
 
 <style>
-	h1 {
-		margin-bottom: 16px;
-	}
-
 	.hist-section {
 		margin-top: 24px;
 	}
@@ -401,7 +397,7 @@
 		padding: 2px 10px;
 		font-size: 12px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
+		border-radius: var(--radius);
 		background: var(--bg-card);
 		color: var(--text-muted);
 		cursor: pointer;
@@ -427,37 +423,33 @@
 		border-bottom: 2px solid var(--border);
 	}
 
+	/* Metro word list, matching Nav / SubNav / Tabs. */
 	.tabs {
 		display: flex;
-		gap: 0;
-		border-bottom: 2px solid var(--border);
+		gap: 18px;
 		margin-bottom: 20px;
+		flex-wrap: wrap;
 	}
 
 	.tabs button {
-		padding: 7px 18px;
-		font-size: 13px;
-		border: 1px solid transparent;
-		border-bottom: none;
-		border-radius: 4px 4px 0 0;
+		padding: 0;
+		font-size: var(--type-subhead);
+		font-weight: 400;
+		letter-spacing: var(--track-tight);
+		text-transform: lowercase;
+		border: none;
 		background: transparent;
-		color: var(--text-muted);
+		color: var(--text-dim);
 		cursor: pointer;
-		position: relative;
-		bottom: -2px;
+		transition: color 120ms ease-out;
 	}
 
 	.tabs button:hover {
-		color: #2563eb;
-		background: var(--hover-bg);
+		color: var(--text-muted);
 	}
 
 	.tabs button.active {
-		background: var(--bg-card);
 		color: var(--text);
-		font-weight: 600;
-		border-color: var(--border);
-		border-bottom-color: var(--bg-card);
 	}
 
 	.flagged-actions {
@@ -494,13 +486,13 @@
 		border: none;
 		cursor: pointer;
 		font-size: 16px;
-		color: #d97706;
+		color: var(--accent);
 		padding: 0;
 		line-height: 1;
 	}
 
 	.unflag-btn:hover {
-		color: #b45309;
+		color: var(--accent-hover);
 	}
 
 	.compare-toolbar {
@@ -566,7 +558,9 @@
 		border-bottom: 2px solid var(--border);
 	}
 
+	/* Differing cells are the whole point of the compare matrix, so they
+	   keep an accent-tinted ground rather than flattening to the page. */
 	.differs {
-		background: #fef3c7;
+		background: var(--accent-wash);
 	}
 </style>

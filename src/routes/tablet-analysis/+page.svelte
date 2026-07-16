@@ -340,7 +340,7 @@
 {/snippet}
 
 <ChromeLayout subNavTabs={tabletTabs}>
-	<h1>Analysis</h1>
+	<h1 class="sr-only">Analysis</h1>
 
 	<SectionedPage sections={sectionDefs} defaultSection="aspect-pen-tablet">
 		{#snippet content(activeSection: string)}
@@ -562,10 +562,6 @@
 </ChromeLayout>
 
 <style>
-	h1 {
-		margin-bottom: 16px;
-	}
-
 	.section {
 		margin-bottom: 32px;
 	}

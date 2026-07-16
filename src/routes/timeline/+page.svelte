@@ -147,7 +147,7 @@
 <SubNav tabs={dataTabs} />
 
 <div class="title-row">
-	<h1>Timeline</h1>
+	<h1 class="sr-only">Timeline</h1>
 	<span class="subtitle"
 		>{groupedTimeline.length}
 		{periodNoun}, {totalTablets} tablets, {totalPens} pens, {totalDrivers}
@@ -309,10 +309,6 @@
 		align-items: baseline;
 		gap: 12px;
 		margin-bottom: 12px;
-	}
-
-	h1 {
-		margin: 0;
 	}
 
 	.subtitle {

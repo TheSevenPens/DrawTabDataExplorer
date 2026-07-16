@@ -111,7 +111,7 @@
 <style>
 	.description {
 		font-size: 13px;
-		color: #888;
+		color: var(--text-muted);
 		margin-bottom: 8px;
 	}
 
@@ -126,41 +126,33 @@
 		user-select: none;
 	}
 	th.sortable:hover {
-		background: #444;
+		color: var(--text);
 	}
 
+	/*
+	 * Restated the whole table locally with hard-coded light-mode colours
+	 * (#fff ground, #333 header, #e0e0e0 rules) that overrode the globals
+	 * and rendered wrong on dark. The shared :global(table) rules in
+	 * +layout.svelte cover all of it; only the width override is local.
+	 */
 	table {
 		width: auto;
-		border-collapse: collapse;
-		background: #fff;
-		font-size: 13px;
 		margin-bottom: 8px;
-	}
-	th,
-	td {
-		text-align: left;
-		padding: 5px 10px;
-		border-bottom: 1px solid #e0e0e0;
-	}
-	th {
-		background: #333;
-		color: #fff;
-	}
-	tr:hover td {
-		background: #f0f7ff;
 	}
 
 	.bar-bg {
 		width: 120px;
 		height: 14px;
-		background: #eee;
-		border-radius: 3px;
+		background: var(--hover-bg);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		overflow: hidden;
 	}
+	/* The completion bar is a measure, so it reads as the accent. */
 	.bar-fill {
 		height: 100%;
-		background: #2563eb;
-		border-radius: 3px;
+		background: var(--accent);
+		border-radius: var(--radius);
 		transition: width 0.3s;
 	}
 

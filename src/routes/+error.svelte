@@ -47,10 +47,10 @@
 	.error-message {
 		font-size: 13px;
 		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-		color: #dc2626;
-		background: #fef2f2;
-		border: 1px solid #fca5a5;
-		border-radius: 4px;
+		color: var(--danger);
+		background: var(--danger-wash);
+		border: 1px solid var(--danger);
+		border-radius: var(--radius);
 		padding: 8px 12px;
 		margin: 0;
 		max-width: 600px;

@@ -112,7 +112,7 @@
 
 <Nav />
 <SubNav tabs={dataTabs} />
-<h1>Data Dictionary</h1>
+<h1 class="sr-only">Data Dictionary</h1>
 
 <div class="dict-layout">
 	<nav class="dict-tree" aria-label="Entity types">
@@ -183,10 +183,6 @@
 </div>
 
 <style>
-	h1 {
-		margin-bottom: 8px;
-	}
-
 	.dict-layout {
 		display: flex;
 		gap: 24px;
@@ -243,32 +239,27 @@
 		font-size: 13px;
 		text-align: left;
 		border: 1px solid transparent;
-		border-radius: 4px;
+		/* Reserved up-front so the active accent edge doesn't shift the tree. */
+		border-left: 2px solid transparent;
+		border-radius: var(--radius);
 		background: transparent;
-		color: var(--text);
+		color: var(--text-muted);
 		cursor: pointer;
 		line-height: 1.3;
 	}
 
+	/* Mirrors SectionedPage: bright label + accent edge rather than a
+	   tinted block, which also retires the per-theme colour overrides. */
 	.tree-cat button:hover {
-		background: #eff6ff;
-		color: #2563eb;
+		background: var(--hover-bg);
+		color: var(--text);
 	}
 
 	.tree-cat button.active {
-		background: #dbeafe;
-		color: #1e40af;
+		background: transparent;
+		border-left-color: var(--accent);
+		color: var(--text);
 		font-weight: 600;
-	}
-
-	:global([data-theme='dark']) .tree-cat button:hover {
-		background: #1e2a45;
-		color: #60a5fa;
-	}
-
-	:global([data-theme='dark']) .tree-cat button.active {
-		background: #1e3a5f;
-		color: #93c5fd;
 	}
 
 	.tree-label {

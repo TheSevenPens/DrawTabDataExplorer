@@ -349,7 +349,7 @@
 </script>
 
 <ChromeLayout subNavTabs={dataTabs}>
-	<h1>Data Quality</h1>
+	<h1 class="sr-only">Data Quality</h1>
 
 	{#if !ds}
 		<LoadingState />
@@ -952,17 +952,13 @@
 </ChromeLayout>
 
 <style>
-	h1 {
-		margin-bottom: 16px;
-	}
-
 	.section {
 		margin-bottom: 32px;
 	}
 
 	.description {
 		font-size: 13px;
-		color: #888;
+		color: var(--text-muted);
 		margin-bottom: 8px;
 	}
 

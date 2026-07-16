@@ -91,28 +91,19 @@
 		margin-bottom: 8px;
 	}
 
+	/*
+	 * Restated the whole table locally with hard-coded light-mode colours
+	 * (#fff ground, #333 header, #e0e0e0 rules) that overrode the globals.
+	 * On dark that rendered a white block with white-on-white text, so the
+	 * rows were invisible. The shared :global(table) rules in
+	 * +layout.svelte own the look; only layout lives here.
+	 */
 	table {
-		width: 100%;
-		border-collapse: collapse;
-		background: #fff;
-		font-size: 13px;
 		margin-bottom: 8px;
 	}
 
 	table.compact {
 		width: auto;
-	}
-
-	th,
-	td {
-		text-align: left;
-		padding: 5px 10px;
-		border-bottom: 1px solid #e0e0e0;
-	}
-
-	th {
-		background: #333;
-		color: #fff;
 	}
 
 	th.sortable {
@@ -121,7 +112,7 @@
 	}
 
 	th.sortable:hover {
-		background: #444;
+		color: var(--text);
 	}
 
 	th.num,
@@ -133,17 +124,13 @@
 		font-size: 10px;
 	}
 
-	tr:hover td {
-		background: #f0f7ff;
-	}
-
 	td :global(a) {
-		color: var(--link);
+		color: var(--text);
 		text-decoration: none;
 	}
 
-	td :global(a:hover) {
-		text-decoration: underline;
+	tr:hover td :global(a) {
+		color: var(--accent);
 	}
 
 	.mono {

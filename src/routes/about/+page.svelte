@@ -4,7 +4,7 @@
 
 <Nav />
 
-<h1>About</h1>
+<h1 class="sr-only">About</h1>
 
 <section class="about-section">
 	<h2>DrawTab Data Explorer</h2>
@@ -84,10 +84,6 @@
 </section>
 
 <style>
-	h1 {
-		margin-bottom: 24px;
-	}
-
 	.about-section {
 		margin-bottom: 32px;
 		max-width: 680px;
