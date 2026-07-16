@@ -152,14 +152,11 @@
 		color: var(--text-muted);
 	}
 
-	/* Active carries two cues, not one: brightness (dim → ink) plus weight
-	   (light → medium). A moderate 500 stays clear of Metro's heavy end so
-	   the big type keeps its air. */
-	/* Active carries two cues: brightness (dim → ink) plus weight
-	   (light 300 → medium 500). */
+	/* Active = the bright word among dim ones, nothing more. Alternatives
+	   for making it more distinct (weight, accent marker, …) were explored
+	   and deferred — see GitHub issue on nav active-state options. */
 	a.active {
 		color: var(--text);
-		font-weight: 500;
 	}
 
 	.nav-toggles {

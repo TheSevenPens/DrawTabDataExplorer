@@ -39,10 +39,8 @@
 	a:hover {
 		color: var(--text-muted);
 	}
-	/* Idle 400 → active 500, same brightness + weight pairing as Nav. */
 	a.active {
 		color: var(--text);
-		font-weight: 500;
 	}
 	.badge {
 		display: inline-block;
