@@ -224,7 +224,6 @@
 		--pill-col-bg: #f2f2f2;
 		--pill-col-border: #d6d6d6;
 		--pill-col-hover: #e8e8e8;
-		--editor-bg: #fafafa;
 		--separator-color: #e6e6e6;
 	}
 
@@ -260,7 +259,6 @@
 		--pill-col-bg: #161616;
 		--pill-col-border: #333;
 		--pill-col-hover: #1f1f1f;
-		--editor-bg: #141414;
 		--separator-color: #242424;
 	}
 

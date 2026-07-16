@@ -263,9 +263,13 @@ Colour by job: bars + KDE are one series → the accent. Range backgrounds are g
 
 _Used by:_ Tablet detail's Size tab, Reference page's Tablet Sizes / ISO Paper Sizes tabs.
 
+### `MeterBar`
+
+A single-series magnitude bar — a filled proportion (`pct: number`, clamped 0–100) of a `--border` track, filled with `--accent` and squared per Metro. One canonical bar for `DistributionTable`, the aspect-ratio sections, and `CompletionSection`, which each used to hand-roll it slightly differently (and the aspect-ratio sections silently depended on `DistributionTable`'s `:global(.bar-fill)`). The fill is the accent to match the histogram bars — see [CLAUDE.md § Chart colours](../CLAUDE.md).
+
 ### `DistributionTable`
 
-Bar-fill count table — each row shows a category, count, and a horizontal bar whose width is proportional to the count. Used wherever a sortable list of "X has N members" is more useful than a histogram.
+Bar-fill count table — each row shows a category, count, and a `MeterBar` whose width is proportional to the count. Used wherever a sortable list of "X has N members" is more useful than a histogram.
 
 _Used by:_ `/tablet-analysis` (aspect ratio, digitizer, audience...), `/pen-analysis` (pen-family distribution).
 

@@ -306,14 +306,14 @@
 						<div>
 							<span class="lbl">Diagonal:</span>
 							{fmtLen(diag(c.usedW, c.usedH))}
-							{lenUnit}{#if c.strip !== 'none'}{' '}<span class="delta"
+							{lenUnit}{#if c.strip !== 'none'}&nbsp;<span class="delta"
 									>({fmtLen(diag(c.usedW, c.usedH) - diag(width, height))} {lenUnit})</span
 								>{/if}
 						</div>
 						<div>
 							<span class="lbl">Area:</span>
 							{fmtArea(c.usedW, c.usedH)}
-							{areaUnit}{#if c.strip !== 'none'}{' '}<span class="delta"
+							{areaUnit}{#if c.strip !== 'none'}&nbsp;<span class="delta"
 									>({fmtAreaDelta(c.usedW * c.usedH - width * height)} {areaUnit})</span
 								>{/if}
 						</div>

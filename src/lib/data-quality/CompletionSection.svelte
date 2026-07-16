@@ -4,6 +4,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import { sortRows, type SortDir } from '$lib/components/sortable-table.js';
 	import type { CompletionStat } from '$lib/data-quality/helpers.js';
+	import MeterBar from '$lib/components/MeterBar.svelte';
 
 	type ExportRow = string | number;
 	type OpenExport = (
@@ -89,9 +90,7 @@
 				<td>{stat.populated} / {stat.total}</td>
 				<td>{stat.percent}%</td>
 				<td>
-					<div class="bar-bg">
-						<div class="bar-fill" style="width: {stat.percent}%"></div>
-					</div>
+					<MeterBar pct={Number(stat.percent)} />
 				</td>
 				{#if filterBase}
 					<td>
@@ -138,22 +137,6 @@
 	table {
 		width: auto;
 		margin-bottom: 8px;
-	}
-
-	.bar-bg {
-		width: 120px;
-		height: 14px;
-		background: var(--hover-bg);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		overflow: hidden;
-	}
-	/* The completion bar is a measure, so it reads as the accent. */
-	.bar-fill {
-		height: 100%;
-		background: var(--accent);
-		border-radius: var(--radius);
-		transition: width 0.3s;
 	}
 
 	.view-link {

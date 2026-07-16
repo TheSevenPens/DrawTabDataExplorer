@@ -1,5 +1,6 @@
 <script lang="ts">
 	import AnalysisExportRow from '$lib/tablet-analysis/AnalysisExportRow.svelte';
+	import MeterBar from '$lib/components/MeterBar.svelte';
 
 	type Row = { label: string; count: number; ratio16: string; decimal: string; category: string };
 
@@ -31,7 +32,7 @@
 				<td class="mono">{row.category}</td>
 				<td class="count">{row.count}</td>
 				<td class="bar-cell">
-					<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
+					<MeterBar pct={Number(pctVal)} />
 					<span class="pct">{pctVal}%</span>
 				</td>
 			</tr>

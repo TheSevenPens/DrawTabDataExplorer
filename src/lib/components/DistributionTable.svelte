@@ -1,4 +1,6 @@
 <script lang="ts">
+	import MeterBar from '$lib/components/MeterBar.svelte';
+
 	interface Row {
 		label: string | number;
 		count: number;
@@ -40,7 +42,7 @@
 				<td class={labelClass}>{formatLabel(row.label)}</td>
 				<td class="count">{row.count}</td>
 				<td class="bar-cell">
-					<div class="bar-bg"><div class="bar-fill" style="width:{pctVal}%"></div></div>
+					<MeterBar pct={Number(pctVal)} />
 					<span class="pct">{pctVal}%</span>
 				</td>
 			</tr>
@@ -88,21 +90,6 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-	}
-	:global(.bar-bg) {
-		width: 120px;
-		height: 12px;
-		background: var(--border);
-		border-radius: var(--radius);
-		overflow: hidden;
-		flex-shrink: 0;
-	}
-	/* Magnitude bar for a single series — the accent, same as the histogram
-	   bars (see CLAUDE.md § Chart colours). Square to match them too. */
-	:global(.bar-fill) {
-		height: 100%;
-		background: var(--accent);
-		border-radius: var(--radius);
 	}
 	:global(.stat-table .pct) {
 		font-size: var(--type-caption);
