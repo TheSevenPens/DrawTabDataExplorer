@@ -43,6 +43,35 @@
 		}, 1500);
 	}
 
+	/**
+	 * Bake the live computed `fill` / `stroke` of every node onto the clone
+	 * as literal attributes.
+	 *
+	 * A serialised chart is a standalone SVG with no `:root`, so the
+	 * `var(--accent)` / `var(--text)` colours the chart uses for theming
+	 * would not resolve — they'd fall back to `initial` (black) in the
+	 * exported file. Reading the computed value from the *rendered* original
+	 * and writing the literal means the export matches exactly what's on
+	 * screen, current theme included. Typography is already literal (see
+	 * `svgTextStyle`), so only colour needs flattening here.
+	 *
+	 * `querySelectorAll('*')` returns both trees in document order, and the
+	 * clone mirrors the original, so the two lists align by index.
+	 */
+	function flattenComputedColors(orig: SVGElement, clone: SVGElement): void {
+		const origNodes = [orig, ...orig.querySelectorAll('*')];
+		const cloneNodes = [clone, ...clone.querySelectorAll('*')];
+		for (let i = 0; i < origNodes.length; i++) {
+			const src = origNodes[i];
+			const dst = cloneNodes[i];
+			if (!(src instanceof Element) || !(dst instanceof Element)) continue;
+			const cs = getComputedStyle(src);
+			// Skip `none` so stroked-only paths stay unfilled and vice versa.
+			if (cs.fill && cs.fill !== 'none') dst.setAttribute('fill', cs.fill);
+			if (cs.stroke && cs.stroke !== 'none') dst.setAttribute('stroke', cs.stroke);
+		}
+	}
+
 	function getSvgString(): string | null {
 		const el = getSvg?.();
 		if (!el) return null;
@@ -50,6 +79,7 @@
 		if (!clone.getAttribute('xmlns')) {
 			clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 		}
+		flattenComputedColors(el, clone);
 		return new XMLSerializer().serializeToString(clone);
 	}
 

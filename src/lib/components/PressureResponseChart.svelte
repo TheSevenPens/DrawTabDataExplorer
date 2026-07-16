@@ -24,6 +24,7 @@
 	import { theme } from '$lib/theme-store.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
+	import { CHART_FONT_FAMILY, CHART_TYPE } from '$lib/chart-type.js';
 
 	Chart.register(
 		LineController,
@@ -35,6 +36,14 @@
 		Title,
 		Filler,
 	);
+
+	// Chart.js draws canvas text with its own built-in font (Helvetica/Arial)
+	// unless told otherwise — a foreign face on the app's most prominent
+	// chart, and it carries straight into the PNG export. Point its global
+	// default at the shared chart typeface + scale so ticks, titles, and
+	// tooltips match every other chart and the rest of the app.
+	Chart.defaults.font.family = CHART_FONT_FAMILY;
+	Chart.defaults.font.size = CHART_TYPE.axisTick.size;
 
 	export interface ChartSession {
 		/** Stable per-session id used by the parent's hidden-set filter. */
