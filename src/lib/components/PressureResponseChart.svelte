@@ -21,6 +21,7 @@
 		IAF_LOGICAL_PCT,
 	} from '$data/lib/pressure/interpolate.js';
 	import { paletteColor } from '$lib/chart-palette.js';
+	import { theme } from '$lib/theme-store.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
 
@@ -93,7 +94,9 @@
 	let chart: Chart | null = null;
 
 	function colorFor(i: number, override?: string) {
-		return override ?? paletteColor(i);
+		// $theme is read here (not captured once) so the $effect that rebuilds
+		// the chart re-runs on a theme switch and repaints the series.
+		return override ?? paletteColor(i, $theme);
 	}
 
 	function pctValue(sortedAsc: number[], pct: number): number {

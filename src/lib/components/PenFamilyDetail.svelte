@@ -14,6 +14,7 @@
 	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
+	import { theme } from '$lib/theme-store.js';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
@@ -44,7 +45,7 @@
 	// PenEntityId → Pen Model ID, for the IAF/MAX tables' first column.
 	let penIdById = $derived(new Map(memberPens.map((p) => [p.EntityId, p.PenId])));
 
-	let sessionColors = $derived(buildSessionColors(pressureSessions));
+	let sessionColors = $derived(buildSessionColors(pressureSessions, $theme));
 
 	let chartSessions = $derived(
 		buildChartSessions(pressureSessions, {

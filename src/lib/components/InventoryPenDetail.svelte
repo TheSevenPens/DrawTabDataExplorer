@@ -6,6 +6,7 @@
 	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
+	import { theme } from '$lib/theme-store.js';
 	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import {
@@ -30,7 +31,7 @@
 		data.defectsByInventoryId ?? new Map(),
 	);
 
-	let sessionColors = $derived(buildSessionColors(pressureSessions));
+	let sessionColors = $derived(buildSessionColors(pressureSessions, $theme));
 
 	let chartSessions = $derived(
 		buildChartSessions(pressureSessions, {

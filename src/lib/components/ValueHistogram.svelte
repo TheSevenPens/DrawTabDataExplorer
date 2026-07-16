@@ -147,7 +147,9 @@
 	let tickCount = $derived(Math.floor((scaleMax - tickStart) / tickStep) + 1);
 	let tx = $derived(currentValue !== null ? xScale(currentValue) : 0);
 
-	const rangeOpacities = [0.2, 0.35, 0.2, 0.35];
+	// Alternating zebra so neighbouring zones separate; these are
+	// annotation behind the data, not marks, so they stay neutral and faint.
+	const rangeOpacities = [0.08, 0.16, 0.08, 0.16];
 
 	// Stagger marker labels to avoid overlap
 	const CHAR_WIDTH_FALLBACK = 5.5; // used before getComputedTextLength measurements are ready
@@ -316,7 +318,7 @@
 							y={padTop}
 							width={xScale(range.max) - xScale(range.min)}
 							height={chartH}
-							fill="#3b82f6"
+							fill="var(--text-dim)"
 							opacity={rangeOpacities[i % rangeOpacities.length]}
 						/>
 						<text
@@ -379,17 +381,17 @@
 								y={padTop + chartH - barH}
 								width={barW}
 								height={barH}
-								fill="#1e3a5f"
-								opacity="0.85"
-								rx="1"
+								fill="var(--accent)"
+								opacity="0.75"
+								rx="0"
 							/>
 						{/if}
 					{/each}
 
 					<!-- KDE curve (in front of bars) -->
 					{#if kdePath}
-						<path d={kdePath} fill="#0d9488" opacity="0.15" />
-						<path d={kdePath} fill="none" stroke="#0d9488" stroke-width="2" opacity="0.7" />
+						<path d={kdePath} fill="var(--accent)" opacity="0.1" />
+						<path d={kdePath} fill="none" stroke="var(--accent)" stroke-width="2" opacity="0.9" />
 					{/if}
 
 					<!-- Markers -->
@@ -400,7 +402,7 @@
 							y1={padTop - 8}
 							x2={marker.x}
 							y2={labelY - 4}
-							stroke="#e11d48"
+							stroke="var(--text)"
 							stroke-width="1.5"
 							stroke-dasharray="4 3"
 							opacity="0.7"
@@ -411,7 +413,7 @@
 							text-anchor={marker.side === 'left' ? 'end' : 'start'}
 							font-size="10"
 							font-weight="600"
-							fill="#e11d48">{marker.label}</text
+							fill="var(--text)">{marker.label}</text
 						>
 					{/each}
 
@@ -422,7 +424,7 @@
 							y1={padTop - 8}
 							x2={tx}
 							y2={padTop + chartH + 30}
-							stroke="#e11d48"
+							stroke="var(--text)"
 							stroke-width="2"
 						/>
 						<text
@@ -431,7 +433,7 @@
 							text-anchor="middle"
 							font-size="12"
 							font-weight="bold"
-							fill="#e11d48">{currentValue.toFixed(1)}{unit}</text
+							fill="var(--text)">{currentValue.toFixed(1)}{unit}</text
 						>
 						{#if currentLabel}
 							<text
@@ -439,7 +441,7 @@
 								y={padTop + chartH + 56}
 								text-anchor="middle"
 								font-size="11"
-								fill="#e11d48">{currentLabel}</text
+								fill="var(--text)">{currentLabel}</text
 							>
 						{/if}
 					{/if}

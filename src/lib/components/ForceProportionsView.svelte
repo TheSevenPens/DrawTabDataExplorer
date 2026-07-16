@@ -153,15 +153,15 @@
 							y={(PANEL_MAX - c.drawnH) / 2}
 							width={c.drawnW}
 							height={c.drawnH}
-							fill="#5bc0eb"
-							stroke="#1a374d"
+							fill="var(--accent)"
+							stroke="var(--border)"
 							stroke-width="2"
 						/>
 						<text
 							x={PANEL_MAX / 2}
 							y={PANEL_MAX / 2 + 5}
 							text-anchor="middle"
-							fill="white"
+							fill="var(--accent-contrast)"
 							font-size="14"
 							font-weight="600"
 						>
@@ -184,7 +184,7 @@
 					<svg width="44" height="14" aria-hidden="true">
 						<path
 							d="M 0 7 L 38 7 M 32 2 L 38 7 L 32 12"
-							stroke="#1a374d"
+							stroke="var(--border)"
 							stroke-width="2"
 							fill="none"
 						/>
@@ -199,15 +199,16 @@
 							y={(PANEL_MAX - c.targetDrawnH) / 2}
 							width={c.targetDrawnW}
 							height={c.targetDrawnH}
-							fill="#d9601a"
-							stroke="#1a374d"
+							fill="none"
+							stroke="var(--text-dim)"
 							stroke-width="2"
+							stroke-dasharray="5 4"
 						/>
 						<text
 							x={PANEL_MAX / 2}
 							y={PANEL_MAX / 2 + 5}
 							text-anchor="middle"
-							fill="white"
+							fill="var(--text)"
 							font-size="14"
 							font-weight="600"
 						>
@@ -221,7 +222,7 @@
 					<svg width="44" height="14" aria-hidden="true">
 						<path
 							d="M 0 7 L 38 7 M 32 2 L 38 7 L 32 12"
-							stroke="#1a374d"
+							stroke="var(--border)"
 							stroke-width="2"
 							fill="none"
 						/>
@@ -237,8 +238,8 @@
 								y={(PANEL_MAX - c.drawnH) / 2}
 								width={c.drawnW}
 								height={c.drawnH}
-								fill="#5bc0eb"
-								stroke="#1a374d"
+								fill="var(--accent)"
+								stroke="var(--border)"
 								stroke-width="2"
 							/>
 						{:else if c.strip === 'horizontal'}
@@ -248,14 +249,14 @@
 								y={(PANEL_MAX - c.drawnH) / 2}
 								width={c.usedDrawnW}
 								height={c.usedDrawnH}
-								fill="#5bc0eb"
+								fill="var(--accent)"
 							/>
 							<rect
 								x={(PANEL_MAX - c.drawnW) / 2}
 								y={(PANEL_MAX - c.drawnH) / 2 + c.usedDrawnH}
 								width={c.drawnW}
 								height={c.drawnH - c.usedDrawnH}
-								fill="#bfe5f5"
+								fill="var(--text-dim)"
 							/>
 							<rect
 								x={(PANEL_MAX - c.drawnW) / 2}
@@ -263,7 +264,7 @@
 								width={c.drawnW}
 								height={c.drawnH}
 								fill="none"
-								stroke="#1a374d"
+								stroke="var(--border)"
 								stroke-width="2"
 							/>
 						{:else}
@@ -273,14 +274,14 @@
 								y={(PANEL_MAX - c.drawnH) / 2}
 								width={c.usedDrawnW}
 								height={c.usedDrawnH}
-								fill="#5bc0eb"
+								fill="var(--accent)"
 							/>
 							<rect
 								x={(PANEL_MAX - c.drawnW) / 2 + c.usedDrawnW}
 								y={(PANEL_MAX - c.drawnH) / 2}
 								width={c.drawnW - c.usedDrawnW}
 								height={c.drawnH}
-								fill="#bfe5f5"
+								fill="var(--text-dim)"
 							/>
 							<rect
 								x={(PANEL_MAX - c.drawnW) / 2}
@@ -288,7 +289,7 @@
 								width={c.drawnW}
 								height={c.drawnH}
 								fill="none"
-								stroke="#1a374d"
+								stroke="var(--border)"
 								stroke-width="2"
 							/>
 						{/if}
@@ -366,7 +367,7 @@
 		align-self: flex-start;
 	}
 	.delta {
-		color: #b91c1c;
+		color: var(--danger);
 	}
 	.lbl {
 		font-weight: 600;
@@ -395,12 +396,12 @@
 		height: 10px;
 		margin-right: 4px;
 		vertical-align: middle;
-		border: 1px solid #1a374d;
+		border: 1px solid var(--border);
 	}
 	.swatch.used {
-		background: #5bc0eb;
+		background: var(--accent);
 	}
 	.swatch.lost {
-		background: #bfe5f5;
+		background: var(--text-dim);
 	}
 </style>

@@ -12,7 +12,7 @@
 		dashed?: boolean;
 		/** SVG stroke-width (default 2). */
 		strokeWidth?: number;
-		/** Stroke color (default #dc2626 red). Used to distinguish markers
+		/** Stroke color (defaults to ink). Used to distinguish markers
 		 * for different pens / sessions when several are overlaid on one
 		 * chart. */
 		color?: string;
@@ -149,7 +149,7 @@
 			aria-label="Range bands chart"
 			font-family="'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 		>
-			<rect x="0" y="0" width={W} height={H} fill="var(--bands-bg, #e5edf6)" />
+			<rect x="0" y="0" width={W} height={H} fill="var(--bands-bg, var(--bg-card))" />
 
 			{#if heading}
 				<text
@@ -182,7 +182,7 @@
 						y1={PAD_TOP - 50}
 						x2={x(b.min)}
 						y2={axisY}
-						stroke="var(--bands-divider, #6b94c2)"
+						stroke="var(--bands-divider, var(--border))"
 						stroke-width="2"
 						stroke-dasharray="6 4"
 					/>
@@ -214,7 +214,7 @@
 				y1={axisY}
 				x2={W - PAD_R}
 				y2={axisY}
-				stroke="var(--bands-axis, #111)"
+				stroke="var(--bands-axis, var(--text-dim))"
 				stroke-width="3"
 			/>
 
@@ -225,7 +225,7 @@
 					y1={axisY - 8}
 					x2={x(t)}
 					y2={axisY + 8}
-					stroke="var(--bands-axis, #111)"
+					stroke="var(--bands-axis, var(--text-dim))"
 					stroke-width="2"
 				/>
 				<text x={x(t)} y={axisY + 28} text-anchor="middle" class="axis-tick" font-size="14"
@@ -243,7 +243,7 @@
 						y={PAD_TOP + 30}
 						width={x(hi) - x(lo)}
 						height={axisY + 4 - (PAD_TOP + 30)}
-						fill="#dc2626"
+						fill="var(--text)"
 						fill-opacity="0.18"
 					/>
 				{/if}
@@ -261,7 +261,7 @@
 							y={markerBandTop + i * markerSliceH}
 							width={x(hi) - x(lo)}
 							height={markerSliceH}
-							fill={r.color ?? '#dc2626'}
+							fill={r.color ?? 'var(--accent)'}
 							fill-opacity="0.22"
 						/>
 					{/if}
@@ -285,7 +285,7 @@
 						y1={y1Val}
 						x2={x(m.value)}
 						y2={y2Val}
-						stroke={m.color ?? '#dc2626'}
+						stroke={m.color ?? 'var(--text)'}
 						stroke-width={m.strokeWidth ?? 2}
 						stroke-dasharray={m.dashed === false ? undefined : '5 4'}
 					/>
@@ -316,21 +316,21 @@
 		display: block;
 	}
 	.band-label {
-		fill: var(--text, #111);
+		fill: var(--text);
 	}
 	.band-range {
-		fill: var(--text, #111);
+		fill: var(--text);
 	}
 	.axis-tick {
-		fill: var(--text, #111);
+		fill: var(--text);
 	}
 	.chart-heading {
-		fill: var(--text, #111);
+		fill: var(--text);
 	}
 	.chart-subtitle {
-		fill: var(--text-muted, #555);
+		fill: var(--text-muted);
 	}
 	.marker-label {
-		fill: #dc2626;
+		fill: var(--text);
 	}
 </style>

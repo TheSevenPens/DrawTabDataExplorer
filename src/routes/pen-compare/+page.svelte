@@ -37,6 +37,7 @@
 	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
+	import { theme } from '$lib/theme-store.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { penFullName, penBrandAndName } from '$lib/pen-helpers.js';
 	import { stripUnit, valueSuffix } from '$lib/field-display.js';
@@ -96,11 +97,11 @@
 	let perPenSections = $derived(
 		flaggedItems.map((p, i) => {
 			const sessions = sessionsByPenEntityId.get(p.EntityId) ?? [];
-			const colors = buildSessionColors(sessions);
+			const colors = buildSessionColors(sessions, $theme);
 			const chartSessions = buildChartSessions(sessions, { colors, defectsByInventoryId });
 			const iaf = iafMeasurements.filter((m) => m.PenEntityId === p.EntityId);
 			const max = maxMeasurements.filter((m) => m.PenEntityId === p.EntityId);
-			return { pen: p, sessions, chartSessions, penColor: paletteColor(i), iaf, max };
+			return { pen: p, sessions, chartSessions, penColor: paletteColor(i, $theme), iaf, max };
 		}),
 	);
 
@@ -252,7 +253,7 @@
 	});
 
 	let overlayColorBy = $state<ColorBy>('session');
-	let overlayColors = $derived(buildSessionColorsBy(matchedSessions, overlayColorBy));
+	let overlayColors = $derived(buildSessionColorsBy(matchedSessions, overlayColorBy, $theme));
 
 	let penNameById = $derived(
 		new Map(

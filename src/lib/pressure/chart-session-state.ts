@@ -7,7 +7,7 @@
 
 import type { PressureResponse } from '$data/lib/drawtab-loader.js';
 import type { DefectInfo } from '$data/lib/pressure/defects.js';
-import { paletteColor } from '$lib/chart-palette.js';
+import { paletteColor, type ChartMode } from '$lib/chart-palette.js';
 
 export type ChartSession = {
 	id: string;
@@ -18,8 +18,11 @@ export type ChartSession = {
 	defectInfo: string | undefined;
 };
 
-export function buildSessionColors(sessions: PressureResponse[]): Map<string, string> {
-	return new Map(sessions.map((s, i) => [s._id, paletteColor(i)]));
+export function buildSessionColors(
+	sessions: PressureResponse[],
+	mode: ChartMode,
+): Map<string, string> {
+	return new Map(sessions.map((s, i) => [s._id, paletteColor(i, mode)]));
 }
 
 /** What the chart's color axis groups by. "session" gives every session
@@ -36,6 +39,7 @@ export type ColorBy = 'session' | 'unit' | 'model' | 'tablet';
 export function buildSessionColorsBy(
 	sessions: readonly PressureResponse[],
 	by: ColorBy,
+	mode: ChartMode,
 ): Map<string, string> {
 	const keyFor = (s: PressureResponse): string => {
 		if (by === 'unit') return s.InventoryId;
@@ -50,7 +54,7 @@ export function buildSessionColorsBy(
 		const k = keyFor(s);
 		let c = groupColor.get(k);
 		if (!c) {
-			c = paletteColor(nextIdx++);
+			c = paletteColor(nextIdx++, mode);
 			groupColor.set(k, c);
 		}
 		sessionColor.set(s._id, c);

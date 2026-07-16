@@ -13,6 +13,7 @@
 	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
+	import { theme } from '$lib/theme-store.js';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -60,7 +61,7 @@
 	// map feeds the embedded Piaf and Pmax charts below so the
 	// visual reading stays consistent across all three tabs.
 	let colorBy = $state<ColorBy>('session');
-	let sessionColors = $derived(buildSessionColorsBy(pressureSessions, colorBy));
+	let sessionColors = $derived(buildSessionColorsBy(pressureSessions, colorBy, $theme));
 
 	let chartSessions = $derived(
 		buildChartSessions(pressureSessions, {
