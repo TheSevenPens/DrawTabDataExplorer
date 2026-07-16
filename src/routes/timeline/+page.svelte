@@ -74,7 +74,6 @@
 
 		// Transient local accumulator rebuilt each computation, not reactive
 		// state — a plain Map is correct (no SvelteMap reactivity needed).
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const map = new Map<string, Period>();
 		const ensure = (k: Omit<Period, 'tablets' | 'pens' | 'drivers'>) => {
 			let p = map.get(k.sort);

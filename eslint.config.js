@@ -69,7 +69,15 @@ export default [
 			// Pre-existing patterns throughout the codebase. Downgrade to warn
 			// so lint passes; address opportunistically when files are touched.
 			'svelte/require-each-key': 'warn',
-			'svelte/prefer-svelte-reactivity': 'warn',
+			// Off, not warn: this codebase drives reactive Set/Map state by
+			// *reassignment* (`x = new Set(x)` / `x = toggleInSet(x, id)`), which
+			// is fully reactive with plain collections in Svelte 5 — so the rule
+			// is 100% false positives here (it flags every `new Map/Set`, incl.
+			// plain local computations). See CLAUDE.md § Svelte 5 for the
+			// convention, and GitHub #151 for the per-site audit. If you ever
+			// mutate reactive state in place (`.add()`/`.delete()`), that's the
+			// exception the convention warns against — reach for SvelteSet/Map.
+			'svelte/prefer-svelte-reactivity': 'off',
 			'svelte/no-navigation-without-resolve': 'warn',
 			'svelte/no-unused-svelte-ignore': 'warn',
 			'svelte/no-at-html-tags': 'warn',

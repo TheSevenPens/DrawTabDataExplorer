@@ -114,6 +114,18 @@ addition to the loaded data). Avoid `$effect` for pure derivations.
   full navigation rather than relying on HMR. Open a fresh browser tab if still
   confused.
 
+- **Reactive `Set`/`Map` state is driven by reassignment, not in-place
+  mutation.** The convention is `hiddenIds = new Set(hiddenIds)` /
+  `selectedIds = toggleInSet(selectedIds, id)` — build a new collection and
+  assign it, which is what triggers Svelte 5 reactivity. Plain `Set`/`Map` is
+  therefore correct in `$state`; do **not** reach for `SvelteSet`/`SvelteMap`.
+  (`svelte/prefer-svelte-reactivity` is off for this reason — it flagged every
+  `new Set/Map`, all false positives; see the rule comment in
+  [`eslint.config.js`](eslint.config.js) and GitHub #151.) The one time
+  `SvelteSet`/`SvelteMap` is right is if you deliberately mutate reactive state
+  **in place** (`.add()` / `.delete()`) and need the template to re-render — a
+  deliberate exception, not the default.
+
 ## Submodule workflow
 
 Both submodules use the same two-commit flow: commit inside the submodule,
