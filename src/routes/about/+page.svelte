@@ -1,5 +1,10 @@
 <script lang="ts">
 	import Nav from '$lib/components/Nav.svelte';
+
+	// `version` comes from the root +layout.ts load, merged into every page's
+	// data. It used to sit in a footer on every page; it lives here now.
+	let { data } = $props();
+	let version = $derived(data.version);
 </script>
 
 <Nav />
@@ -45,6 +50,27 @@
 			— the source code
 		</li>
 	</ul>
+</section>
+
+<section class="about-section">
+	<h2>Dataset version</h2>
+	{#if version}
+		<p>
+			Data <strong>{version.version}</strong>, from DrawTabData commit
+			<a
+				class="commit"
+				href="https://github.com/TheSevenPens/DrawTabData/commit/{version.commit}"
+				target="_blank"
+				rel="noopener noreferrer">{version.shortCommit}</a
+			>.
+		</p>
+		<p>
+			{version.counts.tablets} tablets, {version.counts.pens} pens, {version.counts.drivers} drivers,
+			{version.counts.brands} brands.
+		</p>
+	{:else}
+		<p class="dim">Dataset version unavailable.</p>
+	{/if}
 </section>
 
 <section class="about-section">
@@ -110,6 +136,10 @@
 
 	.about-section a:hover {
 		text-decoration: underline;
+	}
+
+	.commit {
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 	}
 
 	.link-list {
