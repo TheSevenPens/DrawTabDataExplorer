@@ -55,13 +55,13 @@
 
 	.cf-title {
 		margin: 0;
-		font-size: 14px;
+		font-size: var(--type-body);
 		font-weight: 600;
 		color: var(--text);
 	}
 
 	.cf-subtitle {
-		font-size: 12px;
+		font-size: var(--type-caption);
 		color: var(--text-muted);
 	}
 

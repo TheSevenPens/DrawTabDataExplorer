@@ -151,7 +151,7 @@
 	}
 	.legend-table {
 		border-collapse: collapse;
-		font-size: 12px;
+		font-size: var(--type-caption);
 		white-space: nowrap;
 	}
 	thead th {

@@ -609,7 +609,7 @@
 		gap: 12px;
 		align-items: center;
 		margin-bottom: 8px;
-		font-size: 12px;
+		font-size: var(--type-caption);
 		color: var(--text-muted);
 	}
 	.chart-controls label {
@@ -618,7 +618,7 @@
 		align-items: center;
 	}
 	.chart-controls select {
-		font-size: 12px;
+		font-size: var(--type-caption);
 	}
 	.defective-toggle {
 		color: #b45309;

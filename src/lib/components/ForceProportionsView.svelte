@@ -1,5 +1,6 @@
 <script lang="ts">
 	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { svgTextStyle } from '$lib/chart-type.js';
 	import { POPULAR_RATIOS, VERYCLOSE_THRESHOLD } from '$data/lib/aspect-ratio.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { MM_TO_IN } from '$lib/tablet-size-ranges.js';
@@ -162,8 +163,7 @@
 							y={PANEL_MAX / 2 + 5}
 							text-anchor="middle"
 							fill="var(--accent-contrast)"
-							font-size="14"
-							font-weight="600"
+							style={svgTextStyle('axisTitle')}
 						>
 							{tabletRatioLabel()}
 						</text>
@@ -209,8 +209,7 @@
 							y={PANEL_MAX / 2 + 5}
 							text-anchor="middle"
 							fill="var(--text)"
-							font-size="14"
-							font-weight="600"
+							style={svgTextStyle('axisTitle')}
 						>
 							{c.label}
 						</text>
@@ -329,7 +328,7 @@
 	.intro {
 		max-width: 720px;
 		margin-bottom: 20px;
-		font-size: 13px;
+		font-size: var(--type-caption);
 		color: var(--text-muted);
 		line-height: 1.5;
 	}
@@ -340,7 +339,7 @@
 		margin-bottom: 28px;
 	}
 	h3 {
-		font-size: 14px;
+		font-size: var(--type-body);
 		margin: 0 0 10px 0;
 		color: var(--text);
 		font-weight: 600;
@@ -361,7 +360,7 @@
 	}
 	.caption {
 		margin-top: 6px;
-		font-size: 12px;
+		font-size: var(--type-caption);
 		color: var(--text-muted);
 		text-align: left;
 		align-self: flex-start;
@@ -380,11 +379,11 @@
 		gap: 4px;
 		padding-top: 78px;
 		color: var(--text-muted);
-		font-size: 12px;
+		font-size: var(--type-caption);
 	}
 	.legend {
 		margin-top: 6px;
-		font-size: 12px;
+		font-size: var(--type-caption);
 		color: var(--text);
 		display: flex;
 		flex-direction: column;

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
+	import { svgTextStyle, CHART_FONT_FAMILY } from '$lib/chart-type.js';
 
 	export interface HistogramRange {
 		label: string;
@@ -278,7 +279,7 @@
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 {width} {totalHeight}"
 					class="histogram"
-					style="font-family: 'Google Sans', sans-serif;"
+					style="font-family: {CHART_FONT_FAMILY};"
 				>
 					<!-- Hidden texts for measuring actual label widths -->
 					{#each uniqueLabels as label, i (i)}
@@ -286,8 +287,7 @@
 							bind:this={labelMeasureEls[i]}
 							x="0"
 							y="-1000"
-							font-size="10"
-							font-weight="600"
+							style={svgTextStyle('annotation')}
 							visibility="hidden">{label}</text
 						>
 					{/each}
@@ -297,8 +297,7 @@
 							x={width / 2}
 							y={20}
 							text-anchor="middle"
-							font-size="14"
-							font-weight="600"
+							style={svgTextStyle('title')}
 							fill="var(--text)">{titleText}</text
 						>
 						{#if subtitle}
@@ -306,7 +305,7 @@
 								x={width / 2}
 								y={38}
 								text-anchor="middle"
-								font-size="12"
+								style={svgTextStyle('subtitle')}
 								fill="var(--text-muted)">{subtitle}</text
 							>
 						{/if}
@@ -325,14 +324,14 @@
 							x={(xScale(range.min) + xScale(range.max)) / 2}
 							y={padTop - 24}
 							text-anchor="middle"
-							font-size="12"
+							style={svgTextStyle('zoneLabel')}
 							fill="var(--text-muted)">{range.label}</text
 						>
 						<text
 							x={(xScale(range.min) + xScale(range.max)) / 2}
 							y={padTop - 10}
 							text-anchor="middle"
-							font-size="10"
+							style={svgTextStyle('subtitle')}
 							fill="var(--text-dim)"
 							>{range.min}{showUnitInBands ? unit : ''}–{range.max}{showUnitInBands
 								? unit
@@ -364,7 +363,7 @@
 								x={xScale(val)}
 								y={padTop + chartH + 15}
 								text-anchor="middle"
-								font-size="11"
+								style={svgTextStyle('axisTick')}
 								fill="var(--text-dim)">{val}{showUnitInAxis ? unit : ''}</text
 							>
 						{/if}
@@ -411,8 +410,7 @@
 							x={marker.side === 'left' ? marker.x - 4 : marker.x + 4}
 							y={labelY}
 							text-anchor={marker.side === 'left' ? 'end' : 'start'}
-							font-size="10"
-							font-weight="600"
+							style={svgTextStyle('annotation')}
 							fill="var(--text)">{marker.label}</text
 						>
 					{/each}
@@ -431,8 +429,7 @@
 							x={tx}
 							y={padTop + chartH + 42}
 							text-anchor="middle"
-							font-size="12"
-							font-weight="bold"
+							style={svgTextStyle('annotation')}
 							fill="var(--text)">{currentValue.toFixed(1)}{unit}</text
 						>
 						{#if currentLabel}
@@ -440,7 +437,7 @@
 								x={tx}
 								y={padTop + chartH + 56}
 								text-anchor="middle"
-								font-size="11"
+								style={svgTextStyle('seriesLabel')}
 								fill="var(--text)">{currentLabel}</text
 							>
 						{/if}
@@ -467,7 +464,7 @@
 	}
 
 	.compare-label {
-		font-size: 13px;
+		font-size: var(--type-caption);
 		color: var(--text);
 		display: flex;
 		align-items: center;
@@ -476,11 +473,11 @@
 	}
 
 	.compare-select {
-		font-size: 13px;
+		font-size: var(--type-caption);
 		padding: 2px 6px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
 	}
 </style>

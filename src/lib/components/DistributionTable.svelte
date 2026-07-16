@@ -103,7 +103,7 @@
 		border-radius: 3px;
 	}
 	:global(.stat-table .pct) {
-		font-size: 12px;
+		font-size: var(--type-caption);
 		color: var(--text-dim);
 		white-space: nowrap;
 	}

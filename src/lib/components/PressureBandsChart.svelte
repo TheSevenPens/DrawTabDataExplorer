@@ -2,6 +2,7 @@
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
 	import type { Band } from '$lib/bands.js';
+	import { svgTextStyle, CHART_FONT_FAMILY } from '$lib/chart-type.js';
 
 	export interface BandMarker {
 		/** Position on the same axis as `bands` (e.g. gram-force). */
@@ -147,7 +148,7 @@
 			class="bands-chart"
 			role="img"
 			aria-label="Range bands chart"
-			font-family="'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+			font-family={CHART_FONT_FAMILY}
 		>
 			<rect x="0" y="0" width={W} height={H} fill="var(--bands-bg, var(--bg-card))" />
 
@@ -157,8 +158,7 @@
 					y={22}
 					text-anchor="middle"
 					class="chart-heading"
-					font-size="18"
-					font-weight="700">{heading}</text
+					style={svgTextStyle('title')}>{heading}</text
 				>
 				{#if subtitle}
 					<text
@@ -166,8 +166,7 @@
 						y={42}
 						text-anchor="middle"
 						class="chart-subtitle"
-						font-size="13"
-						font-weight="400">{subtitle}</text
+						style={svgTextStyle('subtitle')}>{subtitle}</text
 					>
 				{/if}
 			{/if}
@@ -198,12 +197,15 @@
 					y={PAD_TOP - 25}
 					text-anchor="middle"
 					class="band-label"
-					font-weight="700"
-					font-size="18">{b.label}</text
+					style={svgTextStyle('zoneTier')}>{b.label}</text
 				>
 				{#if showBandRanges}
-					<text x={cx} y={PAD_TOP} text-anchor="middle" class="band-range" font-size="14"
-						>{rangeText}</text
+					<text
+						x={cx}
+						y={PAD_TOP}
+						text-anchor="middle"
+						class="band-range"
+						style={svgTextStyle('subtitle')}>{rangeText}</text
 					>
 				{/if}
 			{/each}
@@ -228,8 +230,12 @@
 					stroke="var(--bands-axis, var(--text-dim))"
 					stroke-width="2"
 				/>
-				<text x={x(t)} y={axisY + 28} text-anchor="middle" class="axis-tick" font-size="14"
-					>{t}{showUnitInAxis ? ` ${unit}` : ''}</text
+				<text
+					x={x(t)}
+					y={axisY + 28}
+					text-anchor="middle"
+					class="axis-tick"
+					style={svgTextStyle('axisTick')}>{t}{showUnitInAxis ? ` ${unit}` : ''}</text
 				>
 			{/each}
 
@@ -295,8 +301,7 @@
 							y={PAD_TOP + 24}
 							text-anchor="middle"
 							class="marker-label"
-							font-size="12"
-							font-weight="600">{m.label}</text
+							style={svgTextStyle('annotation')}>{m.label}</text
 						>
 					{/if}
 				{/if}

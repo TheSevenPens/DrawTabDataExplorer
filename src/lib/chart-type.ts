@@ -61,11 +61,13 @@ export const CHART_TYPE = {
 	title: { size: TYPE_SCALE.subhead, weight: 600, tracking: -0.015, upper: false },
 	/** A muted line under the title (counts, units, "n = …"). */
 	subtitle: { size: TYPE_SCALE.caption, weight: 400, tracking: 0, upper: false },
-	/** Axis name — "Physical force (gf)". */
+	/** Axis name, or a prominent label centred inside a shape ("16:10"). */
 	axisTitle: { size: TYPE_SCALE.caption, weight: 600, tracking: 0, upper: false },
 	/** Numbers along an axis. */
 	axisTick: { size: TYPE_SCALE.micro, weight: 400, tracking: 0, upper: false },
-	/** Graded zone / band labels (S/A/B/C/D, size categories) — Metro caps. */
+	/** A prominent graded rating shown large (the S/A/B/C/D tier letters). */
+	zoneTier: { size: TYPE_SCALE.subhead, weight: 600, tracking: 0, upper: false },
+	/** A small graded category name (TINY / SMALL / …) — Metro tracked caps. */
 	zoneLabel: { size: TYPE_SCALE.micro, weight: 600, tracking: TRACK_WIDE, upper: true },
 	/** A label attached to a mark or series. */
 	seriesLabel: { size: TYPE_SCALE.micro, weight: 600, tracking: 0, upper: false },

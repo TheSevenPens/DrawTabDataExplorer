@@ -94,7 +94,7 @@
 	}
 	h3 {
 		margin: 0 0 8px;
-		font-size: 14px;
+		font-size: var(--type-body);
 		font-weight: 600;
 	}
 	table {
@@ -122,18 +122,18 @@
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 	}
 	.unit {
-		font-size: 11px;
+		font-size: var(--type-micro);
 		font-weight: 400;
 		color: var(--text-muted);
 	}
 	.excluded {
 		margin: 6px 0 0;
-		font-size: 12px;
+		font-size: var(--type-caption);
 		color: #b45309;
 	}
 	.meta {
 		margin: 6px 0 0;
-		font-size: 12px;
+		font-size: var(--type-caption);
 		color: var(--text-muted);
 	}
 </style>

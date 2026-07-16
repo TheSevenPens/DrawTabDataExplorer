@@ -55,10 +55,17 @@
 	 * screen, current theme included. Typography is already literal (see
 	 * `svgTextStyle`), so only colour needs flattening here.
 	 *
+	 * Font is baked too, and for a second reason: a component's scoped
+	 * `<style>` block is NOT serialised with the SVG, so any text styled by
+	 * CSS class (rather than an inline `svgTextStyle`) would lose its size
+	 * and family — and `font-family: inherit` has nothing to inherit from
+	 * once detached, dropping to a serif default. Baking the computed values
+	 * makes export faithful however the text was styled in-document.
+	 *
 	 * `querySelectorAll('*')` returns both trees in document order, and the
 	 * clone mirrors the original, so the two lists align by index.
 	 */
-	function flattenComputedColors(orig: SVGElement, clone: SVGElement): void {
+	function flattenComputedStyles(orig: SVGElement, clone: SVGElement): void {
 		const origNodes = [orig, ...orig.querySelectorAll('*')];
 		const cloneNodes = [clone, ...clone.querySelectorAll('*')];
 		for (let i = 0; i < origNodes.length; i++) {
@@ -69,6 +76,17 @@
 			// Skip `none` so stroked-only paths stay unfilled and vice versa.
 			if (cs.fill && cs.fill !== 'none') dst.setAttribute('fill', cs.fill);
 			if (cs.stroke && cs.stroke !== 'none') dst.setAttribute('stroke', cs.stroke);
+			if (src.tagName === 'text' || src.tagName === 'tspan') {
+				const font = [
+					`font-family:${cs.fontFamily}`,
+					`font-size:${cs.fontSize}`,
+					`font-weight:${cs.fontWeight}`,
+					`letter-spacing:${cs.letterSpacing === 'normal' ? '0' : cs.letterSpacing}`,
+					`text-transform:${cs.textTransform}`,
+				].join(';');
+				const existing = dst.getAttribute('style');
+				dst.setAttribute('style', existing ? `${existing};${font}` : font);
+			}
 		}
 	}
 
@@ -79,7 +97,7 @@
 		if (!clone.getAttribute('xmlns')) {
 			clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 		}
-		flattenComputedColors(el, clone);
+		flattenComputedStyles(el, clone);
 		return new XMLSerializer().serializeToString(clone);
 	}
 

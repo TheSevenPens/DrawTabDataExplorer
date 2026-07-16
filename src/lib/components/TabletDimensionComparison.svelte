@@ -2,6 +2,7 @@
 	import type { Dimensions, ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
+	import { svgTextStyle } from '$lib/chart-type.js';
 
 	let {
 		dims,
@@ -202,10 +203,8 @@
 								x={r.x + r.sw / 2}
 								y={CHART_H - r.sh - 6}
 								text-anchor="middle"
-								font-size="11"
-								font-weight="700"
-								fill={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}
-								font-family="inherit">{r.label}</text
+								style={svgTextStyle('seriesLabel')}
+								fill={STACK_STROKES[r.colorIdx % STACK_STROKES.length]}>{r.label}</text
 							>
 						{:else}
 							<rect
@@ -219,10 +218,15 @@
 								x={r.x + r.sw / 2}
 								y={CHART_H - r.sh - 6}
 								text-anchor="middle"
+								style={svgTextStyle('seriesLabel')}
 								class={r.isTablet ? 'lbl-tablet' : 'lbl-iso'}>{r.label}</text
 							>
-							<text x={r.x + r.sw / 2} y={CHART_H + 14} text-anchor="middle" class="lbl-dims"
-								>{r.dimsLabel}</text
+							<text
+								x={r.x + r.sw / 2}
+								y={CHART_H + 14}
+								text-anchor="middle"
+								style={svgTextStyle('subtitle')}
+								class="lbl-dims">{r.dimsLabel}</text
 							>
 						{/if}
 					{/each}
@@ -279,27 +283,17 @@
 		stroke: #374151;
 	}
 
+	/* Colour only — type comes from the svgTextStyle role on each element. */
 	.lbl-iso {
-		font-size: 11px;
 		fill: var(--text-muted);
-		font-family: inherit;
 	}
 
 	.lbl-tablet {
-		font-size: 11px;
-		font-weight: 700;
-		fill: #2563eb;
-		font-family: inherit;
-	}
-
-	:global([data-theme='dark']) .lbl-tablet {
-		fill: #60a5fa;
+		fill: var(--accent);
 	}
 
 	.lbl-dims {
-		font-size: 10px;
 		fill: var(--text-dim);
-		font-family: inherit;
 	}
 
 	.baseline {
@@ -318,13 +312,13 @@
 		display: flex;
 		align-items: center;
 		gap: 5px;
-		font-size: 12px;
+		font-size: var(--type-caption);
 	}
 
 	.legend-swatch {
 		width: 12px;
 		height: 12px;
-		border-radius: 2px;
+		border-radius: var(--radius);
 		border: 1.5px solid;
 		flex-shrink: 0;
 	}
