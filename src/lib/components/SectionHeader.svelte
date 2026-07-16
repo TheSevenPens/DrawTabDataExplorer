@@ -39,7 +39,7 @@
 		justify-content: space-between;
 		align-items: center;
 		gap: 12px;
-		border-bottom: 2px solid var(--border, #e0e0e0);
+		border-bottom: 1px solid var(--border);
 		padding-bottom: 4px;
 		margin-bottom: 8px;
 	}

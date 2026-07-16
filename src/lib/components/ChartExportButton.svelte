@@ -271,25 +271,26 @@ ${html}
 		align-items: center;
 		gap: 5px;
 		padding: 4px 10px;
-		font-size: 12px;
-		border: 1px solid var(--border, #ccc);
-		border-radius: 4px;
-		background: var(--bg-card, #fff);
-		color: var(--text-muted, #666);
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--text-muted);
 		cursor: pointer;
 	}
 	.export-trigger:hover {
-		border-color: var(--text-dim, #999);
-		color: var(--text, #333);
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 	.dropdown {
 		position: absolute;
 		top: calc(100% + 2px);
 		right: 0;
-		background: var(--bg-card, #fff);
-		border: 1px solid var(--border, #ccc);
-		border-radius: 4px;
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		z-index: 50;
 		min-width: 11rem;
 		padding: 4px 0;
@@ -303,14 +304,14 @@ ${html}
 		background: none;
 		border: none;
 		cursor: pointer;
-		color: var(--text, #333);
+		color: var(--text);
 	}
 	.item:hover {
-		background: var(--hover-bg, #f0f0f0);
+		background: var(--hover-bg);
 	}
 	.separator {
 		height: 1px;
-		background: var(--border-light, #e0e0e0);
+		background: var(--border-light);
 		margin: 4px 0;
 	}
 </style>

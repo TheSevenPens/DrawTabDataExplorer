@@ -42,7 +42,7 @@
 	.segmented {
 		display: inline-flex;
 		border: 1px solid var(--border);
-		border-radius: 4px;
+		border-radius: var(--radius);
 		overflow: hidden;
 	}
 

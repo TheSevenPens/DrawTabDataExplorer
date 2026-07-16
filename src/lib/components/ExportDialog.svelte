@@ -355,11 +355,11 @@
 		justify-content: center;
 	}
 
+	/* Square panel, no shadow — see ModalRoot. */
 	.dialog {
 		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 10px;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		width: 360px;
 		max-width: calc(100vw - 32px);
 		display: flex;
@@ -376,8 +376,9 @@
 
 	.dialog-header h2 {
 		margin: 0;
-		font-size: 15px;
-		font-weight: 600;
+		font-size: var(--type-heading);
+		font-weight: var(--weight-display);
+		letter-spacing: var(--track-tight);
 		color: var(--text);
 	}
 
@@ -388,11 +389,11 @@
 		color: var(--text-muted);
 		cursor: pointer;
 		padding: 2px 6px;
-		border-radius: 4px;
+		border-radius: var(--radius);
 	}
 	.close-btn:hover {
-		background: var(--hover-bg);
-		color: var(--text);
+		background: transparent;
+		color: var(--accent);
 	}
 
 	.dialog-body {
@@ -442,9 +443,13 @@
 		padding: 4px 6px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
+	}
+	.rps-input:focus {
+		outline: none;
+		border-color: var(--accent);
 	}
 
 	label.disabled {
@@ -473,10 +478,12 @@
 		justify-content: center;
 		padding: 5px 8px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		font-size: 12px;
-		font-weight: 500;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		font-size: var(--type-micro);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
+		background: transparent;
 		color: var(--text-muted);
 		transition:
 			border-color 0.1s,
@@ -490,9 +497,9 @@
 		color: var(--text);
 	}
 	.format-opt.selected {
-		border-color: #2563eb;
-		color: #2563eb;
-		background: #eff6ff;
+		border-color: var(--accent);
+		color: var(--accent);
+		background: transparent;
 	}
 
 	.dialog-footer {
@@ -506,17 +513,19 @@
 	.status {
 		flex: 1;
 		font-size: 13px;
-		color: #16a34a;
+		color: var(--good);
 		font-weight: 500;
 	}
 
 	.cancel-btn {
 		margin-left: auto;
 		padding: 6px 14px;
-		font-size: 13px;
+		font-size: var(--type-caption);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
 	}
@@ -527,17 +536,19 @@
 
 	.export-btn {
 		padding: 6px 16px;
-		font-size: 13px;
-		border: 1px solid #2563eb;
-		border-radius: 4px;
-		background: #2563eb;
-		color: #fff;
+		font-size: var(--type-caption);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
+		border: 1px solid var(--accent);
+		border-radius: var(--radius);
+		background: var(--accent);
+		color: var(--accent-contrast);
 		cursor: pointer;
-		font-weight: 500;
 	}
 	.export-btn:hover:not(:disabled) {
-		background: #1d4ed8;
-		border-color: #1d4ed8;
+		background: var(--accent-hover);
+		border-color: var(--accent-hover);
 	}
 	.export-btn:disabled {
 		opacity: 0.5;

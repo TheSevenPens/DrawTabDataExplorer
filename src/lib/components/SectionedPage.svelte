@@ -133,21 +133,30 @@
 		font-size: 13px;
 		text-align: left;
 		border: 1px solid transparent;
-		border-radius: 4px;
+		/* Reserved up-front so the active accent edge below doesn't
+		   change the button's width and shift the tree. */
+		border-left: 2px solid transparent;
+		border-radius: var(--radius);
 		background: transparent;
-		color: var(--text, #333);
+		color: var(--text-muted);
 		cursor: pointer;
 		line-height: 1.3;
 	}
 
+	/*
+	 * Was a hard-coded light-blue fill (#eff6ff / #dbeafe) that ignored the
+	 * theme and rendered wrong on dark. Metro marks the selected section
+	 * with a bright label and an accent edge instead of a tinted block.
+	 */
 	.tree-cat button:hover {
-		background: #eff6ff;
-		color: #2563eb;
+		background: var(--hover-bg);
+		color: var(--text);
 	}
 
 	.tree-cat button.active {
-		background: #dbeafe;
-		color: #1e40af;
+		background: transparent;
+		border-left-color: var(--accent);
+		color: var(--text);
 		font-weight: 600;
 	}
 
@@ -159,28 +168,26 @@
 		white-space: nowrap;
 	}
 
+	/*
+	 * The count IS the signal on /data-quality — non-zero means issues,
+	 * zero means clean — so it keeps a semantic colour rather than the
+	 * accent. Flattened from a filled pill to a square outline.
+	 */
 	.tree-count {
 		flex: 0 0 auto;
-		font-size: 11px;
+		font-size: var(--type-micro);
 		font-variant-numeric: tabular-nums;
 		padding: 1px 6px;
-		border-radius: 9px;
-		background: #fee2e2;
-		color: #991b1b;
+		border-radius: var(--radius);
+		background: transparent;
+		border: 1px solid var(--danger);
+		color: var(--danger);
 	}
 
 	.tree-count.zero {
-		background: #dcfce7;
-		color: #166534;
-	}
-
-	.tree-cat button.active .tree-count {
-		background: #1e40af;
-		color: #fff;
-	}
-
-	.tree-cat button.active .tree-count.zero {
-		background: #166534;
+		background: transparent;
+		border-color: var(--good);
+		color: var(--good);
 	}
 
 	.content {

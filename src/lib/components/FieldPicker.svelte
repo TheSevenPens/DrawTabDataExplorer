@@ -161,9 +161,8 @@
 		left: 0;
 		margin-top: 4px;
 		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 6px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		z-index: 200;
 		padding: 8px;
 		min-width: 300px;
@@ -192,8 +191,8 @@
 		padding: 5px 26px 5px 10px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
 	}
 
@@ -248,11 +247,11 @@
 	}
 
 	.group-toggle {
-		font-size: 10px;
+		font-size: var(--type-micro);
 		border: 1px solid var(--border);
-		border-radius: 3px;
+		border-radius: var(--radius);
 		background: none;
-		color: var(--link);
+		color: var(--accent);
 		cursor: pointer;
 		padding: 1px 5px;
 	}
@@ -262,7 +261,7 @@
 	}
 
 	.group-toggle.remove {
-		color: #e11d48;
+		color: var(--danger);
 	}
 
 	.field-item {
@@ -275,7 +274,7 @@
 		background: none;
 		cursor: pointer;
 		color: var(--text);
-		border-radius: 3px;
+		border-radius: var(--radius);
 	}
 
 	.field-item:hover {
@@ -302,18 +301,15 @@
 		color: var(--text-dim);
 	}
 
+	/* Search matches are one of the few places Metro spends the accent as
+	   a fill: the hit must be findable mid-word while scanning. */
 	.search-hit {
 		font-weight: 700;
-		background: #fde68a;
-		color: #713f12;
-		border-radius: 2px;
+		background: var(--accent);
+		color: var(--accent-contrast);
+		border-radius: var(--radius);
 		padding: 0 2px;
 		box-decoration-break: clone;
 		-webkit-box-decoration-break: clone;
-	}
-
-	:global([data-theme='dark']) .search-hit {
-		background: #854d0e;
-		color: #fef9c3;
 	}
 </style>

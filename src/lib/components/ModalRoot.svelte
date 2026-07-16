@@ -109,27 +109,29 @@
 		padding: 16px;
 	}
 
+	/* Metro dialog: a square panel that sits on the backdrop, not a raised
+	   card. No radius, no drop shadow — the backdrop provides the depth. */
 	.modal {
-		background: var(--bg-card, #fff);
-		color: var(--text, #222);
-		border: 1px solid var(--border, #e0e0e0);
-		border-radius: 8px;
-		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+		background: var(--bg-card);
+		color: var(--text);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		min-width: 320px;
 		max-width: 480px;
 		width: 100%;
-		padding: 20px;
+		padding: 22px;
 	}
 
 	.modal-title {
-		font-size: 15px;
-		font-weight: 600;
-		margin: 0 0 12px;
+		font-size: var(--type-heading);
+		font-weight: var(--weight-display);
+		letter-spacing: var(--track-tight);
+		margin: 0 0 14px;
 	}
 
 	.modal-body {
 		font-size: 14px;
-		color: var(--text-muted, #666);
+		color: var(--text-muted);
 		margin: 0 0 16px;
 		line-height: 1.4;
 	}
@@ -138,17 +140,17 @@
 		width: 100%;
 		padding: 8px 10px;
 		font-size: 14px;
-		border: 1px solid var(--border, #ccc);
-		border-radius: 4px;
-		background: var(--bg, #fff);
-		color: var(--text, #222);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--text);
 		margin-bottom: 16px;
 	}
 
+	/* Accent edge, no halo — Metro has no glow. */
 	.modal-input:focus {
 		outline: none;
-		border-color: var(--link, #2563eb);
-		box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+		border-color: var(--accent);
 	}
 
 	.modal-actions {
@@ -157,33 +159,39 @@
 		gap: 8px;
 	}
 
+	/* Mirrors Button.svelte's primary/subtle variants. Kept local rather
+	   than importing Button because these are the store-driven dialog's own
+	   actions and must render with no further dependencies. */
 	.btn-primary,
 	.btn-secondary {
 		padding: 6px 14px;
-		font-size: 13px;
-		font-weight: 500;
-		border-radius: 4px;
+		font-size: var(--type-caption);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
+		border-radius: var(--radius);
 		cursor: pointer;
 	}
 
 	.btn-primary {
-		background: var(--link, #2563eb);
-		color: #fff;
-		border: 1px solid var(--link, #2563eb);
+		background: var(--accent);
+		color: var(--accent-contrast);
+		border: 1px solid var(--accent);
 	}
 
 	.btn-primary:hover {
-		background: #1d4ed8;
-		border-color: #1d4ed8;
+		background: var(--accent-hover);
+		border-color: var(--accent-hover);
 	}
 
 	.btn-secondary {
 		background: transparent;
-		color: var(--text, #222);
-		border: 1px solid var(--border, #ccc);
+		color: var(--text);
+		border: 1px solid var(--border);
 	}
 
 	.btn-secondary:hover {
-		background: var(--hover-bg, #f0f0f0);
+		background: var(--hover-bg);
+		border-color: var(--text-dim);
 	}
 </style>

@@ -98,11 +98,13 @@
 
 <style>
 	.slot-count {
-		font-size: 12px;
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		color: var(--text-muted);
-		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 10px;
+		background: transparent;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		padding: 2px 8px;
 	}
 
@@ -119,23 +121,23 @@
 		padding: 5px 10px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
 		min-width: 0;
 	}
 
 	.search-input:focus {
 		outline: none;
-		border-color: #2563eb;
+		border-color: var(--accent);
 	}
 
 	.filters select {
 		padding: 5px 8px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 		color: var(--text);
 		flex-shrink: 0;
 	}
@@ -203,19 +205,21 @@
 	.add-btn {
 		flex-shrink: 0;
 		padding: 4px 12px;
-		font-size: 12px;
+		font-size: var(--type-micro);
 		font-weight: 600;
-		border-radius: 4px;
-		border: 1px solid #2563eb;
-		background: var(--bg-card);
-		color: #2563eb;
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
+		border-radius: var(--radius);
+		border: 1px solid var(--accent);
+		background: transparent;
+		color: var(--accent);
 		cursor: pointer;
 		white-space: nowrap;
 	}
 
 	.add-btn:hover:not(:disabled) {
-		background: #2563eb;
-		color: #fff;
+		background: var(--accent);
+		color: var(--accent-contrast);
 	}
 
 	.add-btn:disabled {
@@ -224,8 +228,8 @@
 	}
 
 	.add-btn.is-added {
-		border-color: #16a34a;
-		color: #16a34a;
+		border-color: var(--good);
+		color: var(--good);
 	}
 
 	.empty {

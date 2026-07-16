@@ -25,16 +25,17 @@
 	.export-btn {
 		padding: 4px 10px;
 		font-size: 13px;
-		border: 1px solid #6b7280;
-		border-radius: 4px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		background: var(--bg-card);
-		color: #6b7280;
+		color: var(--text-muted);
 		cursor: pointer;
 		font-weight: 600;
 	}
 	.export-btn:hover:not(:disabled) {
-		background: #6b7280;
-		color: #fff;
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--accent-contrast);
 	}
 	.export-btn:disabled {
 		opacity: 0.5;

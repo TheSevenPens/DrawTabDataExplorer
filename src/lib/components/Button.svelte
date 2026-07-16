@@ -57,6 +57,15 @@
 </button>
 
 <style>
+	/*
+	 * Metro buttons are square outlines on the page ground, not raised
+	 * chips: no radius, no fill by default, no shadow. Only `primary`
+	 * spends the accent as a fill — everything else states itself with an
+	 * edge, so a screen full of commands stays quiet.
+	 *
+	 * Labels are wide-tracked caps at the small size, matching the
+	 * toolbar/table-header voice established in +layout.svelte.
+	 */
 	.btn {
 		display: inline-flex;
 		align-items: center;
@@ -64,7 +73,7 @@
 		gap: 6px;
 		font-family: inherit;
 		border: 1px solid transparent;
-		border-radius: 4px;
+		border-radius: var(--radius);
 		line-height: 1;
 		cursor: pointer;
 		white-space: nowrap;
@@ -77,59 +86,64 @@
 
 	/* sizes */
 	.btn.sm {
-		padding: 3px 8px;
-		font-size: 12px;
+		padding: 4px 9px;
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 	}
 	.btn.md {
 		padding: 6px 16px;
-		font-size: 13px;
+		font-size: var(--type-caption);
 		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 	}
 
 	/* primary — filled accent (run/save/add primary actions) */
 	.btn.primary {
-		background: #2563eb;
-		border-color: #2563eb;
-		color: #fff;
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--accent-contrast);
 		font-weight: 600;
 	}
 	.btn.primary:hover:not(:disabled) {
-		background: #1d4ed8;
-		border-color: #1d4ed8;
+		background: var(--accent-hover);
+		border-color: var(--accent-hover);
 	}
 
 	/* secondary — outline accent */
 	.btn.secondary {
-		background: var(--bg-card);
-		border-color: #2563eb;
-		color: #2563eb;
+		background: transparent;
+		border-color: var(--accent);
+		color: var(--accent);
 		font-weight: 600;
 	}
 	.btn.secondary:hover:not(:disabled) {
-		background: #2563eb;
-		color: #fff;
+		background: var(--accent);
+		color: var(--accent-contrast);
 	}
 
 	/* subtle — neutral, for copy/toolbar commands */
 	.btn.subtle {
-		background: var(--bg-card);
+		background: transparent;
 		border-color: var(--border);
 		color: var(--text-muted);
 	}
 	.btn.subtle:hover:not(:disabled) {
 		background: var(--hover-bg);
+		border-color: var(--text-dim);
 		color: var(--text);
 	}
 
 	/* danger — destructive (clear/delete/remove) */
 	.btn.danger {
-		background: var(--bg-card);
-		border-color: #fca5a5;
-		color: #dc2626;
+		background: transparent;
+		border-color: var(--danger);
+		color: var(--danger);
 	}
 	.btn.danger:hover:not(:disabled) {
-		background: #dc2626;
-		border-color: #dc2626;
+		background: var(--danger);
+		border-color: var(--danger);
 		color: #fff;
 	}
 
@@ -139,15 +153,17 @@
 		background: none;
 		border-color: transparent;
 		color: var(--text-muted);
+		text-transform: none;
+		letter-spacing: normal;
 	}
 	.btn.icon:hover:not(:disabled) {
-		background: var(--hover-bg);
-		color: var(--text);
+		background: transparent;
+		color: var(--accent);
 	}
 
 	/* menu-trigger — opens an anchored PopoverMenu (#232/#234) */
 	.btn.menu-trigger {
-		background: var(--bg-card);
+		background: transparent;
 		border-color: var(--border);
 		color: var(--text-muted);
 	}
@@ -158,8 +174,8 @@
 
 	/* toggle pressed state (used with subtle/menu-trigger for view toggles) */
 	.btn[aria-pressed='true'] {
-		color: var(--text);
-		border-color: var(--border);
+		color: var(--accent);
+		border-color: var(--accent);
 		font-weight: 600;
 	}
 </style>

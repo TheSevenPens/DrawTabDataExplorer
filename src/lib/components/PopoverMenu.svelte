@@ -55,12 +55,12 @@
 </div>
 
 <style>
+	/* Square, flat flyout — matches the FilterBar/SortBar/ColumnBar panels. */
 	.context-menu {
 		position: fixed;
 		background: var(--bg-card);
-		border: 1px solid var(--border-light);
-		border-radius: 6px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
 		z-index: 200;
 		min-width: 150px;
 	}
@@ -79,10 +79,10 @@
 		background: var(--hover-bg);
 	}
 	.context-menu button.delete {
-		color: #e11d48;
+		color: var(--danger);
 	}
 	.context-menu button.delete:hover {
-		background: #fef2f2;
+		background: var(--hover-bg);
 	}
 	.context-menu hr {
 		border: none;

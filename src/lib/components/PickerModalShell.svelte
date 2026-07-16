@@ -59,15 +59,15 @@
 		z-index: 200;
 	}
 
+	/* Square panel, no shadow — see ModalRoot for the same reasoning. */
 	.modal {
 		background: var(--bg);
 		border: 1px solid var(--border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		width: min(640px, 95vw);
 		max-height: min(600px, 90vh);
 		display: flex;
 		flex-direction: column;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 	}
 
 	.modal-header {
@@ -81,8 +81,9 @@
 
 	.modal-header h2 {
 		margin: 0;
-		font-size: 15px;
-		font-weight: 700;
+		font-size: var(--type-heading);
+		font-weight: var(--weight-display);
+		letter-spacing: var(--track-tight);
 		color: var(--text);
 		flex: 1;
 	}
@@ -94,12 +95,12 @@
 		font-size: 16px;
 		color: var(--text-muted);
 		padding: 2px 6px;
-		border-radius: 4px;
+		border-radius: var(--radius);
 		line-height: 1;
 	}
 
 	.close-btn:hover {
-		background: var(--hover-bg);
-		color: var(--text);
+		background: transparent;
+		color: var(--accent);
 	}
 </style>

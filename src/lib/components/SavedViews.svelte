@@ -142,9 +142,9 @@
 		padding: 5px 10px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
+		border-radius: var(--radius);
 		min-width: 180px;
-		background: var(--bg-card);
+		background: transparent;
 		color: var(--text);
 	}
 
@@ -152,12 +152,20 @@
 		padding: 5px 10px;
 		font-size: 13px;
 		border: 1px solid var(--border);
-		border-radius: 4px;
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--text);
 		width: 160px;
 	}
 
+	.views-row select:focus,
+	.views-row input:focus {
+		outline: none;
+		border-color: var(--accent);
+	}
+
 	.rename-input {
-		border-color: #2563eb !important;
+		border-color: var(--accent) !important;
 	}
 
 	.separator {
@@ -169,10 +177,12 @@
 
 	.action-btn {
 		padding: 5px 10px;
-		font-size: 13px;
+		font-size: var(--type-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--track-wide);
 		border: 1px solid var(--border);
-		background: var(--bg-card);
-		border-radius: 4px;
+		background: transparent;
+		border-radius: var(--radius);
 		cursor: pointer;
 		color: var(--text-muted);
 	}
@@ -188,17 +198,17 @@
 	}
 
 	.action-btn.save {
-		border-color: #16a34a;
-		color: #16a34a;
+		border-color: var(--good);
+		color: var(--good);
 	}
 
 	.action-btn.save:hover:not(:disabled) {
-		background: #16a34a;
+		background: var(--good);
 		color: #fff;
 	}
 
 	.action-btn.delete:hover:not(:disabled) {
-		border-color: #e11d48;
-		color: #e11d48;
+		border-color: var(--danger);
+		color: var(--danger);
 	}
 </style>

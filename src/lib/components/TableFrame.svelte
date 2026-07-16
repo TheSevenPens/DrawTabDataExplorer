@@ -81,7 +81,7 @@
 		color: var(--text-muted);
 		background: var(--bg-card);
 		border: 1px solid var(--border-light);
-		border-radius: 10px;
+		border-radius: var(--radius);
 		padding: 0 7px;
 	}
 
