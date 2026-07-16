@@ -93,14 +93,16 @@
 		width: 120px;
 		height: 12px;
 		background: var(--border);
-		border-radius: 3px;
+		border-radius: var(--radius);
 		overflow: hidden;
 		flex-shrink: 0;
 	}
+	/* Magnitude bar for a single series — the accent, same as the histogram
+	   bars (see CLAUDE.md § Chart colours). Square to match them too. */
 	:global(.bar-fill) {
 		height: 100%;
-		background: #2563eb;
-		border-radius: 3px;
+		background: var(--accent);
+		border-radius: var(--radius);
 	}
 	:global(.stat-table .pct) {
 		font-size: var(--type-caption);
