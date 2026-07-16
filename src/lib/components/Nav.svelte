@@ -155,6 +155,8 @@
 	/* Active carries two cues, not one: brightness (dim → ink) plus weight
 	   (light → medium). A moderate 500 stays clear of Metro's heavy end so
 	   the big type keeps its air. */
+	/* Active carries two cues: brightness (dim → ink) plus weight
+	   (light 300 → medium 500). */
 	a.active {
 		color: var(--text);
 		font-weight: 500;

@@ -39,11 +39,10 @@
 	a:hover {
 		color: var(--text-muted);
 	}
-	/* Same brightness + weight pairing as Nav; at 18px the sub-nav takes a
-	   fuller 600 comfortably. */
+	/* Idle 400 → active 500, same brightness + weight pairing as Nav. */
 	a.active {
 		color: var(--text);
-		font-weight: 600;
+		font-weight: 500;
 	}
 	.badge {
 		display: inline-block;
