@@ -163,8 +163,13 @@
 	 * from --warning amber, so emphasis and "something is wrong" read as
 	 * the same colour — fatal on a page like /data-quality. Cyan is ~160deg
 	 * from --warning, ~169deg from --danger and ~112deg from --good, the
-	 * widest separation available in the Metro palette, while still
-	 * clearing 6.8:1 on the near-black ground.
+	 * widest separation available in the Metro palette.
+	 *
+	 * Grounds are #efefef / #222222 (not white / near-black). Both accents
+	 * are tuned to clear WCAG AA on their own ground: light #1373a2 = 4.56,
+	 * dark #1ba1e2 = 5.49. Surface tokens (bg-card, hover-bg, washes) sit
+	 * *above* their ground in both themes — on a mid-value ground a darker
+	 * "card" reads as a hole, which is what a naive flip produces.
 	 */
 	:global(:root) {
 		/* Type scale */
@@ -187,7 +192,7 @@
 		--radius: 0;
 
 		/* Light theme */
-		--accent: #157db0;
+		--accent: #1373a2;
 		--accent-hover: #0f5f86;
 		--accent-contrast: #fff;
 
@@ -196,35 +201,35 @@
 		 * and "this is wrong" must not look alike. Values are darkened from
 		 * the Metro palette for contrast on white.
 		 */
-		--good: #2e7d0e;
+		--good: #2d7b0e;
 		--warning: #8a5a00;
 		--danger: #c11200;
 
 		/* Faint accent-tinted ground for "this cell matters" highlights
 		   (compare diffs, filter pills). Not for text — pair with --text. */
-		--accent-wash: #eef6fb;
-		--danger-wash: #fdf0ef;
-		--bg: #fff;
+		--accent-wash: #e4f0f8;
+		--danger-wash: #f9e8e6;
+		--bg: #efefef;
 		--bg-card: #fafafa;
 		--text: #111;
 		--text-muted: #5c5c5c;
-		--text-dim: #8e8e8e;
-		--border: #e6e6e6;
-		--border-light: #f0f0f0;
+		--text-dim: #868686;
+		--border: #d8d8d8;
+		--border-light: #e4e4e4;
 		--th-bg: transparent;
-		--th-text: #8e8e8e;
-		--hover-bg: #f5f5f5;
+		--th-text: #818181;
+		--hover-bg: #f6f6f6;
 		--link: var(--accent);
-		--pill-filter-bg: #eef6fb;
-		--pill-filter-border: #a9cfe6;
-		--pill-filter-hover: #dceefa;
-		--pill-sort-bg: #f2f2f2;
-		--pill-sort-border: #d6d6d6;
-		--pill-sort-hover: #e8e8e8;
-		--pill-col-bg: #f2f2f2;
-		--pill-col-border: #d6d6d6;
-		--pill-col-hover: #e8e8e8;
-		--separator-color: #e6e6e6;
+		--pill-filter-bg: #e4f0f8;
+		--pill-filter-border: #9cc6de;
+		--pill-filter-hover: #d6e9f4;
+		--pill-sort-bg: #e8e8e8;
+		--pill-sort-border: #d0d0d0;
+		--pill-sort-hover: #e0e0e0;
+		--pill-col-bg: #e8e8e8;
+		--pill-col-border: #d0d0d0;
+		--pill-col-hover: #e0e0e0;
+		--separator-color: #d8d8d8;
 	}
 
 	:global([data-theme='dark']) {
@@ -237,29 +242,29 @@
 		--warning: #f0a30a;
 		--danger: #ff4d2e;
 
-		--accent-wash: #0c1a22;
-		--danger-wash: #2a1210;
-		--bg: #0a0a0a;
-		--bg-card: #141414;
+		--accent-wash: #1f3743;
+		--danger-wash: #3a2320;
+		--bg: #222222;
+		--bg-card: #2b2b2b;
 		--text: #fff;
 		--text-muted: #9a9a9a;
-		--text-dim: #5e5e5e;
-		--border: #242424;
-		--border-light: #1c1c1c;
+		--text-dim: #6c6c6c;
+		--border: #3d3d3d;
+		--border-light: #2e2e2e;
 		--th-bg: transparent;
-		--th-text: #7d7d7d;
-		--hover-bg: #171717;
+		--th-text: #8e8e8e;
+		--hover-bg: #2e2e2e;
 		--link: var(--accent);
-		--pill-filter-bg: #0c1a22;
-		--pill-filter-border: #1c4a63;
-		--pill-filter-hover: #123040;
-		--pill-sort-bg: #161616;
-		--pill-sort-border: #333;
-		--pill-sort-hover: #1f1f1f;
-		--pill-col-bg: #161616;
-		--pill-col-border: #333;
-		--pill-col-hover: #1f1f1f;
-		--separator-color: #242424;
+		--pill-filter-bg: #1f3743;
+		--pill-filter-border: #2f6b8a;
+		--pill-filter-hover: #27485a;
+		--pill-sort-bg: #2b2b2b;
+		--pill-sort-border: #444;
+		--pill-sort-hover: #333;
+		--pill-col-bg: #2b2b2b;
+		--pill-col-border: #444;
+		--pill-col-hover: #333;
+		--separator-color: #3d3d3d;
 	}
 
 	:global(*) {

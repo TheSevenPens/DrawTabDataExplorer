@@ -74,7 +74,7 @@ describe('paletteColor', () => {
 	it('pins slot 1 to the UI accent so the primary series matches the interface', () => {
 		// These are the --accent values in +layout.svelte, stepped into each
 		// mode's lightness band. If the accent moves, these move with it.
-		expect(paletteColor(0, 'light')).toBe('#157db0');
+		expect(paletteColor(0, 'light')).toBe('#1373a2');
 		expect(paletteColor(0, 'dark')).toBe('#1a9ede');
 	});
 });

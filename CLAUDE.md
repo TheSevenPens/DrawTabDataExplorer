@@ -367,8 +367,8 @@ sessions ~5% of men could not tell apart.
 
 ```bash
 # from the dataviz skill's directory; --pairs all because the chart is a scatter
-node scripts/validate_palette.js "<light hexes>" --mode light --surface "#ffffff" --pairs all
-node scripts/validate_palette.js "<dark hexes>"  --mode dark  --surface "#0a0a0a" --pairs all
+node scripts/validate_palette.js "<light hexes>" --mode light --surface "#efefef" --pairs all
+node scripts/validate_palette.js "<dark hexes>"  --mode dark  --surface "#222222" --pairs all
 ```
 
 Three constraints that are load-bearing — read the header comment in

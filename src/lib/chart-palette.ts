@@ -16,9 +16,10 @@
  *
  * ── Why two arrays instead of one ────────────────────────────────────────
  * A palette has to sit inside a per-mode lightness band to stay legible:
- * OKLCH L 0.43–0.77 on white, 0.48–0.67 on near-black. One array cannot
- * satisfy both, so dark is *selected* — the same eight hue families, stepped
- * for the dark ground — rather than an automatic flip of the light values.
+ * OKLCH L 0.43–0.77 for the light ground, 0.48–0.67 for the dark one. One
+ * array cannot satisfy both, so dark is *selected* — the same eight hue
+ * families, stepped for the dark ground — rather than an automatic flip of
+ * the light values.
  * A series keeps its hue family across themes, so "the magenta one" is the
  * same session in either theme.
  *
@@ -31,8 +32,11 @@
  * hide a collapse. Slot 1 is pinned to the UI accent.
  *
  * Verified with the dataviz skill's validator, `--pairs all`:
- *   light (surface #ffffff): all checks PASS, worst all-pairs ΔE 18.8
- *   dark  (surface #0a0a0a): all checks PASS, worst all-pairs ΔE 18.5
+ *   light (surface #efefef): all checks PASS, worst all-pairs ΔE 15.6
+ *   dark  (surface #222222): all checks PASS, worst all-pairs ΔE 18.5
+ * Re-run these whenever --bg changes: the surface is an input to the
+ * contrast check (the mid-value grounds put more slots in the sub-3:1
+ * WARN band than white/near-black did — legal only via the legend below).
  *
  * The palette this replaced failed outright: #ca8a04 and #d97706 collapsed
  * to ΔE 1.5 under deuteranopia — two sessions ~5% of men could not tell
@@ -62,7 +66,7 @@ export const CHART_PALETTE_FAMILIES = [
 ] as const;
 
 const LIGHT = [
-	'#157db0', // cyan — the UI accent
+	'#1373a2', // cyan — the UI accent
 	'#fa6800', // orange
 	'#6a00ff', // indigo
 	'#d80073', // magenta
@@ -89,9 +93,11 @@ const DARK = [
  * became indistinguishable — the exact failure the palette exists to prevent.
  * Past the eighth, series share one deliberately neutral "other" grey, which
  * reads as "not separately identified" instead of impersonating slot 1. The
- * legend table still names every one of them.
+ * legend table still names every one of them. Tuned to the grounds: these
+ * are drawn marks, so they clear ~4:1 (light) / ~4.6:1 (dark) rather than
+ * fading into the surface.
  */
-const OTHER: Record<ChartMode, string> = { light: '#8e8e8e', dark: '#5e5e5e' };
+const OTHER: Record<ChartMode, string> = { light: '#767676', dark: '#8a8a8a' };
 
 export function chartPalette(mode: ChartMode): readonly string[] {
 	return mode === 'dark' ? DARK : LIGHT;
