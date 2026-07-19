@@ -38,6 +38,7 @@ const LINKS = [
 	{ name: 'brands', target: '../data-repo/data/brands', kind: 'junction' },
 	{ name: 'reference', target: '../data-repo/data/reference', kind: 'junction' },
 	{ name: 'wacom-update', target: '../data-repo/data/wacom-update', kind: 'junction' },
+	{ name: 'otd', target: '../data-repo/data/otd', kind: 'junction' },
 	{ name: 'version.json', target: '../data-repo/data/version.json', kind: 'file' },
 ];
 
