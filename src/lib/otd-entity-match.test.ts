@@ -6,7 +6,7 @@ import type { Tablet, OTDTablet } from '$data/lib/drawtab-loader.js';
 function tab(id: string, w?: number, h?: number): Tablet {
 	return {
 		Meta: { EntityId: `wacom.tablet.${id.replace(/[^a-z0-9]/gi, '').toLowerCase()}` },
-		Model: { Id: id },
+		Model: { Brand: 'WACOM', Id: id, Name: id },
 		Digitizer: w != null && h != null ? { Dimensions: { Width: w, Height: h } } : undefined,
 	} as unknown as Tablet;
 }
@@ -52,6 +52,12 @@ describe('matchOtdToTablets', () => {
 		const [r] = matchOtdToTablets([otd('Wacom PTK-440', 157.5, 98.4)], ours);
 		expect(r.entityId).toBe('wacom.tablet.ptk440');
 		expect(r.basis).toBe('id+area');
+		expect(r.fullName).toContain('PTK-440');
+	});
+
+	it('leaves fullName null for an unmatched row', () => {
+		const [r] = matchOtdToTablets([otd('Wacom Nonexistent', 1, 1)], ours);
+		expect(r.fullName).toBeNull();
 	});
 
 	it('matches by id alone when the area disagrees', () => {

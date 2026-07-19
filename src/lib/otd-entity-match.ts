@@ -9,6 +9,7 @@
 // Groundwork for #308. Callers pass already-brand-filtered lists (e.g. OTD
 // Wacom vs our WACOM tablets); the matcher itself is brand-agnostic.
 import type { Tablet, OTDTablet } from '$data/lib/drawtab-loader.js';
+import { tabletFullName } from '$lib/tablet-helpers.js';
 
 /** Active-area tolerance in mm for treating two dimensions as the same tablet. */
 export const AREA_TOLERANCE_MM = 2;
@@ -22,6 +23,7 @@ export interface OtdEntityMatchRow {
 	otdHeightMM: number | null;
 	entityId: string | null;
 	modelId: string | null;
+	fullName: string | null;
 	ourWidthMM: number | null;
 	ourHeightMM: number | null;
 	basis: MatchBasis;
@@ -105,6 +107,7 @@ export function matchOtdToTablets(otd: OTDTablet[], ours: Tablet[]): OtdEntityMa
 			otdHeightMM: otdA?.h ?? null,
 			entityId: chosen?.Meta.EntityId ?? null,
 			modelId: chosen?.Model.Id ?? null,
+			fullName: chosen ? tabletFullName(chosen) : null,
 			ourWidthMM: oa?.w ?? null,
 			ourHeightMM: oa?.h ?? null,
 			basis,

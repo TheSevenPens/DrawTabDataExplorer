@@ -52,6 +52,7 @@
 					<tr>
 						<th>OTD Name</th>
 						<th>Tablet Entity</th>
+						<th>Tablet Full Name</th>
 						<th>Basis</th>
 						<th>OTD Area (mm)</th>
 						<th>Our Area (mm)</th>
@@ -68,6 +69,7 @@
 									<span class="dim">—</span>
 								{/if}
 							</td>
+							<td>{m.fullName ?? '—'}</td>
 							<td>
 								{#if m.basis !== 'none'}
 									<span class="badge basis-{m.basis.replace('+', '-')}">{m.basis}</span>
