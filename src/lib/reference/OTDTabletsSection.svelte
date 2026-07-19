@@ -10,6 +10,18 @@
 	const src = $derived(config?.source ?? null);
 	const tablets = $derived(config?.tablets ?? []);
 
+	// --- Filters (client-side) ---
+	let search = $state('');
+	let vendor = $state('');
+	const vendors = $derived([...new Set(tablets.map((t) => t.vendor))].sort());
+	const filtered = $derived(
+		tablets.filter(
+			(t) =>
+				(vendor === '' || t.vendor === vendor) &&
+				(search === '' || (t.name ?? t.file).toLowerCase().includes(search.toLowerCase())),
+		),
+	);
+
 	// Base for linking each row to its config file on GitHub, pinned to the
 	// exact commit the dataset was harvested from.
 	const blobBase = $derived(
@@ -59,6 +71,16 @@
 	{/if}
 
 	{#if tablets.length}
+		<div class="ref-filters">
+			<input type="search" placeholder="Search name…" bind:value={search} />
+			<select bind:value={vendor} aria-label="Filter by vendor">
+				<option value="">All vendors</option>
+				{#each vendors as v (v)}
+					<option value={v}>{v}</option>
+				{/each}
+			</select>
+			<span class="filter-count">{filtered.length} of {tablets.length}</span>
+		</div>
 		<div class="table-wrap">
 			<table class="ref-table">
 				<thead>
@@ -73,7 +95,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each tablets as t (t.file)}
+					{#each filtered as t (t.file)}
 						<tr>
 							<td>
 								{#if blobBase}

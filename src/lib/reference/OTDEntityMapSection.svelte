@@ -13,6 +13,26 @@
 	let { matches }: { matches: OtdEntityMapRow[] } = $props();
 
 	const matched = $derived(matches.filter((m) => m.entityId));
+
+	// --- Filters (client-side) ---
+	let search = $state('');
+	let vendor = $state('');
+	let confidence = $state('');
+	let basis = $state('');
+	let audit = $state('');
+	const vendors = $derived([...new Set(matched.map((m) => m.otdVendor))].sort());
+	const bases = $derived([...new Set(matched.map((m) => m.basis))]);
+	const filtered = $derived(
+		matched.filter(
+			(m) =>
+				(vendor === '' || m.otdVendor === vendor) &&
+				(confidence === '' || m.confidence === confidence) &&
+				(basis === '' || m.basis === basis) &&
+				(audit === '' || m.audit === audit) &&
+				(search === '' ||
+					`${m.otdName} ${m.fullName ?? ''}`.toLowerCase().includes(search.toLowerCase())),
+		),
+	);
 	const n = (basis: string) => matches.filter((m) => m.basis === basis).length;
 	const a = (audit: AuditValue) => matched.filter((m) => m.audit === audit).length;
 	const counts = $derived({
@@ -67,6 +87,34 @@
 	</p>
 
 	{#if matched.length}
+		<div class="ref-filters">
+			<input type="search" placeholder="Search name…" bind:value={search} />
+			<select bind:value={vendor} aria-label="Filter by vendor">
+				<option value="">All vendors</option>
+				{#each vendors as v (v)}
+					<option value={v}>{v}</option>
+				{/each}
+			</select>
+			<select bind:value={confidence} aria-label="Filter by confidence">
+				<option value="">All confidence</option>
+				<option value="high">high</option>
+				<option value="medium">medium</option>
+			</select>
+			<select bind:value={basis} aria-label="Filter by basis">
+				<option value="">All bases</option>
+				{#each bases as b (b)}
+					<option value={b}>{b}</option>
+				{/each}
+			</select>
+			<select bind:value={audit} aria-label="Filter by audit">
+				<option value="">All audit</option>
+				<option value="approved">approved</option>
+				<option value="rejected">rejected</option>
+				<option value="unclear">unclear</option>
+				<option value="unreviewed">unreviewed</option>
+			</select>
+			<span class="filter-count">{filtered.length} of {matched.length}</span>
+		</div>
 		<div class="table-wrap">
 			<table class="ref-table">
 				<thead>
@@ -82,7 +130,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each matched as m (m.otdFile)}
+					{#each filtered as m (m.otdFile)}
 						<tr>
 							<td>{m.otdName}</td>
 							<td><EntityLink entityId={m.entityId!}>{m.modelId}</EntityLink></td>

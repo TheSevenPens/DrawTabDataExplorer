@@ -363,6 +363,32 @@
 		overflow-x: auto;
 	}
 
+	/* Reference-section filter controls (search + selects). Owned once here so
+	   the OTD tables share one look, same as the table styles below. */
+	:global(.ref-filters) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		align-items: center;
+		margin: 10px 0 4px;
+	}
+	:global(.ref-filters input),
+	:global(.ref-filters select) {
+		padding: 4px 8px;
+		font-size: var(--type-caption);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--bg-card);
+		color: var(--text);
+	}
+	:global(.ref-filters input) {
+		min-width: 200px;
+	}
+	:global(.ref-filters .filter-count) {
+		color: var(--text-dim);
+		font-size: var(--type-caption);
+	}
+
 	:global(table) {
 		width: 100%;
 		border-collapse: collapse;
