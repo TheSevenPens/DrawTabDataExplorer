@@ -77,8 +77,9 @@ describe('matchOtdToTablets', () => {
 	it('does NOT match a near marketing name (Kamvas 24 vs Kamvas 24 Plus)', () => {
 		const huion = [tab('GS2402', 476, 268, 'Kamvas 24 Plus')];
 		const [r] = matchOtdToTablets([otd('Huion Kamvas 24', 476, 268, 'Huion')], huion);
-		// exact-normalized name differs; only a size coincidence remains → 'area'
-		expect(r.basis).not.toBe('name+area');
+		// exact-normalized name differs; same size alone must NOT map.
+		expect(r.entityId).toBeNull();
+		expect(r.basis).toBe('none');
 	});
 
 	it('extracts the model id from a parenthetical marketing name', () => {
@@ -87,13 +88,15 @@ describe('matchOtdToTablets', () => {
 		expect(r.basis).toBe('id+area');
 	});
 
-	it('falls back to a unique area match when no id matches', () => {
+	it('does NOT map on size alone when no id or name matches', () => {
+		// CTL-472 is the same size, but nothing in the name supports it — a size
+		// coincidence must not become a mapping (regression: H690 → H320M).
 		const [r] = matchOtdToTablets([otd('Wacom Mystery Model', 152, 95)], ours);
-		expect(r.entityId).toBe('wacom.tablet.ctl472');
-		expect(r.basis).toBe('area');
+		expect(r.entityId).toBeNull();
+		expect(r.basis).toBe('none');
 	});
 
-	it('reports no match when neither id nor area resolves', () => {
+	it('reports no match when neither id nor name resolves', () => {
 		const [r] = matchOtdToTablets([otd('Wacom Nonexistent', 1, 1)], ours);
 		expect(r.entityId).toBeNull();
 		expect(r.basis).toBe('none');

@@ -17,7 +17,6 @@
 		nameArea: n('name+area'),
 		id: n('id'),
 		name: n('name'),
-		area: n('area'),
 		none: n('none'),
 	});
 
@@ -39,14 +38,13 @@
 			target="_blank"
 			rel="noopener">OpenTabletDriver</a
 		>
-		config to our tablet entity, matched by model number, marketing name, and digitizer active-area
-		size. <strong>id+area</strong> and <strong>name+area</strong> (a name/id match confirmed by size)
-		are the high-confidence bases.
+		config to our tablet entity, matched by model number, marketing name, and digitizer active-area size.
+		<strong>id+area</strong>
+		and <strong>name+area</strong> (a name/id match confirmed by size) are the high-confidence bases.
 	</p>
 	<p class="meta">
 		{counts.matched} matched ({counts.high} high-confidence) of {counts.total} configs · id+area
-		{counts.idArea} · name+area {counts.nameArea} · id {counts.id} · name {counts.name} · area
-		{counts.area}
+		{counts.idArea} · name+area {counts.nameArea} · id {counts.id} · name {counts.name}
 		{#if counts.none}· {counts.none} unmatched (not shown){/if}
 	</p>
 

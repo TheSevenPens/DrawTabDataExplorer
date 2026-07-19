@@ -14,7 +14,7 @@ import { tabletFullName } from '$lib/tablet-helpers.js';
 /** Active-area tolerance in mm for treating two dimensions as the same tablet. */
 export const AREA_TOLERANCE_MM = 2;
 
-export type MatchBasis = 'id+area' | 'name+area' | 'id' | 'name' | 'area' | 'none';
+export type MatchBasis = 'id+area' | 'name+area' | 'id' | 'name' | 'none';
 
 /** The high-confidence bases: a name/id match independently confirmed by size. */
 export function isHighConfidence(basis: MatchBasis): boolean {
@@ -120,14 +120,10 @@ export function matchOtdToTablets(otd: OTDTablet[], ours: Tablet[]): OtdEntityMa
 			}
 		}
 
-		// 3. Size-only fallback: a unique active-area match, lower confidence.
-		if (!chosen && otdA) {
-			const areaHits = ours.filter((t) => areaClose(otdA, ourArea(t)));
-			if (areaHits.length === 1) {
-				chosen = areaHits[0];
-				basis = 'area';
-			}
-		}
+		// No size-only fallback: active area only ever *confirms* a name/id
+		// match. A unique same-size tablet with no name/id support is a
+		// coincidence (e.g. OTD "Huion H690" ≈ our unrelated "H320M"), so it is
+		// deliberately left unmatched rather than mapped on size alone.
 
 		const oa = chosen ? ourArea(chosen) : null;
 		return {
