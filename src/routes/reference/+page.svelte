@@ -14,6 +14,7 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import DriverCompatSection from '$lib/reference/DriverCompatSection.svelte';
 	import OTDTabletsSection from '$lib/reference/OTDTabletsSection.svelte';
+	import OTDEntityMapSection from '$lib/reference/OTDEntityMapSection.svelte';
 	import {
 		BRAND_FIELDS,
 		BRAND_FIELD_GROUPS,
@@ -61,6 +62,7 @@
 	const sectionDefs: Section[] = [
 		{ id: 'brands', category: 'Entities', label: 'Brands' },
 		{ id: 'otd-tablets', category: 'Entities', label: 'OTD Tablets' },
+		{ id: 'otd-entity-map', category: 'Entities', label: 'OTD To Tablet Entity' },
 		{ id: 'tablet-sizes', category: 'Tablets', label: 'Tablet Sizes' },
 		{ id: 'display-resolutions', category: 'Tablets', label: 'Display Resolutions' },
 		{ id: 'iso-paper-a', category: 'Paper Sizes', label: 'ISO A Paper Sizes' },
@@ -605,6 +607,8 @@
 				/>
 			{:else if activeSection === 'otd-tablets'}
 				<OTDTabletsSection config={data.otdConfig} />
+			{:else if activeSection === 'otd-entity-map'}
+				<OTDEntityMapSection matches={data.otdEntityMatches} />
 			{:else if activeSection === 'driver-compat'}
 				<DriverCompatSection
 					products={data.wacomProducts}

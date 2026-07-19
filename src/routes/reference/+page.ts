@@ -6,6 +6,7 @@ import {
 } from '$data/lib/drawtab-loader.js';
 import { tabletFullName as fmtTabletFullName } from '$lib/tablet-helpers.js';
 import { penFullName } from '$lib/pen-helpers.js';
+import { matchOtdToTablets } from '$lib/otd-entity-match.js';
 import type { EnrichedPenCompat } from '$data/lib/entities/pen-compat-fields.js';
 
 export async function load({ parent }) {
@@ -59,6 +60,11 @@ export async function load({ parent }) {
 		if (t.Model.SensorId) sensorIdToTablet.set(t.Model.SensorId, t);
 	}
 
+	// --- OTD → Tablet Entity map: match OTD configs to our entities (Wacom for now) ---
+	const otdWacom = (otdConfig?.tablets ?? []).filter((t) => t.vendor === 'Wacom');
+	const wacomTablets = allTablets.filter((t) => t.Model.Brand === 'WACOM');
+	const otdEntityMatches = matchOtdToTablets(otdWacom, wacomTablets);
+
 	return {
 		paperSizes,
 		usPaperSizes,
@@ -69,5 +75,6 @@ export async function load({ parent }) {
 		modelToTablet,
 		sensorIdToTablet,
 		otdConfig,
+		otdEntityMatches,
 	};
 }
