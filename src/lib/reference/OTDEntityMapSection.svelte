@@ -2,13 +2,19 @@
 	// Maps OpenTabletDriver config names to our tablet EntityIds across brands.
 	// Matching (model number, marketing name, active-area size) lives in
 	// $lib/otd-entity-match. Unmatched OTD configs (no entity) are not listed.
+	// The Audit column is a hand-curated verdict from data/otd/otd-entity-audit.json.
 	import EntityLink from '$lib/components/EntityLink.svelte';
-	import { isHighConfidence, type OtdEntityMatchRow } from '$lib/otd-entity-match.js';
+	import {
+		isHighConfidence,
+		type OtdEntityMapRow,
+		type AuditValue,
+	} from '$lib/otd-entity-match.js';
 
-	let { matches }: { matches: OtdEntityMatchRow[] } = $props();
+	let { matches }: { matches: OtdEntityMapRow[] } = $props();
 
 	const matched = $derived(matches.filter((m) => m.entityId));
 	const n = (basis: string) => matches.filter((m) => m.basis === basis).length;
+	const a = (audit: AuditValue) => matched.filter((m) => m.audit === audit).length;
 	const counts = $derived({
 		total: matches.length,
 		matched: matched.length,
@@ -18,9 +24,13 @@
 		id: n('id'),
 		name: n('name'),
 		none: n('none'),
+		approved: a('approved'),
+		rejected: a('rejected'),
+		unclear: a('unclear'),
+		unreviewed: a('unreviewed'),
 	});
 
-	const round1 = (n: number | null) => (n == null ? null : Math.round(n * 10) / 10);
+	const round1 = (v: number | null) => (v == null ? null : Math.round(v * 10) / 10);
 	function area(w: number | null, h: number | null): string {
 		const rw = round1(w);
 		const rh = round1(h);
@@ -38,17 +48,24 @@
 			target="_blank"
 			rel="noopener">OpenTabletDriver</a
 		>
-		config to our tablet entity, matched by model number, marketing name, and digitizer active-area size.
-		<strong>id+area</strong>
-		and <strong>name+area</strong> (a name/id match confirmed by size) are the high-confidence bases.
+		config to our tablet entity, matched by model number, marketing name, and digitizer active-area
+		size. <strong>High</strong> confidence means a name/id match confirmed by size. The
+		<strong>Audit</strong> verdict is curated in
+		<code>data/otd/otd-entity-audit.json</code>.
 	</p>
 	<p class="meta">
-		{counts.matched} matched ({counts.high} high-confidence) of {counts.total} configs · id+area
-		{counts.idArea} · name+area {counts.nameArea} · id {counts.id} · name {counts.name}
+		{counts.matched} matched ({counts.high} high) of {counts.total} configs · id+area {counts.idArea}
+		· name+area {counts.nameArea} · id {counts.id} · name {counts.name}
 		{#if counts.none}· {counts.none} unmatched (not shown){/if}
 	</p>
+	<p class="meta">
+		Audit: <strong>{counts.approved}</strong> approved · <strong>{counts.rejected}</strong> rejected
+		·
+		<strong>{counts.unclear}</strong>
+		unclear · <strong>{counts.unreviewed}</strong> unreviewed
+	</p>
 
-	{#if matches.length}
+	{#if matched.length}
 		<div class="table-wrap">
 			<table class="ref-table">
 				<thead>
@@ -56,22 +73,22 @@
 						<th>OTD Name</th>
 						<th>Tablet Entity</th>
 						<th>Tablet Full Name</th>
+						<th>Confidence</th>
 						<th>Basis</th>
+						<th>Audit</th>
 						<th>OTD Area (mm)</th>
 						<th>Our Area (mm)</th>
 					</tr>
 				</thead>
 				<tbody>
-					{#each matched as m (m.otdName)}
+					{#each matched as m (m.otdFile)}
 						<tr>
 							<td>{m.otdName}</td>
-							<td>
-								<EntityLink entityId={m.entityId!}>{m.modelId}</EntityLink>
-							</td>
+							<td><EntityLink entityId={m.entityId!}>{m.modelId}</EntityLink></td>
 							<td>{m.fullName ?? '—'}</td>
-							<td>
-								<span class="badge basis-{m.basis.replace('+', '-')}">{m.basis}</span>
-							</td>
+							<td><span class="badge conf-{m.confidence}">{m.confidence}</span></td>
+							<td class="dim mono">{m.basis}</td>
+							<td><span class="badge audit-{m.audit}">{m.audit}</span></td>
 							<td class="mono">{area(m.otdWidthMM, m.otdHeightMM)}</td>
 							<td class="mono">{area(m.ourWidthMM, m.ourHeightMM)}</td>
 						</tr>
@@ -102,6 +119,11 @@
 		color: var(--text);
 		font-weight: 600;
 	}
+	.meta code {
+		background: var(--bg-card);
+		padding: 1px 5px;
+		border-radius: var(--radius);
+	}
 	.table-wrap {
 		overflow-x: auto;
 		margin-top: 8px;
@@ -120,10 +142,26 @@
 		border-radius: var(--radius);
 		color: var(--text-muted);
 	}
-	/* The high-confidence bases (name/id confirmed by size) get the accent edge. */
-	.badge.basis-id-area,
-	.badge.basis-name-area {
+	/* Confidence: high (name/id confirmed by size) carries the accent edge. */
+	.badge.conf-high {
 		border-color: var(--accent);
 		color: var(--accent);
+	}
+	/* Audit verdict colours: status vocabulary, never the accent. */
+	.badge.audit-approved {
+		border-color: var(--good);
+		color: var(--good);
+	}
+	.badge.audit-rejected {
+		border-color: var(--danger);
+		color: var(--danger);
+	}
+	.badge.audit-unclear {
+		border-color: var(--warning);
+		color: var(--warning);
+	}
+	.badge.audit-unreviewed {
+		border-color: var(--border);
+		color: var(--text-dim);
 	}
 </style>

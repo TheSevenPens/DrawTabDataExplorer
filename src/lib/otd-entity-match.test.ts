@@ -48,10 +48,11 @@ describe('matchOtdToTablets', () => {
 		tab('CTL-472', 152, 95),
 	];
 
-	it('matches by id and confirms with area (id+area)', () => {
+	it('matches by id and confirms with area (id+area, high confidence)', () => {
 		const [r] = matchOtdToTablets([otd('Wacom PTK-440', 157.5, 98.4)], ours);
 		expect(r.entityId).toBe('wacom.tablet.ptk440');
 		expect(r.basis).toBe('id+area');
+		expect(r.confidence).toBe('high');
 		expect(r.fullName).toContain('PTK-440');
 	});
 
@@ -60,10 +61,11 @@ describe('matchOtdToTablets', () => {
 		expect(r.fullName).toBeNull();
 	});
 
-	it('matches by id alone when the area disagrees', () => {
+	it('matches by id alone when the area disagrees (medium confidence)', () => {
 		const [r] = matchOtdToTablets([otd('Wacom PTK-440', 999, 999)], ours);
 		expect(r.entityId).toBe('wacom.tablet.ptk440');
 		expect(r.basis).toBe('id');
+		expect(r.confidence).toBe('medium');
 	});
 
 	it('matches by marketing name against Model.Name, confirmed by area (name+area)', () => {

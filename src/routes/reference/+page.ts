@@ -6,7 +6,7 @@ import {
 } from '$data/lib/drawtab-loader.js';
 import { tabletFullName as fmtTabletFullName } from '$lib/tablet-helpers.js';
 import { penFullName } from '$lib/pen-helpers.js';
-import { matchOtdToTablets } from '$lib/otd-entity-match.js';
+import { matchOtdToTablets, type OtdEntityMapRow } from '$lib/otd-entity-match.js';
 import type { EnrichedPenCompat } from '$data/lib/entities/pen-compat-fields.js';
 
 export async function load({ parent }) {
@@ -20,6 +20,7 @@ export async function load({ parent }) {
 		wacomProducts,
 		brands,
 		otdConfig,
+		otdAudit,
 	] = await Promise.all([
 		ds.getISOPaperSizes(),
 		ds.getUSPaperSizes(),
@@ -29,6 +30,7 @@ export async function load({ parent }) {
 		ds.getWacomUpdateProducts(),
 		ds.Brands.toArray(),
 		ds.getOtdConfig(),
+		ds.getOtdEntityAudit(),
 	]);
 
 	// --- Pen Compatibility section: enrich each compat row with display names ---
@@ -71,12 +73,21 @@ export async function load({ parent }) {
 		XENCELABS: 'XenceLabs',
 	};
 	const otdTablets = otdConfig?.tablets ?? [];
-	const otdEntityMatches = Object.entries(OTD_VENDOR_BY_BRAND).flatMap(([brand, vendor]) =>
-		matchOtdToTablets(
-			otdTablets.filter((t) => t.vendor === vendor),
-			allTablets.filter((t) => t.Model.Brand === brand),
-		),
-	);
+	// Merge the hand-curated audit verdict onto each computed correlation. The
+	// overlay is keyed by "<otdFile>|<entityId>"; absence means "unreviewed".
+	const otdEntityMatches = Object.entries(OTD_VENDOR_BY_BRAND)
+		.flatMap(([brand, vendor]) =>
+			matchOtdToTablets(
+				otdTablets.filter((t) => t.vendor === vendor),
+				allTablets.filter((t) => t.Model.Brand === brand),
+			),
+		)
+		.map(
+			(m): OtdEntityMapRow => ({
+				...m,
+				audit: (m.entityId ? otdAudit[`${m.otdFile}|${m.entityId}`] : undefined) ?? 'unreviewed',
+			}),
+		);
 
 	return {
 		paperSizes,

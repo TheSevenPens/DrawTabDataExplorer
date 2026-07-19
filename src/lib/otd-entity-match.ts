@@ -8,13 +8,19 @@
 //
 // Groundwork for #308. Callers pass already-brand-filtered lists (e.g. OTD
 // Wacom vs our WACOM tablets); the matcher itself is brand-agnostic.
-import type { Tablet, OTDTablet } from '$data/lib/drawtab-loader.js';
+import type { Tablet, OTDTablet, OTDAuditStatus } from '$data/lib/drawtab-loader.js';
 import { tabletFullName } from '$lib/tablet-helpers.js';
+
+/** A curation verdict on a correlation; "unreviewed" is the default. */
+export type AuditValue = OTDAuditStatus | 'unreviewed';
 
 /** Active-area tolerance in mm for treating two dimensions as the same tablet. */
 export const AREA_TOLERANCE_MM = 2;
 
 export type MatchBasis = 'id+area' | 'name+area' | 'id' | 'name' | 'none';
+
+/** Coarse confidence: high = a name/id match independently confirmed by size. */
+export type Confidence = 'high' | 'medium';
 
 /** The high-confidence bases: a name/id match independently confirmed by size. */
 export function isHighConfidence(basis: MatchBasis): boolean {
@@ -22,6 +28,8 @@ export function isHighConfidence(basis: MatchBasis): boolean {
 }
 
 export interface OtdEntityMatchRow {
+	/** OTD config path — the stable key for the audit overlay. */
+	otdFile: string;
 	otdName: string;
 	otdVendor: string;
 	otdWidthMM: number | null;
@@ -32,7 +40,12 @@ export interface OtdEntityMatchRow {
 	ourWidthMM: number | null;
 	ourHeightMM: number | null;
 	basis: MatchBasis;
+	confidence: Confidence;
 }
+
+/** A match row plus its hand-curated audit verdict (merged in the route load
+ * from the audit overlay). */
+export type OtdEntityMapRow = OtdEntityMatchRow & { audit: AuditValue };
 
 const norm = (s: string) => s.replace(/[^a-z0-9]/gi, '').toUpperCase();
 
@@ -127,6 +140,7 @@ export function matchOtdToTablets(otd: OTDTablet[], ours: Tablet[]): OtdEntityMa
 
 		const oa = chosen ? ourArea(chosen) : null;
 		return {
+			otdFile: o.file,
 			otdName: o.name ?? o.file,
 			otdVendor: o.vendor,
 			otdWidthMM: otdA?.w ?? null,
@@ -137,6 +151,7 @@ export function matchOtdToTablets(otd: OTDTablet[], ours: Tablet[]): OtdEntityMa
 			ourWidthMM: oa?.w ?? null,
 			ourHeightMM: oa?.h ?? null,
 			basis,
+			confidence: isHighConfidence(basis) ? 'high' : 'medium',
 		};
 	});
 }
