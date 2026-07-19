@@ -60,10 +60,23 @@ export async function load({ parent }) {
 		if (t.Model.SensorId) sensorIdToTablet.set(t.Model.SensorId, t);
 	}
 
-	// --- OTD → Tablet Entity map: match OTD configs to our entities (Wacom for now) ---
-	const otdWacom = (otdConfig?.tablets ?? []).filter((t) => t.vendor === 'Wacom');
-	const wacomTablets = allTablets.filter((t) => t.Model.Brand === 'WACOM');
-	const otdEntityMatches = matchOtdToTablets(otdWacom, wacomTablets);
+	// --- OTD → Tablet Entity map: match OTD configs to our entities per brand ---
+	// Our brand code → OTD vendor folder, for the brands present in both.
+	const OTD_VENDOR_BY_BRAND: Record<string, string> = {
+		WACOM: 'Wacom',
+		HUION: 'Huion',
+		XPPEN: 'XP-Pen',
+		UGEE: 'UGEE',
+		GAOMON: 'Gaomon',
+		XENCELABS: 'XenceLabs',
+	};
+	const otdTablets = otdConfig?.tablets ?? [];
+	const otdEntityMatches = Object.entries(OTD_VENDOR_BY_BRAND).flatMap(([brand, vendor]) =>
+		matchOtdToTablets(
+			otdTablets.filter((t) => t.vendor === vendor),
+			allTablets.filter((t) => t.Model.Brand === brand),
+		),
+	);
 
 	return {
 		paperSizes,

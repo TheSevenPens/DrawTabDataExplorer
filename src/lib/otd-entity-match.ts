@@ -14,7 +14,12 @@ import { tabletFullName } from '$lib/tablet-helpers.js';
 /** Active-area tolerance in mm for treating two dimensions as the same tablet. */
 export const AREA_TOLERANCE_MM = 2;
 
-export type MatchBasis = 'id+area' | 'id' | 'area' | 'none';
+export type MatchBasis = 'id+area' | 'name+area' | 'id' | 'name' | 'area' | 'none';
+
+/** The high-confidence bases: a name/id match independently confirmed by size. */
+export function isHighConfidence(basis: MatchBasis): boolean {
+	return basis === 'id+area' || basis === 'name+area';
+}
 
 export interface OtdEntityMatchRow {
 	otdName: string;
@@ -55,12 +60,22 @@ export function candidateIds(name: string, vendor: string): string[] {
 	return out.map(norm).filter(Boolean);
 }
 
+/** Normalized marketing name: the OTD name after the vendor prefix, with
+ * parentheticals kept (they're part of our Model.Name, e.g. "Kamvas 16 (2021)"). */
+export function marketingNameKey(name: string, vendor: string): string {
+	const escaped = vendor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	return norm(name.replace(new RegExp(`^${escaped}\\s+`, 'i'), ''));
+}
+
 /** Match each OTD tablet to one of `ours` (same brand). Order preserved. */
 export function matchOtdToTablets(otd: OTDTablet[], ours: Tablet[]): OtdEntityMatchRow[] {
 	const byId = new Map<string, Tablet[]>();
+	const byName = new Map<string, Tablet[]>();
 	for (const t of ours) {
-		const k = norm(t.Model.Id);
-		(byId.get(k) ?? byId.set(k, []).get(k)!).push(t);
+		const i = norm(t.Model.Id);
+		(byId.get(i) ?? byId.set(i, []).get(i)!).push(t);
+		const n = norm(t.Model.Name);
+		if (n) (byName.get(n) ?? byName.set(n, []).get(n)!).push(t);
 	}
 
 	return otd.map((o) => {
@@ -72,6 +87,7 @@ export function matchOtdToTablets(otd: OTDTablet[], ours: Tablet[]): OtdEntityMa
 		let chosen: Tablet | null = null;
 		let basis: MatchBasis = 'none';
 
+		// 1. Model-number match: OTD name embeds our Model.Id (mostly Wacom).
 		for (const c of candidateIds(o.name ?? '', o.vendor)) {
 			const hits = byId.get(c) ?? [];
 			if (hits.length === 1) {
@@ -91,6 +107,20 @@ export function matchOtdToTablets(otd: OTDTablet[], ours: Tablet[]): OtdEntityMa
 			}
 		}
 
+		// 2. Marketing-name match: OTD name (after the vendor prefix) equals our
+		// Model.Name (Huion "Kamvas 16", XP-Pen "Deco M", …). Exact normalized
+		// equality only — never a substring — so "Kamvas 24" ≠ "Kamvas 24 Plus".
+		if (!chosen) {
+			const nameKey = marketingNameKey(o.name ?? '', o.vendor);
+			let hits = byName.get(nameKey) ?? [];
+			if (hits.length > 1) hits = hits.filter((t) => areaClose(otdA, ourArea(t)));
+			if (hits.length === 1) {
+				chosen = hits[0];
+				basis = areaClose(otdA, ourArea(chosen)) ? 'name+area' : 'name';
+			}
+		}
+
+		// 3. Size-only fallback: a unique active-area match, lower confidence.
 		if (!chosen && otdA) {
 			const areaHits = ours.filter((t) => areaClose(otdA, ourArea(t)));
 			if (areaHits.length === 1) {

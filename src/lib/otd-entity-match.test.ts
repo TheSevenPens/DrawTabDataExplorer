@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { matchOtdToTablets, candidateIds } from './otd-entity-match.js';
+import { matchOtdToTablets, candidateIds, isHighConfidence } from './otd-entity-match.js';
 import type { Tablet, OTDTablet } from '$data/lib/drawtab-loader.js';
 
 // Minimal fixtures — only the fields the matcher reads.
-function tab(id: string, w?: number, h?: number): Tablet {
+function tab(id: string, w?: number, h?: number, name = id): Tablet {
 	return {
 		Meta: { EntityId: `wacom.tablet.${id.replace(/[^a-z0-9]/gi, '').toLowerCase()}` },
-		Model: { Brand: 'WACOM', Id: id, Name: id },
+		Model: { Brand: 'WACOM', Id: id, Name: name },
 		Digitizer: w != null && h != null ? { Dimensions: { Width: w, Height: h } } : undefined,
 	} as unknown as Tablet;
 }
@@ -64,6 +64,21 @@ describe('matchOtdToTablets', () => {
 		const [r] = matchOtdToTablets([otd('Wacom PTK-440', 999, 999)], ours);
 		expect(r.entityId).toBe('wacom.tablet.ptk440');
 		expect(r.basis).toBe('id');
+	});
+
+	it('matches by marketing name against Model.Name, confirmed by area (name+area)', () => {
+		const huion = [tab('GS1562', 344.2, 193.6, 'Kamvas 16 (2021)')];
+		const [r] = matchOtdToTablets([otd('Huion Kamvas 16 (2021)', 344.2, 193.6, 'Huion')], huion);
+		expect(r.entityId).toBe('wacom.tablet.gs1562');
+		expect(r.basis).toBe('name+area');
+		expect(isHighConfidence(r.basis)).toBe(true);
+	});
+
+	it('does NOT match a near marketing name (Kamvas 24 vs Kamvas 24 Plus)', () => {
+		const huion = [tab('GS2402', 476, 268, 'Kamvas 24 Plus')];
+		const [r] = matchOtdToTablets([otd('Huion Kamvas 24', 476, 268, 'Huion')], huion);
+		// exact-normalized name differs; only a size coincidence remains → 'area'
+		expect(r.basis).not.toBe('name+area');
 	});
 
 	it('extracts the model id from a parenthetical marketing name', () => {

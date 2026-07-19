@@ -1,19 +1,24 @@
 <script lang="ts">
-	// Maps OpenTabletDriver config names to our tablet EntityIds. Wacom for now;
-	// matching (model number + active-area size) lives in $lib/otd-entity-match.
+	// Maps OpenTabletDriver config names to our tablet EntityIds across brands.
+	// Matching (model number, marketing name, active-area size) lives in
+	// $lib/otd-entity-match. Unmatched OTD configs (no entity) are not listed.
 	import EntityLink from '$lib/components/EntityLink.svelte';
-	import type { OtdEntityMatchRow } from '$lib/otd-entity-match.js';
+	import { isHighConfidence, type OtdEntityMatchRow } from '$lib/otd-entity-match.js';
 
 	let { matches }: { matches: OtdEntityMatchRow[] } = $props();
 
 	const matched = $derived(matches.filter((m) => m.entityId));
+	const n = (basis: string) => matches.filter((m) => m.basis === basis).length;
 	const counts = $derived({
 		total: matches.length,
 		matched: matched.length,
-		idArea: matches.filter((m) => m.basis === 'id+area').length,
-		id: matches.filter((m) => m.basis === 'id').length,
-		area: matches.filter((m) => m.basis === 'area').length,
-		none: matches.filter((m) => m.basis === 'none').length,
+		high: matches.filter((m) => isHighConfidence(m.basis)).length,
+		idArea: n('id+area'),
+		nameArea: n('name+area'),
+		id: n('id'),
+		name: n('name'),
+		area: n('area'),
+		none: n('none'),
 	});
 
 	const round1 = (n: number | null) => (n == null ? null : Math.round(n * 10) / 10);
@@ -33,16 +38,16 @@
 			href="https://github.com/OpenTabletDriver/OpenTabletDriver"
 			target="_blank"
 			rel="noopener">OpenTabletDriver</a
-		> config to our tablet entity, matched by model number and digitizer active-area size. Wacom only
-		for now.
+		>
+		config to our tablet entity, matched by model number, marketing name, and digitizer active-area
+		size. <strong>id+area</strong> and <strong>name+area</strong> (a name/id match confirmed by size)
+		are the high-confidence bases.
 	</p>
 	<p class="meta">
-		{counts.matched}/{counts.total} matched · <strong>id+area</strong>
-		{counts.idArea} ·
-		<strong>id</strong>
-		{counts.id} · <strong>area</strong>
+		{counts.matched} matched ({counts.high} high-confidence) of {counts.total} configs · id+area
+		{counts.idArea} · name+area {counts.nameArea} · id {counts.id} · name {counts.name} · area
 		{counts.area}
-		{#if counts.none}· <strong>unmatched</strong> {counts.none}{/if}
+		{#if counts.none}· {counts.none} unmatched (not shown){/if}
 	</p>
 
 	{#if matches.length}
@@ -59,23 +64,15 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each matches as m (m.otdName)}
-						<tr class:unmatched={!m.entityId}>
+					{#each matched as m (m.otdName)}
+						<tr>
 							<td>{m.otdName}</td>
 							<td>
-								{#if m.entityId}
-									<EntityLink entityId={m.entityId}>{m.modelId}</EntityLink>
-								{:else}
-									<span class="dim">—</span>
-								{/if}
+								<EntityLink entityId={m.entityId!}>{m.modelId}</EntityLink>
 							</td>
 							<td>{m.fullName ?? '—'}</td>
 							<td>
-								{#if m.basis !== 'none'}
-									<span class="badge basis-{m.basis.replace('+', '-')}">{m.basis}</span>
-								{:else}
-									<span class="dim">none</span>
-								{/if}
+								<span class="badge basis-{m.basis.replace('+', '-')}">{m.basis}</span>
 							</td>
 							<td class="mono">{area(m.otdWidthMM, m.otdHeightMM)}</td>
 							<td class="mono">{area(m.ourWidthMM, m.ourHeightMM)}</td>
@@ -115,9 +112,6 @@
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 		color: var(--text-muted);
 	}
-	tr.unmatched td {
-		color: var(--text-dim);
-	}
 	.badge {
 		display: inline-block;
 		padding: 1px 6px;
@@ -128,8 +122,9 @@
 		border-radius: var(--radius);
 		color: var(--text-muted);
 	}
-	/* id+area is the confident match — mark it with the accent edge. */
-	.badge.basis-id-area {
+	/* The high-confidence bases (name/id confirmed by size) get the accent edge. */
+	.badge.basis-id-area,
+	.badge.basis-name-area {
 		border-color: var(--accent);
 		color: var(--accent);
 	}
