@@ -23,6 +23,13 @@
 	function usbIds(ids: { vendorID: number | null; productID: number | null }[]): string {
 		return ids.length ? ids.map((i) => `${hex(i.vendorID)}:${hex(i.productID)}`).join(', ') : '—';
 	}
+	const round1 = (n: number | null) => (n == null ? null : Math.round(n * 10) / 10);
+	function activeArea(s: { widthMM: number | null; heightMM: number | null }): string {
+		const w = round1(s.widthMM);
+		const h = round1(s.heightMM);
+		return w != null && h != null ? `${w} × ${h}` : '—';
+	}
+	const numOrDash = (n: number | null) => (n == null ? '—' : String(n));
 	const shortCommit = $derived(src?.commit.slice(0, 7) ?? '');
 </script>
 
@@ -58,6 +65,10 @@
 					<tr>
 						<th>Name</th>
 						<th>Vendor</th>
+						<th>Active Area (mm)</th>
+						<th class="num">Max Pressure</th>
+						<th class="num">Pen Btns</th>
+						<th class="num">Aux Btns</th>
 						<th>USB IDs (VID:PID)</th>
 					</tr>
 				</thead>
@@ -73,6 +84,10 @@
 								{/if}
 							</td>
 							<td>{t.vendor}</td>
+							<td class="mono">{activeArea(t.specs)}</td>
+							<td class="num mono">{numOrDash(t.specs.penMaxPressure)}</td>
+							<td class="num mono">{numOrDash(t.specs.penButtons)}</td>
+							<td class="num mono">{numOrDash(t.specs.auxButtons)}</td>
 							<td class="mono">{usbIds(t.identifiers)}</td>
 						</tr>
 					{/each}
@@ -110,5 +125,8 @@
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 		color: var(--text-muted);
+	}
+	.num {
+		text-align: right;
 	}
 </style>
