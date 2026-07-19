@@ -10,16 +10,25 @@ import type { EnrichedPenCompat } from '$data/lib/entities/pen-compat-fields.js'
 
 export async function load({ parent }) {
 	const { ds } = await parent();
-	const [paperSizes, usPaperSizes, allTablets, penCompatRaw, pens, wacomProducts, brands] =
-		await Promise.all([
-			ds.getISOPaperSizes(),
-			ds.getUSPaperSizes(),
-			ds.Tablets.toArray(),
-			ds.PenCompat.toArray(),
-			ds.Pens.toArray(),
-			ds.getWacomUpdateProducts(),
-			ds.Brands.toArray(),
-		]);
+	const [
+		paperSizes,
+		usPaperSizes,
+		allTablets,
+		penCompatRaw,
+		pens,
+		wacomProducts,
+		brands,
+		otdConfig,
+	] = await Promise.all([
+		ds.getISOPaperSizes(),
+		ds.getUSPaperSizes(),
+		ds.Tablets.toArray(),
+		ds.PenCompat.toArray(),
+		ds.Pens.toArray(),
+		ds.getWacomUpdateProducts(),
+		ds.Brands.toArray(),
+		ds.getOtdConfig(),
+	]);
 
 	// --- Pen Compatibility section: enrich each compat row with display names ---
 	const tabletById = new Map<string, Tablet>();
@@ -59,5 +68,6 @@ export async function load({ parent }) {
 		wacomProducts: wacomProducts as WacomUpdateProduct[],
 		modelToTablet,
 		sensorIdToTablet,
+		otdConfig,
 	};
 }
