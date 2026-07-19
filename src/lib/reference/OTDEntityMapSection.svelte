@@ -48,8 +48,9 @@
 			target="_blank"
 			rel="noopener">OpenTabletDriver</a
 		>
-		config to our tablet entity, matched by model number, marketing name, and digitizer active-area
-		size. <strong>High</strong> confidence means a name/id match confirmed by size. The
+		config to our tablet entity, matched by model number, marketing name, and digitizer active-area size.
+		<strong>High</strong>
+		confidence means a name/id match confirmed by size. The
 		<strong>Audit</strong> verdict is curated in
 		<code>data/otd/otd-entity-audit.json</code>.
 	</p>
