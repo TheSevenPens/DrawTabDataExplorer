@@ -1,9 +1,9 @@
 <script lang="ts">
-	// TEMPORARY OTD→entity audit-curation page. Same table + filters as the
-	// reference "OTD To Tablet Entity" section, but each row's verdict is
+	// OTD→entity audit-curation page (linked from the reference "OTD To Tablet
+	// Entity" section). Same table + filters, but each row's verdict is
 	// editable. Edits are kept in localStorage (so you don't lose work) and
-	// exported as the exact data/otd/otd-entity-audit.json shape to hand back.
-	// Delete the whole src/routes/otd-audit/ folder when done.
+	// exported as the exact data/otd/otd-entity-audit.json shape to hand back
+	// for committing.
 	import Button from '$lib/components/Button.svelte';
 	import EntityLink from '$lib/components/EntityLink.svelte';
 	import type { OtdEntityMapRow, AuditValue } from '$lib/otd-entity-match.js';
@@ -139,7 +139,7 @@
 	const VERDICTS: AuditValue[] = ['unreviewed', 'approved', 'rejected', 'unclear'];
 </script>
 
-<svelte:head><title>OTD Audit (temporary)</title></svelte:head>
+<svelte:head><title>OTD Audit</title></svelte:head>
 
 <div class="page">
 	<div class="head">
@@ -147,9 +147,9 @@
 		<a href="/reference">← back to reference</a>
 	</div>
 	<p class="meta">
-		<strong>Temporary curation page.</strong> Mark each correlation's verdict below — your work is
-		saved in this browser (localStorage). When done, <em>Copy</em> or <em>Download</em> the JSON and
-		hand it back; it's the exact <code>data/otd/otd-entity-audit.json</code> shape.
+		<strong>Curation page.</strong> Mark each correlation's verdict below — your work is saved in
+		this browser (localStorage). When done, <em>Copy</em> or <em>Download</em> the JSON and hand it
+		back; it's the exact <code>data/otd/otd-entity-audit.json</code> shape.
 	</p>
 	<p class="meta">
 		{rows.length} correlations · <strong>{tally.approved}</strong> approved ·

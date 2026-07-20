@@ -70,9 +70,11 @@
 		>
 		config to our tablet entity, matched by model number, marketing name, and digitizer active-area size.
 		<strong>High</strong>
-		confidence means a name/id match confirmed by size. The
-		<strong>Audit</strong> verdict is curated in
-		<code>data/otd/otd-entity-audit.json</code>.
+		confidence means a name/id match confirmed by size. Curate the
+		<strong>Audit</strong> verdict on the
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+		<a href="/otd-audit">audit page →</a> (writes
+		<code>data/otd/otd-entity-audit.json</code>).
 	</p>
 	<p class="meta">
 		{counts.matched} matched ({counts.high} high) of {counts.total} configs · id+area {counts.idArea}

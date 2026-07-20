@@ -1,6 +1,6 @@
-// TEMPORARY curation page for OTD→entity correlations (see +page.svelte).
-// Mirrors the reference "OTD To Tablet Entity" matching; safe to delete this
-// whole `otd-audit/` folder once the audit overlay is filled in.
+// Audit-curation page for OTD→entity correlations (see +page.svelte),
+// linked from the reference "OTD To Tablet Entity" section. Mirrors that
+// section's matching.
 import { matchOtdToTablets, type OtdEntityMapRow } from '$lib/otd-entity-match.js';
 
 // Unlinked route — served via the SPA fallback rather than prerendered.
