@@ -120,6 +120,22 @@
 	const area = (w: number | null, h: number | null) =>
 		round1(w) != null && round1(h) != null ? `${round1(w)} × ${round1(h)}` : '—';
 
+	// Diagonal difference (mm) between the OTD and our active areas — a single
+	// scalar for "how far apart are these two sizes". Big values flag a shaky
+	// (or wrong) correlation.
+	function diagDiff(m: OtdEntityMapRow): number | null {
+		if (
+			m.otdWidthMM == null ||
+			m.otdHeightMM == null ||
+			m.ourWidthMM == null ||
+			m.ourHeightMM == null
+		)
+			return null;
+		const otd = Math.hypot(m.otdWidthMM, m.otdHeightMM);
+		const our = Math.hypot(m.ourWidthMM, m.ourHeightMM);
+		return Math.round(Math.abs(otd - our) * 10) / 10;
+	}
+
 	const VERDICTS: AuditValue[] = ['unreviewed', 'approved', 'rejected', 'unclear'];
 </script>
 
@@ -183,10 +199,12 @@
 					<th>Verdict</th>
 					<th>OTD Area (mm)</th>
 					<th>Our Area (mm)</th>
+					<th class="num">Diag Δ (mm)</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each filtered as m (m.otdFile)}
+					{@const dd = diagDiff(m)}
 					<tr>
 						<td>{m.otdName}</td>
 						<td><EntityLink entityId={m.entityId!}>{m.modelId}</EntityLink></td>
@@ -205,6 +223,7 @@
 						</td>
 						<td class="mono">{area(m.otdWidthMM, m.otdHeightMM)}</td>
 						<td class="mono">{area(m.ourWidthMM, m.ourHeightMM)}</td>
+						<td class="num mono" class:diff-large={dd != null && dd >= 5}>{dd ?? '—'}</td>
 					</tr>
 				{/each}
 			</tbody>
@@ -279,6 +298,13 @@
 	.mono {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 		color: var(--text-muted);
+	}
+	.num {
+		text-align: right;
+	}
+	/* A large diagonal gap flags a shaky size correlation. */
+	.diff-large {
+		color: var(--warning);
 	}
 	.badge {
 		display: inline-block;
