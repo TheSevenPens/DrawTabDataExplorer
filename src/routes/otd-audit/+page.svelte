@@ -191,9 +191,9 @@
 		<table class="ref-table">
 			<thead>
 				<tr>
-					<th>OTD Name</th>
+					<th class="wrap-cell">OTD Name</th>
 					<th>Tablet Entity</th>
-					<th>Tablet Full Name</th>
+					<th class="wrap-cell">Tablet Full Name</th>
 					<th>Confidence</th>
 					<th>Basis</th>
 					<th>Verdict</th>
@@ -206,9 +206,9 @@
 				{#each filtered as m (m.otdFile)}
 					{@const dd = diagDiff(m)}
 					<tr>
-						<td>{m.otdName}</td>
+						<td class="wrap-cell">{m.otdName}</td>
 						<td><EntityLink entityId={m.entityId!}>{m.modelId}</EntityLink></td>
-						<td>{m.fullName ?? '—'}</td>
+						<td class="wrap-cell">{m.fullName ?? '—'}</td>
 						<td><span class="badge conf-{m.confidence}">{m.confidence}</span></td>
 						<td class="dim mono">{m.basis}</td>
 						<td>
@@ -301,6 +301,13 @@
 	}
 	.num {
 		text-align: right;
+	}
+	/* Let the two long name columns wrap so the whole table fits the page
+	   width — otherwise the right-hand columns sit off-screen behind a
+	   horizontal scrollbar that's stranded below 160+ rows. */
+	.wrap-cell {
+		white-space: normal;
+		min-width: 130px;
 	}
 	/* A large diagonal gap flags a shaky size correlation. */
 	.diff-large {
