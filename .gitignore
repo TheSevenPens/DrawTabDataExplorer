@@ -15,6 +15,7 @@ static/brands
 static/reference
 static/wacom-update
 static/otd
+static/links
 static/version.json
 .claude/
 playwright-report/
