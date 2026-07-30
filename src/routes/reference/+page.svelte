@@ -79,6 +79,7 @@
 		{ id: 'bands-report-rate', category: 'Digitizer Bands', label: 'Report Rate' },
 		{ id: 'pen-compat', category: 'Compatibility', label: 'Pen Compatibility' },
 		{ id: 'driver-compat', category: 'Compatibility', label: 'Driver Compatibility' },
+		{ id: 'links-review', category: 'Tools', label: 'Links Review' },
 	];
 
 	interface BandSection {
@@ -615,6 +616,19 @@
 					modelToTablet={data.modelToTablet}
 					sensorIdToTablet={data.sensorIdToTablet}
 				/>
+			{:else if activeSection === 'links-review'}
+				<section>
+					<div class="section-header"><h2>Links Review</h2></div>
+					<p class="ref-blurb">
+						Curate the external reference links (reviews, product pages, manuals, store) shown on
+						tablet and pen detail pages — edit type / title / author / date, drop what doesn't
+						belong, then export the JSON to apply.
+					</p>
+					<p class="ref-blurb">
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+						<a href="/links-review">Open the links review page →</a>
+					</p>
+				</section>
 			{:else}
 				{#each specBandSections as s (s.id)}
 					{#if activeSection === s.id}
