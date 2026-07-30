@@ -8,6 +8,7 @@
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonTab from '$lib/components/JsonTab.svelte';
+	import EntityLinksSection from '$lib/components/EntityLinksSection.svelte';
 	import CompatEntityTable, { type CompatRow } from '$lib/components/CompatEntityTable.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
 	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
@@ -76,8 +77,18 @@
 		hiddenSessionIds = toggleInSet(hiddenSessionIds, id);
 	}
 
+	let links = $derived(pen.Links ?? []);
 	let activeTab = $state<
-		'model' | 'specs' | 'tablets' | 'included' | 'inventory' | 'pressure' | 'iaf' | 'max' | 'json'
+		| 'model'
+		| 'specs'
+		| 'tablets'
+		| 'included'
+		| 'inventory'
+		| 'pressure'
+		| 'iaf'
+		| 'max'
+		| 'links'
+		| 'json'
 	>('model');
 
 	function tabletExportRows(tablets: Tablet[]): (string | number)[][] {
@@ -160,6 +171,7 @@
 		{ id: 'pressure', label: 'Pressure Response' },
 		{ id: 'iaf', label: 'IAF' },
 		{ id: 'max', label: 'MAX' },
+		{ id: 'links', label: 'Links', badge: links.length, visible: links.length > 0 },
 		{ id: 'json', label: 'JSON' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
@@ -305,6 +317,12 @@
 		{:else}
 			<EmptyState>No pressure response data available for this pen model.</EmptyState>
 		{/if}
+	</div>
+{/if}
+
+{#if activeTab === 'links'}
+	<div class="tab-content">
+		<EntityLinksSection {links} />
 	</div>
 {/if}
 

@@ -18,9 +18,11 @@
 	import TabletCompatiblePensTab from '$lib/components/tablet-detail/TabletCompatiblePensTab.svelte';
 	import TabletInventoryTab from '$lib/components/tablet-detail/TabletInventoryTab.svelte';
 	import TabletSimilarTab from '$lib/components/tablet-detail/TabletSimilarTab.svelte';
+	import EntityLinksSection from '$lib/components/EntityLinksSection.svelte';
 
 	let { data } = $props();
 	let tablet: Tablet = $derived(data.tablet);
+	let links = $derived(tablet.Model.Links ?? []);
 	let allTablets: Tablet[] = $derived(data.allTablets);
 	let allPens: Pen[] = $derived(data.allPens);
 	let compatiblePens: Pen[] = $derived(data.compatiblePens);
@@ -29,7 +31,7 @@
 	let inventoryUnits: InventoryTablet[] = $derived(data.inventoryUnits ?? []);
 
 	let activeTab = $state<
-		'model' | 'specs' | 'size' | 'force' | 'pens' | 'inventory' | 'similar' | 'json'
+		'model' | 'specs' | 'size' | 'force' | 'pens' | 'inventory' | 'similar' | 'links' | 'json'
 	>('model');
 
 	let isPenTablet = $derived(tablet.Model.Type === 'PENTABLET');
@@ -125,6 +127,7 @@
 		{ id: 'pens', label: 'Compatible Pens' },
 		{ id: 'inventory', label: 'Inventory', badge: inventoryUnits.length },
 		{ id: 'similar', label: 'Similar Tablets' },
+		{ id: 'links', label: 'Links', badge: links.length, visible: links.length > 0 },
 		{ id: 'json', label: 'JSON' },
 	] satisfies Tab[]}
 	bind:active={activeTab}
@@ -149,6 +152,8 @@
 		<TabletInventoryTab {inventoryUnits} />
 	{:else if activeTab === 'similar'}
 		<TabletSimilarTab {tablet} {allTablets} />
+	{:else if activeTab === 'links'}
+		<EntityLinksSection {links} />
 	{:else if activeTab === 'json'}
 		<JsonTab entity={tablet} />
 	{/if}
