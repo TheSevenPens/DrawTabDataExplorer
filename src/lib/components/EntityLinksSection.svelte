@@ -7,13 +7,9 @@
 
 	const ORDER = [
 		['REVIEW', 'Reviews'],
-		['TUTORIAL', 'Tutorials'],
 		['PRODUCTINFO', 'Product info'],
 		['USERMANUAL', 'User manuals'],
 		['STORE', 'Store'],
-		['DISCUSSION', 'Discussions'],
-		['ARCHIVE', 'Archived'],
-		['NOTE', 'Notes'],
 	] as const;
 
 	const groups = $derived(

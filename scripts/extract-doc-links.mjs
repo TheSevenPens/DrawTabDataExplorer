@@ -73,15 +73,13 @@ function classify(url, title) {
 	const host = new URL(url).hostname.replace(/^www\./, '');
 	const t = title.toLowerCase();
 	const brand = BRAND_BY_HOST.find(([re]) => re.test(url))?.[1];
+	// Kept types only: REVIEW, PRODUCTINFO, USERMANUAL, STORE. Tutorials,
+	// reddit discussions, plain archives, and notes are dropped.
 	if (/youtube\.com|youtu\.be/.test(host)) {
-		let type = 'REVIEW';
-		if (/tutorial|how ?to|setup|unbox|connect|install|guide|timelapse/.test(t)) type = 'TUTORIAL';
-		return { type, author: ytAuthor(title) };
+		if (/tutorial|how ?to|setup|unbox|connect|install|guide|timelapse/.test(t)) return null;
+		return { type: 'REVIEW', author: ytAuthor(title) };
 	}
-	if (/reddit\.com/.test(host)) {
-		const m = url.match(/reddit\.com\/(r\/[^/]+)/i);
-		return { type: 'DISCUSSION', author: m ? m[1] : '' };
-	}
+	if (/reddit\.com/.test(host)) return null;
 	if (
 		/101\.wacom\.com/.test(host) ||
 		/manual|user ?help|userhelp/.test(t) ||
@@ -91,11 +89,11 @@ function classify(url, title) {
 	if (/store\.|estore\.|amazon\./.test(host)) return { type: 'STORE', author: brand ?? '' };
 	if (/archive\.org|archive\.is/.test(host)) {
 		if (/manual/.test(t)) return { type: 'USERMANUAL', author: '' };
-		return { type: 'ARCHIVE', author: '' };
+		return null;
 	}
-	if (/thesevenpens/.test(host)) return { type: 'NOTE', author: '' };
+	if (/thesevenpens/.test(host)) return null;
 	if (brand) return { type: 'PRODUCTINFO', author: brand };
-	return null; // out of scope (wikipedia, twitter, github, misc) — skip
+	return null; // out of scope — skip
 }
 // Unescape markdown, pull out an embedded date, and blank bare-URL titles.
 function cleanTitle(raw, url) {
