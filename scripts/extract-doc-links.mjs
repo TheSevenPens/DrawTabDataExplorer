@@ -131,7 +131,9 @@ for (const sub of ['catalog/drawtabs', 'catalog/pens']) {
 	if (fs.existsSync(base)) walk(base);
 }
 
-const linkRe = /\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)(\s+(\d{4}-\d{2}-\d{2}))?/g;
+// URL part allows markdown-escaped parens (\( \)) so URLs like
+// ".../Kamvas Pro 16 Plus \(4K\).pdf" aren't truncated at the first ")".
+const linkRe = /\[([^\]]*)\]\((https?:\/\/(?:\\[()]|[^)\s])+)\)(\s+(\d{4}-\d{2}-\d{2}))?/g;
 const embedRe = /\{%\s*embed\s+url="(https?:\/\/[^"]+)"\s*%\}/g;
 
 const records = [];
@@ -151,8 +153,9 @@ for (const { p, name, kind } of files) {
 		let m;
 		linkRe.lastIndex = 0;
 		while ((m = linkRe.exec(line))) {
-			const { title, date } = cleanTitle(m[1], m[2]);
-			links.push({ url: m[2], title, date: m[4] || date });
+			const url = m[2].replace(/\\([()&])/g, '$1'); // unescape markdown-escaped chars
+			const { title, date } = cleanTitle(m[1], url);
+			links.push({ url, title, date: m[4] || date });
 		}
 		embedRe.lastIndex = 0;
 		while ((m = embedRe.exec(line))) links.push({ url: m[1], title: '', date: '' });
