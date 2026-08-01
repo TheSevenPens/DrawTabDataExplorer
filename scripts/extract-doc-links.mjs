@@ -34,7 +34,7 @@ function loadEntities(dir, topKey, idKey, nameKey, kind) {
 		for (const e of j[topKey] ?? []) {
 			const m = kind === 'tablet' ? e.Model : e;
 			const eid = kind === 'tablet' ? e.Meta.EntityId : e.EntityId;
-			const ids = [m[idKey], m[nameKey], ...(m.AlternateNames ?? []), ...(m.OTDNames ?? [])];
+			const ids = [m[idKey], m[nameKey], ...(m.AlternateNames ?? [])];
 			const codes = [...new Set(ids.map(norm).filter((c) => c.length >= 4 && hasDigit(c)))];
 			out.push({ eid, kind, brand: m.Brand, codes });
 		}
