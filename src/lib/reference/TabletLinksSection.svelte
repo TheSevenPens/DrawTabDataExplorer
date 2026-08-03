@@ -3,6 +3,7 @@
 	// table. Rows are built in the route load (buildTabletLinkRows). Filters are
 	// client-side: search by tablet name, plus brand and type dropdowns.
 	import EntityLink from '$lib/components/EntityLink.svelte';
+	import { sortRows, type SortDir } from '$lib/components/sortable-table.js';
 	import type { TabletLinkRow } from '$lib/reference/tablet-links.js';
 
 	let { links }: { links: TabletLinkRow[] } = $props();
@@ -48,6 +49,28 @@
 			return url;
 		}
 	}
+
+	// --- Sorting (clickable Title / Tablet / Author / Date headers) ---
+	// Accessors match the visible cell text so the order is unsurprising.
+	const SORT_ACCESSORS: Record<string, (l: TabletLinkRow) => string> = {
+		title: (l) => (l.title || hostOf(l.url)).toLowerCase(),
+		tablet: (l) => l.tabletLabel.toLowerCase(),
+		author: (l) => l.author.toLowerCase(),
+		date: (l) => l.publishDate,
+	};
+	let sortKey = $state('');
+	let sortDir = $state<SortDir>('asc');
+	function sortBy(key: string) {
+		if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+		else {
+			sortKey = key;
+			sortDir = 'asc';
+		}
+	}
+	// No sort chosen → keep the load order (tablet name, then type).
+	const sorted = $derived(
+		sortKey ? sortRows(filtered, SORT_ACCESSORS[sortKey], sortDir) : filtered,
+	);
 </script>
 
 <section>
@@ -78,20 +101,30 @@
 			</select>
 			<span class="filter-count">{filtered.length} of {links.length}</span>
 		</div>
+		{#snippet sortHeader(key: string, label: string)}
+			<th
+				class="sortable"
+				aria-sort={sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+				onclick={() => sortBy(key)}
+			>
+				{label}{#if sortKey === key}<span class="arrow">{sortDir === 'asc' ? ' ▲' : ' ▼'}</span
+					>{/if}
+			</th>
+		{/snippet}
 		<div class="table-wrap">
 			<table class="ref-table">
 				<thead>
 					<tr>
 						<th>Type</th>
-						<th>Title</th>
-						<th>Tablet</th>
+						{@render sortHeader('title', 'Title')}
+						{@render sortHeader('tablet', 'Tablet')}
 						<th>Brand</th>
-						<th>Author</th>
-						<th>Date</th>
+						{@render sortHeader('author', 'Author')}
+						{@render sortHeader('date', 'Date')}
 					</tr>
 				</thead>
 				<tbody>
-					{#each filtered as l (l.tabletEntityId + '|' + l.url)}
+					{#each sorted as l (l.tabletEntityId + '|' + l.url)}
 						<tr>
 							<td><span class="badge">{TYPE_LABEL[l.type] ?? l.type}</span></td>
 							<td class="title-cell">
@@ -149,5 +182,15 @@
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		color: var(--text-muted);
+	}
+	th.sortable {
+		cursor: pointer;
+		user-select: none;
+	}
+	th.sortable:hover {
+		color: var(--text);
+	}
+	.arrow {
+		font-size: 10px;
 	}
 </style>
