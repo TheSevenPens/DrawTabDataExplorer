@@ -8,6 +8,7 @@ import { tabletFullName as fmtTabletFullName } from '$lib/tablet-helpers.js';
 import { penFullName } from '$lib/pen-helpers.js';
 import { matchOtdToTablets, type OtdEntityMapRow } from '$lib/otd-entity-match.js';
 import { buildTabletLinkRows } from '$lib/reference/tablet-links.js';
+import { buildInventoryTabletsWithoutLinksRows } from '$lib/reference/inventory-no-links.js';
 import type { EnrichedPenCompat } from '$data/lib/entities/pen-compat-fields.js';
 
 export async function load({ parent }) {
@@ -22,6 +23,7 @@ export async function load({ parent }) {
 		brands,
 		otdConfig,
 		otdAudit,
+		inventoryTablets,
 	] = await Promise.all([
 		ds.getISOPaperSizes(),
 		ds.getUSPaperSizes(),
@@ -32,6 +34,7 @@ export async function load({ parent }) {
 		ds.Brands.toArray(),
 		ds.getOtdConfig(),
 		ds.getOtdEntityAudit(),
+		ds.InventoryTablets.toArray(),
 	]);
 
 	// --- Pen Compatibility section: enrich each compat row with display names ---
@@ -93,6 +96,9 @@ export async function load({ parent }) {
 	// --- Tablet Links section: flatten every tablet's Model.Links to rows ---
 	const tabletLinks = buildTabletLinkRows(allTablets);
 
+	// --- Inventory Missing Links: owned tablets with no links yet ---
+	const inventoryNoLinks = buildInventoryTabletsWithoutLinksRows(allTablets, inventoryTablets);
+
 	return {
 		paperSizes,
 		usPaperSizes,
@@ -105,5 +111,6 @@ export async function load({ parent }) {
 		otdConfig,
 		otdEntityMatches,
 		tabletLinks,
+		inventoryNoLinks,
 	};
 }

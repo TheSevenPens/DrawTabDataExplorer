@@ -16,6 +16,7 @@
 	import OTDTabletsSection from '$lib/reference/OTDTabletsSection.svelte';
 	import OTDEntityMapSection from '$lib/reference/OTDEntityMapSection.svelte';
 	import TabletLinksSection from '$lib/reference/TabletLinksSection.svelte';
+	import InventoryNoLinksSection from '$lib/reference/InventoryNoLinksSection.svelte';
 	import {
 		BRAND_FIELDS,
 		BRAND_FIELD_GROUPS,
@@ -81,6 +82,7 @@
 		{ id: 'pen-compat', category: 'Compatibility', label: 'Pen Compatibility' },
 		{ id: 'driver-compat', category: 'Compatibility', label: 'Driver Compatibility' },
 		{ id: 'tablet-links', category: 'Links', label: 'Tablet Links' },
+		{ id: 'inventory-no-links', category: 'Links', label: 'Inventory Missing Links' },
 		{ id: 'links-review', category: 'Links', label: 'Links Review' },
 	];
 
@@ -620,6 +622,8 @@
 				/>
 			{:else if activeSection === 'tablet-links'}
 				<TabletLinksSection links={data.tabletLinks} />
+			{:else if activeSection === 'inventory-no-links'}
+				<InventoryNoLinksSection rows={data.inventoryNoLinks} />
 			{:else if activeSection === 'links-review'}
 				<section>
 					<div class="section-header"><h2>Links Review</h2></div>
