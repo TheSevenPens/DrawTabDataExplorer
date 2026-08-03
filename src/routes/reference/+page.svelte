@@ -15,6 +15,7 @@
 	import DriverCompatSection from '$lib/reference/DriverCompatSection.svelte';
 	import OTDTabletsSection from '$lib/reference/OTDTabletsSection.svelte';
 	import OTDEntityMapSection from '$lib/reference/OTDEntityMapSection.svelte';
+	import TabletLinksSection from '$lib/reference/TabletLinksSection.svelte';
 	import {
 		BRAND_FIELDS,
 		BRAND_FIELD_GROUPS,
@@ -79,7 +80,8 @@
 		{ id: 'bands-report-rate', category: 'Digitizer Bands', label: 'Report Rate' },
 		{ id: 'pen-compat', category: 'Compatibility', label: 'Pen Compatibility' },
 		{ id: 'driver-compat', category: 'Compatibility', label: 'Driver Compatibility' },
-		{ id: 'links-review', category: 'Tools', label: 'Links Review' },
+		{ id: 'tablet-links', category: 'Links', label: 'Tablet Links' },
+		{ id: 'links-review', category: 'Links', label: 'Links Review' },
 	];
 
 	interface BandSection {
@@ -616,6 +618,8 @@
 					modelToTablet={data.modelToTablet}
 					sensorIdToTablet={data.sensorIdToTablet}
 				/>
+			{:else if activeSection === 'tablet-links'}
+				<TabletLinksSection links={data.tabletLinks} />
 			{:else if activeSection === 'links-review'}
 				<section>
 					<div class="section-header"><h2>Links Review</h2></div>

@@ -7,6 +7,7 @@ import {
 import { tabletFullName as fmtTabletFullName } from '$lib/tablet-helpers.js';
 import { penFullName } from '$lib/pen-helpers.js';
 import { matchOtdToTablets, type OtdEntityMapRow } from '$lib/otd-entity-match.js';
+import { buildTabletLinkRows } from '$lib/reference/tablet-links.js';
 import type { EnrichedPenCompat } from '$data/lib/entities/pen-compat-fields.js';
 
 export async function load({ parent }) {
@@ -89,6 +90,9 @@ export async function load({ parent }) {
 			}),
 		);
 
+	// --- Tablet Links section: flatten every tablet's Model.Links to rows ---
+	const tabletLinks = buildTabletLinkRows(allTablets);
+
 	return {
 		paperSizes,
 		usPaperSizes,
@@ -100,5 +104,6 @@ export async function load({ parent }) {
 		sensorIdToTablet,
 		otdConfig,
 		otdEntityMatches,
+		tabletLinks,
 	};
 }
