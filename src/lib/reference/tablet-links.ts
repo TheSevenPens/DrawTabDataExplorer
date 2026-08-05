@@ -24,7 +24,14 @@ export interface TabletLinkRow {
 }
 
 // Presentation order for the type column / default row sort.
-const TYPE_RANK: Record<string, number> = { REVIEW: 0, PRODUCTINFO: 1, USERMANUAL: 2, STORE: 3 };
+const TYPE_RANK: Record<string, number> = {
+	MANUFACTURERPRODUCTINFO: 0,
+	PRODUCTINFO: 1,
+	MANUFACTURERUSERMANUAL: 2,
+	USERMANUAL: 3,
+	REVIEW: 4,
+	STORE: 5,
+};
 
 export function buildTabletLinkRows(tablets: Tablet[]): TabletLinkRow[] {
 	const rows: TabletLinkRow[] = [];

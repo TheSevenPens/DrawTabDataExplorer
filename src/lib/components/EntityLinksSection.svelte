@@ -6,11 +6,20 @@
 
 	let { links }: { links: Link[] } = $props();
 
-	const RANK: Record<string, number> = { REVIEW: 0, PRODUCTINFO: 1, USERMANUAL: 2, STORE: 3 };
+	const RANK: Record<string, number> = {
+		MANUFACTURERPRODUCTINFO: 0,
+		PRODUCTINFO: 1,
+		MANUFACTURERUSERMANUAL: 2,
+		USERMANUAL: 3,
+		REVIEW: 4,
+		STORE: 5,
+	};
 	const TYPE_LABEL: Record<string, string> = {
-		REVIEW: 'review',
+		MANUFACTURERPRODUCTINFO: 'official product',
 		PRODUCTINFO: 'product',
+		MANUFACTURERUSERMANUAL: 'official manual',
 		USERMANUAL: 'manual',
+		REVIEW: 'review',
 		STORE: 'store',
 	};
 

@@ -9,7 +9,14 @@
 	let { data } = $props();
 	const rows = $derived(data.links);
 
-	const TYPES = ['REVIEW', 'PRODUCTINFO', 'USERMANUAL', 'STORE'];
+	const TYPES = [
+		'REVIEW',
+		'MANUFACTURERPRODUCTINFO',
+		'PRODUCTINFO',
+		'MANUFACTURERUSERMANUAL',
+		'USERMANUAL',
+		'STORE',
+	];
 
 	type Edit = { type?: string; title?: string; author?: string; publishDate?: string };
 	const keyOf = (l: (typeof rows)[number]) => `${l.entityId}|${l.url}`;
