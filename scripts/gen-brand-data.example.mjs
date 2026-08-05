@@ -137,8 +137,14 @@ function buildTablet(t) {
 			LaunchYear: t.year,
 			...(t.audience ? { Audience: t.audience } : {}),
 			...(t.family ? { Family: t.family } : {}),
-			...(t.productLink ? { ProductLink: t.productLink } : {}),
 			...(t.status ? { Status: t.status } : {}),
+			// The manufacturer product page lives in Links as the single
+			// MANUFACTURERPRODUCTINFO entry (read via tabletManufacturerProductLink);
+			// there is no standalone ProductLink field anymore. Author should be the
+			// brand *display* name (e.g. "Wacom") — BRAND here is the enum code.
+			...(t.productLink
+				? { Links: [{ Type: 'MANUFACTURERPRODUCTINFO', URL: t.productLink, Author: BRAND }] }
+				: {}),
 		},
 		...(Object.keys(digitizer).length ? { Digitizer: digitizer } : {}),
 	};

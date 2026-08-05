@@ -345,7 +345,6 @@ export function analyzeData(data: AnalysisInput) {
 			'Digitizer.SupportsTouch',
 			'Physical.Dimensions',
 			'Physical.Weight',
-			'Model.ProductLink',
 		]),
 		displayCompletion: computeCompletion(displayTablets, [
 			'Display.PixelDimensions',
