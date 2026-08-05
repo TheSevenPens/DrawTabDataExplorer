@@ -59,13 +59,14 @@
 		}
 	}
 
-	// --- Sorting (clickable Domain / Author / Tablet / Title headers) ---
+	// --- Sorting (clickable Domain / Author / Tablet / Title / Date headers) ---
 	// Accessors match the visible cell text so the order is unsurprising.
 	const SORT_ACCESSORS: Record<string, (l: TabletLinkRow) => string> = {
 		domain: (l) => hostOf(l.url).toLowerCase(),
 		author: (l) => l.author.toLowerCase(),
 		tablet: (l) => l.tabletLabel.toLowerCase(),
 		title: (l) => (l.title || hostOf(l.url)).toLowerCase(),
+		date: (l) => l.publishDate,
 	};
 	let sortKey = $state('');
 	let sortDir = $state<SortDir>('asc');
@@ -130,6 +131,7 @@
 						{@render sortHeader('author', 'Author')}
 						{@render sortHeader('tablet', 'Tablet')}
 						{@render sortHeader('title', 'Title')}
+						{@render sortHeader('date', 'Date')}
 					</tr>
 				</thead>
 				<tbody>
@@ -144,6 +146,7 @@
 								<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 								<a href={l.url} target="_blank" rel="noopener">{l.title || hostOf(l.url)}</a>
 							</td>
+							<td class="dim mono">{l.publishDate || '—'}</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -178,6 +181,9 @@
 	}
 	.dim {
 		color: var(--text-muted);
+	}
+	.mono {
+		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 	}
 	.badge {
 		display: inline-block;
