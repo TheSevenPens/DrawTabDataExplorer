@@ -91,14 +91,10 @@
 					<th>Type</th>
 					<th>Year</th>
 					<th>Status</th>
-					<th title="Active area lost when using Force Proportions at 16:9">FP Loss 16:9</th>
-					<th title="Active area lost when using Force Proportions at 16:10">FP Loss 16:10</th>
 				</tr>
 			</thead>
 			<tbody>
 				{#each familyTablets as tablet (tablet.Meta.EntityId)}
-					{@const d = tablet.Digitizer?.Dimensions}
-					{@const isPenTablet = tablet.Model.Type === 'PENTABLET'}
 					<tr>
 						<td
 							><a href={resolve('/entity/[entityId]', { entityId: tablet.Meta.EntityId })}
@@ -110,30 +106,6 @@
 						<td>{tablet.Model.Type}</td>
 						<td>{tablet.Model.LaunchYear || ''}</td>
 						<td>{tablet.Model.Status || ''}</td>
-						<td
-							>{#if isPenTablet && d?.Width && d?.Height}{(() => {
-									const w = d.Width,
-										h = d.Height,
-										r = 16 / 9,
-										cur = w / h,
-										nw = cur > r ? h * r : w,
-										nh = cur > r ? h : w / r,
-										loss = ((w * h - nw * nh) / (w * h)) * 100;
-									return loss < 0.05 ? '0%' : loss.toFixed(1) + '%';
-								})()}{/if}</td
-						>
-						<td
-							>{#if isPenTablet && d?.Width && d?.Height}{(() => {
-									const w = d.Width,
-										h = d.Height,
-										r = 16 / 10,
-										cur = w / h,
-										nw = cur > r ? h * r : w,
-										nh = cur > r ? h : w / r,
-										loss = ((w * h - nw * nh) / (w * h)) * 100;
-									return loss < 0.05 ? '0%' : loss.toFixed(1) + '%';
-								})()}{/if}</td
-						>
 					</tr>
 				{/each}
 			</tbody>
