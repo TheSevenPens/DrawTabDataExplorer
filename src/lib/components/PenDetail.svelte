@@ -322,7 +322,7 @@
 
 {#if activeTab === 'links'}
 	<div class="tab-content">
-		<EntityLinksSection {links} />
+		<EntityLinksSection {links} name={pen.PenId} />
 	</div>
 {/if}
 

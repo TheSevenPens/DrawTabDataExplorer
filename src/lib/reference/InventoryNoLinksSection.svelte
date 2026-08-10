@@ -4,6 +4,7 @@
 	// (buildInventoryTabletsWithoutLinksRows). Filters are client-side: search by
 	// tablet name, plus brand and (tablet) type dropdowns. Columns are sortable.
 	import EntityLink from '$lib/components/EntityLink.svelte';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import { sortRows, type SortDir } from '$lib/components/sortable-table.js';
 	import type { InventoryNoLinksRow } from '$lib/reference/inventory-no-links.js';
 
@@ -50,6 +51,11 @@
 	const sorted = $derived(
 		sortKey ? sortRows(filtered, SORT_ACCESSORS[sortKey], sortDir) : filtered,
 	);
+
+	const exportHeaders = ['Tablet', 'Brand', 'Type', 'Year', 'Units', 'EntityId'];
+	const exportRows = $derived(
+		sorted.map((r) => [r.tabletLabel, r.brandName, r.type, r.year, r.units, r.tabletEntityId]),
+	);
 </script>
 
 <section>
@@ -90,6 +96,15 @@
 				{/each}
 			</select>
 			<span class="filter-count">{filtered.length} of {rows.length}</span>
+			<span class="export-slot">
+				<ExportTableButton
+					entityType="reference"
+					title="Inventory Missing Links"
+					filename="inventory-missing-links"
+					headers={exportHeaders}
+					rows={exportRows}
+				/>
+			</span>
 		</div>
 		<div class="table-wrap">
 			<table class="ref-table">
@@ -137,6 +152,9 @@
 	.table-wrap {
 		overflow-x: auto;
 		margin-top: 8px;
+	}
+	.export-slot {
+		margin-left: auto;
 	}
 	.dim {
 		color: var(--text-muted);

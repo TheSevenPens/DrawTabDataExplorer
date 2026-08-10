@@ -3,6 +3,7 @@
 	// table. Rows are built in the route load (buildTabletLinkRows). Filters are
 	// client-side: search by tablet name, plus brand and type dropdowns.
 	import EntityLink from '$lib/components/EntityLink.svelte';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import { sortRows, type SortDir } from '$lib/components/sortable-table.js';
 	import type { TabletLinkRow } from '$lib/reference/tablet-links.js';
 
@@ -91,6 +92,36 @@
 	const sorted = $derived(
 		sortKey ? sortRows(filtered, SORT_ACCESSORS[sortKey], sortDir) : filtered,
 	);
+
+	// Export the currently filtered + sorted rows.
+	const exportHeaders = [
+		'Type',
+		'Content',
+		'Status',
+		'Domain',
+		'Brand',
+		'Author',
+		'Tablet',
+		'Title',
+		'URL',
+		'Date',
+		'Tablet EntityId',
+	];
+	const exportRows = $derived(
+		sorted.map((l) => [
+			TYPE_LABEL[l.type] ?? l.type,
+			l.contentType,
+			l.checkStatus,
+			hostOf(l.url),
+			l.brandName,
+			l.author,
+			l.tabletLabel,
+			l.title,
+			l.url,
+			l.publishDate,
+			l.tabletEntityId,
+		]),
+	);
 </script>
 
 <section>
@@ -132,6 +163,15 @@
 				{/each}
 			</select>
 			<span class="filter-count">{filtered.length} of {links.length}</span>
+			<span class="export-slot">
+				<ExportTableButton
+					entityType="reference"
+					title="Tablet Links"
+					filename="tablet-links"
+					headers={exportHeaders}
+					rows={exportRows}
+				/>
+			</span>
 		</div>
 		{#snippet sortHeader(key: string, label: string)}
 			<th
@@ -204,6 +244,9 @@
 	.table-wrap {
 		overflow-x: auto;
 		margin-top: 8px;
+	}
+	.export-slot {
+		margin-left: auto; /* push the export button to the right of the filter row */
 	}
 	.title-cell {
 		white-space: normal;

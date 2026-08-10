@@ -153,7 +153,7 @@
 	{:else if activeTab === 'similar'}
 		<TabletSimilarTab {tablet} {allTablets} />
 	{:else if activeTab === 'links'}
-		<EntityLinksSection {links} />
+		<EntityLinksSection {links} name={tablet.Model.Id} />
 	{:else if activeTab === 'json'}
 		<JsonTab entity={tablet} />
 	{/if}

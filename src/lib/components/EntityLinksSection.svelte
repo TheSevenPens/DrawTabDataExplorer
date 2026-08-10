@@ -3,8 +3,10 @@
 	// Type / Content / Status / Domain / Author / Title columns. Data lives on
 	// Model.Links / Links; curated via the /links-review page.
 	import type { Link } from '$data/lib/drawtab-loader.js';
+	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 
-	let { links }: { links: Link[] } = $props();
+	// `name` (e.g. the tablet/pen Model.Id) only labels the export file/title.
+	let { links, name = '' }: { links: Link[]; name?: string } = $props();
 
 	const RANK: Record<string, number> = {
 		MANUFACTURERPRODUCTINFO: 0,
@@ -33,9 +35,41 @@
 			return url;
 		}
 	}
+
+	const exportHeaders = [
+		'Type',
+		'Content',
+		'Status',
+		'Domain',
+		'Author',
+		'Title',
+		'URL',
+		'Published',
+	];
+	const exportRows = $derived(
+		ordered.map((l) => [
+			TYPE_LABEL[l.Type] ?? l.Type,
+			l.ContentType ?? '',
+			l.Check?.Status ?? '',
+			hostOf(l.URL),
+			l.Author ?? '',
+			l.Title ?? '',
+			l.URL,
+			l.PublishDate ?? '',
+		]),
+	);
 </script>
 
 {#if ordered.length}
+	<div class="controls">
+		<ExportTableButton
+			entityType="links"
+			title={name ? `${name} links` : 'Links'}
+			filename={name ? `${name}-links` : 'links'}
+			headers={exportHeaders}
+			rows={exportRows}
+		/>
+	</div>
 	<div class="table-wrap">
 		<table class="links-table">
 			<thead>
@@ -73,6 +107,11 @@
 {/if}
 
 <style>
+	.controls {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 8px;
+	}
 	.links-table {
 		width: auto;
 		font-size: 13px;
