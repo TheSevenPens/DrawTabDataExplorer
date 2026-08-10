@@ -21,6 +21,10 @@ export interface TabletLinkRow {
 	title: string;
 	author: string;
 	publishDate: string;
+	/** What the URL leads to (HTML/PDF/VIDEO/…), or '' if not yet checked. */
+	contentType: string;
+	/** Last link-check result (OK/DEAD/BLOCKED/REDIRECT/…), or '' if unchecked. */
+	checkStatus: string;
 }
 
 // Presentation order for the type column / default row sort.
@@ -48,6 +52,8 @@ export function buildTabletLinkRows(tablets: Tablet[]): TabletLinkRow[] {
 				title: l.Title ?? '',
 				author: l.Author ?? '',
 				publishDate: l.PublishDate ?? '',
+				contentType: l.ContentType ?? '',
+				checkStatus: l.Check?.Status ?? '',
 			});
 		}
 	}

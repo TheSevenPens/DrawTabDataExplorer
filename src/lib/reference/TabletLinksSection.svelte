@@ -29,6 +29,8 @@
 	let search = $state('');
 	let brand = $state('');
 	let type = $state('');
+	let contentType = $state('');
+	let status = $state('');
 
 	// Distinct brands (by code, label from the row) for the dropdown.
 	const brands = $derived(
@@ -41,12 +43,18 @@
 			(a, b) => (TYPE_RANK[a] ?? 9) - (TYPE_RANK[b] ?? 9),
 		),
 	);
+	const contentTypes = $derived(
+		[...new Set(links.map((l) => l.contentType).filter(Boolean))].sort(),
+	);
+	const statuses = $derived([...new Set(links.map((l) => l.checkStatus).filter(Boolean))].sort());
 
 	const filtered = $derived(
 		links.filter(
 			(l) =>
 				(brand === '' || l.brand === brand) &&
 				(type === '' || l.type === type) &&
+				(contentType === '' || l.contentType === contentType) &&
+				(status === '' || l.checkStatus === status) &&
 				(search === '' || l.tabletFullName.toLowerCase().includes(search.toLowerCase())),
 		),
 	);
@@ -67,6 +75,8 @@
 		tablet: (l) => l.tabletLabel.toLowerCase(),
 		title: (l) => (l.title || hostOf(l.url)).toLowerCase(),
 		date: (l) => l.publishDate,
+		contenttype: (l) => l.contentType,
+		status: (l) => l.checkStatus,
 	};
 	let sortKey = $state('');
 	let sortDir = $state<SortDir>('asc');
@@ -109,6 +119,18 @@
 					<option value={t}>{TYPE_LABEL[t] ?? t}</option>
 				{/each}
 			</select>
+			<select bind:value={contentType} aria-label="Filter by content type">
+				<option value="">All content</option>
+				{#each contentTypes as c (c)}
+					<option value={c}>{c}</option>
+				{/each}
+			</select>
+			<select bind:value={status} aria-label="Filter by check status">
+				<option value="">All statuses</option>
+				{#each statuses as s (s)}
+					<option value={s}>{s}</option>
+				{/each}
+			</select>
 			<span class="filter-count">{filtered.length} of {links.length}</span>
 		</div>
 		{#snippet sortHeader(key: string, label: string)}
@@ -126,6 +148,8 @@
 				<thead>
 					<tr>
 						<th>Type</th>
+						{@render sortHeader('contenttype', 'Content')}
+						{@render sortHeader('status', 'Status')}
 						{@render sortHeader('domain', 'Domain')}
 						<th>Brand</th>
 						{@render sortHeader('author', 'Author')}
@@ -138,6 +162,12 @@
 					{#each sorted as l (l.tabletEntityId + '|' + l.url)}
 						<tr>
 							<td><span class="badge">{TYPE_LABEL[l.type] ?? l.type}</span></td>
+							<td class="dim">{l.contentType || '—'}</td>
+							<td
+								>{#if l.checkStatus}<span class="badge status status-{l.checkStatus}"
+										>{l.checkStatus}</span
+									>{:else}<span class="dim">—</span>{/if}</td
+							>
 							<td class="dim">{hostOf(l.url)}</td>
 							<td class="dim">{l.brandName}</td>
 							<td class="dim">{l.author || '—'}</td>
@@ -204,5 +234,20 @@
 	}
 	.arrow {
 		font-size: 10px;
+	}
+	/* Check-status colours: status vocabulary, never the accent. */
+	.status-OK {
+		border-color: var(--good);
+		color: var(--good);
+	}
+	.status-DEAD {
+		border-color: var(--danger);
+		color: var(--danger);
+	}
+	.status-BLOCKED,
+	.status-REDIRECT,
+	.status-ERROR {
+		border-color: var(--warning);
+		color: var(--warning);
 	}
 </style>

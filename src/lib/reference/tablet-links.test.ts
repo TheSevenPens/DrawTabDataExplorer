@@ -46,6 +46,18 @@ describe('buildTabletLinkRows', () => {
 		expect(bare.title).toBe('');
 		expect(bare.author).toBe('');
 		expect(bare.publishDate).toBe('');
+		expect(bare.contentType).toBe('');
+		expect(bare.checkStatus).toBe('');
+	});
+
+	it('surfaces ContentType and Check.Status', () => {
+		const [row] = buildTabletLinkRows([
+			tab('P', 'WACOM', 'P', [
+				{ Type: 'REVIEW', URL: 'https://v', ContentType: 'VIDEO', Check: { Status: 'OK' } },
+			]),
+		]);
+		expect(row.contentType).toBe('VIDEO');
+		expect(row.checkStatus).toBe('OK');
 	});
 
 	it('sorts by tablet name, then by type rank (REVIEW before STORE)', () => {

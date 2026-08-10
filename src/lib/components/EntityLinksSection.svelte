@@ -1,7 +1,7 @@
 <script lang="ts">
 	// External reference links for a tablet/pen entity, as a table with
-	// Type / Domain / Author / Title columns. Data lives on Model.Links / Links;
-	// curated via the /links-review page.
+	// Type / Content / Status / Domain / Author / Title columns. Data lives on
+	// Model.Links / Links; curated via the /links-review page.
 	import type { Link } from '$data/lib/drawtab-loader.js';
 
 	let { links }: { links: Link[] } = $props();
@@ -41,6 +41,8 @@
 			<thead>
 				<tr>
 					<th>Type</th>
+					<th>Content</th>
+					<th>Status</th>
 					<th>Domain</th>
 					<th>Author</th>
 					<th>Title</th>
@@ -50,6 +52,11 @@
 				{#each ordered as l (l.URL)}
 					<tr>
 						<td><span class="tag">{TYPE_LABEL[l.Type] ?? l.Type}</span></td>
+						<td class="dim">{l.ContentType || '—'}</td>
+						<td>
+							{#if l.Check?.Status}<span class="tag status-{l.Check.Status}">{l.Check.Status}</span
+								>{:else}<span class="dim">—</span>{/if}
+						</td>
 						<td class="dim">{hostOf(l.URL)}</td>
 						<td class="dim">{l.Author || '—'}</td>
 						<td class="title-cell">
@@ -84,6 +91,21 @@
 	}
 	.dim {
 		color: var(--text-dim);
+	}
+	/* Check-status colours: status vocabulary, never the accent. */
+	.status-OK {
+		border-color: var(--good);
+		color: var(--good);
+	}
+	.status-DEAD {
+		border-color: var(--danger);
+		color: var(--danger);
+	}
+	.status-BLOCKED,
+	.status-REDIRECT,
+	.status-ERROR {
+		border-color: var(--warning);
+		color: var(--warning);
 	}
 	.title-cell {
 		white-space: normal;
