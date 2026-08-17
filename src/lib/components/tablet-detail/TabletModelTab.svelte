@@ -41,7 +41,11 @@
 					<dl>
 						{#each groupFields as f (f.key)}
 							{@const val = f.getValue(tablet)}
-							{#if val && val !== '-'}
+							{@const displayVal = f.getDisplayValue ? f.getDisplayValue(tablet) : ''}
+							<!-- Gate on the *displayed* value, not just the raw one: a field can
+							     have no sortable value and still have something to say. Age on an
+							     unreleased tablet is the case — no number, but "not yet released". -->
+							{#if (val && val !== '-') || displayVal}
 								<div class="field-row">
 									<dt>{stripUnit(f.label, f.unit)}</dt>
 									<dd>
@@ -64,7 +68,7 @@
 											</a>
 										{:else}
 											{f.getDisplayValue
-												? f.getDisplayValue(tablet)
+												? displayVal
 												: formatValueWithAlt(val, f.label, f.unit, $unitPreference, $showAltUnits)}
 										{/if}
 										{#if f.computed}
