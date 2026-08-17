@@ -55,6 +55,13 @@
 		return converted + valueSuffix(f.label, f.unit, $unitPreference);
 	}
 
+	// Fields kept out of the comparison matrix. Every cell is `white-space:
+	// nowrap`, so a single long free-text value stretches its column to the
+	// full length of the text and pushes the other tablet columns off-screen.
+	// Notes is the only field long enough to do that today. Temporary — see
+	// GitHub #309 for bringing it back with per-field wrapping.
+	const COMPARE_EXCLUDED_FIELD_KEYS = new Set(['ModelNotes']);
+
 	// Group fields and filter out those with no data across all flagged tablets.
 	// Each row carries `key` (the unique field key, used as the {#each} key) and
 	// `label` (the unit-stripped display label, which can collide across fields
@@ -67,7 +74,9 @@
 			fields: { key: string; label: string; values: string[]; differs: boolean }[];
 		}[] = [];
 		for (const groupName of TABLET_FIELD_GROUPS) {
-			const groupFields = TABLET_FIELDS.filter((f) => f.group === groupName);
+			const groupFields = TABLET_FIELDS.filter(
+				(f) => f.group === groupName && !COMPARE_EXCLUDED_FIELD_KEYS.has(f.key),
+			);
 			const rows: { key: string; label: string; values: string[]; differs: boolean }[] = [];
 			for (const f of groupFields) {
 				const values = flaggedItems.map((t) => getDisplayVal(f, t));
