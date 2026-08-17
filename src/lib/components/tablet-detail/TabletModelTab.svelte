@@ -32,7 +32,9 @@
 		{@const groupFields = getGroupFields([group])}
 		{@const hasValues = groupFields.some((f) => {
 			const v = f.getValue(tablet);
-			return v && v !== '-';
+			if (v && v !== '-') return true;
+			// Same rule as the per-row gate below: a display-only value still counts.
+			return !!f.getDisplayValue?.(tablet);
 		})}
 		{#if hasValues}
 			<div class="detail-col">

@@ -143,6 +143,39 @@ describe('analyzeData — tabletsMissingExactReleaseDate', () => {
 	});
 });
 
+const tabletWithYears = (id: string, launchYear: string, releaseDate: string): Tablet =>
+	({
+		Meta: { EntityId: `wacom.tablet.${id.toLowerCase()}` },
+		Model: {
+			Brand: 'WACOM',
+			Id: id,
+			Name: id,
+			Type: 'PENTABLET',
+			LaunchYear: launchYear,
+			ReleaseDate: releaseDate,
+		},
+	}) as unknown as Tablet;
+
+describe('analyzeData — tabletsWithReleaseYearDrift', () => {
+	it('flags year mismatches widest-gap first, ignoring agreeing or unusable pairs', () => {
+		const input: AnalysisInput = {
+			...emptyInput(),
+			tablets: [
+				tabletWithYears('AGREE', '2023', '2023-08-10'), // same year → excluded
+				tabletWithYears('AGREEYEAR', '1984', '1984'), // year-only, same → excluded
+				tabletWithYears('OFFBYONE', '2012', '2011-09-13'),
+				tabletWithYears('WIDE', '2004', '1997-11-01'),
+				tabletWithYears('NODATE', '2020', ''), // no ReleaseDate → excluded
+				tabletWithYears('NOYEAR', '', '2020-01-01'), // no LaunchYear → excluded
+			],
+		};
+		const r = analyzeData(input);
+		expect(r.tabletsWithReleaseYearDrift.map((t) => t.id)).toEqual(['WIDE', 'OFFBYONE']);
+		expect(r.tabletsWithReleaseYearDrift[0].gap).toBe(7);
+		expect(r.tabletsWithReleaseYearDrift[1].gap).toBe(1);
+	});
+});
+
 const tabletWithDensity = (id: string, density?: string): Tablet =>
 	({
 		Meta: { EntityId: `wacom.tablet.${id.toLowerCase()}` },

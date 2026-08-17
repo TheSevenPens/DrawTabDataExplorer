@@ -52,6 +52,7 @@
 	let iafEstimatedNoMeasurement = $derived(analysis.iafEstimatedNoMeasurement);
 	let tabletsMissingExactReleaseDate = $derived(analysis.tabletsMissingExactReleaseDate);
 	let lowDensityTablets = $derived(analysis.lowDensityTablets);
+	let tabletsWithReleaseYearDrift = $derived(analysis.tabletsWithReleaseYearDrift);
 
 	// Brand + Missing filters for the "Tablets — No Exact Release Date" section.
 	let releaseDateBrand = $state('');
@@ -210,6 +211,26 @@
 			mono: true,
 		},
 	];
+	const releaseYearDriftCols: SortableColumn[] = [
+		{ key: 'brand', label: 'Brand', get: (t) => t.brand },
+		{
+			key: 'tablet',
+			label: 'Tablet',
+			get: (t) => `${t.name} (${t.id})`,
+			sortValue: (t) => t.name,
+			href: (t) => resolve('/entity/[entityId]', { entityId: t.entityId }),
+		},
+		{ key: 'launchYear', label: 'Launch Year', get: (t) => t.launchYear, mono: true },
+		{ key: 'releaseDate', label: 'Release Date', get: (t) => t.releaseDate, mono: true },
+		{
+			key: 'gap',
+			label: 'Gap (years)',
+			get: (t) => String(t.gap),
+			sortValue: (t) => t.gap,
+			num: true,
+			mono: true,
+		},
+	];
 	const releaseDateCols: SortableColumn[] = [
 		{ key: 'brand', label: 'Brand', get: (t) => t.brand },
 		{
@@ -331,6 +352,12 @@
 			category: 'Field Completion',
 			label: 'Tablet Release Dates',
 			count: tabletsMissingExactReleaseDate.length,
+		},
+		{
+			id: 'release-year-drift',
+			category: 'Field Completion',
+			label: 'Launch Year vs Release Date',
+			count: tabletsWithReleaseYearDrift.length,
 		},
 		{
 			id: 'low-digitizer-density',
@@ -735,6 +762,49 @@
 											t.name,
 											t.releaseDate,
 											t.missing,
+										]),
+									)}
+							/>
+						{/if}
+					</section>
+				{/if}
+
+				{#if activeSection === 'release-year-drift'}
+					<section class="section">
+						<SectionHeader
+							title="Launch Year vs Release Date"
+							count={tabletsWithReleaseYearDrift.length}
+						/>
+						<p class="description">
+							Tablets whose <code>Model.LaunchYear</code> disagrees with the year in
+							<code>Model.ReleaseDate</code>. LaunchYear is the canonical year and ReleaseDate
+							refines it, so a mismatch means one of the two is wrong — and the detail page shows
+							both at once, printing LaunchYear as "Year" while measuring Age from ReleaseDate. A
+							one-year gap is often an announce-vs-ship straddle; a wider one usually means a field
+							was filled from the wrong source.
+						</p>
+						{#if tabletsWithReleaseYearDrift.length === 0}
+							<StatusMessage variant="good">
+								Every tablet with both fields agrees on the year.
+							</StatusMessage>
+						{:else}
+							<SortableTable
+								columns={releaseYearDriftCols}
+								rows={tabletsWithReleaseYearDrift}
+								rowKey={(t) => t.entityId}
+								tableClass="compact"
+								onExport={() =>
+									openExport(
+										'Tablets with Launch Year / Release Date Drift',
+										'data-quality-release-year-drift',
+										['Brand', 'Model ID', 'Name', 'Launch Year', 'Release Date', 'Gap (years)'],
+										tabletsWithReleaseYearDrift.map((t) => [
+											t.brand,
+											t.id,
+											t.name,
+											t.launchYear,
+											t.releaseDate,
+											t.gap,
 										]),
 									)}
 							/>
