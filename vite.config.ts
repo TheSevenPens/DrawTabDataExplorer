@@ -49,17 +49,12 @@ export default defineConfig({
 			allow: [path.resolve(__dirname), ...(hasLocalData ? [localDataPath] : [])],
 		},
 	},
-	build: {
-		rollupOptions: {
-			output: {
-				// Keep the ~200 KB pptxgenjs payload in its own chunk so the
-				// entry bundle stays unaffected, even if a future static import
-				// of `pptxgenjs` slips past the lazy `await import(...)` in
-				// `src/lib/pptx-export.ts`.
-				manualChunks(id) {
-					if (id.includes('pptxgenjs')) return 'pptx';
-				},
-			},
-		},
-	},
+	// NOTE: build.rollupOptions.output is deliberately absent. SvelteKit's Vite
+	// plugin replaces that object wholesale for the client build, so nothing set
+	// here reaches Rolldown — verified by a chunkFileNames probe that produced no
+	// renamed chunks. A manualChunks() entry used to live here claiming it kept
+	// pptxgenjs out of the entry bundle; it never ran, and pptxgenjs is in fact
+	// merged into a chunk the app entry imports statically, so every page carries
+	// a modulepreload for ~123 KB gzipped of PowerPoint exporter. Tracked in #310
+	// — don't re-add output config here expecting it to take effect.
 });

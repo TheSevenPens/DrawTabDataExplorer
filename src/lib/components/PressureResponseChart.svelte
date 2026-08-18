@@ -1,18 +1,7 @@
 <!-- Agent note: envelope uses fill shape polygon — see CLAUDE.md § Pressure response charts before editing. -->
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import {
-		Chart,
-		LineController,
-		LineElement,
-		PointElement,
-		LinearScale,
-		Tooltip,
-		Legend,
-		Title,
-		Filler,
-		type Plugin,
-	} from 'chart.js';
+	import type { Chart as ChartType, Plugin } from 'chart.js';
 	import type { PressureRecord } from '$data/lib/pressure/interpolate.js';
 	import {
 		estimatePiaf,
@@ -26,24 +15,42 @@
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
 	import { CHART_FONT_FAMILY, CHART_TYPE, chartJsFont } from '$lib/chart-type.js';
 
-	Chart.register(
-		LineController,
-		LineElement,
-		PointElement,
-		LinearScale,
-		Tooltip,
-		Legend,
-		Title,
-		Filler,
-	);
+	// chart.js is ~177 KB (61 KB gzipped) and is imported on demand rather than
+	// statically. Every detail component that can show a chart — PenDetail,
+	// PenFamilyDetail, InventoryPenDetail — is part of /entity/<id>'s graph, so
+	// a static import put the whole of chart.js in the initial payload of every
+	// entity page, including brands, drivers and tablets that never draw one.
+	//
+	// `ChartCtor` is $state, so the $effect below re-runs and builds the chart
+	// the moment the module lands. Nothing here changes what the chart renders.
+	let ChartCtor = $state<typeof ChartType | null>(null);
+	let chartJsLoading = false;
 
-	// Chart.js draws canvas text with its own built-in font (Helvetica/Arial)
-	// unless told otherwise — a foreign face on the app's most prominent
-	// chart, and it carries straight into the PNG export. Point its global
-	// default at the shared chart typeface + scale so ticks, titles, and
-	// tooltips match every other chart and the rest of the app.
-	Chart.defaults.font.family = CHART_FONT_FAMILY;
-	Chart.defaults.font.size = CHART_TYPE.axisTick.size;
+	async function loadChartJs() {
+		if (chartJsLoading || ChartCtor) return;
+		chartJsLoading = true;
+		const m = await import('chart.js');
+		m.Chart.register(
+			m.LineController,
+			m.LineElement,
+			m.PointElement,
+			m.LinearScale,
+			m.Tooltip,
+			m.Legend,
+			m.Title,
+			m.Filler,
+		);
+
+		// Chart.js draws canvas text with its own built-in font (Helvetica/Arial)
+		// unless told otherwise — a foreign face on the app's most prominent
+		// chart, and it carries straight into the PNG export. Point its global
+		// default at the shared chart typeface + scale so ticks, titles, and
+		// tooltips match every other chart and the rest of the app.
+		m.Chart.defaults.font.family = CHART_FONT_FAMILY;
+		m.Chart.defaults.font.size = CHART_TYPE.axisTick.size;
+
+		ChartCtor = m.Chart;
+	}
 
 	export interface ChartSession {
 		/** Stable per-session id used by the parent's hidden-set filter. */
@@ -100,7 +107,7 @@
 	const STANDARD_PCTS = [0, 1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95, 99, 100];
 
 	let canvas: HTMLCanvasElement | undefined = $state();
-	let chart: Chart | null = null;
+	let chart: ChartType | null = null;
 
 	function colorFor(i: number, override?: string) {
 		// $theme is read here (not captured once) so the $effect that rebuilds
@@ -497,6 +504,12 @@
 		void piafTransition;
 		void $theme; // repaint axes/grid/envelope when the theme switches
 		if (!canvas) return;
+		// Read after the deps above so they stay tracked on this first pass;
+		// setting ChartCtor re-runs the effect and falls through to build.
+		if (!ChartCtor) {
+			void loadChartJs();
+			return;
+		}
 		const datasets = buildDatasets();
 		const { x: xRange, y: yRange } = axisRange();
 		if (chart) {
@@ -506,7 +519,7 @@
 			chart.update();
 			return;
 		}
-		chart = new Chart(canvas, {
+		chart = new ChartCtor(canvas, {
 			type: 'line',
 			data: { datasets },
 			plugins: [piafTransitionPlugin],

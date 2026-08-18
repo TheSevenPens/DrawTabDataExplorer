@@ -9,17 +9,16 @@
 // previews, crawlers and search indexing, uptime checks, and proxies that
 // block 404 bodies. Each shell is ~4KB.
 //
-// It lives in +page.server.ts, not +page.ts, because it reaches for the
-// disk loader — importing that from the universal module would drag
-// node:fs into the client bundle.
+// It lives in +page.server.ts, not +page.ts, because createDiskDataSet is
+// the Node-only entry point — importing it from the universal module would
+// drag node:fs into the client bundle.
 import * as path from 'path';
-import { DrawTabDataSet } from '$data/lib/dataset.js';
+import { createDiskDataSet } from '$data/lib/dataset-node.js';
 
 export const prerender = true;
 
 export async function entries() {
-	const ds = new DrawTabDataSet({
-		kind: 'disk',
+	const ds = createDiskDataSet({
 		dataDir: path.resolve('data-repo/data'),
 		userId: 'sevenpens',
 	});
