@@ -3,7 +3,7 @@
 import { tabletFullName } from '$lib/tablet-helpers.js';
 import { penFullName } from '$lib/pen-helpers.js';
 
-export const prerender = false;
+export const prerender = true;
 
 export async function load({ parent }) {
 	const { ds } = await parent();

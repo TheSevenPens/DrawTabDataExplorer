@@ -1,10 +1,11 @@
-// Agent note: canonical /entity/[entityId] loader — prerender false. No onMount data fetch.
+// Agent note: canonical /entity/[entityId] loader — prerendered via +page.server.ts entries(). No onMount data fetch.
 // Universal entity detail loader.
 // Parses the EntityId, determines the entity type from the second dot-segment,
 // and fetches the appropriate data via DrawTabDataSet. The page component
 // renders the right detail view based on `entityType` — no redirect, URL
 // stays at /entity/[entityId].
-export const prerender = false;
+// prerender = true and the entries() list live in +page.server.ts — see the
+// comment there for why the path list can't be built from this module.
 
 import { error } from '@sveltejs/kit';
 import { sessionEntityId } from '$data/lib/pressure/session-id.js';

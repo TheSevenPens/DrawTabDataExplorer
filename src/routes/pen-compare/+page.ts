@@ -1,7 +1,7 @@
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 import { buildTabletNameAndIdMap } from '$lib/tablet-helpers.js';
 
-export const prerender = false;
+export const prerender = true;
 
 export async function load({ parent }) {
 	const { ds } = await parent();
