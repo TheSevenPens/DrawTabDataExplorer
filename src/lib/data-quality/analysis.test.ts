@@ -28,7 +28,7 @@ const pen = (over: Partial<Pen>): Pen =>
 		PenId: 'X',
 		PenName: 'Pen X',
 		PenFamily: '',
-		PenYear: '',
+		ReleaseYear: '',
 		_id: 'p',
 		...over,
 	}) as unknown as Pen;

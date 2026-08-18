@@ -25,7 +25,7 @@
 			cells: [
 				penFullName(p),
 				brandName(p.Brand),
-				p.PenYear ?? '',
+				p.ReleaseYear ?? '',
 				inventoryPenCounts.get(p.EntityId) ?? 0,
 			],
 		})),
@@ -44,7 +44,7 @@
 		penFullName(p),
 		p.EntityId,
 		brandName(p.Brand),
-		p.PenYear ?? '',
+		p.ReleaseYear ?? '',
 		inventoryPenCounts.get(p.EntityId) ?? 0,
 	])}
 />

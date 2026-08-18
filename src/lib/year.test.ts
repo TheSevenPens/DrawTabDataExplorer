@@ -29,7 +29,8 @@ describe('yearNum', () => {
 const TABLET = (year: unknown): Tablet =>
 	({ Meta: { EntityId: `t-${year}` }, Model: { ReleaseYear: year } }) as unknown as Tablet;
 
-const PEN = (year: unknown): Pen => ({ EntityId: `p-${year}`, PenYear: year }) as unknown as Pen;
+const PEN = (year: unknown): Pen =>
+	({ EntityId: `p-${year}`, ReleaseYear: year }) as unknown as Pen;
 
 describe('compareTabletByYearDesc', () => {
 	it('sorts newest first', () => {
@@ -52,12 +53,12 @@ describe('compareTabletByYearDesc', () => {
 describe('comparePenByYearDesc', () => {
 	it('sorts newest first', () => {
 		const sorted = [PEN('2009'), PEN('2024'), PEN('2015')].sort(comparePenByYearDesc);
-		expect(sorted.map((p) => p.PenYear)).toEqual(['2024', '2015', '2009']);
+		expect(sorted.map((p) => p.ReleaseYear)).toEqual(['2024', '2015', '2009']);
 	});
 
-	it('sinks null/undefined PenYear to the bottom', () => {
+	it('sinks null/undefined ReleaseYear to the bottom', () => {
 		const sorted = [PEN(undefined), PEN('2020'), PEN(null)].sort(comparePenByYearDesc);
-		expect(sorted.map((p) => p.PenYear)).toEqual(['2020', undefined, null]);
+		expect(sorted.map((p) => p.ReleaseYear)).toEqual(['2020', undefined, null]);
 	});
 
 	it('returns 0 for equal years', () => {

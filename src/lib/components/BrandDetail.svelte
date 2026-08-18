@@ -24,7 +24,7 @@
 		),
 	);
 	let sortedPens = $derived(
-		[...pens].sort((a, b) => (b.PenYear ?? '').localeCompare(a.PenYear ?? '')),
+		[...pens].sort((a, b) => (b.ReleaseYear ?? '').localeCompare(a.ReleaseYear ?? '')),
 	);
 
 	let timeline = $derived.by(() => {
@@ -36,9 +36,9 @@
 			yearMap.get(t.Model.ReleaseYear)!.tablets.push(t);
 		}
 		for (const p of pens) {
-			if (!p.PenYear) continue;
-			if (!yearMap.has(p.PenYear)) yearMap.set(p.PenYear, { tablets: [], pens: [] });
-			yearMap.get(p.PenYear)!.pens.push(p);
+			if (!p.ReleaseYear) continue;
+			if (!yearMap.has(p.ReleaseYear)) yearMap.set(p.ReleaseYear, { tablets: [], pens: [] });
+			yearMap.get(p.ReleaseYear)!.pens.push(p);
 		}
 		return [...yearMap.entries()]
 			.map(([year, d]) => ({ year, tablets: d.tablets, pens: d.pens }))
@@ -109,7 +109,7 @@
 						title={`${brand.BrandName} — Pens`}
 						filename={`${brand.EntityId}-pens`}
 						headers={['Name', 'Pen ID', 'Entity ID', 'Year']}
-						rows={sortedPens.map((p) => [p.PenName, p.PenId, p.EntityId, p.PenYear ?? ''])}
+						rows={sortedPens.map((p) => [p.PenName, p.PenId, p.EntityId, p.ReleaseYear ?? ''])}
 					/>
 				</div>
 				<table>
@@ -125,7 +125,7 @@
 							<tr>
 								<td><EntityLink entityId={p.EntityId}>{p.PenName}</EntityLink></td>
 								<td>{p.PenId}</td>
-								<td>{p.PenYear ?? ''}</td>
+								<td>{p.ReleaseYear ?? ''}</td>
 							</tr>
 						{/each}
 					</tbody>

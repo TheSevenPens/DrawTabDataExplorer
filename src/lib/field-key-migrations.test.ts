@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { migrateFieldKeys, RENAMED_FIELD_KEYS } from './field-key-migrations.js';
+import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
+import { PEN_FIELDS } from '$data/lib/entities/pen-fields.js';
+import { DRIVER_FIELDS } from '$data/lib/entities/driver-fields.js';
+import { BRAND_FIELDS } from '$data/lib/entities/brand-fields.js';
 
 describe('migrateFieldKeys', () => {
 	it('renames a filter step field', () => {
@@ -93,5 +97,33 @@ describe('migrateFieldKeys', () => {
 
 	it('every mapping points at a real rename, not an identity entry', () => {
 		for (const [from, to] of Object.entries(RENAMED_FIELD_KEYS)) expect(from).not.toBe(to);
+	});
+
+	it('renames a pen view saved before PenYear became ReleaseYear', () => {
+		const steps = [{ kind: 'sort', field: 'PenYear', direction: 'desc' }];
+		expect(migrateFieldKeys(steps)).toEqual([
+			{ kind: 'sort', field: 'ReleaseYear', direction: 'desc' },
+		]);
+	});
+
+	// The map is flat across entity types, which is only safe while no old key
+	// is still live somewhere else — otherwise loading that entity's views would
+	// rewrite a field that never moved.
+	it('no old key is a live key on any entity', () => {
+		const live = new Set(
+			[...TABLET_FIELDS, ...PEN_FIELDS, ...DRIVER_FIELDS, ...BRAND_FIELDS].map((f) => f.key),
+		);
+		for (const from of Object.keys(RENAMED_FIELD_KEYS)) {
+			expect(live.has(from), `${from} is still a live field key`).toBe(false);
+		}
+	});
+
+	it('every mapping targets a key that actually exists', () => {
+		const live = new Set(
+			[...TABLET_FIELDS, ...PEN_FIELDS, ...DRIVER_FIELDS, ...BRAND_FIELDS].map((f) => f.key),
+		);
+		for (const to of Object.values(RENAMED_FIELD_KEYS)) {
+			expect(live.has(to), `${to} is not a field key on any entity`).toBe(true);
+		}
 	});
 });

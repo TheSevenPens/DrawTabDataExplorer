@@ -12,5 +12,5 @@ export function formatPenIds(ids: string[], penNameMap: Map<string, string>): st
 }
 
 export function comparePenByYearDesc(a: Pen, b: Pen): number {
-	return yearNum(b.PenYear) - yearNum(a.PenYear);
+	return yearNum(b.ReleaseYear) - yearNum(a.ReleaseYear);
 }

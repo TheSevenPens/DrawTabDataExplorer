@@ -94,8 +94,8 @@
 		// (matches prior behavior); pens still honor brand + year-range filters.
 		for (const p of pens) {
 			if (filterBrand && p.Brand !== filterBrand) continue;
-			if (!inRange(p.PenYear)) continue;
-			ensure(periodKey(p.PenYear, undefined)).pens.push(p);
+			if (!inRange(p.ReleaseYear)) continue;
+			ensure(periodKey(p.ReleaseYear, undefined)).pens.push(p);
 		}
 		// Drivers carry a full ReleaseDate (no ReleaseYear); the year is its first
 		// 4 chars. Like pens, drivers ignore the tablet-only type filter.

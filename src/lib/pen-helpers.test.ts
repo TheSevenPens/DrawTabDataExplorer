@@ -9,7 +9,7 @@ const PEN = (overrides: Partial<Pen>): Pen =>
 		PenId: 'KP-503E',
 		PenName: 'Pro Pen 3',
 		PenFamily: 'wacom.penfamily.wacomkpgen3',
-		PenYear: '2023',
+		ReleaseYear: '2023',
 		_id: '00000000-0000-0000-0000-000000000000',
 		_CreateDate: '2024-01-01T00:00:00Z',
 		_ModifiedDate: '2024-01-01T00:00:00Z',

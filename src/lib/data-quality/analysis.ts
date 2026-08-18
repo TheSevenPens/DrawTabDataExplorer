@@ -384,7 +384,7 @@ export function analyzeData(data: AnalysisInput) {
 			'Display.Lamination',
 		]),
 		displayTabletCount: displayTablets.length,
-		penCompletion: computeCompletion(ds.pens, ['PenName', 'PenFamily', 'PenYear']),
+		penCompletion: computeCompletion(ds.pens, ['PenName', 'PenFamily', 'ReleaseYear']),
 		driverCompletion: computeCompletion(ds.drivers, [
 			'DriverURLWacom',
 			'DriverURLArchiveDotOrg',

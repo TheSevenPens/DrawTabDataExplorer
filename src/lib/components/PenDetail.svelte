@@ -140,10 +140,10 @@
 			<dt>Model ID</dt>
 			<dd>{pen.PenId}</dd>
 		</div>
-		{#if pen.PenYear}
+		{#if pen.ReleaseYear}
 			<div class="basics-item">
 				<dt>Year</dt>
-				<dd>{pen.PenYear}</dd>
+				<dd>{pen.ReleaseYear}</dd>
 			</div>
 		{/if}
 		{#if pen.PenFamily}

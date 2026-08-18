@@ -6,12 +6,25 @@
 // This maps old keys to current ones on load. Entries are permanent: a view
 // saved before a rename can surface at any time, so nothing here expires.
 
-/** Old FieldDef key -> current key. */
+/**
+ * Old FieldDef key -> current key.
+ *
+ * Flat rather than scoped per entity type on purpose: saved-view storage keys
+ * are loose UI labels ("tablets", "tablet-similar", "pen-analysis") that do not
+ * map cleanly onto field sets, so scoping would be more error-prone than the
+ * invariant it protects. That invariant is instead enforced by a test: an old
+ * key here must not be a *live* key on any entity, or migrating one entity's
+ * views would corrupt another's.
+ */
 export const RENAMED_FIELD_KEYS: Readonly<Record<string, string>> = {
 	// Model.LaunchYear became Model.ReleaseYear, so the tablet field key
 	// followed. "Launch" and "release" were two words for one event, and the
 	// mismatch invited reading them as announced-vs-shipped.
 	ModelLaunchYear: 'ModelReleaseYear',
+	// Pen.PenYear became Pen.ReleaseYear. A pen record is flat, so the
+	// entity-name prefix distinguished nothing — PenYear on a pen reads the way
+	// TabletYear would on a tablet.
+	PenYear: 'ReleaseYear',
 };
 
 /** Properties of a Step that hold a single field key. */

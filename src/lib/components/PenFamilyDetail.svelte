@@ -107,7 +107,7 @@
 						penBrandAndName(p),
 						p.PenId,
 						p.EntityId,
-						p.PenYear ?? '',
+						p.ReleaseYear ?? '',
 						inventoryPenCounts.get(p.EntityId) ?? 0,
 					])}
 				/>
@@ -126,7 +126,7 @@
 									{#if !penIdRedundantInName(p)}<span class="dim">({p.PenId})</span>{/if}
 								</a>
 							</td>
-							<td class="year">{p.PenYear || ''}</td>
+							<td class="year">{p.ReleaseYear || ''}</td>
 							<td class="num"
 								>{#if inv > 0}{inv}{:else}<span class="dim">0</span>{/if}</td
 							>

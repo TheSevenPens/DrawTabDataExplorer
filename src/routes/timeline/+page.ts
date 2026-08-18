@@ -22,7 +22,7 @@ export async function load({ parent }) {
 	// ReleaseDate year.
 	const years = [
 		...tablets.map((t) => Number(t.Model.ReleaseYear)),
-		...pens.map((p) => Number(p.PenYear)),
+		...pens.map((p) => Number(p.ReleaseYear)),
 		...drivers.map((d) => Number((d.ReleaseDate ?? '').slice(0, 4))),
 	].filter((y) => !isNaN(y) && y >= 1900 && y <= 2200);
 	const minYear = Math.min(...years);
