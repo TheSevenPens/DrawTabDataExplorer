@@ -9,6 +9,17 @@ const config = {
 		prerender: {
 			handleUnseenRoutes: 'ignore',
 		},
+		// Each Pages deploy replaces the whole site, so the content-hashed
+		// chunks under _app/immutable/ from the previous build are deleted
+		// rather than kept alongside. A tab open across a deploy then fails
+		// its next lazy route import ("Failed to fetch dynamically imported
+		// module") and lands on +error.svelte. Polling _app/version.json
+		// flips `updated.current`, which +layout.svelte turns into a full
+		// page load on the next navigation. See src/hooks.client.ts for the
+		// fallback that catches the poll-vs-click race.
+		version: {
+			pollInterval: 300_000,
+		},
 		paths: {
 			// BASE_PATH override lets the e2e build serve at `/` instead of
 			// the GitHub Pages prefix. Default: production = pages prefix,

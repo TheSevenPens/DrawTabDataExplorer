@@ -3,7 +3,21 @@
 	import DevErrorBanner from '$lib/components/DevErrorBanner.svelte';
 	import ModalRoot from '$lib/components/ModalRoot.svelte';
 	import { SUPPORTED_SCHEMA_MAJOR } from '$lib/schema-version.js';
+	import { beforeNavigate } from '$app/navigation';
+	import { updated } from '$app/state';
 	let { children, data } = $props();
+
+	// A deploy replaces every content-hashed chunk under _app/immutable/, so a
+	// client-side navigation made by a tab that predates the deploy tries to
+	// import a chunk that no longer exists. `updated.current` goes true once
+	// the version poll (kit.version.pollInterval) notices a new build; from
+	// then on we hand the navigation to the browser instead of the router, so
+	// it fetches fresh HTML naming the chunks that do exist.
+	beforeNavigate((nav) => {
+		if (!updated.current || nav.willUnload || !nav.to?.url) return;
+		nav.cancel();
+		location.href = nav.to.url.href;
+	});
 
 	let version = $derived(data.version);
 
