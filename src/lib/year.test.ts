@@ -27,21 +27,21 @@ describe('yearNum', () => {
 });
 
 const TABLET = (year: unknown): Tablet =>
-	({ Meta: { EntityId: `t-${year}` }, Model: { LaunchYear: year } }) as unknown as Tablet;
+	({ Meta: { EntityId: `t-${year}` }, Model: { ReleaseYear: year } }) as unknown as Tablet;
 
 const PEN = (year: unknown): Pen => ({ EntityId: `p-${year}`, PenYear: year }) as unknown as Pen;
 
 describe('compareTabletByYearDesc', () => {
 	it('sorts newest first', () => {
 		const sorted = [TABLET('2013'), TABLET('2025'), TABLET('2018')].sort(compareTabletByYearDesc);
-		expect(sorted.map((t) => t.Model.LaunchYear)).toEqual(['2025', '2018', '2013']);
+		expect(sorted.map((t) => t.Model.ReleaseYear)).toEqual(['2025', '2018', '2013']);
 	});
 
-	it('sinks null/undefined LaunchYear to the bottom', () => {
+	it('sinks null/undefined ReleaseYear to the bottom', () => {
 		const sorted = [TABLET(null), TABLET('2020'), TABLET(undefined), TABLET('2010')].sort(
 			compareTabletByYearDesc,
 		);
-		expect(sorted.map((t) => t.Model.LaunchYear)).toEqual(['2020', '2010', null, undefined]);
+		expect(sorted.map((t) => t.Model.ReleaseYear)).toEqual(['2020', '2010', null, undefined]);
 	});
 
 	it('returns 0 for equal years (stable sort behaviour)', () => {

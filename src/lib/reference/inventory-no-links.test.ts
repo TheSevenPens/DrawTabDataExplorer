@@ -15,7 +15,7 @@ function tab(
 		Meta: {
 			EntityId: `${brand.toLowerCase()}.tablet.${id.replace(/[^a-z0-9]/gi, '').toLowerCase()}`,
 		},
-		Model: { Brand: brand, Id: id, Name: name, Type: type, LaunchYear: year, Links: links },
+		Model: { Brand: brand, Id: id, Name: name, Type: type, ReleaseYear: year, Links: links },
 	} as unknown as Tablet;
 }
 const inv = (entityId: string) => ({ TabletEntityId: entityId });

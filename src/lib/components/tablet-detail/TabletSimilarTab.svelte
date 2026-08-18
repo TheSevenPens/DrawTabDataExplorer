@@ -46,7 +46,7 @@
 		if (filterBrand !== 'all') results = results.filter((t) => t.Model.Brand === filterBrand);
 		results.sort((a, b) => {
 			if (similarSort === 'year')
-				return (a.Model.LaunchYear || '').localeCompare(b.Model.LaunchYear || '');
+				return (a.Model.ReleaseYear || '').localeCompare(b.Model.ReleaseYear || '');
 			const da = getDiagonal(a.Digitizer?.Dimensions) ?? 0;
 			const db = getDiagonal(b.Digitizer?.Dimensions) ?? 0;
 			return da - db;
@@ -66,7 +66,7 @@
 			const row: (string | number)[] = [
 				tabletFullName(t),
 				t.Meta.EntityId,
-				t.Model.LaunchYear ?? '',
+				t.Model.ReleaseYear ?? '',
 				d ? `${d.Width} x ${d.Height}` : '',
 				diag ? diag.toFixed(1) : '',
 			];
@@ -148,7 +148,7 @@
 							>{tabletFullName(t)}</a
 						></td
 					>
-					<td>{t.Model.LaunchYear || ''}</td>
+					<td>{t.Model.ReleaseYear || ''}</td>
 					<td>{d ? `${d.Width} x ${d.Height} mm` : ''}</td>
 					<td>{diag ? `${diag.toFixed(1)} mm` : ''}</td>
 					{#if hasDisplay}

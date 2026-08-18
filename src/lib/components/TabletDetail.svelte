@@ -85,10 +85,10 @@
 			<dt>Type</dt>
 			<dd>{tablet.Model.Type}</dd>
 		</div>
-		{#if tablet.Model.LaunchYear}
+		{#if tablet.Model.ReleaseYear}
 			<div class="basics-item">
 				<dt>Year</dt>
-				<dd>{tablet.Model.LaunchYear}</dd>
+				<dd>{tablet.Model.ReleaseYear}</dd>
 			</div>
 		{/if}
 		{#if tablet.Model.Status}

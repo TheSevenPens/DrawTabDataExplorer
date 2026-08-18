@@ -96,7 +96,7 @@
 			tabletFullName(t),
 			t.Meta.EntityId,
 			t.Model.Type,
-			t.Model.LaunchYear ?? '',
+			t.Model.ReleaseYear ?? '',
 			inventoryTabletCounts.get(t.Meta.EntityId) ?? 0,
 		]);
 	}
@@ -107,7 +107,7 @@
 			cells: [
 				tabletFullName(t),
 				t.Model.Type,
-				t.Model.LaunchYear ?? '',
+				t.Model.ReleaseYear ?? '',
 				inventoryTabletCounts.get(t.Meta.EntityId) ?? 0,
 			],
 		}));

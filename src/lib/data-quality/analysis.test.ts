@@ -116,7 +116,7 @@ const tabletWithDate = (id: string, releaseDate: string): Tablet =>
 			Id: id,
 			Name: id,
 			Type: 'PENTABLET',
-			LaunchYear: '2020',
+			ReleaseYear: '2020',
 			ReleaseDate: releaseDate,
 		},
 	}) as unknown as Tablet;
@@ -143,7 +143,7 @@ describe('analyzeData — tabletsMissingExactReleaseDate', () => {
 	});
 });
 
-const tabletWithYears = (id: string, launchYear: string, releaseDate: string): Tablet =>
+const tabletWithYears = (id: string, releaseYear: string, releaseDate: string): Tablet =>
 	({
 		Meta: { EntityId: `wacom.tablet.${id.toLowerCase()}` },
 		Model: {
@@ -151,7 +151,7 @@ const tabletWithYears = (id: string, launchYear: string, releaseDate: string): T
 			Id: id,
 			Name: id,
 			Type: 'PENTABLET',
-			LaunchYear: launchYear,
+			ReleaseYear: releaseYear,
 			ReleaseDate: releaseDate,
 		},
 	}) as unknown as Tablet;
@@ -166,7 +166,7 @@ describe('analyzeData — tabletsWithReleaseYearDrift', () => {
 				tabletWithYears('OFFBYONE', '2012', '2011-09-13'),
 				tabletWithYears('WIDE', '2004', '1997-11-01'),
 				tabletWithYears('NODATE', '2020', ''), // no ReleaseDate → excluded
-				tabletWithYears('NOYEAR', '', '2020-01-01'), // no LaunchYear → excluded
+				tabletWithYears('NOYEAR', '', '2020-01-01'), // no ReleaseYear → excluded
 			],
 		};
 		const r = analyzeData(input);

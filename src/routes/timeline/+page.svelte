@@ -47,7 +47,7 @@
 
 	type Period = TimelinePeriod;
 
-	// Period bucket for an item. In year mode everything keys on the launch
+	// Period bucket for an item. In year mode everything keys on the release
 	// year. In year-month mode, tablets with a month-precision ReleaseDate
 	// (YYYY-MM…) key on that month; year-only dates and all pens (which have
 	// no release date) drop into a per-year "month unknown" bucket.
@@ -87,8 +87,8 @@
 		for (const t of tablets) {
 			if (filterBrand && t.Model.Brand !== filterBrand) continue;
 			if (filterType && t.Model.Type !== filterType) continue;
-			if (!inRange(t.Model.LaunchYear)) continue;
-			ensure(periodKey(t.Model.LaunchYear, t.Model.ReleaseDate)).tablets.push(t);
+			if (!inRange(t.Model.ReleaseYear)) continue;
+			ensure(periodKey(t.Model.ReleaseYear, t.Model.ReleaseDate)).tablets.push(t);
 		}
 		// Type is a tablet property, so the type filter doesn't apply to pens
 		// (matches prior behavior); pens still honor brand + year-range filters.
@@ -97,7 +97,7 @@
 			if (!inRange(p.PenYear)) continue;
 			ensure(periodKey(p.PenYear, undefined)).pens.push(p);
 		}
-		// Drivers carry a full ReleaseDate (no LaunchYear); the year is its first
+		// Drivers carry a full ReleaseDate (no ReleaseYear); the year is its first
 		// 4 chars. Like pens, drivers ignore the tablet-only type filter.
 		for (const d of drivers) {
 			if (filterBrand && d.Brand !== filterBrand) continue;

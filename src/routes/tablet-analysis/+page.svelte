@@ -141,7 +141,7 @@
 					name: t.Model.Name,
 					id: t.Model.Id,
 					brand: t.Model.Brand as string,
-					year: t.Model.LaunchYear ?? '',
+					year: t.Model.ReleaseYear ?? '',
 					density,
 				};
 			})

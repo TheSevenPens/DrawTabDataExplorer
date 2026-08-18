@@ -134,7 +134,7 @@ function buildTablet(t) {
 			Id: t.id,
 			Name: t.name,
 			Type: t.type,
-			LaunchYear: t.year,
+			ReleaseYear: t.year,
 			...(t.audience ? { Audience: t.audience } : {}),
 			...(t.family ? { Family: t.family } : {}),
 			...(t.status ? { Status: t.status } : {}),

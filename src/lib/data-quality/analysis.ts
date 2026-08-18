@@ -314,10 +314,10 @@ export function analyzeData(data: AnalysisInput) {
 		.filter((t) => t.density !== '' && Number.isFinite(Number(t.density)) && Number(t.density) < 20)
 		.sort((a, b) => Number(a.density) - Number(b.density) || a.brand.localeCompare(b.brand));
 
-	// Tablets whose Model.LaunchYear disagrees with the year in
-	// Model.ReleaseDate. LaunchYear is the canonical year and ReleaseDate
+	// Tablets whose Model.ReleaseYear disagrees with the year in
+	// Model.ReleaseDate. ReleaseYear is the canonical year and ReleaseDate
 	// refines it, so a mismatch means one of them is wrong — and both are on
-	// screen at once (the Model tab prints LaunchYear as "Year" while Age is
+	// screen at once (the Model tab prints ReleaseYear as "Year" while Age is
 	// measured from ReleaseDate), so the record contradicts itself.
 	const tabletsWithReleaseYearDrift = ds.tablets
 		.map((t) => ({
@@ -325,16 +325,16 @@ export function analyzeData(data: AnalysisInput) {
 			id: t.Model.Id,
 			name: t.Model.Name,
 			entityId: t.Meta.EntityId,
-			launchYear: t.Model.LaunchYear ?? '',
+			releaseYear: t.Model.ReleaseYear ?? '',
 			releaseDate: t.Model.ReleaseDate ?? '',
 			gap: 0,
 		}))
 		.filter((t) => {
-			if (!t.launchYear || !/^\d{4}/.test(t.releaseDate)) return false;
-			const releaseYear = Number(t.releaseDate.slice(0, 4));
-			const launchYear = Number(t.launchYear);
-			if (!Number.isFinite(releaseYear) || !Number.isFinite(launchYear)) return false;
-			t.gap = Math.abs(releaseYear - launchYear);
+			if (!t.releaseYear || !/^\d{4}/.test(t.releaseDate)) return false;
+			const yearFromDate = Number(t.releaseDate.slice(0, 4));
+			const yearField = Number(t.releaseYear);
+			if (!Number.isFinite(yearFromDate) || !Number.isFinite(yearField)) return false;
+			t.gap = Math.abs(yearFromDate - yearField);
 			return t.gap > 0;
 		})
 		// widest disagreement first — those are the likeliest to be a wrong field
@@ -356,7 +356,7 @@ export function analyzeData(data: AnalysisInput) {
 		remeasureRecommendations: findRecommendedForRemeasurement(ds.pressureResponse),
 		iafEstimatedNoMeasurement,
 		tabletCompletion: computeCompletion(ds.tablets, [
-			'Model.LaunchYear',
+			'Model.ReleaseYear',
 			'Model.Audience',
 			'Model.Family',
 			'Model.Status',

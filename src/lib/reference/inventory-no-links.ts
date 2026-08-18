@@ -17,7 +17,7 @@ export interface InventoryNoLinksRow {
 	brandName: string;
 	/** Tablet Model.Type (PENTABLET / PENDISPLAY / STANDALONE). */
 	type: string;
-	/** Model.LaunchYear. */
+	/** Model.ReleaseYear. */
 	year: string;
 	/** Number of inventory units owned for this tablet. */
 	units: number;
@@ -47,7 +47,7 @@ export function buildInventoryTabletsWithoutLinksRows(
 			brand: t.Model.Brand,
 			brandName: brandName(t.Model.Brand),
 			type: t.Model.Type,
-			year: t.Model.LaunchYear,
+			year: t.Model.ReleaseYear,
 			units,
 		});
 	}

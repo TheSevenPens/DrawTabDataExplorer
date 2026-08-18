@@ -19,7 +19,9 @@
 	let activeTab = $state<'tablets' | 'pens' | 'timeline'>('tablets');
 
 	let sortedTablets = $derived(
-		[...tablets].sort((a, b) => (b.Model.LaunchYear ?? '').localeCompare(a.Model.LaunchYear ?? '')),
+		[...tablets].sort((a, b) =>
+			(b.Model.ReleaseYear ?? '').localeCompare(a.Model.ReleaseYear ?? ''),
+		),
 	);
 	let sortedPens = $derived(
 		[...pens].sort((a, b) => (b.PenYear ?? '').localeCompare(a.PenYear ?? '')),
@@ -28,10 +30,10 @@
 	let timeline = $derived.by(() => {
 		const yearMap = new Map<string, { tablets: Tablet[]; pens: Pen[] }>();
 		for (const t of tablets) {
-			if (!t.Model.LaunchYear) continue;
-			if (!yearMap.has(t.Model.LaunchYear))
-				yearMap.set(t.Model.LaunchYear, { tablets: [], pens: [] });
-			yearMap.get(t.Model.LaunchYear)!.tablets.push(t);
+			if (!t.Model.ReleaseYear) continue;
+			if (!yearMap.has(t.Model.ReleaseYear))
+				yearMap.set(t.Model.ReleaseYear, { tablets: [], pens: [] });
+			yearMap.get(t.Model.ReleaseYear)!.tablets.push(t);
 		}
 		for (const p of pens) {
 			if (!p.PenYear) continue;
@@ -72,7 +74,7 @@
 							t.Meta.EntityId,
 							(t.Model.AlternateNames ?? []).join(', '),
 							t.Model.Type,
-							t.Model.LaunchYear ?? '',
+							t.Model.ReleaseYear ?? '',
 						])}
 					/>
 				</div>
@@ -91,7 +93,7 @@
 								<td><EntityLink entityId={t.Meta.EntityId}>{tabletNameAndId(t)}</EntityLink></td>
 								<td>{(t.Model.AlternateNames ?? []).join(', ')}</td>
 								<td>{t.Model.Type}</td>
-								<td>{t.Model.LaunchYear ?? ''}</td>
+								<td>{t.Model.ReleaseYear ?? ''}</td>
 							</tr>
 						{/each}
 					</tbody>

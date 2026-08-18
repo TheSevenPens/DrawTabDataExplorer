@@ -7,7 +7,9 @@ import {
 
 describe('fieldMatchesQuery', () => {
 	it('matches label substring case-insensitively', () => {
-		expect(fieldMatchesQuery({ label: 'Launch year', key: 'ModelLaunchYear' }, 'year')).toBe(true);
+		expect(fieldMatchesQuery({ label: 'Release year', key: 'ModelReleaseYear' }, 'year')).toBe(
+			true,
+		);
 	});
 
 	it('matches field key', () => {
@@ -21,8 +23,8 @@ describe('fieldMatchesQuery', () => {
 
 describe('highlightFieldLabel', () => {
 	it('marks the matching substring', () => {
-		expect(highlightFieldLabel('Launch year', 'year')).toEqual([
-			{ text: 'Launch ', match: false },
+		expect(highlightFieldLabel('Release year', 'year')).toEqual([
+			{ text: 'Release ', match: false },
 			{ text: 'year', match: true },
 		]);
 	});
@@ -35,7 +37,10 @@ describe('highlightFieldLabel', () => {
 describe('fieldLabelBoldWhenKeyMatch', () => {
 	it('is true when only the key matches', () => {
 		expect(
-			fieldLabelBoldWhenKeyMatch({ label: 'Launch year', key: 'ModelLaunchYear' }, 'modellaunch'),
+			fieldLabelBoldWhenKeyMatch(
+				{ label: 'Release year', key: 'ModelReleaseYear' },
+				'modelrelease',
+			),
 		).toBe(true);
 	});
 

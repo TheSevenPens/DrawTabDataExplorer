@@ -82,7 +82,7 @@ describe('executeBuilderQuery', () => {
 		await executeBuilderQuery(ds, {
 			collection: 'Tablets',
 			filters: [{ field: 'Brand', operator: '==', value: 'WACOM' }],
-			sorts: [{ field: 'ModelLaunchYear', direction: 'desc' }],
+			sorts: [{ field: 'ModelReleaseYear', direction: 'desc' }],
 			columns: ['Brand', 'ModelId'],
 			take: 5,
 			output: { mode: 'toArray' },
@@ -90,7 +90,7 @@ describe('executeBuilderQuery', () => {
 		expect(q.calls).toEqual([
 			'filter:["Brand","==","WACOM"]',
 			'select:Brand,ModelId',
-			'sort:ModelLaunchYear:desc',
+			'sort:ModelReleaseYear:desc',
 			'take:5',
 			'toArray',
 		]);

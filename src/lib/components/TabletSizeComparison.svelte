@@ -37,7 +37,7 @@
 			.filter((t) => {
 				if (t.Model.Type !== tablet.Model.Type) return false;
 				if (compareYears !== null) {
-					const year = parseInt(t.Model.LaunchYear, 10);
+					const year = parseInt(t.Model.ReleaseYear, 10);
 					if (!isNaN(year) && year < currentYear - compareYears) return false;
 				}
 				return true;

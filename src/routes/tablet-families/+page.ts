@@ -15,7 +15,7 @@ export async function load({ parent }) {
 		if (t.Model.Family) familyByTabletEntityId.set(t.Meta.EntityId, t.Model.Family);
 		const fid = t.Model.Family;
 		if (!fid) continue;
-		const year = parseInt(t.Model.LaunchYear ?? '');
+		const year = parseInt(t.Model.ReleaseYear ?? '');
 		const existing = familyStats.get(fid);
 		if (!existing) {
 			familyStats.set(fid, { count: 1, earliestYear: isNaN(year) ? Infinity : year });

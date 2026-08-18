@@ -126,7 +126,7 @@
 				if (typeFilter === 'PENTABLET' && t.Model.Type !== 'PENTABLET') return false;
 				if (typeFilter === 'PENDISPLAY' && t.Model.Type === 'PENTABLET') return false;
 				if (compareYears !== null) {
-					const y = parseInt(t.Model.LaunchYear, 10);
+					const y = parseInt(t.Model.ReleaseYear, 10);
 					if (!isNaN(y) && y < currentYear - compareYears) return false;
 				}
 				return true;

@@ -1,5 +1,6 @@
 import type { Step } from '@thesevenpens/queriton';
 import { getStorageJson, setStorageJson, removeStorageItem } from '$lib/storage.js';
+import { migrateFieldKeys } from '$lib/field-key-migrations.js';
 
 export interface SavedView {
 	name: string;
@@ -29,7 +30,10 @@ export function loadViews(entityType: string): SavedView[] {
 	migrate(entityType);
 	const raw = getStorageJson<unknown>(getStorageKey(entityType), []);
 	if (!Array.isArray(raw)) return [];
-	return raw.filter(isValidSavedView);
+	// Steps reference fields by FieldDef key, so a view saved before a key was
+	// renamed would point at a field that no longer exists — see
+	// field-key-migrations.ts.
+	return raw.filter(isValidSavedView).map((view) => migrateFieldKeys(view));
 }
 
 function persist(entityType: string, views: SavedView[]) {

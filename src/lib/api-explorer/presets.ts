@@ -28,7 +28,7 @@ export const PRESET_GROUPS: { group: string; labels: string[] }[] = [
 			'Predicate-function filter',
 			'Boolean expression filter (OR / AND / NOT)',
 			'filterIn: brand is one of a set',
-			'between operator: launch year range',
+			'between operator: release year range',
 			'Strict (case-sensitive) contains',
 			'Distinct values of a field',
 			'Pens tagged UDEMR',
@@ -48,9 +48,9 @@ export const PRESET_GROUPS: { group: string; labels: string[] }[] = [
 			'Count tablets per brand',
 			'Count tablets per brand and type',
 			'countIf: Excel-style conditional counts in summarize',
-			'Wacom launch-year stats (avg/min/max)',
+			'Wacom release-year stats (avg/min/max)',
 			'Brands with > 30 tablets (filter after summarize = SQL HAVING)',
-			'Median launch year per brand (with collect)',
+			'Median release year per brand (with collect)',
 			'Derive + summarize: tablet age buckets',
 		],
 	},
@@ -91,7 +91,7 @@ export const presets: Preset[] = [
 		body: `return await ds.Tablets
   .filter('Brand', '==', 'WACOM')
   .filter('ModelType', '==', 'PENDISPLAY')
-  .sort('ModelLaunchYear', 'desc')
+  .sort('ModelReleaseYear', 'desc')
   .take(5)
   .toArray();`,
 	},
@@ -150,15 +150,15 @@ return await ds.Tablets.countBy('Brand').toArray();`,
 return await ds.Tablets.countBy(['Brand', 'ModelType']).toArray();`,
 	},
 	{
-		label: 'Wacom launch-year stats (avg/min/max)',
+		label: 'Wacom release-year stats (avg/min/max)',
 		body: `return await ds.Tablets
   .filter('Brand', '==', 'WACOM')
   .summarize({
     by: 'Brand',
     count: 'tablets',
-    avg: { avgYear: 'ModelLaunchYear' },
-    min: { firstYear: 'ModelLaunchYear' },
-    max: { lastYear: 'ModelLaunchYear' },
+    avg: { avgYear: 'ModelReleaseYear' },
+    min: { firstYear: 'ModelReleaseYear' },
+    max: { lastYear: 'ModelReleaseYear' },
   })
   .toArray();`,
 	},
@@ -177,8 +177,8 @@ return await ds.Tablets
 		label: 'Project to specific columns with .select()',
 		body: `return await ds.Tablets
   .filter('Brand', '==', 'WACOM')
-  .select(['Brand', 'ModelId', 'ModelName', 'ModelLaunchYear'])
-  .sort('ModelLaunchYear', 'desc')
+  .select(['Brand', 'ModelId', 'ModelName', 'ModelReleaseYear'])
+  .sort('ModelReleaseYear', 'desc')
   .take(5)
   .toArray();`,
 	},
@@ -204,7 +204,7 @@ return await ds.Pens
 		body: `// .filter() also accepts an arbitrary predicate function.
 // Not serialisable — use string-tuple form for saved/URL state.
 return await ds.Tablets
-  .filter(t => (t.Model.LaunchYear ?? 0) >= 2020 && t.Display)
+  .filter(t => (t.Model.ReleaseYear ?? 0) >= 2020 && t.Display)
   .take(5)
   .toArray();`,
 	},
@@ -221,7 +221,7 @@ return await ds.Tablets
       { field: 'Brand', op: '==', value: 'XENCELABS' },
     ],
   })
-  .sort('ModelLaunchYear', 'desc')
+  .sort('ModelReleaseYear', 'desc')
   .take(10)
   .toArray();`,
 	},
@@ -230,7 +230,7 @@ return await ds.Tablets
 		body: `// .derive() adds computed columns usable by downstream verbs.
 return await ds.Tablets
   .derive({
-    decade: t => Math.floor((t.Model.LaunchYear ?? 2000) / 10) * 10,
+    decade: t => Math.floor((t.Model.ReleaseYear ?? 2000) / 10) * 10,
   })
   .summarize({ by: 'decade', count: 'tablets' })
   .sort('decade', 'asc')
@@ -254,10 +254,10 @@ return await ds.Pens
 	},
 	{
 		label: 'Pagination: skip + take',
-		body: `// Page 3 (rows 11-15) of Wacom tablets by launch year.
+		body: `// Page 3 (rows 11-15) of Wacom tablets by release year.
 return await ds.Tablets
   .filter('Brand', '==', 'WACOM')
-  .sort('ModelLaunchYear', 'desc')
+  .sort('ModelReleaseYear', 'desc')
   .skip(10)
   .take(5)
   .toArray();`,
@@ -269,7 +269,7 @@ return await ds.Tablets
   .filterIn('Brand', ['WACOM', 'HUION', 'XPPEN'])
   .sort([
     { field: 'Brand', direction: 'asc' },
-    { field: 'ModelLaunchYear', direction: 'desc' },
+    { field: 'ModelReleaseYear', direction: 'desc' },
   ])
   .take(15)
   .toArray();`,
@@ -282,9 +282,9 @@ return await ds.Tablets
   .toArray();`,
 	},
 	{
-		label: 'between operator: launch year range',
+		label: 'between operator: release year range',
 		body: `return await ds.Tablets
-  .filter('ModelLaunchYear', 'between', '2018|2022')
+  .filter('ModelReleaseYear', 'between', '2018|2022')
   .summarize({ by: 'Brand', count: 'tablets' })
   .sort('tablets', 'desc')
   .toArray();`,
@@ -306,8 +306,8 @@ return await ds.Tablets
   .filter('Brand', '==', 'WACOM')
   .filter('ModelType', '==', 'PENTABLET')
   .antijoin(ds.InventoryTablets, 'EntityId', 'TabletEntityId')
-  .select(['Brand', 'ModelId', 'ModelName', 'ModelLaunchYear'])
-  .sort('ModelLaunchYear', 'desc')
+  .select(['Brand', 'ModelId', 'ModelName', 'ModelReleaseYear'])
+  .sort('ModelReleaseYear', 'desc')
   .toArray();`,
 	},
 	{
@@ -365,19 +365,19 @@ return await ds.Tablets
       penDisplays: { field: 'ModelType', op: '==', value: 'PENDISPLAY' },
       penTablets:  { field: 'ModelType', op: '==', value: 'PENTABLET' },
       standalones: { field: 'ModelType', op: '==', value: 'STANDALONE' },
-      recent2020plus: (t) => (t.Model.LaunchYear ?? '') >= '2020',
+      recent2020plus: (t) => (t.Model.ReleaseYear ?? '') >= '2020',
     },
   })
   .sort('total', 'desc')
   .toArray();`,
 	},
 	{
-		label: 'Median launch year per brand (with collect)',
+		label: 'Median release year per brand (with collect)',
 		body: `return await ds.Tablets
   .summarize({
     by: 'Brand',
     count: 'tablets',
-    median: { medianYear: 'ModelLaunchYear' },
+    median: { medianYear: 'ModelReleaseYear' },
     distinctCount: { distinctTypes: 'ModelType' },
   })
   .sort('tablets', 'desc')

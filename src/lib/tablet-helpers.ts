@@ -11,7 +11,7 @@ import { tabletFullName, tabletNameAndId } from '$data/lib/entities/tablet-field
 import { yearNum } from '$lib/year.js';
 
 export function compareTabletByYearDesc(a: Tablet, b: Tablet): number {
-	return yearNum(b.Model.LaunchYear) - yearNum(a.Model.LaunchYear);
+	return yearNum(b.Model.ReleaseYear) - yearNum(a.Model.ReleaseYear);
 }
 
 export function buildTabletNameMap(tablets: Tablet[]): Map<string, string> {

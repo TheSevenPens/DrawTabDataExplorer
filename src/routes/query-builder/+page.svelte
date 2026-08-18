@@ -73,7 +73,7 @@
 	let collection = $state<BuilderCollection>('Tablets');
 	let filters = $state<BuilderFilter[]>([]);
 	let sorts = $state<BuilderSort[]>([]);
-	let columns = $state<string[]>(['Brand', 'ModelId', 'ModelName', 'ModelLaunchYear']);
+	let columns = $state<string[]>(['Brand', 'ModelId', 'ModelName', 'ModelReleaseYear']);
 	let skip = $state<number | ''>('');
 	let take = $state<number | ''>(5);
 	let outputMode = $state<BuilderOutput['mode']>('toArray');

@@ -85,7 +85,7 @@ export function arCategoryRows(tablets: Tablet[]) {
 
 export function withinYears(t: Tablet, n: number | null): boolean {
 	if (n === null) return true;
-	const y = parseInt(t.Model.LaunchYear, 10);
+	const y = parseInt(t.Model.ReleaseYear, 10);
 	if (isNaN(y)) return false;
 	return y >= new Date().getFullYear() - n;
 }
@@ -94,7 +94,7 @@ export function subtitleFor(tablets: Tablet[]): string {
 	const n = tablets.length;
 	const noun = n === 1 ? 'tablet' : 'tablets';
 	if (n === 0) return `0 ${noun}`;
-	const ys = tablets.map((t) => parseInt(t.Model.LaunchYear, 10)).filter((y) => !isNaN(y));
+	const ys = tablets.map((t) => parseInt(t.Model.ReleaseYear, 10)).filter((y) => !isNaN(y));
 	if (ys.length === 0) return `${n} ${noun}`;
 	const min = Math.min(...ys);
 	const max = Math.max(...ys);

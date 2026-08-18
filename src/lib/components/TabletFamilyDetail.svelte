@@ -104,7 +104,7 @@
 						<td>{tablet.Model.Name}</td>
 						<td>{(tablet.Model.AlternateNames ?? []).join(', ')}</td>
 						<td>{tablet.Model.Type}</td>
-						<td>{tablet.Model.LaunchYear || ''}</td>
+						<td>{tablet.Model.ReleaseYear || ''}</td>
 						<td>{tablet.Model.Status || ''}</td>
 					</tr>
 				{/each}

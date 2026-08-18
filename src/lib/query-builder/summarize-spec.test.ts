@@ -17,15 +17,15 @@ describe('buildSummarizeSpec', () => {
 	it('builds avg/min/max field aggregators', () => {
 		const aggs: BuilderAggregator[] = [
 			{ op: 'count', name: 'tablets' },
-			{ op: 'avg', name: 'avgYear', field: 'ModelLaunchYear' },
-			{ op: 'min', name: 'firstYear', field: 'ModelLaunchYear' },
-			{ op: 'max', name: 'lastYear', field: 'ModelLaunchYear' },
+			{ op: 'avg', name: 'avgYear', field: 'ModelReleaseYear' },
+			{ op: 'min', name: 'firstYear', field: 'ModelReleaseYear' },
+			{ op: 'max', name: 'lastYear', field: 'ModelReleaseYear' },
 		];
 		const spec = buildSummarizeSpec('Brand', aggs);
 		expect(spec?.count).toBe('tablets');
-		expect(spec?.avg).toEqual({ avgYear: 'ModelLaunchYear' });
-		expect(spec?.min).toEqual({ firstYear: 'ModelLaunchYear' });
-		expect(spec?.max).toEqual({ lastYear: 'ModelLaunchYear' });
+		expect(spec?.avg).toEqual({ avgYear: 'ModelReleaseYear' });
+		expect(spec?.min).toEqual({ firstYear: 'ModelReleaseYear' });
+		expect(spec?.max).toEqual({ lastYear: 'ModelReleaseYear' });
 	});
 
 	it('builds countIf with serialisable filter leaf', () => {
@@ -62,7 +62,7 @@ describe('formatSummarizeSpec', () => {
 		const text = formatSummarizeSpec({
 			by: 'Brand',
 			count: 'tablets',
-			avg: { avgYear: 'ModelLaunchYear' },
+			avg: { avgYear: 'ModelReleaseYear' },
 		});
 		expect(text).toContain("by: 'Brand'");
 		expect(text).toContain("count: 'tablets'");
