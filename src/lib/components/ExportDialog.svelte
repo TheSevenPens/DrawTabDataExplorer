@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
-	import { exportTableAsPptx } from '$lib/pptx-export';
 	import type { RowRecord } from '$lib/table-types.js';
 	import { datedFilename } from '$lib/chart-export/filenames.js';
 
@@ -171,6 +170,12 @@
 
 	async function doExport() {
 		if (format === 'pptx') {
+			// Imported here rather than at the top of the module: pptxgenjs is
+			// ~360 KB, and a static edge from this component put it in the app
+			// entry's graph, so every page carried a modulepreload for it — ~123 KB
+			// gzipped, on pages with no export UI at all. pptx-export.ts already
+			// loads pptxgenjs itself lazily; this is the edge that defeated it (#310).
+			const { exportTableAsPptx } = await import('$lib/pptx-export.js');
 			const headers = exportFields.map((f) => f.label);
 			const rows = exportRows.map((row) => exportFields.map((f) => cell(row, f)));
 			await exportTableAsPptx({

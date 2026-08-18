@@ -49,12 +49,20 @@ export default defineConfig({
 			allow: [path.resolve(__dirname), ...(hasLocalData ? [localDataPath] : [])],
 		},
 	},
-	// NOTE: build.rollupOptions.output is deliberately absent. SvelteKit's Vite
-	// plugin replaces that object wholesale for the client build, so nothing set
-	// here reaches Rolldown — verified by a chunkFileNames probe that produced no
-	// renamed chunks. A manualChunks() entry used to live here claiming it kept
-	// pptxgenjs out of the entry bundle; it never ran, and pptxgenjs is in fact
-	// merged into a chunk the app entry imports statically, so every page carries
-	// a modulepreload for ~123 KB gzipped of PowerPoint exporter. Tracked in #310
-	// — don't re-add output config here expecting it to take effect.
+	// NOTE: no build.rollupOptions.output here, deliberately.
+	//
+	// A manualChunks() entry used to force pptxgenjs into a chunk named 'pptx',
+	// with a comment claiming that kept it out of the entry bundle. It did the
+	// opposite: naming the group made Rolldown hoist the chunk into the app
+	// entry's static graph, so every page — /about included — carried a
+	// modulepreload for ~120 KB gzipped of PowerPoint exporter, defeating the
+	// lazy import in src/lib/pptx-export.ts. Measured on /entity/<id>: 234,064
+	// bytes gz of initial JS with it, 111,530 without. See #310.
+	//
+	// SvelteKit's Vite plugin overrides the output keys it owns (chunkFileNames
+	// and friends) but leaves manualChunks alone — which is why that option kept
+	// working while a chunkFileNames probe appeared to show the whole object was
+	// ignored. Don't reintroduce chunk grouping here to "optimise" a large
+	// dependency; break the static import edge at the call site instead, the way
+	// ExportDialog.svelte does.
 });
