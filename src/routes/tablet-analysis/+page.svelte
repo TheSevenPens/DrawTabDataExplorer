@@ -268,7 +268,12 @@
 	const DIAGONAL_COUNT_OPTIONS = [10, 20, 30];
 
 	let ptDiagonalRows = $derived(diagonalRows(penTablets));
-	let pdDiagonalRows = $derived(diagonalRows(penDisplays));
+	// Standalones (iPads and the like) are left out of the ranking: they
+	// dominated the smallest end and are not pen displays in the sense this
+	// table is comparing. The histogram above still includes them.
+	let pdDiagonalRows = $derived(
+		diagonalRows(penDisplays.filter((t) => t.Model.Type === 'PENDISPLAY')),
+	);
 	let ptDiagonalBrands = $derived(diagonalBrands(ptDiagonalRows, brandName));
 	let pdDiagonalBrands = $derived(diagonalBrands(pdDiagonalRows, brandName));
 
@@ -305,6 +310,9 @@
 	onCountChange: (n: number) => void;
 	direction: DiagonalDirection;
 	onDirectionChange: (d: DiagonalDirection) => void;
+	/** Optional caveat appended to the description, e.g. when this table's
+	 *  population differs from the chart above it. */
+	note?: string;
 })}
 	{@const superlative = p.direction === 'largest' ? 'Largest' : 'Smallest'}
 	{@const title = `${superlative} ${p.noun} by diagonal`}
@@ -312,8 +320,9 @@
 	<h3>{title}</h3>
 	<p class="description">
 		The {superlative.toLowerCase()}
-		{p.noun} by active-area diagonal. Ranked across every {p.noun} with recorded dimensions — unlike the
+		{p.noun} by active-area diagonal. Ranked across all {p.noun} with recorded dimensions — unlike the
 		chart above, this table ignores the compare-years control.
+		{#if p.note}{p.note}{/if}
 	</p>
 	{#if p.allRows.length === 0}
 		<EmptyState>No {p.noun} with recorded active-area dimensions.</EmptyState>
@@ -707,6 +716,7 @@
 						onCountChange: (n) => (pdTopCount = n),
 						direction: pdTopDir,
 						onDirectionChange: (d) => (pdTopDir = d),
+						note: 'Standalone tablets are excluded, though the chart above includes them.',
 					})}
 				</section>
 			{/if}
