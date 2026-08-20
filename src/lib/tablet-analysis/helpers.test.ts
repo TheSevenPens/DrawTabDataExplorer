@@ -72,6 +72,27 @@ describe('topByDiagonal', () => {
 		topByDiagonal(rows, '', 3);
 		expect(rows.map((r) => r.id)).toEqual(before);
 	});
+
+	it('orders smallest first when asked, and it is not merely the reverse slice', () => {
+		// With count < total the two directions pick different tablets, not the
+		// same three read backwards — SMALL is absent from 'largest' at count 2.
+		expect(topByDiagonal(rows, '', 3, 'smallest').map((r) => r.id)).toEqual([
+			'SMALL',
+			'MID',
+			'BIG',
+		]);
+		expect(topByDiagonal(rows, '', 2, 'smallest').map((r) => r.id)).toEqual(['SMALL', 'MID']);
+		expect(topByDiagonal(rows, '', 2, 'largest').map((r) => r.id)).toEqual(['BIG', 'MID']);
+	});
+
+	it('defaults to largest, matching the behaviour before direction was selectable', () => {
+		expect(topByDiagonal(rows, '', 3)).toEqual(topByDiagonal(rows, '', 3, 'largest'));
+	});
+
+	it('applies the brand filter in either direction', () => {
+		expect(topByDiagonal(rows, 'WACOM', 10, 'smallest').map((r) => r.id)).toEqual(['SMALL', 'MID']);
+		expect(topByDiagonal(rows, 'WACOM', 10, 'largest').map((r) => r.id)).toEqual(['MID', 'SMALL']);
+	});
 });
 
 describe('diagonalBrands', () => {

@@ -155,13 +155,26 @@ export function diagonalRows(tablets: Tablet[]): DiagonalRow[] {
 		.filter((r): r is DiagonalRow => r !== null);
 }
 
+/** Which end of the range a ranking table shows. */
+export type DiagonalDirection = 'largest' | 'smallest';
+
 /**
- * The `count` largest rows, biggest first, optionally limited to one brand.
- * An empty `brand` means all brands.
+ * The `count` rows at one end of the diagonal range, optionally limited to a
+ * single brand. An empty `brand` means all brands. Defaults to 'largest',
+ * which is what the tables opened with before the direction was selectable.
  */
-export function topByDiagonal(rows: DiagonalRow[], brand: string, count: number): DiagonalRow[] {
+export function topByDiagonal(
+	rows: DiagonalRow[],
+	brand: string,
+	count: number,
+	direction: DiagonalDirection = 'largest',
+): DiagonalRow[] {
 	const filtered = brand ? rows.filter((r) => r.brand === brand) : rows;
-	return [...filtered].sort((a, b) => b.diagonalMm - a.diagonalMm).slice(0, count);
+	return [...filtered]
+		.sort((a, b) =>
+			direction === 'largest' ? b.diagonalMm - a.diagonalMm : a.diagonalMm - b.diagonalMm,
+		)
+		.slice(0, count);
 }
 
 /** Brands present in `rows`, ordered by display name. */

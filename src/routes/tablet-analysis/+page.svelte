@@ -34,6 +34,7 @@
 		topByDiagonal,
 		diagonalBrands,
 		type DiagonalRow,
+		type DiagonalDirection,
 	} from '$lib/tablet-analysis/helpers.js';
 	import { buildAnalysisSections } from '$lib/tablet-analysis/metric-configs.js';
 	import AspectRatioRatioSection from '$lib/tablet-analysis/AspectRatioRatioSection.svelte';
@@ -271,13 +272,20 @@
 	let ptDiagonalBrands = $derived(diagonalBrands(ptDiagonalRows, brandName));
 	let pdDiagonalBrands = $derived(diagonalBrands(pdDiagonalRows, brandName));
 
+	const DIAGONAL_DIRECTION_OPTIONS: { value: DiagonalDirection; label: string }[] = [
+		{ value: 'largest', label: 'Largest first' },
+		{ value: 'smallest', label: 'Smallest first' },
+	];
+
 	let ptTopBrand = $state('');
 	let pdTopBrand = $state('');
 	let ptTopCount = $state(10);
 	let pdTopCount = $state(10);
+	let ptTopDir = $state<DiagonalDirection>('largest');
+	let pdTopDir = $state<DiagonalDirection>('largest');
 
-	let ptTopRows = $derived(topByDiagonal(ptDiagonalRows, ptTopBrand, ptTopCount));
-	let pdTopRows = $derived(topByDiagonal(pdDiagonalRows, pdTopBrand, pdTopCount));
+	let ptTopRows = $derived(topByDiagonal(ptDiagonalRows, ptTopBrand, ptTopCount, ptTopDir));
+	let pdTopRows = $derived(topByDiagonal(pdDiagonalRows, pdTopBrand, pdTopCount, pdTopDir));
 
 	/** Diagonal in the active unit, to one decimal. */
 	function diagonalDisplay(mm: number): string {
@@ -289,24 +297,37 @@
 	rows: DiagonalRow[];
 	allRows: DiagonalRow[];
 	brands: string[];
-	title: string;
-	filename: string;
+	filenameBase: string;
 	noun: string;
 	brand: string;
 	onBrandChange: (b: string) => void;
 	count: number;
 	onCountChange: (n: number) => void;
+	direction: DiagonalDirection;
+	onDirectionChange: (d: DiagonalDirection) => void;
 })}
-	<h3>{p.title}</h3>
+	{@const superlative = p.direction === 'largest' ? 'Largest' : 'Smallest'}
+	{@const title = `${superlative} ${p.noun} by diagonal`}
+	{@const filename = `${p.filenameBase}-${p.direction}`}
+	<h3>{title}</h3>
 	<p class="description">
-		The largest {p.noun} by active-area diagonal. Ranked across every {p.noun} with recorded dimensions
-		— unlike the chart above, this table ignores the compare-years control.
+		The {superlative.toLowerCase()}
+		{p.noun} by active-area diagonal. Ranked across every {p.noun} with recorded dimensions — unlike the
+		chart above, this table ignores the compare-years control.
 	</p>
 	{#if p.allRows.length === 0}
 		<EmptyState>No {p.noun} with recorded active-area dimensions.</EmptyState>
 	{:else}
 		<div class="rank-controls">
 			<div class="controls-left">
+				<label class="show-count">
+					Sort
+					<select onchange={(e) => p.onDirectionChange(e.currentTarget.value as DiagonalDirection)}>
+						{#each DIAGONAL_DIRECTION_OPTIONS as opt (opt.value)}
+							<option value={opt.value} selected={p.direction === opt.value}>{opt.label}</option>
+						{/each}
+					</select>
+				</label>
 				<label class="show-count">
 					Brand
 					<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
@@ -327,8 +348,8 @@
 			</div>
 			<ExportTableButton
 				entityType="analysis"
-				title={p.title}
-				filename={p.filename}
+				{title}
+				{filename}
 				headers={['Rank', 'Tablet', 'Brand', 'Year', `Diagonal (${isMetric ? 'cm' : 'in'})`]}
 				rows={p.rows.map((r, i) => [
 					i + 1,
@@ -647,13 +668,14 @@
 						rows: ptTopRows,
 						allRows: ptDiagonalRows,
 						brands: ptDiagonalBrands,
-						title: 'Largest pen tablets by diagonal',
-						filename: 'analysis-pen-tablet-diagonal-largest',
+						filenameBase: 'analysis-pen-tablet-diagonal',
 						noun: 'pen tablets',
 						brand: ptTopBrand,
 						onBrandChange: (b) => (ptTopBrand = b),
 						count: ptTopCount,
 						onCountChange: (n) => (ptTopCount = n),
+						direction: ptTopDir,
+						onDirectionChange: (d) => (ptTopDir = d),
 					})}
 				</section>
 			{/if}
@@ -677,13 +699,14 @@
 						rows: pdTopRows,
 						allRows: pdDiagonalRows,
 						brands: pdDiagonalBrands,
-						title: 'Largest pen displays by diagonal',
-						filename: 'analysis-pen-display-diagonal-largest',
+						filenameBase: 'analysis-pen-display-diagonal',
 						noun: 'pen displays',
 						brand: pdTopBrand,
 						onBrandChange: (b) => (pdTopBrand = b),
 						count: pdTopCount,
 						onCountChange: (n) => (pdTopCount = n),
+						direction: pdTopDir,
+						onDirectionChange: (d) => (pdTopDir = d),
 					})}
 				</section>
 			{/if}
