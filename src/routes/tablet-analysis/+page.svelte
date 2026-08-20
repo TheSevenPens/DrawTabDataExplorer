@@ -30,6 +30,10 @@
 		countBy,
 		filterByYears,
 		pct,
+		diagonalRows,
+		topByDiagonal,
+		diagonalBrands,
+		type DiagonalRow,
 	} from '$lib/tablet-analysis/helpers.js';
 	import { buildAnalysisSections } from '$lib/tablet-analysis/metric-configs.js';
 	import AspectRatioRatioSection from '$lib/tablet-analysis/AspectRatioRatioSection.svelte';
@@ -253,7 +257,120 @@
 
 	let ptMarkers = $derived(markersFor(ptOverlay));
 	let pdMarkers = $derived(markersFor(pdOverlay));
+
+	// --- Largest by diagonal (per Sizes section) ---
+	//
+	// Ranks over every tablet of the type, not the histogram's year-filtered
+	// set: a top-N list that silently dropped older large tablets would be
+	// surprising, and it matches the digitizer-density rankings above.
+
+	const DIAGONAL_COUNT_OPTIONS = [10, 20, 30];
+
+	let ptDiagonalRows = $derived(diagonalRows(penTablets));
+	let pdDiagonalRows = $derived(diagonalRows(penDisplays));
+	let ptDiagonalBrands = $derived(diagonalBrands(ptDiagonalRows, brandName));
+	let pdDiagonalBrands = $derived(diagonalBrands(pdDiagonalRows, brandName));
+
+	let ptTopBrand = $state('');
+	let pdTopBrand = $state('');
+	let ptTopCount = $state(10);
+	let pdTopCount = $state(10);
+
+	let ptTopRows = $derived(topByDiagonal(ptDiagonalRows, ptTopBrand, ptTopCount));
+	let pdTopRows = $derived(topByDiagonal(pdDiagonalRows, pdTopBrand, pdTopCount));
+
+	/** Diagonal in the active unit, to one decimal. */
+	function diagonalDisplay(mm: number): string {
+		return (isMetric ? mm * MM_TO_CM : mm * MM_TO_IN).toFixed(1);
+	}
 </script>
+
+{#snippet diagonalRankSection(p: {
+	rows: DiagonalRow[];
+	allRows: DiagonalRow[];
+	brands: string[];
+	title: string;
+	filename: string;
+	noun: string;
+	brand: string;
+	onBrandChange: (b: string) => void;
+	count: number;
+	onCountChange: (n: number) => void;
+})}
+	<h3>{p.title}</h3>
+	<p class="description">
+		The largest {p.noun} by active-area diagonal. Ranked across every {p.noun} with recorded dimensions
+		— unlike the chart above, this table ignores the compare-years control.
+	</p>
+	{#if p.allRows.length === 0}
+		<EmptyState>No {p.noun} with recorded active-area dimensions.</EmptyState>
+	{:else}
+		<div class="rank-controls">
+			<div class="controls-left">
+				<label class="show-count">
+					Brand
+					<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
+						<option value="" selected={p.brand === ''}>All brands</option>
+						{#each p.brands as b (b)}
+							<option value={b} selected={p.brand === b}>{brandName(b)}</option>
+						{/each}
+					</select>
+				</label>
+				<label class="show-count">
+					Show
+					<select onchange={(e) => p.onCountChange(Number(e.currentTarget.value))}>
+						{#each DIAGONAL_COUNT_OPTIONS as n (n)}
+							<option value={n} selected={p.count === n}>{n}</option>
+						{/each}
+					</select>
+				</label>
+			</div>
+			<ExportTableButton
+				entityType="analysis"
+				title={p.title}
+				filename={p.filename}
+				headers={['Rank', 'Tablet', 'Brand', 'Year', `Diagonal (${isMetric ? 'cm' : 'in'})`]}
+				rows={p.rows.map((r, i) => [
+					i + 1,
+					`${r.name} (${r.id})`,
+					brandName(r.brand),
+					r.year,
+					diagonalDisplay(r.diagonalMm),
+				])}
+			/>
+		</div>
+		{#if p.rows.length === 0}
+			<EmptyState>No {p.noun} match this brand.</EmptyState>
+		{:else}
+			<table class="rank-table">
+				<thead>
+					<tr>
+						<th class="num">#</th>
+						<th>Tablet</th>
+						<th>Brand</th>
+						<th class="num">Year</th>
+						<th class="num">Diagonal <span class="unit">({isMetric ? 'cm' : 'in'})</span></th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each p.rows as r, i (r.entityId)}
+						<tr>
+							<td class="num mono">{i + 1}</td>
+							<td>
+								<a href={resolve('/entity/[entityId]', { entityId: r.entityId })}>
+									{r.name} ({r.id})
+								</a>
+							</td>
+							<td>{brandName(r.brand)}</td>
+							<td class="num mono">{r.year || '—'}</td>
+							<td class="num mono">{diagonalDisplay(r.diagonalMm)}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		{/if}
+	{/if}
+{/snippet}
 
 {#snippet densityRankSection(p: {
 	rows: DensityRow[];
@@ -526,6 +643,18 @@
 						bind:compareYears={ptSizesYears}
 						markers={ptMarkers}
 					/>
+					{@render diagonalRankSection({
+						rows: ptTopRows,
+						allRows: ptDiagonalRows,
+						brands: ptDiagonalBrands,
+						title: 'Largest pen tablets by diagonal',
+						filename: 'analysis-pen-tablet-diagonal-largest',
+						noun: 'pen tablets',
+						brand: ptTopBrand,
+						onBrandChange: (b) => (ptTopBrand = b),
+						count: ptTopCount,
+						onCountChange: (n) => (ptTopCount = n),
+					})}
 				</section>
 			{/if}
 
@@ -544,6 +673,18 @@
 						bind:compareYears={pdSizesYears}
 						markers={pdMarkers}
 					/>
+					{@render diagonalRankSection({
+						rows: pdTopRows,
+						allRows: pdDiagonalRows,
+						brands: pdDiagonalBrands,
+						title: 'Largest pen displays by diagonal',
+						filename: 'analysis-pen-display-diagonal-largest',
+						noun: 'pen displays',
+						brand: pdTopBrand,
+						onBrandChange: (b) => (pdTopBrand = b),
+						count: pdTopCount,
+						onCountChange: (n) => (pdTopCount = n),
+					})}
 				</section>
 			{/if}
 		{/snippet}
