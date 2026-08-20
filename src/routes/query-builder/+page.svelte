@@ -106,7 +106,7 @@
 	}
 
 	function setQuickFilter(spec: QuickFilterSpec, value: string) {
-		filters = withQuickFilter(filters, spec, value);
+		filters = withQuickFilter(filters, spec, value, quickFilterChoices(spec));
 		clearResult();
 	}
 
@@ -396,7 +396,7 @@
 									<div class="row quick-filter-row">
 										{#each quickFilterSpecs as spec (spec.field + spec.operator)}
 											{@const choices = quickFilterChoices(spec)}
-											{@const selected = currentValue(filters, spec)}
+											{@const selected = currentValue(filters, spec, choices)}
 											<select
 												class="select"
 												aria-label={fieldOptionLabelForKey(spec.field, fields)}
@@ -404,8 +404,8 @@
 												onchange={(e) => setQuickFilter(spec, e.currentTarget.value)}
 											>
 												<option value="">{spec.anyLabel}</option>
-												{#each choices as opt (opt.value)}
-													<option value={opt.value} selected={opt.value === selected}>
+												{#each choices as opt (opt.id)}
+													<option value={opt.id} selected={opt.id === selected}>
 														{opt.label}
 													</option>
 												{/each}
