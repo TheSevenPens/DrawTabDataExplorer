@@ -38,9 +38,16 @@
 	import { summarizeOutputFieldKeys } from '$lib/query-builder/summarize-spec.js';
 	import { buildQueryCode } from '$lib/query-builder/code-preview.js';
 	import { executeBuilderQuery } from '$lib/query-builder/execute-builder-query.js';
-	import { fieldOptionLabel } from '$lib/field-option-label.js';
+	import { fieldOptionLabel, fieldOptionLabelForKey } from '$lib/field-option-label.js';
 	import type { DrawTabDataSet } from '$data/lib/dataset.js';
 	import type { PipelineSection } from '$lib/query-builder/pipeline-field-drag.js';
+	import {
+		QUICK_FILTERS,
+		optionsFor,
+		currentValue,
+		withQuickFilter,
+		type QuickFilterSpec,
+	} from '$lib/query-builder/quick-filters.js';
 
 	let { data } = $props();
 
@@ -85,6 +92,23 @@
 
 	let fields = $derived(collectionMeta[collection].fields);
 	let fieldGroups = $derived(collectionMeta[collection].groups);
+
+	// Quick filters are sugar over `filters`: each dropdown reads its value back
+	// out of that array and writes through to it, so there is no second source of
+	// truth to drift. See quick-filters.ts.
+	let quickFilterSpecs = $derived(QUICK_FILTERS[collection] ?? []);
+
+	function quickFilterChoices(spec: QuickFilterSpec) {
+		return optionsFor(
+			spec,
+			fields.find((f) => f.key === spec.field),
+		);
+	}
+
+	function setQuickFilter(spec: QuickFilterSpec, value: string) {
+		filters = withQuickFilter(filters, spec, value);
+		clearResult();
+	}
 
 	let output = $derived.by((): BuilderOutput => {
 		if (outputMode === 'distinct') return { mode: 'distinct', field: distinctField };
@@ -364,6 +388,37 @@
 								</div>
 							</td>
 						</tr>
+
+						{#if quickFilterSpecs.length > 0}
+							<tr>
+								<th class="pipeline-label" scope="row">Quick filters</th>
+								<td class="pipeline-cell">
+									<div class="row quick-filter-row">
+										{#each quickFilterSpecs as spec (spec.field + spec.operator)}
+											{@const choices = quickFilterChoices(spec)}
+											{@const selected = currentValue(filters, spec)}
+											<select
+												class="select"
+												aria-label={fieldOptionLabelForKey(spec.field, fields)}
+												value={selected}
+												onchange={(e) => setQuickFilter(spec, e.currentTarget.value)}
+											>
+												<option value="">{spec.anyLabel}</option>
+												{#each choices as opt (opt.value)}
+													<option value={opt.value} selected={opt.value === selected}>
+														{opt.label}
+													</option>
+												{/each}
+											</select>
+										{/each}
+									</div>
+									<p class="hint cell-hint">
+										Shortcuts for the most common filters. Each one writes a
+										<code>.filter()</code> into the row below.
+									</p>
+								</td>
+							</tr>
+						{/if}
 
 						<tr>
 							<th class="pipeline-label" scope="row">Filters</th>
@@ -842,6 +897,11 @@
 	.field-label {
 		font-size: 13px;
 		color: var(--text-dim);
+	}
+	.quick-filter-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
 	}
 
 	.select,
