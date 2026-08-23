@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "Data explorer for DrawTabData",
 	"scripts": {
-		"postinstall": "node scripts/setup-static.mjs",
+		"postinstall": "node scripts/setup-static.mjs && node scripts/submodule-branches.mjs && npm run setup-hooks",
 		"setup-static": "node scripts/setup-static.mjs",
 		"update-data": "cd data-repo && git pull origin master",
 		"dev": "vite dev",
@@ -18,7 +18,9 @@
 		"test:unit": "vitest run",
 		"test:unit:watch": "vitest",
 		"test:unit:coverage": "vitest run --coverage",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"fix-submodules": "node scripts/submodule-branches.mjs",
+		"setup-hooks": "git config core.hooksPath .githooks"
 	},
 	"keywords": [],
 	"author": "",

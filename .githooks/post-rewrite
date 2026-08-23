@@ -1,0 +1,5 @@
+#!/bin/sh
+# Reattach submodules to their tracking branch after git moved them.
+# See scripts/submodule-branches.mjs. Advisory: never blocks the operation.
+command -v node >/dev/null 2>&1 || exit 0
+node "$(git rev-parse --show-toplevel)/scripts/submodule-branches.mjs" || true

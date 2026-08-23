@@ -1,6 +1,8 @@
 [submodule "data-repo"]
 	path = data-repo
 	url = https://github.com/TheSevenPens/DrawTabData.git
+	branch = master
 [submodule "packages/queriton"]
 	path = packages/queriton
 	url = https://github.com/TheSevenPens/queriton.git
+	branch = main

@@ -149,6 +149,32 @@ If a queriton change is needed for an explorer feature, push queriton first,
 then make the explorer commit that bumps the pointer and uses the new API in
 the same PR — the pointer bump and the consumer change should land together.
 
+### Submodules stay on a branch automatically
+
+Git checks submodules out **detached**: `git pull --recurse-submodules`,
+`git checkout`, and `git submodule update` all move the submodule's HEAD to
+the recorded commit without touching its branch. Nothing looks wrong until
+you commit inside the submodule — the commit lands off-branch, `git push`
+has nothing to push to, and if the outer pointer bump gets pushed first the
+superproject references a commit that exists on one machine only. That
+happened on 2026-08-20 and had to be repaired by hand.
+
+[`scripts/submodule-branches.mjs`](scripts/submodule-branches.mjs) makes it
+self-correcting. It reattaches each submodule to the branch named in
+`.gitmodules` (`master` for data-repo, `main` for queriton), fast-forwarding
+that branch when HEAD is ahead of it. It runs from `.githooks/` on
+post-merge, post-checkout and post-rewrite, and again on `postinstall`.
+Silent when there's nothing to do; `npm run fix-submodules` runs it by hand.
+
+It deliberately **refuses** to reattach when the branch is ahead of the
+recorded commit, or when the two have forked — reattaching would either move
+the submodule off the commit the superproject records or strand commits. Those
+are the only cases still worth a human, and it prints the `git log` command to
+inspect them.
+
+`core.hooksPath` is per-clone local config, so a fresh clone picks the hooks
+up via `postinstall` (or `npm run setup-hooks`).
+
 ## Adding a new brand
 
 A new brand needs touches in two places plus the data files themselves.
