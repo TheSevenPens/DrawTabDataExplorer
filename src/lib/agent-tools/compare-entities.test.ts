@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { compareEntities, type ComparableField } from './compare-entities.js';
-import type { FieldRole } from './field-roles.js';
+import type { FieldRole } from '$lib/field-roles.js';
 
 type Row = Record<string, string>;
 const F = (key: string, group = 'Model'): ComparableField<Row> => ({

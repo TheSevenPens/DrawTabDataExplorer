@@ -192,6 +192,13 @@ analysis, say so, and pivot to the adjacent question that does have data — 39
 pens carry a resolved IAF. That pivot is only possible if field metadata carries
 population counts. FieldDefs give types today; feasibility needs fill rates.
 
+**Half shipped.** PR #313 rewired `/data-quality` completion to read the field
+defs instead of a hand-maintained path list, so fill rates are now computed for
+every field (46 tablet, 23 pen, up from 17 and 3) — `computeFieldCompletion` in
+[`src/lib/data-quality/helpers.ts`](../src/lib/data-quality/helpers.ts). What is
+still missing is exposing them through `describe_fields`, which is a thin read
+over that function rather than new analysis.
+
 ### The pivot paid off
 
 Re-aimed at measured data only, the same run produced B1 for free — the widest
@@ -342,13 +349,22 @@ metadata, while `Type`, `Year`, `Release Date`, `Audience`, `Family`, `Status`,
 `Last Windows Driver`, `Last macOS Driver`, `Included Pen` are genuinely worth
 comparing. Group is a layout hint; it is not a semantic role.
 
-> `FieldDisplayDef` gains an explicit role (`identity` / `spec` / `metadata`).
-> Comparison tools diff `spec` only.
+> Fields carry an explicit role (`identity` / `spec` / `metadata`). Comparison
+> tools diff `spec` only.
 
-**This one pays for itself in the UI.** With roles present,
-`/tablet-compare` can offer a differences-only view that isn't 58% noise —
-the same shape as the E1 finding, where an agent requirement turned out to be a
-feature the humans wanted anyway.
+**Shipped** — [`src/lib/field-roles.ts`](../src/lib/field-roles.ts), PR #313.
+It paid for itself in the UI exactly as predicted: both compare pages now drop
+identity and metadata rows and offer a differences-only toggle, and
+`/pen-compare` — which had no filtering at all — was brought into line. Same
+shape as the E1 finding: an agent requirement that turned out to be a feature
+the humans wanted anyway.
+
+The map lives in the app rather than on `FieldDisplayDef` for now, because the
+type is in `queriton` and the field arrays in `data-repo`; `field-roles.test.ts`
+asserts exact key-set agreement with both so upstream drift fails the build.
+That guard earned its keep on its first real upstream change — adding the
+`ColorGamuts` field defs (DrawTabData#40) failed the test with all seven new
+keys named rather than letting them default silently.
 
 ### The answer it produced
 
@@ -372,21 +388,21 @@ buried it too.
 Derived from the scenarios above, not designed up front. Roughly ordered by how
 many scenarios need them:
 
-| Tool                | Serves            | Notes                                                   |
-| ------------------- | ----------------- | ------------------------------------------------------- |
-| `query`             | A1 A3 B1 C2 D1 D2 | Structured pipeline steps — **never** arbitrary eval    |
-| `describe_fields`   | all query users   | FieldDefs are already schema; this is an adapter        |
-| `get_conventions`   | all               | EntityId casing, `Model.Family`, measured-wins IAF      |
-| `resolve_entity`    | A1 A2 A4          | Name → ranked candidates + ids. Never a single guess    |
-| `get_entity`        | A1 A2 A3          | By EntityId, with relationships resolved                |
-| `compare_entities`  | A4                | Diffs `spec`-role fields only; reports the accounting   |
-| `find_compatible`   | A1 A2             | The journey, not three atomic verbs                     |
-| `resolve_range`     | A3 B1             | Exposes measured-wins rather than making agents redo it |
-| `set_view_state`    | E1                | Write. Also the deterministic test hook                 |
-| `get_shareable_url` | E1 B2             | Blocked on URL-encoded view state                       |
-| `export_chart`      | B2 D1             | Returns the flattened self-contained SVG                |
-| `run_data_quality`  | B3                | Structured issues                                       |
-| `propose_verdict`   | C1 C2             | Write, human-approved. Last, and only if C1 proves out  |
+| Tool                | Serves            | Notes                                                                     |
+| ------------------- | ----------------- | ------------------------------------------------------------------------- |
+| `query`             | A1 A3 B1 C2 D1 D2 | Structured pipeline steps — **never** arbitrary eval                      |
+| `describe_fields`   | all query users   | FieldDefs are already schema; fill rates via `computeFieldCompletion`     |
+| `get_conventions`   | all               | EntityId casing, `Model.Family`, measured-wins IAF                        |
+| `resolve_entity`    | A1 A2 A4          | Built. Name → ranked candidates + ids. Never a single guess               |
+| `get_entity`        | A1 A2 A3          | By EntityId, with relationships resolved                                  |
+| `compare_entities`  | A4                | Built. Diffs `spec` fields via `$lib/field-roles`; reports the accounting |
+| `find_compatible`   | A1 A2             | The journey, not three atomic verbs                                       |
+| `resolve_range`     | A3 B1             | Exposes measured-wins rather than making agents redo it                   |
+| `set_view_state`    | E1                | Write. Also the deterministic test hook                                   |
+| `get_shareable_url` | E1 B2             | Blocked on URL-encoded view state                                         |
+| `export_chart`      | B2 D1             | Returns the flattened self-contained SVG                                  |
+| `run_data_quality`  | B3                | Structured issues                                                         |
+| `propose_verdict`   | C1 C2             | Write, human-approved. Last, and only if C1 proves out                    |
 
 ## Non-goals
 

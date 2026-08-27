@@ -9,7 +9,7 @@
  *    confident answer without the denominator. `differing: 5` means something
  *    very different when `compared` is 62 versus 6.
  */
-import type { FieldRole } from './field-roles.js';
+import type { FieldRole } from '$lib/field-roles.js';
 
 /** The slice of `FieldDisplayDef` this module needs. */
 export interface ComparableField<T> {
