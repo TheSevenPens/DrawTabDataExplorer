@@ -38,11 +38,18 @@ import { PRESSURE_RESPONSE_FIELDS } from '$data/lib/entities/pressure-response-f
 import { INVENTORY_PEN_FIELDS } from '$data/lib/entities/inventory-pen-fields.js';
 import { INVENTORY_TABLET_FIELDS } from '$data/lib/entities/inventory-tablet-fields.js';
 
-// The Display group gets its own section, scoped to tablets that actually have
-// a display — a 0% "Brightness" across 375 tablets would just be measuring how
-// many are pen-only.
+// Display and Standalone each get their own section, scoped to the tablets the
+// group actually applies to. Mixed into the main table their denominator would
+// be all 375 tablets, so the number would measure how many tablets are pen-only
+// rather than how complete the data is: ComputeOS is filled on 43 of the 47
+// standalones (91.5%) but reads 11.5% against the full set, and emptiest-first
+// sorting then parks all 16 Standalone rows above the digitizer gaps this page
+// exists to surface.
 const DISPLAY_FIELDS = TABLET_FIELDS.filter((f) => f.group === 'Display');
-const NON_DISPLAY_TABLET_FIELDS = TABLET_FIELDS.filter((f) => f.group !== 'Display');
+const STANDALONE_FIELDS = TABLET_FIELDS.filter((f) => f.group === 'Standalone');
+const CORE_TABLET_FIELDS = TABLET_FIELDS.filter(
+	(f) => f.group !== 'Display' && f.group !== 'Standalone',
+);
 
 // Mirror of the bundle passed into `analyzeData`. Each field is the
 // raw collection straight from the loader.
@@ -206,6 +213,7 @@ export function analyzeData(data: AnalysisInput) {
 	const displayTablets = ds.tablets.filter(
 		(t) => t.Model.Type === 'PENDISPLAY' || t.Model.Type === 'STANDALONE',
 	);
+	const standaloneTablets = ds.tablets.filter((t) => t.Model.Type === 'STANDALONE');
 
 	// Orphaned family references
 	const penFamilyIds = new Set(ds.penFamilies.map((f) => f.EntityId));
@@ -367,9 +375,11 @@ export function analyzeData(data: AnalysisInput) {
 		staleMeasurements: findStaleMeasurements(ds.pressureResponse),
 		remeasureRecommendations: findRecommendedForRemeasurement(ds.pressureResponse),
 		iafEstimatedNoMeasurement,
-		tabletCompletion: computeFieldCompletion(ds.tablets, NON_DISPLAY_TABLET_FIELDS),
+		tabletCompletion: computeFieldCompletion(ds.tablets, CORE_TABLET_FIELDS),
 		displayCompletion: computeFieldCompletion(displayTablets, DISPLAY_FIELDS),
 		displayTabletCount: displayTablets.length,
+		standaloneCompletion: computeFieldCompletion(standaloneTablets, STANDALONE_FIELDS),
+		standaloneTabletCount: standaloneTablets.length,
 		penCompletion: computeFieldCompletion(ds.pens, PEN_FIELDS),
 		driverCompletion: computeFieldCompletion(ds.drivers, DRIVER_FIELDS),
 		pressureResponseCompletion: computeFieldCompletion(

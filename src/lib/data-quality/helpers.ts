@@ -158,8 +158,16 @@ export function checkDuplicateInventoryIds(
  * - **Coverage was whatever someone remembered to list:** 17 of 74 tablet
  *   fields, 3 of ~30 pen fields, 2 for pressure-response. `Pen.IAF` —
  *   populated on 4% of pens, the emptiest interesting field in the dataset —
- *   was absent entirely, and one listed path (`Display.ColorGamuts`) has no
- *   FieldDef at all, so it could never have produced a working link.
+ *   was absent entirely.
+ *
+ * One field is genuinely lost in the move and is worth restoring:
+ * `Display.ColorGamuts` was tracked by path and has no FieldDef, so it drops
+ * off the list. Its "show" link could never have worked, but its *count* did,
+ * and the data is not sparse — 108 of the 171 tablets with a Display block
+ * carry it. It was the only display-colour coverage signal on this page.
+ * `ColorGamuts` is an object (`SRGB` / `ADOBERGB` / `DCIP3` / …) rather than a
+ * string, which is why no column exists; a computed FieldDef in `data-repo`
+ * would restore the count and give `/tablet-compare` a real gamut row.
  *
  * Driving off the field defs fixes both at once and keeps new fields covered
  * without anyone maintaining a second list.

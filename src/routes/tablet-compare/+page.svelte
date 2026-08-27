@@ -276,6 +276,13 @@
 					</tr>
 				</thead>
 				<tbody>
+					{#if visibleGroups.length === 0}
+						<tr>
+							<td class="no-diffs" colspan={flaggedItems.length + 1}>
+								No differences — every populated spec matches.
+							</td>
+						</tr>
+					{/if}
 					{#each visibleGroups as group (group.group)}
 						<tr class="group-row">
 							<td class="group-header" colspan={flaggedItems.length + 1}>{group.group}</td>
@@ -507,6 +514,12 @@
 		justify-content: space-between;
 		gap: 8px;
 		margin-bottom: 12px;
+	}
+
+	.no-diffs {
+		color: var(--text-muted);
+		font-size: var(--type-caption);
+		padding: 12px 8px;
 	}
 
 	.diffs-toggle {

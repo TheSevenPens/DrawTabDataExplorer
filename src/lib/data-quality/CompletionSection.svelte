@@ -21,6 +21,7 @@
 		description,
 		stats,
 		filterBase,
+		extraFilters = [],
 		openExport,
 	}: {
 		/** Section heading, e.g. "Tablet Field Completion". */
@@ -34,6 +35,14 @@
 		stats: CompletionStat[];
 		/** Path to filter-link from each row, or null/undefined to hide the link column. */
 		filterBase?: string | null;
+		/**
+		 * Extra filters ANDed onto every "show" link. Needed when a section is
+		 * scoped to a subset of the collection: the Standalone getters return `''`
+		 * on non-standalone tablets, so an `empty` filter alone matches all 328 of
+		 * them and lands the reader on a near-unfiltered list. (Display escapes
+		 * this because its getters emit `'-'`, which `empty` does not match.)
+		 */
+		extraFilters?: { field: string; operator: string; value: string }[];
 		openExport: OpenExport;
 	} = $props();
 
@@ -112,6 +121,7 @@
 						{#if stat.populated < stat.total}
 							{@const u = buildFilterUrl(filterBase, [
 								{ field: stat.field, operator: 'empty', value: '' },
+								...extraFilters,
 							])}
 							<a class="view-link" href={u}>show</a>
 						{/if}

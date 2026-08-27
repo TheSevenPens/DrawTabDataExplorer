@@ -31,6 +31,8 @@
 	let tabletCompletion = $derived(analysis.tabletCompletion);
 	let displayCompletion = $derived(analysis.displayCompletion);
 	let displayTabletCount = $derived(analysis.displayTabletCount);
+	let standaloneCompletion = $derived(analysis.standaloneCompletion);
+	let standaloneTabletCount = $derived(analysis.standaloneTabletCount);
 	let penCompletion = $derived(analysis.penCompletion);
 	let driverCompletion = $derived(analysis.driverCompletion);
 	let pressureResponseCompletion = $derived(analysis.pressureResponseCompletion);
@@ -367,6 +369,7 @@
 		},
 		{ id: 'completion-tablet', category: 'Field Completion', label: 'Tablets' },
 		{ id: 'completion-display', category: 'Field Completion', label: 'Displays' },
+		{ id: 'completion-standalone', category: 'Field Completion', label: 'Standalone' },
 		{ id: 'completion-pen', category: 'Field Completion', label: 'Pens' },
 		{ id: 'completion-driver', category: 'Field Completion', label: 'Drivers' },
 		{ id: 'completion-pressure', category: 'Field Completion', label: 'Pressure Response' },
@@ -933,6 +936,21 @@
 							description={`How many of the ${displayTabletCount} pen displays and standalone tablets have each display field populated.`}
 							stats={displayCompletion}
 							filterBase="/"
+							{openExport}
+						/>
+					</section>
+				{/if}
+
+				{#if activeSection === 'completion-standalone'}
+					<section class="section">
+						<CompletionSection
+							title="Standalone Field Completion"
+							exportTitle="Standalone Field Completion"
+							filename="data-quality-standalone-completion"
+							description={`How many of the ${standaloneTabletCount} standalone tablets have each compute, battery, connectivity and hardware field populated.`}
+							stats={standaloneCompletion}
+							filterBase="/"
+							extraFilters={[{ field: 'ModelType', operator: '==', value: 'STANDALONE' }]}
 							{openExport}
 						/>
 					</section>
