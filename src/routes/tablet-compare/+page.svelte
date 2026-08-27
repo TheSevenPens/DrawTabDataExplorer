@@ -4,6 +4,12 @@
 	import { getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import Button from '$lib/components/Button.svelte';
 	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import {
+		buildCompareGroups,
+		countIdentical,
+		onlyDifferences,
+		toExportRows,
+	} from '$lib/compare-matrix.js';
 	import { comparableFields, TABLET_FIELD_ROLES } from '$lib/field-roles.js';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
@@ -25,7 +31,7 @@
 		MM_TO_IN,
 		MM_TO_CM,
 	} from '$lib/tablet-size-ranges.js';
-	import { stripUnit, valueSuffix } from '$lib/field-display.js';
+	import { valueSuffix } from '$lib/field-display.js';
 	import { buildPenNameMap, formatPenIds } from '$lib/pen-helpers.js';
 	import { tabletSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
@@ -77,46 +83,17 @@
 	// `label` (the unit-stripped display label, which can collide across fields
 	// — e.g. "Active Area (mm²)" and "Active Area (cm²)" both strip to "Active
 	// Area"). Keying on `label` was the source of an each_key_duplicate crash.
-	let comparisonGroups = $derived.by(() => {
-		if (flaggedItems.length === 0) return [];
-		const groups: {
-			group: string;
-			fields: { key: string; label: string; values: string[]; differs: boolean }[];
-		}[] = [];
-		for (const groupName of TABLET_FIELD_GROUPS) {
-			const groupFields = COMPARABLE_FIELDS.filter((f) => f.group === groupName);
-			const rows: { key: string; label: string; values: string[]; differs: boolean }[] = [];
-			for (const f of groupFields) {
-				const values = flaggedItems.map((t) => getDisplayVal(f, t));
-				if (values.every((v) => v === '')) continue;
-				const unique = new Set(values.filter((v) => v !== ''));
-				rows.push({
-					key: f.key,
-					label: stripUnit(f.label, f.unit),
-					values,
-					differs: unique.size > 1,
-				});
-			}
-			if (rows.length > 0) groups.push({ group: groupName, fields: rows });
-		}
-		return groups;
-	});
+	let comparisonGroups = $derived(
+		buildCompareGroups(flaggedItems, COMPARABLE_FIELDS, TABLET_FIELD_GROUPS, getDisplayVal),
+	);
 
 	// "Only differences" collapses the table to the rows that actually answer
 	// "what's different between these" — the most common question this page is
 	// opened for. Off by default: the full spec sheet is the other reason to
 	// come here.
 	let diffsOnly = $state(false);
-	let visibleGroups = $derived(
-		diffsOnly
-			? comparisonGroups
-					.map((g) => ({ ...g, fields: g.fields.filter((f) => f.differs) }))
-					.filter((g) => g.fields.length > 0)
-			: comparisonGroups,
-	);
-	let sameCount = $derived(
-		comparisonGroups.reduce((n, g) => n + g.fields.filter((f) => !f.differs).length, 0),
-	);
+	let visibleGroups = $derived(diffsOnly ? onlyDifferences(comparisonGroups) : comparisonGroups);
+	let sameCount = $derived(countIdentical(comparisonGroups));
 
 	const currentYear = new Date().getFullYear();
 	let isMetric = $derived($unitPreference === 'metric');
@@ -212,17 +189,9 @@
 		const tabletCols = flaggedItems.map((t) => tabletBrandAndName(t));
 		return ['Field', ...tabletCols];
 	});
-	let compareExportRows: (string | number)[][] = $derived.by(() => {
-		const blanks = flaggedItems.map(() => '');
-		const out: (string | number)[][] = [];
-		for (const group of visibleGroups) {
-			out.push([group.group, ...blanks]);
-			for (const f of group.fields) {
-				out.push([f.label, ...f.values]);
-			}
-		}
-		return out;
-	});
+	let compareExportRows: (string | number)[][] = $derived(
+		toExportRows(visibleGroups, flaggedItems.length),
+	);
 </script>
 
 <Nav />
