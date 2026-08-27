@@ -42,7 +42,7 @@
 			exportTitle,
 			filename,
 			['Field', 'Populated', '%'],
-			stats.map((s) => [s.field, `${s.populated}/${s.total}`, `${s.percent}%`]),
+			sortedStats.map((s) => [s.label, `${s.populated}/${s.total}`, `${s.percent}%`]),
 		);
 	}
 
@@ -50,7 +50,7 @@
 	let sortKey = $state('');
 	let sortDir = $state<SortDir>('asc');
 	const accessors: Record<string, (s: CompletionStat) => string | number> = {
-		field: (s) => s.field,
+		field: (s) => s.label,
 		populated: (s) => s.populated,
 		percent: (s) => s.percent,
 	};
@@ -61,7 +61,16 @@
 			sortDir = 'asc';
 		}
 	}
-	let sortedStats = $derived(sortKey ? sortRows(stats, accessors[sortKey], sortDir) : stats);
+	// Completion is now driven by the entity's full field-def set rather than a
+	// hand-picked list, so a section can run to 60+ rows. Complete fields are
+	// hidden by default: the gaps are what the page is for, and a wall of 100%
+	// rows buries them.
+	let gapsOnly = $state(true);
+	let visibleStats = $derived(gapsOnly ? stats.filter((s) => s.populated < s.total) : stats);
+	let completeCount = $derived(stats.length - stats.filter((s) => s.populated < s.total).length);
+	let sortedStats = $derived(
+		sortKey ? sortRows(visibleStats, accessors[sortKey], sortDir) : visibleStats,
+	);
 	const arrow = (key: string) => (sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '');
 </script>
 
@@ -70,7 +79,13 @@
 	<p class="description">{description}</p>
 {/if}
 <div class="table-controls">
-	<Button variant="subtle" disabled={stats.length === 0} onclick={doExport}>Export</Button>
+	{#if completeCount > 0}
+		<label class="gaps-toggle">
+			<input type="checkbox" bind:checked={gapsOnly} />
+			hide complete ({completeCount})
+		</label>
+	{/if}
+	<Button variant="subtle" disabled={sortedStats.length === 0} onclick={doExport}>Export</Button>
 </div>
 <table class="compact">
 	<thead>
@@ -86,7 +101,7 @@
 	<tbody>
 		{#each sortedStats as stat (stat.field)}
 			<tr>
-				<td>{stat.field}</td>
+				<td>{stat.label}</td>
 				<td>{stat.populated} / {stat.total}</td>
 				<td>{stat.percent}%</td>
 				<td>
@@ -116,8 +131,20 @@
 
 	.table-controls {
 		display: flex;
-		justify-content: flex-end;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
 		margin-bottom: 8px;
+	}
+
+	.gaps-toggle {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: var(--type-caption);
+		color: var(--text-muted);
+		cursor: pointer;
+		user-select: none;
 	}
 
 	th.sortable {

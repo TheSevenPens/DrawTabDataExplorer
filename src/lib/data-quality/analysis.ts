@@ -25,12 +25,24 @@ import {
 	checkRequired,
 	checkWhitespace,
 	checkDuplicateInventoryIds,
-	computeCompletion,
+	computeFieldCompletion,
 	findOrphanedCompat,
 	type DataBundle,
 	type IncludedPenMissing,
 	type Issue,
 } from '$lib/data-quality/helpers.js';
+import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
+import { PEN_FIELDS } from '$data/lib/entities/pen-fields.js';
+import { DRIVER_FIELDS } from '$data/lib/entities/driver-fields.js';
+import { PRESSURE_RESPONSE_FIELDS } from '$data/lib/entities/pressure-response-fields.js';
+import { INVENTORY_PEN_FIELDS } from '$data/lib/entities/inventory-pen-fields.js';
+import { INVENTORY_TABLET_FIELDS } from '$data/lib/entities/inventory-tablet-fields.js';
+
+// The Display group gets its own section, scoped to tablets that actually have
+// a display — a 0% "Brightness" across 375 tablets would just be measuring how
+// many are pen-only.
+const DISPLAY_FIELDS = TABLET_FIELDS.filter((f) => f.group === 'Display');
+const NON_DISPLAY_TABLET_FIELDS = TABLET_FIELDS.filter((f) => f.group !== 'Display');
 
 // Mirror of the bundle passed into `analyzeData`. Each field is the
 // raw collection straight from the loader.
@@ -355,52 +367,17 @@ export function analyzeData(data: AnalysisInput) {
 		staleMeasurements: findStaleMeasurements(ds.pressureResponse),
 		remeasureRecommendations: findRecommendedForRemeasurement(ds.pressureResponse),
 		iafEstimatedNoMeasurement,
-		tabletCompletion: computeCompletion(ds.tablets, [
-			'Model.ReleaseYear',
-			'Model.Audience',
-			'Model.Family',
-			'Model.Status',
-			'Model.IncludedPen',
-			'Digitizer.Type',
-			'Digitizer.PressureLevels',
-			'Digitizer.Dimensions',
-			'Digitizer.Density',
-			'Digitizer.ReportRate',
-			'Digitizer.Tilt',
-			'Digitizer.AccuracyCenter',
-			'Digitizer.AccuracyCorner',
-			'Digitizer.MaxHover',
-			'Digitizer.SupportsTouch',
-			'Physical.Dimensions',
-			'Physical.Weight',
-		]),
-		displayCompletion: computeCompletion(displayTablets, [
-			'Display.PixelDimensions',
-			'Display.PanelTech',
-			'Display.Brightness',
-			'Display.Contrast',
-			'Display.ColorBitDepth',
-			'Display.ColorGamuts',
-			'Display.Lamination',
-		]),
+		tabletCompletion: computeFieldCompletion(ds.tablets, NON_DISPLAY_TABLET_FIELDS),
+		displayCompletion: computeFieldCompletion(displayTablets, DISPLAY_FIELDS),
 		displayTabletCount: displayTablets.length,
-		penCompletion: computeCompletion(ds.pens, ['PenName', 'PenFamily', 'ReleaseYear']),
-		driverCompletion: computeCompletion(ds.drivers, [
-			'DriverURLWacom',
-			'DriverURLArchiveDotOrg',
-			'ReleaseNotesURL',
-		]),
-		pressureResponseCompletion: computeCompletion(ds.pressureResponse, ['PenFamily', 'Notes']),
-		inventoryPenCompletion: computeCompletion(invPens, [
-			'PenEntityId',
-			'PenTech',
-			'WithTabletInventoryId',
-		]),
-		inventoryTabletCompletion: computeCompletion(invTablets, [
-			'TabletEntityId',
-			'Vendor',
-			'OrderDate',
-		]),
+		penCompletion: computeFieldCompletion(ds.pens, PEN_FIELDS),
+		driverCompletion: computeFieldCompletion(ds.drivers, DRIVER_FIELDS),
+		pressureResponseCompletion: computeFieldCompletion(
+			ds.pressureResponse,
+			PRESSURE_RESPONSE_FIELDS,
+		),
+		inventoryPenCompletion: computeFieldCompletion(invPens, INVENTORY_PEN_FIELDS),
+		inventoryTabletCompletion: computeFieldCompletion(invTablets, INVENTORY_TABLET_FIELDS),
 		orphanedCompat: findOrphanedCompat(ds),
 		orphanedFamilies: orphFamilies,
 		entityCounts: [
