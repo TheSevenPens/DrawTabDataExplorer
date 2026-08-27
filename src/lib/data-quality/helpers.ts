@@ -1,3 +1,4 @@
+import type { FieldDisplayDef } from '@thesevenpens/queriton';
 import type {
 	Brand,
 	Tablet,
@@ -18,7 +19,14 @@ export interface Issue {
 }
 
 export interface CompletionStat {
+	/**
+	 * FieldDef **key**, not a schema path. This is what the row's "show" link
+	 * filters on, and `EntityExplorer` resolves a URL filter by key — see the
+	 * note on `computeFieldCompletion`.
+	 */
 	field: string;
+	/** Human label from the FieldDef, for display. */
+	label: string;
 	populated: number;
 	total: number;
 	percent: string;
@@ -136,26 +144,71 @@ export function checkDuplicateInventoryIds(
 	return found;
 }
 
-export function computeCompletion(
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	records: Record<string, any>[],
-	fields: string[],
+/**
+ * Field-completion stats driven by the entity's FieldDefs rather than a
+ * hand-maintained list of dotted schema paths.
+ *
+ * It replaced a path-based version that had two defects:
+ *
+ * - **The "show" links silently did nothing.** Stats carried a schema path
+ *   (`Model.ReleaseYear`), but `EntityExplorer` resolves a URL filter by
+ *   FieldDef *key* (`ModelReleaseYear`). `?filter=Model.ReleaseYear:empty:`
+ *   matched no field and rendered the unfiltered list — 375 of 375 tablets,
+ *   indistinguishable from a page with no filter at all.
+ * - **Coverage was whatever someone remembered to list:** 17 of 74 tablet
+ *   fields, 3 of ~30 pen fields, 2 for pressure-response. `Pen.IAF` —
+ *   populated on 4% of pens, the emptiest interesting field in the dataset —
+ *   was absent entirely.
+ *
+ * One field is genuinely lost in the move and is worth restoring:
+ * `Display.ColorGamuts` was tracked by path and has no FieldDef, so it drops
+ * off the list. Its "show" link could never have worked, but its *count* did,
+ * and the data is not sparse — 108 of the 171 tablets with a Display block
+ * carry it. It was the only display-colour coverage signal on this page.
+ * `ColorGamuts` is an object (`SRGB` / `ADOBERGB` / `DCIP3` / …) rather than a
+ * string, which is why no column exists; a computed FieldDef in `data-repo`
+ * would restore the count and give `/tablet-compare` a real gamut row.
+ *
+ * Driving off the field defs fixes both at once and keeps new fields covered
+ * without anyone maintaining a second list.
+ *
+ * Computed fields are excluded: a derived value is not something anyone forgot
+ * to enter, and its fill rate only restates its inputs'.
+ */
+export function computeFieldCompletion<T>(
+	records: readonly T[],
+	fields: readonly FieldDisplayDef<T>[],
 ): CompletionStat[] {
 	const total = records.length;
-	return fields
-		.map((field) => {
-			const populated = records.filter((r) => {
-				const v = getByPath(r, field);
-				return v !== undefined && v !== null && v !== '';
-			}).length;
-			return {
-				field,
-				populated,
-				total,
-				percent: total > 0 ? ((populated / total) * 100).toFixed(1) : '0',
-			};
-		})
-		.sort((a, b) => parseFloat(a.percent) - parseFloat(b.percent));
+	return (
+		fields
+			.filter((f) => !f.computed)
+			.map((f) => {
+				let populated = 0;
+				for (const r of records) {
+					let v: string;
+					try {
+						v = f.getValue(r);
+					} catch {
+						// A getter that throws on a sparse row has no value for it.
+						continue;
+					}
+					if (v !== undefined && v !== null && String(v).trim() !== '') populated++;
+				}
+				return {
+					field: f.key,
+					label: f.label,
+					populated,
+					total,
+					percent: total > 0 ? ((populated / total) * 100).toFixed(1) : '0',
+				};
+			})
+			// Emptiest first — the gaps are the point. Label breaks ties so the
+			// order is stable rather than dependent on field-def declaration order.
+			.sort(
+				(a, b) => parseFloat(a.percent) - parseFloat(b.percent) || a.label.localeCompare(b.label),
+			)
+	);
 }
 
 export function findOrphanedCompat(ds: DataBundle): { type: string; id: string }[] {

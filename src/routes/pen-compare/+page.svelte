@@ -12,6 +12,13 @@
 	import { resolve } from '$app/paths';
 	import { type Pen, type PressureResponse, type PressureRange } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
+	import {
+		buildCompareGroups,
+		countIdentical,
+		onlyDifferences,
+		toExportRows,
+	} from '$lib/compare-matrix.js';
+	import { comparableFields, PEN_FIELD_ROLES } from '$lib/field-roles.js';
 	import { PEN_FIELDS, PEN_FIELD_GROUPS } from '$data/lib/entities/pen-fields.js';
 	import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
@@ -40,7 +47,7 @@
 	import { theme } from '$lib/theme-store.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { penFullName, penBrandAndName } from '$lib/pen-helpers.js';
-	import { stripUnit, valueSuffix } from '$lib/field-display.js';
+	import { valueSuffix } from '$lib/field-display.js';
 	import { penSubNavTabs } from '$lib/nav/subnav-tabs.js';
 	import {
 		buildSessionColors,
@@ -311,33 +318,24 @@
 		return converted + valueSuffix(f.label, f.unit, $unitPreference);
 	}
 
+	// Identity and metadata fields are dropped by role. This page previously
+	// showed every field, so each comparison opened with five rows (Entity ID,
+	// Full Name, Brand, Pen ID, Name) restating the pen names already printed in
+	// the column headers.
+	const COMPARABLE_FIELDS = comparableFields(PEN_FIELDS, PEN_FIELD_ROLES);
+
 	// Grouped, dense comparison rows. `key` (the unique FieldDef key) is the
 	// stable each-block key — keying on `label` would crash via
 	// each_key_duplicate the moment two fields strip to the same label.
-	let comparisonGroups = $derived.by(() => {
-		if (flaggedItems.length === 0) return [];
-		const groups: {
-			group: string;
-			fields: { key: string; label: string; values: string[]; differs: boolean }[];
-		}[] = [];
-		for (const groupName of PEN_FIELD_GROUPS) {
-			const groupFields = PEN_FIELDS.filter((f) => f.group === groupName);
-			const rows: { key: string; label: string; values: string[]; differs: boolean }[] = [];
-			for (const f of groupFields) {
-				const values = flaggedItems.map((p) => getDisplayVal(f, p));
-				if (values.every((v) => v === '')) continue;
-				const unique = new Set(values.filter((v) => v !== ''));
-				rows.push({
-					key: f.key,
-					label: stripUnit(f.label, f.unit),
-					values,
-					differs: unique.size > 1,
-				});
-			}
-			if (rows.length > 0) groups.push({ group: groupName, fields: rows });
-		}
-		return groups;
-	});
+	let comparisonGroups = $derived(
+		buildCompareGroups(flaggedItems, COMPARABLE_FIELDS, PEN_FIELD_GROUPS, getDisplayVal),
+	);
+
+	// Mirrors /tablet-compare: collapse to the rows that answer "what's
+	// different", off by default so the full spec sheet stays the landing view.
+	let diffsOnly = $state(false);
+	let visibleGroups = $derived(diffsOnly ? onlyDifferences(comparisonGroups) : comparisonGroups);
+	let sameCount = $derived(countIdentical(comparisonGroups));
 
 	let copyFlaggedStatus = $state('');
 	function copyFlaggedList() {
@@ -362,17 +360,9 @@
 		const cols = flaggedItems.map((p) => penBrandAndName(p));
 		return ['Field', ...cols];
 	});
-	let compareExportRows: (string | number)[][] = $derived.by(() => {
-		const blanks = flaggedItems.map(() => '');
-		const out: (string | number)[][] = [];
-		for (const group of comparisonGroups) {
-			out.push([group.group, ...blanks]);
-			for (const f of group.fields) {
-				out.push([f.label, ...f.values]);
-			}
-		}
-		return out;
-	});
+	let compareExportRows: (string | number)[][] = $derived(
+		toExportRows(visibleGroups, flaggedItems.length),
+	);
 </script>
 
 <Nav />
@@ -425,6 +415,10 @@
 		</EmptyState>
 	{:else}
 		<div class="compare-toolbar">
+			<label class="diffs-toggle">
+				<input type="checkbox" bind:checked={diffsOnly} />
+				only differences{sameCount > 0 ? ` (hides ${sameCount})` : ''}
+			</label>
 			<Button
 				variant="subtle"
 				onclick={() => (showExport = true)}
@@ -446,7 +440,14 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each comparisonGroups as group (group.group)}
+					{#if visibleGroups.length === 0}
+						<tr>
+							<td class="no-diffs" colspan={flaggedItems.length + 1}>
+								No differences — every populated spec matches.
+							</td>
+						</tr>
+					{/if}
+					{#each visibleGroups as group (group.group)}
 						<tr class="group-row">
 							<td class="group-header" colspan={flaggedItems.length + 1}>{group.group}</td>
 						</tr>
@@ -736,8 +737,26 @@
 
 	.compare-toolbar {
 		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		gap: 8px;
 		margin-bottom: 12px;
+	}
+
+	.no-diffs {
+		color: var(--text-muted);
+		font-size: var(--type-caption);
+		padding: 12px 8px;
+	}
+
+	.diffs-toggle {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: var(--type-caption);
+		color: var(--text-muted);
+		cursor: pointer;
+		user-select: none;
 	}
 
 	.compare-wrap {
