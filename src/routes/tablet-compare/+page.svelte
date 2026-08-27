@@ -4,6 +4,7 @@
 	import { getDiagonal, type Tablet, type Pen } from '$data/lib/drawtab-loader.js';
 	import Button from '$lib/components/Button.svelte';
 	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import { comparableFields, TABLET_FIELD_ROLES } from '$lib/field-roles.js';
 	import { TABLET_FIELDS, TABLET_FIELD_GROUPS } from '$data/lib/entities/tablet-fields.js';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue } from '$data/lib/units.js';
@@ -60,7 +61,16 @@
 	// full length of the text and pushes the other tablet columns off-screen.
 	// Notes is the only field long enough to do that today. Temporary — see
 	// GitHub #309 for bringing it back with per-field wrapping.
-	const COMPARE_EXCLUDED_FIELD_KEYS = new Set(['ModelNotes']);
+	const LAYOUT_EXCLUDED_FIELD_KEYS = new Set(['ModelNotes']);
+
+	// Two separate exclusions, deliberately not merged. The set above is a
+	// presentational workaround tracked in GitHub #309. The role filter below is
+	// semantic: identity and metadata fields differ between any two rows by
+	// definition, and the column headers already print each tablet's name, so a
+	// Name / Entity ID / Brand row underneath only restates them.
+	const COMPARABLE_FIELDS = comparableFields(TABLET_FIELDS, TABLET_FIELD_ROLES).filter(
+		(f) => !LAYOUT_EXCLUDED_FIELD_KEYS.has(f.key),
+	);
 
 	// Group fields and filter out those with no data across all flagged tablets.
 	// Each row carries `key` (the unique field key, used as the {#each} key) and
@@ -74,9 +84,7 @@
 			fields: { key: string; label: string; values: string[]; differs: boolean }[];
 		}[] = [];
 		for (const groupName of TABLET_FIELD_GROUPS) {
-			const groupFields = TABLET_FIELDS.filter(
-				(f) => f.group === groupName && !COMPARE_EXCLUDED_FIELD_KEYS.has(f.key),
-			);
+			const groupFields = COMPARABLE_FIELDS.filter((f) => f.group === groupName);
 			const rows: { key: string; label: string; values: string[]; differs: boolean }[] = [];
 			for (const f of groupFields) {
 				const values = flaggedItems.map((t) => getDisplayVal(f, t));
@@ -93,6 +101,22 @@
 		}
 		return groups;
 	});
+
+	// "Only differences" collapses the table to the rows that actually answer
+	// "what's different between these" — the most common question this page is
+	// opened for. Off by default: the full spec sheet is the other reason to
+	// come here.
+	let diffsOnly = $state(false);
+	let visibleGroups = $derived(
+		diffsOnly
+			? comparisonGroups
+					.map((g) => ({ ...g, fields: g.fields.filter((f) => f.differs) }))
+					.filter((g) => g.fields.length > 0)
+			: comparisonGroups,
+	);
+	let sameCount = $derived(
+		comparisonGroups.reduce((n, g) => n + g.fields.filter((f) => !f.differs).length, 0),
+	);
 
 	const currentYear = new Date().getFullYear();
 	let isMetric = $derived($unitPreference === 'metric');
@@ -191,7 +215,7 @@
 	let compareExportRows: (string | number)[][] = $derived.by(() => {
 		const blanks = flaggedItems.map(() => '');
 		const out: (string | number)[][] = [];
-		for (const group of comparisonGroups) {
+		for (const group of visibleGroups) {
 			out.push([group.group, ...blanks]);
 			for (const f of group.fields) {
 				out.push([f.label, ...f.values]);
@@ -258,6 +282,10 @@
 		</EmptyState>
 	{:else}
 		<div class="compare-toolbar">
+			<label class="diffs-toggle">
+				<input type="checkbox" bind:checked={diffsOnly} />
+				only differences{sameCount > 0 ? ` (hides ${sameCount})` : ''}
+			</label>
 			<Button
 				variant="subtle"
 				onclick={() => (showExport = true)}
@@ -279,7 +307,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each comparisonGroups as group (group.group)}
+					{#each visibleGroups as group (group.group)}
 						<tr class="group-row">
 							<td class="group-header" colspan={flaggedItems.length + 1}>{group.group}</td>
 						</tr>
@@ -506,8 +534,20 @@
 
 	.compare-toolbar {
 		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		gap: 8px;
 		margin-bottom: 12px;
+	}
+
+	.diffs-toggle {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: var(--type-caption);
+		color: var(--text-muted);
+		cursor: pointer;
+		user-select: none;
 	}
 
 	.compare-wrap {
