@@ -33,8 +33,10 @@
 		diagonalRows,
 		topByDiagonal,
 		diagonalBrands,
+		touchTabletRows,
 		type DiagonalRow,
 		type DiagonalDirection,
+		type TabletTypeValue,
 	} from '$lib/tablet-analysis/helpers.js';
 	import { buildAnalysisSections } from '$lib/tablet-analysis/metric-configs.js';
 	import AspectRatioRatioSection from '$lib/tablet-analysis/AspectRatioRatioSection.svelte';
@@ -203,6 +205,13 @@
 	});
 
 	let touchTotal = $derived(touchSupportRows.reduce((s, r) => s + r.count, 0));
+
+	// Device-type filter for the touch-support listing. STANDALONE is off by
+	// default: every standalone pen computer supports touch, so including them
+	// swamps the list with rows that carry no information.
+	let touchTypes = $state<Set<TabletTypeValue>>(new Set(['PENTABLET', 'PENDISPLAY']));
+
+	let touchTablets = $derived(touchTabletRows(allTablets, touchTypes, brandName));
 
 	// --- Export dialog (shared) ---
 
@@ -619,6 +628,8 @@
 						rows={touchSupportRows}
 						total={touchTotal}
 						coveredOf={allTablets.length}
+						touchRows={touchTablets}
+						bind:selectedTypes={touchTypes}
 						onExport={() =>
 							openExport(
 								'Touch Support',

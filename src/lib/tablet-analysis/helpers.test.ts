@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Tablet } from '$data/lib/drawtab-loader.js';
-import { diagonalRows, topByDiagonal, diagonalBrands } from './helpers.js';
+import { diagonalRows, topByDiagonal, diagonalBrands, touchTabletRows } from './helpers.js';
 
 const tablet = (
 	id: string,
@@ -106,5 +106,80 @@ describe('diagonalBrands', () => {
 		]);
 		const label = (b: string) => (b === 'ALP' ? 'Zulu' : 'Alpha');
 		expect(diagonalBrands(rows, label)).toEqual(['ZED', 'ALP']);
+	});
+});
+
+describe('touchTabletRows', () => {
+	const touchTablet = (
+		id: string,
+		brand: string,
+		type: string,
+		supportsTouch: string | undefined,
+		name = id,
+		year = '2020',
+	): Tablet =>
+		({
+			Meta: { EntityId: `${brand.toLowerCase()}.tablet.${id.toLowerCase()}` },
+			Model: { Brand: brand, Id: id, Name: name, Type: type, ReleaseYear: year },
+			Digitizer: supportsTouch === undefined ? {} : { SupportsTouch: supportsTouch },
+		}) as unknown as Tablet;
+
+	const ident = (b: string) => b;
+	const allTypes = new Set(['PENTABLET', 'PENDISPLAY', 'STANDALONE']);
+
+	const sample = [
+		touchTablet('PT1', 'WACOM', 'PENTABLET', 'YES'),
+		touchTablet('PT2', 'WACOM', 'PENTABLET', 'NO'),
+		touchTablet('PT3', 'WACOM', 'PENTABLET', undefined),
+		touchTablet('PD1', 'HUION', 'PENDISPLAY', 'YES'),
+		touchTablet('SA1', 'APPLE', 'STANDALONE', 'YES'),
+	];
+
+	it('keeps only tablets that report touch support', () => {
+		expect(
+			touchTabletRows(sample, allTypes, ident)
+				.map((r) => r.id)
+				.sort(),
+		).toEqual(['PD1', 'PT1', 'SA1']);
+	});
+
+	it('limits to the selected device types', () => {
+		const rows = touchTabletRows(sample, new Set(['PENTABLET', 'PENDISPLAY']), ident);
+		expect(rows.map((r) => r.id)).toEqual(['PD1', 'PT1']);
+	});
+
+	it('returns nothing when no type is selected, rather than falling back to all', () => {
+		expect(touchTabletRows(sample, new Set(), ident)).toEqual([]);
+	});
+
+	it('orders by brand display name, then name', () => {
+		const rows = touchTabletRows(
+			[
+				touchTablet('B', 'ALP', 'PENTABLET', 'YES', 'Zeta'),
+				touchTablet('C', 'ALP', 'PENTABLET', 'YES', 'Alpha'),
+				touchTablet('A', 'ZED', 'PENTABLET', 'YES', 'Mid'),
+			],
+			allTypes,
+			// Codes and display names sort in opposite directions, so this fails
+			// if the sort falls back to the raw brand code.
+			(b) => (b === 'ALP' ? 'Zulu' : 'Alpha'),
+		);
+		expect(rows.map((r) => r.name)).toEqual(['Mid', 'Alpha', 'Zeta']);
+	});
+
+	it('carries the identifying fields and a display label for the type', () => {
+		const [row] = touchTabletRows(
+			[touchTablet('SA1', 'APPLE', 'STANDALONE', 'YES')],
+			allTypes,
+			ident,
+		);
+		expect(row).toMatchObject({
+			entityId: 'apple.tablet.sa1',
+			id: 'SA1',
+			brand: 'APPLE',
+			type: 'STANDALONE',
+			typeLabel: 'Standalone',
+			year: '2020',
+		});
 	});
 });
