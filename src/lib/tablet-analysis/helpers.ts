@@ -183,3 +183,68 @@ export function diagonalBrands(rows: DiagonalRow[], brandLabel: (b: string) => s
 		brandLabel(a).localeCompare(brandLabel(b)),
 	);
 }
+
+// --- Touch support listing --------------------------------------------------
+//
+// Backs the "Tablets with touch support" table under the Touch Support
+// section. The device-type filter is a set rather than a single value because
+// the three types answer different questions: standalone pen computers all
+// support touch (it is a tablet computer first), so listing them alongside pen
+// tablets and pen displays buries the interesting cases. The section therefore
+// defaults to the two types where touch is a differentiator, and the user can
+// add STANDALONE back.
+
+export type TabletTypeValue = 'PENTABLET' | 'PENDISPLAY' | 'STANDALONE';
+
+export const TABLET_TYPE_OPTIONS: { value: TabletTypeValue; label: string }[] = [
+	{ value: 'PENTABLET', label: 'Pen Tablet' },
+	{ value: 'PENDISPLAY', label: 'Pen Display' },
+	{ value: 'STANDALONE', label: 'Standalone' },
+];
+
+const TABLET_TYPE_LABELS = new Map<string, string>(
+	TABLET_TYPE_OPTIONS.map((o) => [o.value, o.label]),
+);
+
+/** Display label for a Model.Type value; unknown values pass through as-is. */
+export function tabletTypeLabel(type: string): string {
+	return TABLET_TYPE_LABELS.get(type) ?? type;
+}
+
+export interface TouchTabletRow {
+	entityId: string;
+	name: string;
+	id: string;
+	brand: string;
+	type: string;
+	typeLabel: string;
+	year: string;
+}
+
+/**
+ * Tablets whose digitizer reports `SupportsTouch: "YES"`, limited to the
+ * selected device types and ordered by brand then name. An empty `types` set
+ * means no type is selected, which yields no rows — the same "you filtered
+ * everything out" reading the brand dropdowns give, not an implicit "all".
+ */
+export function touchTabletRows(
+	tablets: Tablet[],
+	types: ReadonlySet<string>,
+	brandLabel: (b: string) => string,
+): TouchTabletRow[] {
+	return tablets
+		.filter((t) => t.Digitizer?.SupportsTouch === 'YES' && types.has(t.Model.Type))
+		.map((t) => ({
+			entityId: t.Meta.EntityId,
+			name: t.Model.Name,
+			id: t.Model.Id,
+			brand: t.Model.Brand as string,
+			type: t.Model.Type,
+			typeLabel: tabletTypeLabel(t.Model.Type),
+			year: t.Model.ReleaseYear ?? '',
+		}))
+		.sort(
+			(a, b) =>
+				brandLabel(a.brand).localeCompare(brandLabel(b.brand)) || a.name.localeCompare(b.name),
+		);
+}
