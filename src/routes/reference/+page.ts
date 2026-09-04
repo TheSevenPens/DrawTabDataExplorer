@@ -23,6 +23,8 @@ export async function load({ parent }) {
 		brands,
 		otdConfig,
 		otdAudit,
+		machollywood,
+		machollywoodAnnotations,
 		inventoryTablets,
 	] = await Promise.all([
 		ds.getISOPaperSizes(),
@@ -34,6 +36,8 @@ export async function load({ parent }) {
 		ds.Brands.toArray(),
 		ds.getOtdConfig(),
 		ds.getOtdEntityAudit(),
+		ds.getMacHollywood(),
+		ds.getMacHollywoodAnnotations(),
 		ds.InventoryTablets.toArray(),
 	]);
 
@@ -110,6 +114,8 @@ export async function load({ parent }) {
 		sensorIdToTablet,
 		otdConfig,
 		otdEntityMatches,
+		machollywood,
+		machollywoodAnnotations,
 		tabletLinks,
 		inventoryNoLinks,
 	};

@@ -15,6 +15,8 @@
 	import DriverCompatSection from '$lib/reference/DriverCompatSection.svelte';
 	import OTDTabletsSection from '$lib/reference/OTDTabletsSection.svelte';
 	import OTDEntityMapSection from '$lib/reference/OTDEntityMapSection.svelte';
+	import MacHollywoodSection from '$lib/reference/MacHollywoodSection.svelte';
+	import MacHollywoodEntityMapSection from '$lib/reference/MacHollywoodEntityMapSection.svelte';
 	import TabletLinksSection from '$lib/reference/TabletLinksSection.svelte';
 	import InventoryNoLinksSection from '$lib/reference/InventoryNoLinksSection.svelte';
 	import {
@@ -81,6 +83,12 @@
 		{ id: 'bands-report-rate', category: 'Digitizer Bands', label: 'Report Rate' },
 		{ id: 'pen-compat', category: 'Compatibility', label: 'Pen Compatibility' },
 		{ id: 'driver-compat', category: 'Compatibility', label: 'Driver Compatibility' },
+		{ id: 'machollywood', category: 'Compatibility', label: 'MacHollywood Pen Compat' },
+		{
+			id: 'machollywood-entity-map',
+			category: 'Compatibility',
+			label: 'MacHollywood To Entity',
+		},
 		{ id: 'tablet-links', category: 'Links', label: 'Tablet Links' },
 		{ id: 'inventory-no-links', category: 'Links', label: 'Inventory Missing Links' },
 		{ id: 'links-review', category: 'Links', label: 'Links Review' },
@@ -620,6 +628,10 @@
 					modelToTablet={data.modelToTablet}
 					sensorIdToTablet={data.sensorIdToTablet}
 				/>
+			{:else if activeSection === 'machollywood'}
+				<MacHollywoodSection dataset={data.machollywood} />
+			{:else if activeSection === 'machollywood-entity-map'}
+				<MacHollywoodEntityMapSection annotations={data.machollywoodAnnotations} />
 			{:else if activeSection === 'tablet-links'}
 				<TabletLinksSection links={data.tabletLinks} />
 			{:else if activeSection === 'inventory-no-links'}
