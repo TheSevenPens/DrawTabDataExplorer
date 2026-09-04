@@ -2,6 +2,12 @@
 
 **Audience:** humans · **Agents:** use [FUTURES.txt](FUTURES.txt) and GitHub issues instead of reading this whole file unless you need consumer-merge history.
 
+## Active focus (2026-09)
+
+**Agent readability** — making the dataset reachable by AI assistants that do not
+drive a browser. Brief: [AGENT-READABILITY.md](AGENT-READABILITY.md). Four static
+deliverables, none built yet. See the workstream entry below.
+
 ## Active focus (2026-05)
 
 Open cleanup and docs work is tracked in GitHub **#171–#192** (see [FUTURES.txt](FUTURES.txt)). Agent doc set: [AGENTS.md](../AGENTS.md), [WHERE.md](WHERE.md), [RECIPES.md](RECIPES.md) (issues **#181–#192**).
@@ -15,6 +21,27 @@ captures one-shot ideas.
 Each entry: **Status** (where we are), **Next** (concrete next step),
 **Open** (decisions still pending). Update in place as work progresses;
 delete the entry when the workstream is done.
+
+---
+
+## Agent readability
+
+**Status.** Nothing built. Brief written and scoped:
+[AGENT-READABILITY.md](AGENT-READABILITY.md). Motivated by a measured failure —
+an assistant took ten round-trips to answer "which tablets support touch" and
+reported a confident zero along the way, because it filtered `SupportsTouch` on
+boolean `true` when the value is the string `"YES"`. Every fact it needed was
+already declared in `data-repo/lib/entities/tablet-fields.ts`.
+
+**Next.** Deliverable 1, `static/llms.txt` — hand-written, no build step. Then
+deliverable 2, the field catalogue emitted from the existing FieldDef arrays.
+
+**Open.** Deliverable 5, the key collision between catalogue keys
+(`DigitizerSupportsTouch`) and raw JSON paths (`Digitizer.SupportsTouch`) —
+decision brief and measurements are in
+[AGENT-READABILITY.md](AGENT-READABILITY.md) § Deliverable 5. **Discuss before
+building deliverable 2**, since the answer changes what the catalogue emits.
+Also open: whether `/entity/[entityId]` should ever prerender.
 
 ---
 

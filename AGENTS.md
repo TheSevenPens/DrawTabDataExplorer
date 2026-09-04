@@ -24,6 +24,7 @@
 | Any styling / colour     | `CLAUDE.md` § Design tokens                         | Tokens live in `src/routes/+layout.svelte`; never hard-code a hex                                                       |
 | Chart colours            | `CLAUDE.md` § Chart colours                         | [`src/lib/chart-palette.ts`](src/lib/chart-palette.ts) — validate, don't eyeball                                        |
 | Step-by-step workflows   | [`docs/RECIPES.md`](docs/RECIPES.md)                | Files listed in recipe                                                                                                  |
+| Agent-readable output    | [`docs/AGENT-READABILITY.md`](docs/AGENT-READABILITY.md) | `data-repo/lib/entities/*-fields.ts`, `static/`, the `version.json` generator                     |
 | Data shape / validation  | `data-repo/docs/ARCHITECTURE.md`                    | `data-repo/lib/schemas.ts`, `FIELDS.txt`                                                                                |
 | Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`               | `CLAUDE.md` § Adding a brand                                                                                            |
 | Pressure / charts        | `CLAUDE.md` § Pressure response                     | `PressureResponseChart.svelte`                                                                                          |
@@ -52,6 +53,7 @@
 | [`docs/FUTURE.md`](docs/FUTURE.md)               | Devs          | Design notes; skim when implementing that feature |
 | [`docs/WORKSTREAMS.md`](docs/WORKSTREAMS.md)     | Humans        | Historical narrative; see “Active focus” at top   |
 | [`docs/USERMANUAL.md`](docs/USERMANUAL.md)       | End users     | UX/copy only — not for code changes               |
+| [`docs/AGENT-READABILITY.md`](docs/AGENT-READABILITY.md) | Agents / devs | Static output that makes the data reachable       |
 
 ## Commands
 
