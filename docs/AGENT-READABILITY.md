@@ -8,17 +8,17 @@ break the running app.
 
 ## Why (measured, not theoretical)
 
-An AI assistant was asked a simple question against the live site: *which
-tablets support touch?* It took **ten round-trips**, and one of them was silently
+An AI assistant was asked a simple question against the live site: _which
+tablets support touch?_ It took **ten round-trips**, and one of them was silently
 wrong.
 
-| What it had to do | Why |
-| --- | --- |
-| Read `performance.getEntriesByType('resource')` to find the JSON URLs | No index. There is no documented entry point to the data. |
-| Hardcode a **guessed** list of 12 brand names | No manifest listing the data files. |
-| Fetch a brand file and walk the object tree hunting for a touch field | No published schema. |
-| Filter on `SupportsTouch === true` → **0 results, reported confidently** | The value is the string `"YES"`. |
-| Re-inspect, find `"YES"`/`"NO"`, rerun | — |
+| What it had to do                                                        | Why                                                       |
+| ------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Read `performance.getEntriesByType('resource')` to find the JSON URLs    | No index. There is no documented entry point to the data. |
+| Hardcode a **guessed** list of 12 brand names                            | No manifest listing the data files.                       |
+| Fetch a brand file and walk the object tree hunting for a touch field    | No published schema.                                      |
+| Filter on `SupportsTouch === true` → **0 results, reported confidently** | The value is the string `"YES"`.                          |
+| Re-inspect, find `"YES"`/`"NO"`, rerun                                   | —                                                         |
 
 Every one of those facts was already declared in
 `data-repo/lib/entities/tablet-fields.ts`:
@@ -121,37 +121,37 @@ inference. This is the same failure class as `true` vs `"YES"`.
 
 Measured across all 11 FieldDef arrays in `data-repo/lib/entities/`:
 
-| Entity | Fields | Simple path | Derived | `computed: true` | Enum |
-| --- | --: | --: | --: | --: | --: |
-| tablet | 81 | 39 | **42** | 19 | 12 |
-| pen | 26 | 4 | **22** | 3 | 2 |
-| pressure-response | 15 | 9 | 6 | 5 | 3 |
-| inventory-tablet | 12 | 10 | 2 | 0 | 2 |
-| driver | 11 | 8 | 3 | 3 | 2 |
-| pressure-range | 11 | 10 | 1 | 0 | 3 |
-| inventory-pen | 9 | 7 | 2 | 0 | 2 |
-| tablet-family | 7 | 3 | 4 | 0 | 1 |
-| pen-family | 6 | 3 | 3 | 3 | 1 |
-| brand | 5 | 4 | 1 | 0 | 0 |
-| pen-compat | 5 | 5 | 0 | 0 | 1 |
-| **TOTAL** | **188** | **102** | **86** | **33** | **29** |
+| Entity            |  Fields | Simple path | Derived | `computed: true` |   Enum |
+| ----------------- | ------: | ----------: | ------: | ---------------: | -----: |
+| tablet            |      81 |          39 |  **42** |               19 |     12 |
+| pen               |      26 |           4 |  **22** |                3 |      2 |
+| pressure-response |      15 |           9 |       6 |                5 |      3 |
+| inventory-tablet  |      12 |          10 |       2 |                0 |      2 |
+| driver            |      11 |           8 |       3 |                3 |      2 |
+| pressure-range    |      11 |          10 |       1 |                0 |      3 |
+| inventory-pen     |       9 |           7 |       2 |                0 |      2 |
+| tablet-family     |       7 |           3 |       4 |                0 |      1 |
+| pen-family        |       6 |           3 |       3 |                3 |      1 |
+| brand             |       5 |           4 |       1 |                0 |      0 |
+| pen-compat        |       5 |           5 |       0 |                0 |      1 |
+| **TOTAL**         | **188** |     **102** |  **86** |           **33** | **29** |
 
 "Simple path" = the getter is a single optional-chained property read.
 **46% of all fields have no single path**, and for `pen` it is 85%.
 
 The derived ones are not edge cases. The first six on `tablet` are `FullName`,
 `NameAndModelId`, `AlternateNames`, `LinkCount`, `Age`, `AgeInDays` — several of
-which are the *most* agent-useful fields on the entity. `AlternateNames` is what
+which are the _most_ agent-useful fields on the entity. `AlternateNames` is what
 name resolution needs; `FullName` is what a citation needs. **None of them exist
 in the raw JSON at any path.**
 
 ### Options
 
-| | Approach | Coverage | Cost |
-| --- | --- | --: | --- |
-| **A** | Publish a flat projection keyed by FieldDef key | 100% | A second representation; all values are strings |
-| **B** | Add `path` to each catalogue entry | 54% | One string per field; agent handles a mixed model |
-| **C** | Do nothing | — | Agent infers the mapping, and cannot reach derived fields at all |
+|       | Approach                                        | Coverage | Cost                                                             |
+| ----- | ----------------------------------------------- | -------: | ---------------------------------------------------------------- |
+| **A** | Publish a flat projection keyed by FieldDef key |     100% | A second representation; all values are strings                  |
+| **B** | Add `path` to each catalogue entry              |      54% | One string per field; agent handles a mixed model                |
+| **C** | Do nothing                                      |        — | Agent infers the mapping, and cannot reach derived fields at all |
 
 ### Recommendation: A
 
