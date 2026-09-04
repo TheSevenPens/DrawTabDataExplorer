@@ -17,41 +17,43 @@
 
 ## Read order by task
 
-| Task                     | Read first                                          | Then                                                                                                                    |
-| ------------------------ | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Any change               | This file + `CLAUDE.md`                             | [`docs/WHERE.md`](docs/WHERE.md)                                                                                        |
-| UI / routes / components | `CLAUDE.md` § Design tokens, Data loading, Svelte 5 | [`docs/UXCOMPONENTS.md`](docs/UXCOMPONENTS.md) (catalog w/ screenshots), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
-| Any styling / colour     | `CLAUDE.md` § Design tokens                         | Tokens live in `src/routes/+layout.svelte`; never hard-code a hex                                                       |
-| Chart colours            | `CLAUDE.md` § Chart colours                         | [`src/lib/chart-palette.ts`](src/lib/chart-palette.ts) — validate, don't eyeball                                        |
-| Step-by-step workflows   | [`docs/RECIPES.md`](docs/RECIPES.md)                | Files listed in recipe                                                                                                  |
-| Data shape / validation  | `data-repo/docs/ARCHITECTURE.md`                    | `data-repo/lib/schemas.ts`, `FIELDS.txt`                                                                                |
-| Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`               | `CLAUDE.md` § Adding a brand                                                                                            |
-| Pressure / charts        | `CLAUDE.md` § Pressure response                     | `PressureResponseChart.svelte`                                                                                          |
-| Tests / verify           | [`docs/TESTING.md`](docs/TESTING.md)                | Run commands below                                                                                                      |
-| Planned work             | [`docs/FUTURES.txt`](docs/FUTURES.txt)              | GitHub issue bodies                                                                                                     |
-| Don'ts (quick scan)      | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md)    | `CLAUDE.md` for detail                                                                                                  |
+| Task                     | Read first                                               | Then                                                                                                                    |
+| ------------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Any change               | This file + `CLAUDE.md`                                  | [`docs/WHERE.md`](docs/WHERE.md)                                                                                        |
+| UI / routes / components | `CLAUDE.md` § Design tokens, Data loading, Svelte 5      | [`docs/UXCOMPONENTS.md`](docs/UXCOMPONENTS.md) (catalog w/ screenshots), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Any styling / colour     | `CLAUDE.md` § Design tokens                              | Tokens live in `src/routes/+layout.svelte`; never hard-code a hex                                                       |
+| Chart colours            | `CLAUDE.md` § Chart colours                              | [`src/lib/chart-palette.ts`](src/lib/chart-palette.ts) — validate, don't eyeball                                        |
+| Step-by-step workflows   | [`docs/RECIPES.md`](docs/RECIPES.md)                     | Files listed in recipe                                                                                                  |
+| Agent-readable output    | [`docs/AGENT-READABILITY.md`](docs/AGENT-READABILITY.md) | `data-repo/lib/entities/*-fields.ts`, `static/`, the `version.json` generator                                           |
+| Data shape / validation  | `data-repo/docs/ARCHITECTURE.md`                         | `data-repo/lib/schemas.ts`, `FIELDS.txt`                                                                                |
+| Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`                    | `CLAUDE.md` § Adding a brand                                                                                            |
+| Pressure / charts        | `CLAUDE.md` § Pressure response                          | `PressureResponseChart.svelte`                                                                                          |
+| Tests / verify           | [`docs/TESTING.md`](docs/TESTING.md)                     | Run commands below                                                                                                      |
+| Planned work             | [`docs/FUTURES.txt`](docs/FUTURES.txt)                   | GitHub issue bodies                                                                                                     |
+| Don'ts (quick scan)      | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md)         | `CLAUDE.md` for detail                                                                                                  |
 
 ## Doc roles (what to load)
 
-| File                                             | Audience      | Agents should                                     |
-| ------------------------------------------------ | ------------- | ------------------------------------------------- |
-| [`AGENTS.md`](AGENTS.md)                         | Agents        | Start here                                        |
-| [`CLAUDE.md`](CLAUDE.md)                         | Agents / devs | Always follow rules                               |
-| [`docs/WHERE.md`](docs/WHERE.md)                 | Agents        | Lookup “change X → files”                         |
-| [`docs/RECIPES.md`](docs/RECIPES.md)             | Agents        | Common workflows                                  |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)   | Devs          | Reference (components, routes)                    |
-| [`docs/GLOSSARY.md`](docs/GLOSSARY.md)           | All           | A–Z lookup for domain vocab                       |
-| [`docs/SCRIPTS.md`](docs/SCRIPTS.md)             | Agents        | Catalog of every CLI script                       |
-| [`docs/FIELDDEFS.md`](docs/FIELDDEFS.md)         | Agents / devs | How columns / filters / detail rows are defined   |
-| [`docs/STORES.md`](docs/STORES.md)               | Agents / devs | Map of the four Svelte stores                     |
-| [`docs/UXCOMPONENTS.md`](docs/UXCOMPONENTS.md)   | Agents / devs | Catalog of every Svelte component                 |
-| [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md) | Agents        | Reject bad approaches fast                        |
-| [`docs/TESTING.md`](docs/TESTING.md)             | Agents / devs | Verification commands                             |
-| [`docs/DOC-STYLE.md`](docs/DOC-STYLE.md)         | Doc authors   | Format new/edited docs                            |
-| [`docs/FUTURES.txt`](docs/FUTURES.txt)           | All           | Issue IDs only — open issue for scope             |
-| [`docs/FUTURE.md`](docs/FUTURE.md)               | Devs          | Design notes; skim when implementing that feature |
-| [`docs/WORKSTREAMS.md`](docs/WORKSTREAMS.md)     | Humans        | Historical narrative; see “Active focus” at top   |
-| [`docs/USERMANUAL.md`](docs/USERMANUAL.md)       | End users     | UX/copy only — not for code changes               |
+| File                                                     | Audience      | Agents should                                     |
+| -------------------------------------------------------- | ------------- | ------------------------------------------------- |
+| [`AGENTS.md`](AGENTS.md)                                 | Agents        | Start here                                        |
+| [`CLAUDE.md`](CLAUDE.md)                                 | Agents / devs | Always follow rules                               |
+| [`docs/WHERE.md`](docs/WHERE.md)                         | Agents        | Lookup “change X → files”                         |
+| [`docs/RECIPES.md`](docs/RECIPES.md)                     | Agents        | Common workflows                                  |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)           | Devs          | Reference (components, routes)                    |
+| [`docs/GLOSSARY.md`](docs/GLOSSARY.md)                   | All           | A–Z lookup for domain vocab                       |
+| [`docs/SCRIPTS.md`](docs/SCRIPTS.md)                     | Agents        | Catalog of every CLI script                       |
+| [`docs/FIELDDEFS.md`](docs/FIELDDEFS.md)                 | Agents / devs | How columns / filters / detail rows are defined   |
+| [`docs/STORES.md`](docs/STORES.md)                       | Agents / devs | Map of the four Svelte stores                     |
+| [`docs/UXCOMPONENTS.md`](docs/UXCOMPONENTS.md)           | Agents / devs | Catalog of every Svelte component                 |
+| [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md)         | Agents        | Reject bad approaches fast                        |
+| [`docs/TESTING.md`](docs/TESTING.md)                     | Agents / devs | Verification commands                             |
+| [`docs/DOC-STYLE.md`](docs/DOC-STYLE.md)                 | Doc authors   | Format new/edited docs                            |
+| [`docs/FUTURES.txt`](docs/FUTURES.txt)                   | All           | Issue IDs only — open issue for scope             |
+| [`docs/FUTURE.md`](docs/FUTURE.md)                       | Devs          | Design notes; skim when implementing that feature |
+| [`docs/WORKSTREAMS.md`](docs/WORKSTREAMS.md)             | Humans        | Historical narrative; see “Active focus” at top   |
+| [`docs/USERMANUAL.md`](docs/USERMANUAL.md)               | End users     | UX/copy only — not for code changes               |
+| [`docs/AGENT-READABILITY.md`](docs/AGENT-READABILITY.md) | Agents / devs | Static output that makes the data reachable       |
 
 ## Commands
 
