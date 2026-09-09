@@ -5,6 +5,8 @@
 	import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
 	import { unitPreference, showAltUnits } from '$lib/unit-store.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
+	import MultilineFieldBlock from '$lib/components/MultilineFieldBlock.svelte';
+	import { inlineFields, multilineFieldValues } from '$lib/multiline-fields.js';
 
 	let {
 		tablet,
@@ -25,11 +27,16 @@
 	function isUrl(val: string): boolean {
 		return val.startsWith('http://') || val.startsWith('https://');
 	}
+
+	// Free-text fields (Notes) don't belong in a third-of-the-width spec
+	// column — they get full-width preformatted blocks under the grid so the
+	// authored line breaks survive. See $lib/multiline-fields.ts.
+	let noteBlocks = $derived(multilineFieldValues(tablet, getGroupFields(modelTabGroups)));
 </script>
 
 <div class="detail-columns">
 	{#each modelTabGroups as group (group)}
-		{@const groupFields = getGroupFields([group])}
+		{@const groupFields = inlineFields(getGroupFields([group]))}
 		{@const hasValues = groupFields.some((f) => {
 			const v = f.getValue(tablet);
 			if (v && v !== '-') return true;
@@ -86,6 +93,10 @@
 		{/if}
 	{/each}
 </div>
+
+{#each noteBlocks as block (block.key)}
+	<MultilineFieldBlock label={block.label} value={block.value} />
+{/each}
 
 <style>
 	.detail-columns {

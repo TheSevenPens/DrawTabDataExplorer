@@ -5,6 +5,8 @@
 	import { unitPreference } from '$lib/unit-store.js';
 	import { formatValue, getFieldLabel } from '$data/lib/units.js';
 	import LoadingState from '$lib/components/LoadingState.svelte';
+	import MultilineFieldBlock from '$lib/components/MultilineFieldBlock.svelte';
+	import { inlineFields, multilineFieldValues } from '$lib/multiline-fields.js';
 
 	let {
 		item,
@@ -26,12 +28,16 @@
 {:else}
 	{#each fieldGroups as group (group)}
 		{@const groupFields = fields.filter((f) => f.group === group)}
-		{@const hasValues = groupFields.some((f) => f.getValue(item) !== '')}
+		<!-- Free-text fields render as full-width blocks under the spec list
+		     instead of a one-line <dd> — see $lib/multiline-fields.ts. -->
+		{@const blocks = multilineFieldValues(item, groupFields)}
+		{@const rowFields = inlineFields(groupFields)}
+		{@const hasValues = rowFields.some((f) => f.getValue(item) !== '') || blocks.length > 0}
 		{#if hasValues}
 			<section class="field-group">
 				<h2>{group}</h2>
 				<dl>
-					{#each groupFields as f (f.key)}
+					{#each rowFields as f (f.key)}
 						{@const val = f.getValue(item)}
 						{@const displayVal = f.getDisplayValue
 							? f.getDisplayValue(item)
@@ -58,6 +64,9 @@
 						{/if}
 					{/each}
 				</dl>
+				{#each blocks as block (block.key)}
+					<MultilineFieldBlock label={block.label} value={block.value} />
+				{/each}
 			</section>
 		{/if}
 	{/each}

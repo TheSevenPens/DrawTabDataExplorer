@@ -294,6 +294,13 @@ for these instead of one-off markup — the full catalog with props is in
   comes from the canonical formatters (see § Label formatting); EntityLink
   only wraps the `<a>`. Data-shaped links (ResultsTable `cellLinks`) build
   hrefs in route code.
+- **`MultilineFieldBlock`** — free text a detail view must show as
+  written (the tablet/pen `Notes` fields). Mark the FieldDisplayDef
+  `multiline: true`; detail views split their field list with
+  `inlineFields()` / `multilineFieldValues()`
+  ([src/lib/multiline-fields.ts](src/lib/multiline-fields.ts)) so the note
+  gets a full-width monospace `pre-wrap` block instead of a squeezed
+  one-line `<dd>`. The markdown is shown as plain text on purpose.
 - **`PopoverMenu`** — one anchored menu (FilterBar/SortBar/ColumnBar pill
   context menus).
 - **`FlagButton`** — every flag affordance (table cells use `compact`).

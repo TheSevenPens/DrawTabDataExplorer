@@ -35,6 +35,10 @@ Canonical link to `/entity/[entityId]`. Centralizes the `resolve()` call + `var(
 
 One anchored popover menu (position `{x, y}` + `items` + `onclose`; owns outside-click + Escape dismissal). _Used by:_ the `FilterBar` / `SortBar` / `ColumnBar` pill context menus.
 
+### `MultilineFieldBlock`
+
+Full-width block for a `multiline` `FieldDisplayDef` — free text the author wrote as prose (today the tablet/pen **Notes** fields, which hold markdown). Renders the value verbatim in a monospace face with `white-space: pre-wrap`, so line breaks, indentation and runs of spaces survive; the markdown is deliberately **not** formatted. Detail views partition their field list with `inlineFields()` / `multilineFieldValues()` from [`$lib/multiline-fields.ts`](../src/lib/multiline-fields.ts) — spec rows stay in the grid, blocks render underneath it. _Used by:_ `DetailView`, `TabletModelTab`.
+
 ### `TableFrame`
 
 Table chrome: optional title + count badge + subtitle, a right-aligned `actions` area (export/commands sit with the table), and an `EmptyState`-backed empty state. Body is a snippet. _Used by:_ `CompatEntityTable`. _Note:_ actions hide when empty.
