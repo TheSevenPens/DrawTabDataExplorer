@@ -34,19 +34,34 @@ export function applyOwnedOnly<T>(rows: T[], field: AnyFieldDisplayDef | undefin
 	});
 }
 
-/** Keep rows where any of `searchDefs` has a value containing `query`
- * (case-insensitive). Blank query is a no-op. */
+/**
+ * Free-text search over rows. **What you see is what you search:** a row
+ * matches when the query appears in the text a column actually draws, and
+ * the stored value behind it is matched too so ids keep working.
+ *
+ * `displayText` resolves the rendered string for a row/field pair — pass
+ * `cellText` from $lib/cell-text.ts, which is the same resolution
+ * `ResultsTable` renders with. Omit it and only stored values are searched,
+ * which is what every caller did before GitHub #324 and is why typing
+ * "XP-Pen" on /tablets matched nothing while every row on screen said
+ * "XP-Pen".
+ *
+ * Both strings are tested, not one or the other: the rendered text is what
+ * the reader can see, and the raw value is what they may have pasted from a
+ * URL or an id column. Case-insensitive substring; blank query is a no-op.
+ */
 export function applyTextSearch<T>(
 	rows: T[],
 	query: string,
 	searchDefs: AnyFieldDisplayDef[],
+	displayText?: (row: T, field: AnyFieldDisplayDef) => string,
 ): T[] {
 	const q = query.trim().toLowerCase();
 	if (!q) return rows;
+	const hit = (s: string | null | undefined) => s != null && String(s).toLowerCase().includes(q);
 	return rows.filter((row) =>
-		searchDefs.some((f) => {
-			const val = f.getValue(row);
-			return val != null && String(val).toLowerCase().includes(q);
-		}),
+		searchDefs.some(
+			(f) => hit(f.getValue(row)) || (displayText ? hit(displayText(row, f)) : false),
+		),
 	);
 }

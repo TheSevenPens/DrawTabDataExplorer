@@ -156,3 +156,39 @@ test.describe('Compare workflow', () => {
 		await expect(page.locator('body')).toContainText(/flagged/i);
 	});
 });
+
+// "What you see is what you search" (#324). These cases are the ones the unit
+// tests cannot cover: they prove EntityExplorer actually threads the
+// rendered-text resolver through to the search. Each query below is text the
+// table draws but does NOT store, so a regression that reverts search to
+// getValue makes them return nothing.
+test.describe('Search matches the text on screen', () => {
+	async function search(page: Page, path: string, query: string): Promise<number> {
+		await page.goto(path, { waitUntil: 'networkidle' });
+		const box = page.getByPlaceholder('Search...');
+		await expect(box).toBeVisible({ timeout: 10_000 });
+		await box.fill(query);
+		// Let the derived pipeline settle before counting.
+		await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 5_000 });
+		return page.locator('tbody tr').count();
+	}
+
+	test('inventory: a tablet name drawn by a cellLink is searchable', async ({ page }) => {
+		// The Tablet column's field is TabletEntityId ("wacom.tablet.dth271")
+		// but it draws the ModelName ("Cintiq Pro 27").
+		expect(await search(page, '/tablet-inventory', 'cin')).toBeGreaterThan(0);
+	});
+
+	test('inventory: a pen name drawn by a cellLink is searchable', async ({ page }) => {
+		expect(await search(page, '/pen-inventory', 'pro pen')).toBeGreaterThan(0);
+	});
+
+	test('tablets: the brand spelling on screen is searchable', async ({ page }) => {
+		// Brand stores "XPPEN" and draws "XP-Pen". Both must match, so compare
+		// the two counts rather than asserting a number that moves with the data.
+		const drawn = await search(page, '/tablets', 'xp-pen');
+		const stored = await search(page, '/tablets', 'xppen');
+		expect(drawn).toBeGreaterThan(0);
+		expect(drawn).toBe(stored);
+	});
+});

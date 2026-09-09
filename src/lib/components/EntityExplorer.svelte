@@ -26,6 +26,8 @@
 		applyOwnedOnly,
 		applyTextSearch,
 	} from '$lib/entity-explorer/search.js';
+	import { cellText } from '$lib/cell-text.js';
+	import { unitPreference } from '$lib/unit-store.js';
 
 	let {
 		title,
@@ -183,7 +185,13 @@
 			const alwaysDefs = fields.filter(
 				(f) => alwaysSearchFields.includes(f.key) && !r.visibleFields.includes(f.key),
 			);
-			filtered = applyTextSearch(filtered, searchText, [...visibleDefs, ...alwaysDefs]);
+			// Search the text the table actually draws, not just the stored
+			// value — see $lib/cell-text.ts. Without this the Tablet column on
+			// the inventory pages says "Cintiq Pro 27" while search reads
+			// "wacom.tablet.dth271", and typing what you see finds nothing.
+			filtered = applyTextSearch(filtered, searchText, [...visibleDefs, ...alwaysDefs], (row, f) =>
+				cellText(row, f, { cellLinks, unitPreference: $unitPreference }),
+			);
 		}
 
 		return { ...r, data: filtered };
