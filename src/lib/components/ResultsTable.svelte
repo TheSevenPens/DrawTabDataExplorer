@@ -3,7 +3,8 @@
 	import { base } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
 	import { unitPreference } from '$lib/unit-store.js';
-	import { formatValue, getFieldLabel } from '$data/lib/units.js';
+	import { getFieldLabel } from '$data/lib/units.js';
+	import { cellText } from '$lib/cell-text.js';
 	import FlagButton from '$lib/components/FlagButton.svelte';
 	import type { CellLinks } from '$lib/table-types.js';
 
@@ -106,9 +107,10 @@
 					{/if}
 					{#each fieldDefs as f (f.key)}
 						{@const val = f.getValue(item)}
-						{@const displayVal = f.getDisplayValue
-							? f.getDisplayValue(item)
-							: formatValue(val, f.unit, $unitPreference)}
+						<!-- Same resolver the search uses, minus cellLinks (the branch
+						     below needs the link objects for their hrefs). Shared so the
+						     drawn text and the searched text cannot drift — see #324. -->
+						{@const displayVal = cellText(item, f, { unitPreference: $unitPreference })}
 						{#if cellLinks[f.key]}
 							{@const links = cellLinks[f.key](item)}
 							<td class:dim={links.length === 0}>

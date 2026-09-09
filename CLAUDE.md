@@ -342,6 +342,46 @@ just `prerender = false` plus `redirectToCanonicalEntity(params)`).
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) § Key components for **EntityExplorer**, **QueryPipelineBar**, **FilterBar**, **SortBar**, **ColumnBar**, and **SearchBar** (layout, operators, dropdown behavior).
 
+## Search policy — what you see is what you search
+
+`EntityExplorer`'s free-text search matches **the text a column actually
+draws**, plus the stored value behind it. Both, never one: the drawn text is
+what the reader can see, the raw value is what they may have pasted from a
+URL or an id column.
+
+This matters because a field's stored value and its rendered text are allowed
+to differ, by three separate mechanisms:
+
+| Mechanism         | Stores                | Draws              |
+| ----------------- | --------------------- | ------------------ |
+| `cellLinks`       | `wacom.tablet.dth271` | `Cintiq Pro 27`    |
+| `getDisplayValue` | `XPPEN`               | `XP-Pen`           |
+| `formatValue`     | `338` (mm)            | `13.31` (imperial) |
+
+Search used to read `getValue` only, so `/tablet-inventory` drew "Cintiq
+Pro 27" while searching `wacom.tablet.dth271` — typing "cin" found nothing —
+and every XP-Pen row on `/tablets` was reachable only by typing `xppen`, a
+string that appears nowhere on the page. GitHub #324.
+
+The resolution order lives in **one** place,
+[`src/lib/cell-text.ts`](src/lib/cell-text.ts) (`cellText`): cell-link labels
+→ `getDisplayValue` → unit-formatted `getValue`. **`ResultsTable` renders
+through it and the search reads through it**, so the drawn string and the
+searched string cannot drift apart again. If you add a fourth way to rewrite
+a cell, add it there and both follow.
+
+Two consequences worth knowing:
+
+- **Scope is the visible columns.** Hiding a column removes it from the
+  search corpus — that is what makes a result explainable ("it matched
+  something I can see"). A field that must stay searchable while hidden goes
+  in `alwaysSearchFields` (only `/tablets` uses it, for `AlternateNames`).
+- **Other search surfaces already comply.** `TabletPicker` / `PenPicker`
+  search `tabletFullName` / `penBrandAndName` — the labels they draw — and
+  the reference sections search `tabletFullName`. `FieldPicker` searches
+  label _and_ key, which is the same rendered-plus-raw rule. Only
+  `EntityExplorer` was matching something the reader could not see.
+
 ## Label formatting (full names)
 
 Pen and tablet "full name" labels go through canonical formatters in
