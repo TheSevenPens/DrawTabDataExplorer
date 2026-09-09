@@ -137,7 +137,13 @@
 		const body = exportRows
 			.map(
 				(row) =>
-					'| ' + exportFields.map((f) => cell(row, f).replace(/\|/g, '\\|')).join(' | ') + ' |',
+					'| ' +
+					exportFields
+						// A newline inside a cell would end the table row, so multi-line
+						// values (Notes) fold to <br>. Pipes still need escaping.
+						.map((f) => cell(row, f).replace(/\|/g, '\\|').replace(/\r?\n/g, '<br>'))
+						.join(' | ') +
+					' |',
 			)
 			.join('\n');
 		return [header, sep, body].join('\n');
