@@ -130,6 +130,18 @@
 		return mode === 'canvas' ? canvasToPngBlob() : svgToPngBlob();
 	}
 
+	/** Intrinsic pixel size of what getPngBlob() produces, or null when the
+	 * chart isn't available. Used by the PPTX export to keep the aspect
+	 * ratio; the PNG/SVG paths don't need it. */
+	function getPngDims(): { width: number; height: number } | null {
+		if (mode === 'canvas') {
+			const canvas = getCanvas?.();
+			return canvas ? { width: canvas.width, height: canvas.height } : null;
+		}
+		const el = getSvg?.();
+		return el ? getPixelDims(el) : null;
+	}
+
 	async function svgToPngBlob(): Promise<Blob | null> {
 		const el = getSvg?.();
 		const svgString = getSvgString();
@@ -220,6 +232,33 @@
 		showToast('Downloaded PNG ✓');
 	}
 
+	async function downloadPptx(): Promise<void> {
+		open = false;
+		const blob = await getPngBlob();
+		if (!blob) {
+			console.error('PPTX export failed: no chart image');
+			return;
+		}
+		showToast('Building PPTX…');
+		try {
+			// Lazily imported so pptxgenjs (~200 KB) stays out of the bundle
+			// for the many pages that render a chart and never export one.
+			const { exportChartAsPptx } = await import('$lib/pptx-export.js');
+			const dims = getPngDims();
+			await exportChartAsPptx({
+				pngBlob: blob,
+				pngWidth: dims?.width,
+				pngHeight: dims?.height,
+				title,
+				filename: filename ?? slugify(title || 'chart'),
+			});
+			showToast('Downloaded PowerPoint ✓');
+		} catch (err) {
+			console.error('PPTX export failed', err);
+			showToast('PowerPoint export failed');
+		}
+	}
+
 	async function copyDataHtml(): Promise<void> {
 		open = false;
 		const html = getDataHtml?.();
@@ -294,6 +333,7 @@ ${html}
 				<div class="separator" role="separator"></div>
 				<button type="button" class="item" onclick={downloadPng}>Download PNG</button>
 				<button type="button" class="item" onclick={downloadSvg}>Download SVG</button>
+				<button type="button" class="item" onclick={downloadPptx}>Download PowerPoint</button>
 			{:else}
 				<button type="button" class="item" onclick={copyPng}>Copy as PNG</button>
 				{#if getDataHtml}
@@ -301,6 +341,7 @@ ${html}
 				{/if}
 				<div class="separator" role="separator"></div>
 				<button type="button" class="item" onclick={downloadPng}>Download PNG</button>
+				<button type="button" class="item" onclick={downloadPptx}>Download PowerPoint</button>
 				{#if getDataHtml}
 					<button type="button" class="item" onclick={downloadDataHtml}>Download HTML</button>
 				{/if}
