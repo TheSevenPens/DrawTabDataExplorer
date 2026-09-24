@@ -412,3 +412,61 @@ test.describe('Separator-insensitive ID search', () => {
 		await expect(dialog).toContainText('KP-503E');
 	});
 });
+
+// #348: API Explorer queries run in a Worker that can be stopped.
+test.describe('API Explorer runs queries in a stoppable worker', () => {
+	async function runCode(page: Page, code: string) {
+		await page.locator('#api-code').fill(code);
+		await page.getByRole('button', { name: 'Run', exact: true }).click();
+	}
+
+	test('a query returns its result', async ({ page }) => {
+		await page.goto('/api-explorer');
+		await runCode(page, "return await ds.Tablets.filter('Brand', '==', 'WACOM').count();");
+		await expect(page.locator('.result-pane')).toHaveText(/^\d+$/);
+	});
+
+	test('records with relationship methods come back as plain JSON', async ({ page }) => {
+		await page.goto('/api-explorer');
+		await runCode(
+			page,
+			"const t = await ds.Tablets.findBy('ModelId', 'PTK-1240'); return (await t.getCompatiblePens()).map(p => p.PenId);",
+		);
+		await expect(page.locator('.result-pane')).toContainText('"');
+		await expect(page.locator('.result-pane.error')).toHaveCount(0);
+	});
+
+	test('every built-in example runs through the worker without an error', async ({ page }) => {
+		test.setTimeout(120_000);
+		await page.goto('/api-explorer');
+		const labels = await page
+			.locator('.preset-select option[value]:not([value=""])')
+			.evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
+		expect(labels.length).toBeGreaterThan(10);
+		const failures: string[] = [];
+		for (const label of labels) {
+			await page.locator('.preset-select').selectOption(label);
+			await page.getByRole('button', { name: 'Run', exact: true }).click();
+			await expect(page.getByRole('button', { name: 'Run', exact: true })).toBeEnabled({
+				timeout: 30_000,
+			});
+			const err = page.locator('.result-pane.error');
+			if (await err.count()) failures.push(`${label}: ${await err.textContent()}`);
+		}
+		expect(failures).toEqual([]);
+	});
+
+	test('an infinite loop can be stopped and the page stays usable', async ({ page }) => {
+		await page.goto('/api-explorer');
+		await runCode(page, 'while (true) {}');
+		const stop = page.getByRole('button', { name: 'Stop' });
+		await expect(stop).toBeVisible();
+		// The main thread is free: the page still responds while the loop spins.
+		expect(await page.evaluate(() => 1 + 1)).toBe(2);
+		await stop.click();
+		await expect(page.locator('.result-pane.error')).toHaveText('Stopped.');
+		// A fresh worker takes the next run.
+		await runCode(page, 'return 42;');
+		await expect(page.locator('.result-pane')).toHaveText('42');
+	});
+});

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { DrawTabDataSet } from '$data/lib/dataset.js';
+	import { createQueryRunner, type QueryRunner } from '$lib/api-explorer/query-runner.js';
 	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
 	import QuickApiReference from '$lib/components/QuickApiReference.svelte';
 	import { dataSubNavTabs } from '$lib/nav/subnav-tabs.js';
@@ -26,38 +26,46 @@
 	let running = $state(false);
 	let elapsedMs = $state<number | null>(null);
 
-	// NOTE: /api-explorer intentionally constructs its OWN DrawTabDataSet here
-	// rather than using the session-scoped `ds` from `+layout.ts` via
-	// `parent().ds` (the normal pattern — see CLAUDE.md "One DataSet per
-	// session"). This route is an interactive sandbox: it demonstrates and runs
-	// arbitrary `DrawTabDataSet` queries, so it deliberately owns a fresh, clearly
-	// scoped instance. Do NOT copy this exception into regular data pages.
-	let ds = $state<DrawTabDataSet | null>(null);
+	// Queries run in a Web Worker (query.worker.ts) that owns its OWN
+	// DrawTabDataSet, rather than the session-scoped `ds` from +layout.ts —
+	// this route is a sandbox for arbitrary `DrawTabDataSet` code, and running
+	// it off the main thread means a runaway query can't freeze the tab: Stop
+	// (or the timeout) terminates the worker (GitHub #348). Do NOT copy this
+	// exception into regular data pages.
+	const QUERY_TIMEOUT_MS = 30_000;
+	let runner = $state<QueryRunner | null>(null);
 
 	onMount(() => {
-		ds = new DrawTabDataSet({ kind: 'url', baseUrl: base, userId: 'sevenpens' });
+		runner = createQueryRunner(
+			() =>
+				new Worker(new URL('../../lib/api-explorer/query.worker.ts', import.meta.url), {
+					type: 'module',
+				}),
+			{ timeoutMs: QUERY_TIMEOUT_MS },
+		);
+		return () => runner?.dispose();
 	});
 
 	async function runQuery() {
-		if (!ds) return;
+		if (!runner || running) return;
 		running = true;
 		error = null;
 		result = undefined;
 		elapsedMs = null;
-		const start = performance.now();
-		try {
-			// User code is treated as the body of an async function, with `ds`
-			// in scope. The body is expected to `return` a value.
-			const fn = new Function('ds', `return (async () => { ${code} })()`);
-			const out = await (fn as (d: DrawTabDataSet) => Promise<unknown>)(ds);
-			result = out;
-			elapsedMs = Math.round(performance.now() - start);
-		} catch (e) {
-			error = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
-			elapsedMs = Math.round(performance.now() - start);
-		} finally {
-			running = false;
-		}
+		const outcome = await runner.run(code, { baseUrl: base, userId: 'sevenpens' });
+		elapsedMs = outcome.elapsedMs;
+		if (outcome.kind === 'ok') result = outcome.value;
+		else if (outcome.kind === 'error') error = outcome.message;
+		else
+			error =
+				outcome.reason === 'timeout'
+					? `Stopped: the query ran longer than ${QUERY_TIMEOUT_MS / 1000} s.`
+					: 'Stopped.';
+		running = false;
+	}
+
+	function stopQuery() {
+		runner?.stop();
 	}
 
 	function formatResult(value: unknown): string {
@@ -131,7 +139,8 @@
 		<code>DrawTabDataSet</code> API (defined in
 		<code>data-repo/lib/dataset.ts</code>). Your code runs as the body of an async function with
 		<code>ds</code>
-		in scope — return a value to see it.
+		in scope — return a value to see it. It runs in a background worker, so a query that never finishes
+		can be stopped (and stops itself after 30 s).
 		<kbd>Ctrl</kbd>+<kbd>Enter</kbd> runs.
 	</p>
 
@@ -166,9 +175,12 @@
 				rows="12"
 			></textarea>
 			<div class="run-row">
-				<Button variant="primary" size="md" onclick={runQuery} disabled={running || !ds}>
+				<Button variant="primary" size="md" onclick={runQuery} disabled={running || !runner}>
 					{running ? 'Running…' : 'Run'}
 				</Button>
+				{#if running}
+					<Button variant="secondary" size="md" onclick={stopQuery}>Stop</Button>
+				{/if}
 				{#if elapsedMs !== null}
 					<span class="meta">{elapsedMs} ms</span>
 				{/if}
