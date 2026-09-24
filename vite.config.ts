@@ -37,15 +37,30 @@ function localDataPlugin(): Plugin {
 
 // Regenerate static/version.json from the data this build ships (#333).
 // buildStart runs for dev and build alike, before SvelteKit copies static/.
+// version.json also carries the file manifest and the session-count index
+// the URL loaders trust (#346), so in dev it is rewritten whenever a data
+// file is added, removed or edited — otherwise a new brand file would be
+// skipped, or a count stale, until the server restarted.
 function versionJsonPlugin(): Plugin {
+	const dataRepoRoot = hasLocalData ? localDataPath : path.resolve(__dirname, 'data-repo');
+	const write = () =>
+		writeVersionJson({
+			dataRepoRoot,
+			appRoot: __dirname,
+			outFile: path.resolve(__dirname, 'static', 'version.json'),
+		});
 	return {
 		name: 'version-json',
-		buildStart() {
-			writeVersionJson({
-				dataRepoRoot: hasLocalData ? localDataPath : path.resolve(__dirname, 'data-repo'),
-				appRoot: __dirname,
-				outFile: path.resolve(__dirname, 'static', 'version.json'),
-			});
+		buildStart: write,
+		configureServer(server) {
+			const dataDir = path.join(dataRepoRoot, 'data');
+			server.watcher.add(dataDir);
+			const onChange = (file: string) => {
+				if (file.startsWith(dataDir) && file.endsWith('.json')) write();
+			};
+			server.watcher.on('add', onChange);
+			server.watcher.on('unlink', onChange);
+			server.watcher.on('change', onChange);
 		},
 	};
 }

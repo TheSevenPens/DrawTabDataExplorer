@@ -92,47 +92,32 @@ That single edit gives you:
 
 No route changes, no per-page wiring.
 
-## The cross-page setter pattern
+## Fields computed from other collections
 
-Some fields need data the dataset doesn't store on the entity itself — e.g. "how many pressure-response sessions exist for this pen?" The fields file declares a module-scope `let` plus a `setX()` exporter; `+layout.ts` populates it once per session.
-
-From [pen-fields.ts](../data-repo/lib/entities/pen-fields.ts):
+Some fields need data the entity doesn't store — "how many pressure-response sessions exist for this pen?", "how many units do we own?". **The `DrawTabDataSet` computes these while loading the collection that shows them** and attaches the results to each row; the FieldDef reads them with `computedOf(row)` from [computed.ts](../data-repo/lib/computed.ts).
 
 ```ts
-let pressureSessionCountByPenEntityId: ReadonlyMap<string, number> = new Map();
-export function setPressureSessionCountByPenEntityId(
-	map: ReadonlyMap<string, number>,
-): void {
-	pressureSessionCountByPenEntityId = map;
-}
-
-// ...later in PEN_FIELDS:
+// pen-fields.ts
 {
 	key: "PressureSessionCount", label: "Pressure Sessions",
 	computed: true, type: "number", group: "Sensors",
-	getValue: (p) => String(pressureSessionCountByPenEntityId.get(p.EntityId) ?? 0),
+	getValue: (p) => String(computedOf(p).PressureSessionCount ?? 0),
 },
 ```
 
-And from [src/routes/+layout.ts](../src/routes/+layout.ts):
+The collection's loader in [dataset.ts](../data-repo/lib/dataset.ts) loads exactly the inputs it needs and calls `attachComputed(row, { … })`. Nothing is preloaded by the app, and no page can forget a setup step.
 
-```ts
-const sessionsByPen = new Map<string, number>();
-for (const s of sessions)
-	sessionsByPen.set(s.PenEntityId, (sessionsByPen.get(s.PenEntityId) ?? 0) + 1);
-setPressureSessionCountByPenEntityId(sessionsByPen);
-```
+| Computed value                           | On               | Computed from                                                         |
+| ---------------------------------------- | ---------------- | --------------------------------------------------------------------- |
+| `UnitsInInventory`                       | Pens, Tablets    | InventoryPens / InventoryTablets                                      |
+| `PressureSessionCount`                   | Pens             | `version.json` `indexes.pressureSessionsByPen` (URL); sessions (disk) |
+| `FamilyName` (display of `PenFamily`)    | Pens             | PenFamilies                                                           |
+| `PenCount`, `InventoryCount`, `ModelIds` | PenFamilies      | Pens, InventoryPens                                                   |
+| `IsDefective`                            | PressureResponse | InventoryPens defects                                                 |
 
-**Wire setters in `+layout.ts`, not in individual `+page.ts` files.** That guarantees every list / detail page sees the same values regardless of entry point.
+To add one: extend `ComputedValues`, compute it in the collection's loader, read it with `computedOf`. If its input is large and the value small (the session count is ~3 KB derived from ~1.5 MB), add a build-time index to `buildVersionInfo()` and prefer it in URL mode.
 
-Current setters:
-
-| Setter                                 | Populates                                                                           | Wired from                                        |
-| -------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `setDefectsByInventoryId`              | `IsDefective` on PressureResponse                                                   | [src/routes/+layout.ts](../src/routes/+layout.ts) |
-| `setPenFamilyNames`                    | The `PenFamily` column shows `FamilyName` (not `EntityId`) on pens / inventory pens | [src/routes/+layout.ts](../src/routes/+layout.ts) |
-| `setPressureSessionCountByPenEntityId` | `PressureSessionCount` on Pens                                                      | [src/routes/+layout.ts](../src/routes/+layout.ts) |
-| `setInventoryUnitCountByPenEntityId`   | `UnitsInInventory` on Pens                                                          | [src/routes/+layout.ts](../src/routes/+layout.ts) |
+**This replaced module-level setters** (`setPenFamilyNames`, `setPressureSessionCountByPenEntityId`, …) that `+layout.ts` had to call. That forced every page, `/about` included, to preload ~1.6 MB, and any consumer that skipped the setup read 0 / NO. Don't reintroduce the pattern (#346).
 
 ## `enumValues` and the `BRANDS` constant
 
@@ -141,7 +126,7 @@ For enum fields whose values are open-ended (e.g. `Brand`), pull from [data-repo
 ```ts
 import { BRANDS } from '../loader-shared.js';
 
-{ key: "Brand", label: "Brand", getValue: (p) => brandName(p.Brand),
+{ key: "Brand", label: "Brand", getValue: (p) => p.Brand, getDisplayValue: (p) => brandName(p.Brand),
   type: "enum", enumValues: [...BRANDS], group: "Model" },
 ```
 
@@ -152,14 +137,14 @@ The `BRANDS` array is the single source of truth for known brand IDs — adding 
 - **Always return a string from `getValue`.** Empty values → `''`. The engine coerces back to number / enum based on `type`. Returning `undefined` produces silent NaN comparisons.
 - **`getDisplayValue` is rendering-only.** It changes what `DetailView` and the table cell render but the filter/sort still use `getValue`. Use it when you want a pretty label without breaking equality filters.
 - **`getHref` makes a cell clickable in `DetailView` only.** List pages handle links via the route's `cellLinks` prop — see [EntityExplorer.svelte](../src/lib/components/EntityExplorer.svelte).
-- **`computed: true` is for "this isn't on the JSON, we made it up"** — derived from other fields, aggregated from other entities, or computed via the setter pattern above. Surfaces as a small badge in the UI.
+- **`computed: true` is for "this isn't on the JSON, we made it up"** — derived from other fields, or computed from other collections by the dataset (above). Surfaces as a small badge in the UI.
 - **`unit` is consumed by formatters.** `'gf'` (gram-force), `'g'` (grams), `'mm'`, etc. Detail-page rows and the export pipeline check the unit string and apply metric ↔ imperial conversion when `unit-store`'s `unitPreference` is `'imperial'`.
 
 ## Pitfalls
 
 - **Don't shadow built-in keys.** `EntityId`, `_id`, `_CreateDate`, `_ModifiedDate` are reserved — re-declaring them as a field-def causes saved-view round-trips to break.
 - **Number fields with optional values.** Use `getValue: (p) => p.Field ?? ''` (string), not `p.Field?.toString()`. The empty string is the engine's "missing" sentinel for number fields, and `isempty` / `isnotempty` operators rely on it.
-- **The cross-page setter pattern is module-level state.** If two `+layout.ts` instances ever raced to set it (they don't today; we have one root layout), the last write would win. Keep all setter calls in one place.
+- **`getValue` returns the stored value, never a label.** An enum field's `getValue` must be one of its `enumValues` (`data-repo/lib/field-values.test.ts` checks every one). Labels go in `getDisplayValue`.
 - **The label is the column header but the key is the URL.** Renaming `label` is free; renaming `key` invalidates saved views and shared URLs.
 
 ## Where it's read
