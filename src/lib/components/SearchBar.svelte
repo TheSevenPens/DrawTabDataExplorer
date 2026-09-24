@@ -4,7 +4,9 @@
 
 	interface QuickFilterOption {
 		fieldDef: AnyFieldDisplayDef;
-		values: string[];
+		/** `value` is what the filter compares (getValue); `label` is what
+		 * the dropdown shows (getDisplayValue when the field has one). */
+		values: { value: string; label: string }[];
 	}
 
 	let {
@@ -50,8 +52,8 @@
 	{#each quickFilterOptions as qf (qf.fieldDef.key)}
 		<select bind:value={quickFilters[qf.fieldDef.key]}>
 			<option value="">All {qf.fieldDef.label}</option>
-			{#each qf.values as v (v)}
-				<option value={v}>{v}</option>
+			{#each qf.values as v (v.value)}
+				<option value={v.value}>{v.label}</option>
 			{/each}
 		</select>
 	{/each}
