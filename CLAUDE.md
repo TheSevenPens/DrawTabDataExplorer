@@ -81,7 +81,8 @@ available before the component mounts.
 ### One DataSet per session
 
 `src/routes/+layout.ts` constructs **one** `DrawTabDataSet` at session
-start and exposes it as `data.ds`. Every child `+page.ts` reads it via
+start and exposes it as `data.ds`, loading nothing but `version.json`
+itself — collections load when a page asks for them. Every child `+page.ts` reads it via
 `await parent()`:
 
 ```ts
@@ -410,9 +411,12 @@ search already prefer. Two rules follow:
 - An `enum` field's `getValue` must return one of its own `enumValues`.
   `data-repo/lib/field-values.test.ts` checks every enum field against the
   real data.
-- `getValue` must not read a module-level lookup a page sets up
-  (`setPenFamilyNames` and friends) — then a query means different things
-  before and after that setup runs. `getDisplayValue` may.
+- `getValue` must not read a module-level lookup a page sets up — then a
+  query means different things before and after that setup runs. Values
+  derived from other collections are computed by the `DrawTabDataSet`
+  while loading and read with `computedOf(row)` (#346); see
+  [docs/FIELDDEFS.md](docs/FIELDDEFS.md) § Fields computed from other
+  collections.
 
 Pen `Brand` and `PenFamily` broke both (GitHub #332): `Brand == WACOM`
 matched no pens. Saved views and `?filter=` links that stored the old

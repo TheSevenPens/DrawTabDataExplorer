@@ -4,7 +4,7 @@
 	import { brandName, type Tablet, type PressureResponse } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
-	import { type Pen, PEN_FIELDS, getPenFamilyName } from '$data/lib/entities/pen-fields.js';
+	import { type Pen, PEN_FIELDS, penFamilyName } from '$data/lib/entities/pen-fields.js';
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonTab from '$lib/components/JsonTab.svelte';
@@ -150,7 +150,7 @@
 			<div class="basics-item">
 				<dt>Family</dt>
 				<dd>
-					<EntityLink entityId={pen.PenFamily}>{getPenFamilyName(pen.PenFamily)}</EntityLink>
+					<EntityLink entityId={pen.PenFamily}>{penFamilyName(pen)}</EntityLink>
 				</dd>
 			</div>
 		{/if}

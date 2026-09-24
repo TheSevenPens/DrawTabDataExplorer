@@ -327,3 +327,41 @@ test.describe('Keyboard access', () => {
 		await expect(header).toHaveAttribute('aria-sort', 'descending');
 	});
 });
+
+// #346: a page loads only the data it shows. The root layout used to
+// preload inventory, every pressure session and every pen family (~1.6 MB)
+// on every page, and every collection probed all brands, 404ing on files
+// that don't exist.
+test.describe('Data loading budget', () => {
+	function watchDataRequests(page: Page): { url: string; status: number }[] {
+		const seen: { url: string; status: number }[] = [];
+		page.on('response', (r) => {
+			if (new URL(r.url()).pathname.endsWith('.json'))
+				seen.push({ url: r.url(), status: r.status() });
+		});
+		return seen;
+	}
+
+	test('/about fetches only version.json', async ({ page }) => {
+		const seen = watchDataRequests(page);
+		await page.goto('/about');
+		await expect(page.getByText(/tablets, \d+ pens/)).toBeVisible();
+		expect(seen.map((r) => new URL(r.url).pathname)).toEqual(['/version.json']);
+	});
+
+	test('/tablets skips pressure sessions and never requests a missing file', async ({ page }) => {
+		const seen = watchDataRequests(page);
+		await page.goto('/tablets');
+		await expect(page.locator('tbody tr').first()).toBeVisible();
+		expect(seen.some((r) => r.url.includes('/pressure-response/'))).toBe(false);
+		expect(seen.filter((r) => r.status !== 200)).toEqual([]);
+	});
+
+	test('/pens computes session counts without downloading sessions', async ({ page }) => {
+		const seen = watchDataRequests(page);
+		await page.goto('/pens?filter=PressureSessionCount:>:0');
+		await expect(page.locator('tbody tr').first()).toBeVisible();
+		expect(await page.locator('tbody tr').count()).toBeGreaterThan(0);
+		expect(seen.some((r) => r.url.includes('/pressure-response/'))).toBe(false);
+	});
+});
