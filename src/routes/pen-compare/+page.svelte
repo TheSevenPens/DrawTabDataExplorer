@@ -312,6 +312,8 @@
 	});
 
 	function getDisplayVal(f: (typeof PEN_FIELDS)[0], pen: Pen): string {
+		// Brand and PenFamily store a code / EntityId and draw a label (#332).
+		if (f.getDisplayValue) return f.getDisplayValue(pen);
 		const val = f.getValue(pen);
 		if (val === undefined || val === null || val === '' || val === '-') return '';
 		const converted = formatValue(val, f.unit, $unitPreference);

@@ -1,6 +1,7 @@
 import type { Step } from '@thesevenpens/queriton';
 import { getStorageJson, setStorageJson, removeStorageItem } from '$lib/storage.js';
 import { migrateFieldKeys } from '$lib/field-key-migrations.js';
+import { migrateFilterValues } from '$lib/filter-value-migrations.js';
 
 export interface SavedView {
 	name: string;
@@ -32,8 +33,9 @@ export function loadViews(entityType: string): SavedView[] {
 	if (!Array.isArray(raw)) return [];
 	// Steps reference fields by FieldDef key, so a view saved before a key was
 	// renamed would point at a field that no longer exists — see
-	// field-key-migrations.ts.
-	return raw.filter(isValidSavedView).map((view) => migrateFieldKeys(view));
+	// field-key-migrations.ts. Filter values that used to be display labels
+	// get the same treatment — see filter-value-migrations.ts.
+	return raw.filter(isValidSavedView).map((view) => migrateFilterValues(migrateFieldKeys(view)));
 }
 
 function persist(entityType: string, views: SavedView[]) {

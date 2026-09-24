@@ -50,6 +50,25 @@ describe('loadViews', () => {
 		expect(loadViews(ENTITY)).toEqual([{ name: 'good', steps: [] }]);
 	});
 
+	it('migrates filter values that used to be display labels (#332)', () => {
+		localStorage.setItem(
+			KEY,
+			JSON.stringify([
+				{
+					name: 'old',
+					steps: [
+						{ kind: 'filter', field: 'Brand', operator: '==', value: 'Wacom' },
+						{ kind: 'filter', field: 'PenFamily', operator: '==', value: 'Wacom LP pen series' },
+					],
+				},
+			]),
+		);
+		expect(loadViews(ENTITY)[0].steps).toEqual([
+			{ kind: 'filter', field: 'Brand', operator: '==', value: 'WACOM' },
+			{ kind: 'filter', field: 'PenFamily', operator: '==', value: 'wacom.penfamily.wacom_lp' },
+		]);
+	});
+
 	it('returns empty array when stored value is not an array', () => {
 		localStorage.setItem(KEY, JSON.stringify({ not: 'an array' }));
 		expect(loadViews(ENTITY)).toEqual([]);

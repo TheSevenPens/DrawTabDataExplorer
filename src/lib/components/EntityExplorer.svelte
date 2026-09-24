@@ -27,6 +27,7 @@
 		applyTextSearch,
 	} from '$lib/entity-explorer/search.js';
 	import { cellText } from '$lib/cell-text.js';
+	import { migrateFilterValue } from '$lib/filter-value-migrations.js';
 	import { unitPreference } from '$lib/unit-store.js';
 
 	let {
@@ -94,11 +95,11 @@
 			return urlFilters
 				.map((f) => {
 					const parts = f.split(':');
-					return {
-						field: parts[0] ?? '',
-						operator: parts[1] ?? '==',
-						value: parts.slice(2).join(':'),
-					};
+					const field = parts[0] ?? '';
+					const operator = parts[1] ?? '==';
+					// Old links may carry a display label (Brand:==:Wacom) — #332.
+					const value = migrateFilterValue(field, operator, parts.slice(2).join(':'));
+					return { field, operator, value };
 				})
 				.filter((f) => f.field);
 		}
@@ -127,7 +128,7 @@
 
 	interface QuickFilterOption {
 		fieldDef: AnyFieldDisplayDef;
-		values: string[];
+		values: { value: string; label: string }[];
 	}
 
 	let quickFilterOptions = $derived.by((): QuickFilterOption[] => {
@@ -135,12 +136,17 @@
 			.map((key) => {
 				const fieldDef = fields.find((f) => f.key === key);
 				if (!fieldDef) return null;
-				const vals = new Set<string>();
+				// Filter on the stored value, but show its display label: pen Brand
+				// stores "XPPEN" and the dropdown should say "XP-Pen" (#332).
+				const labels = new Map<string, string>();
 				for (const row of data) {
 					const v = String(fieldDef.getValue(row) ?? '').trim();
-					if (v && v !== '-') vals.add(v);
+					if (!v || v === '-' || labels.has(v)) continue;
+					labels.set(v, fieldDef.getDisplayValue ? fieldDef.getDisplayValue(row) : v);
 				}
-				return { fieldDef, values: [...vals].sort() };
+				const values = [...labels].map(([value, label]) => ({ value, label }));
+				values.sort((a, b) => a.label.localeCompare(b.label));
+				return { fieldDef, values };
 			})
 			.filter(Boolean) as QuickFilterOption[];
 	});

@@ -393,6 +393,26 @@ Two consequences worth knowing:
   label _and_ key, which is the same rendered-plus-raw rule. Only
   `EntityExplorer` was matching something the reader could not see.
 
+## `getValue` is the stored value, never a label
+
+A FieldDef's `getValue` is what filters, sorts, quick filters, saved views
+and the API see, so it returns the **stored** value — a brand code
+(`XPPEN`), an EntityId (`wacom.penfamily.wacom_kpgen2`). The label goes in
+`getDisplayValue` (or a `cellLinks` label), which every renderer and the
+search already prefer. Two rules follow:
+
+- An `enum` field's `getValue` must return one of its own `enumValues`.
+  `data-repo/lib/field-values.test.ts` checks every enum field against the
+  real data.
+- `getValue` must not read a module-level lookup a page sets up
+  (`setPenFamilyNames` and friends) — then a query means different things
+  before and after that setup runs. `getDisplayValue` may.
+
+Pen `Brand` and `PenFamily` broke both (GitHub #332): `Brand == WACOM`
+matched no pens. Saved views and `?filter=` links that stored the old
+labels are rewritten on load by
+[`filter-value-migrations.ts`](src/lib/filter-value-migrations.ts).
+
 ## Label formatting (full names)
 
 Pen and tablet "full name" labels go through canonical formatters in
