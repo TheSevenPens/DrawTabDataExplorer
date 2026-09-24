@@ -1,0 +1,67 @@
+name: Verify
+
+# Every check that must pass before a change reaches Pages. Runs on pull
+# requests so a broken change shows a red check *before* merge, and is
+# called by deploy.yml so main is held to the same gate (#330).
+
+on:
+  pull_request:
+  workflow_call:
+    inputs:
+      upload-pages:
+        description: Upload build/ as the Pages artifact (deploy only).
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        # postinstall (scripts/setup-static.mjs) creates symlinks from
+        # static/<entity> to data-repo/data/<entity>. adapter-static
+        # follows symlinks at build time and writes real files to build/.
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx svelte-kit sync && npm run check
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Data quality
+        run: npm run data-quality
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: npm run test:e2e
+
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Upload Pages artifact
+        if: inputs.upload-pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build
