@@ -27,6 +27,7 @@
 		applyTextSearch,
 	} from '$lib/entity-explorer/search.js';
 	import { cellText } from '$lib/cell-text.js';
+	import { strippedCandidates } from '$lib/search-match.js';
 	import { migrateFilterValue } from '$lib/filter-value-migrations.js';
 	import { parseFilterParams } from '$lib/filter-url.js';
 	import { unitPreference } from '$lib/unit-store.js';
@@ -191,8 +192,13 @@
 			// value — see $lib/cell-text.ts. Without this the Tablet column on
 			// the inventory pages says "Cintiq Pro 27" while search reads
 			// "wacom.tablet.dth271", and typing what you see finds nothing.
-			filtered = applyTextSearch(filtered, searchText, [...visibleDefs, ...alwaysDefs], (row, f) =>
-				cellText(row, f, { cellLinks, unitPreference: $unitPreference }),
+			const textOptions = { cellLinks, unitPreference: $unitPreference };
+			filtered = applyTextSearch(
+				filtered,
+				searchText,
+				[...visibleDefs, ...alwaysDefs],
+				(row, f) => cellText(row, f, textOptions),
+				(row, f) => strippedCandidates(row, f, textOptions),
 			);
 		}
 

@@ -6,6 +6,7 @@
 	// stays enabled.
 	import { brandName, type Pen } from '$data/lib/drawtab-loader.js';
 	import { penBrandAndName } from '$lib/pen-helpers.js';
+	import { compileSearch } from '$lib/search-match.js';
 	import { toggleFlaggedPenModel } from '$lib/flagged-store.js';
 	import PickerModalShell from '$lib/components/PickerModalShell.svelte';
 	import { onMount } from 'svelte';
@@ -29,12 +30,16 @@
 	let brands = $derived([...new Set(allPens.map((p) => p.Brand))].sort());
 
 	let filteredPens = $derived.by(() => {
-		const q = searchText.trim().toLowerCase();
+		const search = compileSearch(searchText);
 		return allPens.filter((p) => {
 			if (filterBrand && p.Brand !== filterBrand) return false;
-			if (q) {
-				const hay = `${penBrandAndName(p)} ${p.PenId} ${p.EntityId}`.toLowerCase();
-				if (!hay.includes(q)) return false;
+			if (search) {
+				// Exact check on the joined text, as before; the separator-
+				// insensitive check on each value separately (#327). EntityId
+				// stays searchable, as it was.
+				const exact = search.exact(`${penBrandAndName(p)} ${p.PenId} ${p.EntityId}`);
+				const candidates = [penBrandAndName(p), p.PenId, p.EntityId];
+				if (!exact && !candidates.some((c) => search.stripped(c))) return false;
 			}
 			return true;
 		});

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { brandName, type Tablet } from '$data/lib/drawtab-loader.js';
 	import { tabletFullName } from '$lib/tablet-helpers.js';
+	import { compileSearch } from '$lib/search-match.js';
 	import { toggleFlag } from '$lib/flagged-store.js';
 	import PickerModalShell from '$lib/components/PickerModalShell.svelte';
 	import { onMount } from 'svelte';
@@ -31,14 +32,17 @@
 	let brands = $derived([...new Set(allTablets.map((t) => t.Model.Brand))].sort());
 
 	let filteredTablets = $derived.by(() => {
-		const q = searchText.trim().toLowerCase();
+		const search = compileSearch(searchText);
 		return allTablets.filter((t) => {
 			if (filterBrand && t.Model.Brand !== filterBrand) return false;
 			if (filterType && t.Model.Type !== filterType) return false;
-			if (q) {
-				const altNames = (t.Model.AlternateNames ?? []).join(' ');
-				const hay = `${tabletFullName(t)} ${altNames}`.toLowerCase();
-				if (!hay.includes(q)) return false;
+			if (search) {
+				const altNames = t.Model.AlternateNames ?? [];
+				// Exact check on the joined text, as before; the separator-
+				// insensitive check on each value separately (#327).
+				const exact = search.exact(`${tabletFullName(t)} ${altNames.join(' ')}`);
+				const candidates = [tabletFullName(t), t.Model.Id, t.Model.Name, ...altNames];
+				if (!exact && !candidates.some((c) => search.stripped(c))) return false;
 			}
 			return true;
 		});
