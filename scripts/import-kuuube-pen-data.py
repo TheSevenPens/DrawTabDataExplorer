@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """One-shot import of pen specs from kuuube-wacom-pen-info.xlsx.
 
-Reads the spreadsheet, matches Excel rows to records in
-data-repo/data/pens/WACOM-pens.json by PenId, computes per-pen updates,
-and either prints a dry-run diff (default) or rewrites the JSON file
-(--write).
+Reads the spreadsheet, matches Excel rows to the Wacom pen source files
+data-repo/source/pens/wacom/<EntityId>.json by PenId, computes per-pen
+updates, and either prints a dry-run diff (default) or (--write) rewrites
+the affected pens' source files and then regenerates the pen bundles
+(data-repo/data/pens/*-pens.json) with
+`npx tsx data-repo/scripts/generate.ts --write`. The bundles are generated
+from the sources (RFC #45) and are never edited directly.
 
 Field rules:
   - Weight: strip "g"; first numeric token; "???" / annotated → flag, skip
@@ -18,17 +21,22 @@ Field rules:
 Fields the spreadsheet does NOT cover (Tilt, Hover, Shape) are never
 written.
 
---write rewrites the whole file in the dataset's canonical JSON form —
-byte-identical to data-repo/lib/data-json.ts formatDataJson(), i.e.
-JSON.stringify(value, null, 2) + "\\n", LF, UTF-8 without BOM (RFC #45) —
-so on an already-canonical file the diff is just the updated pens.
---json points it at a copy of the pens file (for testing).
+--write rewrites each updated pen's source file in the dataset's canonical
+JSON form — byte-identical to data-repo/lib/data-json.ts formatDataJson(),
+i.e. JSON.stringify(value, null, 2) + "\\n", LF, UTF-8 without BOM (RFC #45),
+key order kept — so the diff is just the updated values. Before writing it
+runs the generator in check mode and stops if the bundles are already out of
+sync; after writing it regenerates them and fails loudly if that fails.
+--repo-root points it at a copy of the data-repo (the directory holding
+source/ and data/), for testing.
 """
 
 import argparse
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -39,7 +47,8 @@ except ImportError:
     sys.exit("missing openpyxl: python -m pip install openpyxl")
 
 REPO = Path(__file__).resolve().parent.parent
-JSON_PATH = REPO / "data-repo" / "data" / "pens" / "WACOM-pens.json"
+DATA_REPO = REPO / "data-repo"
+GENERATE_TS = DATA_REPO / "scripts" / "generate.ts"
 
 # Manual overrides applied AFTER Excel-derived updates. Each entry maps
 # PenId → field → value, with None meaning "delete this field". Decisions
@@ -185,6 +194,27 @@ def write_data_json(path, value):
     os.replace(tmp, path)
 
 
+def read_wacom_pen_sources(repo_root):
+    """{path: record} for every Wacom pen source file, sorted by path."""
+    src_dir = Path(repo_root) / "source" / "pens" / "wacom"
+    if not src_dir.is_dir():
+        sys.exit(f"no pen sources at {src_dir}")
+    return {f: read_data_json(f) for f in sorted(src_dir.glob("*.json"))}
+
+
+def run_generator(repo_root, write):
+    """Run data-repo/scripts/generate.ts on repo_root (check mode, or
+    --write) from the Explorer root. Returns (exit code, output)."""
+    npx = shutil.which("npx")
+    if npx is None:
+        sys.exit("npx not found on PATH (needed to run data-repo/scripts/generate.ts)")
+    cmd = [npx, "tsx", str(GENERATE_TS), "--repo-root", str(repo_root)]
+    if write:
+        cmd.append("--write")
+    r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, encoding="utf-8")
+    return r.returncode, (r.stdout + r.stderr).strip()
+
+
 def diff_fields(current, updates):
     """Return list of (field, before, after, kind) for changed fields.
 
@@ -211,7 +241,12 @@ def main():
         help="path to the spreadsheet",
     )
     ap.add_argument("--write", action="store_true", help="apply changes (default: dry-run)")
-    ap.add_argument("--json", default=str(JSON_PATH), help="pens JSON file to update")
+    ap.add_argument(
+        "--repo-root",
+        default=str(DATA_REPO),
+        help="data-repo root holding source/ and data/ "
+        "(default: the data-repo submodule; point it at a copy for testing)",
+    )
     args = ap.parse_args()
 
     wb = openpyxl.load_workbook(args.xlsx, data_only=True)
@@ -228,9 +263,10 @@ def main():
             continue
         excel_rows[pid] = row
 
-    json_path = Path(args.json)
-    data = read_data_json(json_path)
-    pens = data["Pens"]
+    repo_root = Path(args.repo_root).resolve()
+    sources = read_wacom_pen_sources(repo_root)
+    pens = list(sources.values())
+    path_of = {p["EntityId"]: f for f, p in sources.items()}
     by_penid = {p["PenId"]: p for p in pens}
 
     today_iso = datetime.utcnow().strftime("%Y-%m-%dT00:00:00.000Z")
@@ -294,19 +330,37 @@ def main():
         print(f"(dry-run; pass --write to apply {len(updates_planned)} updates)")
         return
 
+    if not updates_planned:
+        print()
+        print("nothing to write")
+        return
+
     # ---- Write phase ----
-    index_by_id = {p["_id"]: i for i, p in enumerate(pens)}
+    # Start from bundles that match their sources, so the regenerate below
+    # carries this import's changes and nothing else.
+    code, out = run_generator(repo_root, write=False)
+    if code != 0:
+        print(out, file=sys.stderr)
+        sys.exit("generate.ts check failed before writing; nothing was written")
+
+    print()
     for cur, _diffs, _flags, new_pen in updates_planned:
-        i = index_by_id.get(cur["_id"])
-        if i is None:
-            sys.exit(f"could not locate {cur['PenId']} ({cur['_id']}) in file")
+        path = path_of[cur["EntityId"]]
+        if path.name != f"{cur['EntityId']}.json":
+            sys.exit(f"{path}: file name does not match EntityId {cur['EntityId']}")
         # new_pen keeps cur's key order (new fields go last), so the diff
         # is just the changed values.
-        pens[i] = new_pen
+        write_data_json(path, new_pen)
+        print(f"wrote {path.relative_to(repo_root).as_posix()}")
 
-    write_data_json(json_path, data)
-    print()
-    print(f"wrote {json_path}  ({len(updates_planned)} pens updated)")
+    code, out = run_generator(repo_root, write=True)
+    print(out)
+    if code != 0:
+        sys.exit(
+            f"generate.ts --write FAILED (exit {code}): the {len(updates_planned)} source file(s) "
+            "above were written but the pen bundles were NOT regenerated"
+        )
+    print(f"{len(updates_planned)} pens updated; bundles regenerated")
 
 
 if __name__ == "__main__":

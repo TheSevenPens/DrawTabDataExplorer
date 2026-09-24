@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import type { Tablet } from '$data/lib/drawtab-loader.js';
-import { diagonalRows, topByDiagonal, diagonalBrands, touchTabletRows } from './helpers.js';
+import {
+	diagonalRows,
+	topByDiagonal,
+	diagonalBrands,
+	touchTabletRows,
+	rankRows,
+} from './helpers.js';
 
 const tablet = (
 	id: string,
@@ -181,5 +187,32 @@ describe('touchTabletRows', () => {
 			typeLabel: 'Standalone',
 			year: '2020',
 		});
+	});
+});
+
+describe('rankRows', () => {
+	const rows = [
+		{ entityId: 'b.tablet.two', v: 5 },
+		{ entityId: 'a.tablet.one', v: 5 },
+		{ entityId: 'c.tablet.big', v: 9 },
+		{ entityId: 'a.tablet.zero', v: 5 },
+	];
+
+	it('ranks by value, breaking ties on EntityId (not input order)', () => {
+		expect(rankRows(rows, (r) => r.v, 'desc', 3).map((r) => r.entityId)).toEqual([
+			'c.tablet.big',
+			'a.tablet.one',
+			'a.tablet.zero',
+		]);
+		expect(rankRows([...rows].reverse(), (r) => r.v, 'desc', 3)).toEqual(
+			rankRows(rows, (r) => r.v, 'desc', 3),
+		);
+	});
+
+	it('ascending keeps the same tie order', () => {
+		expect(rankRows(rows, (r) => r.v, 'asc', 2).map((r) => r.entityId)).toEqual([
+			'a.tablet.one',
+			'a.tablet.zero',
+		]);
 	});
 });

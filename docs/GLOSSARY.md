@@ -14,7 +14,7 @@ Domain vocabulary used across this repo. Alphabetised. Each entry: short definit
 
 **Brand** — Top-level entity. Singular noun form ("Wacom", "XP-Pen"). All-uppercase `BrandId` in code (`"WACOM"`, `"XPPEN"`). See `BRANDS` in [data-repo/lib/loader-shared.ts](../data-repo/lib/loader-shared.ts).
 
-**Brand-sharded JSON** — Storage convention where one JSON file per brand holds all records of an entity type, e.g. `WACOM-pens.json`, `HUION-tablets.json`. Loaded transparently by [data-repo/lib/dataset.ts](../data-repo/lib/dataset.ts)'s `makeShardedLoader`.
+**Brand-sharded JSON** — Storage convention where one JSON file per brand holds all records of an entity type, e.g. `WACOM-pens.json`, `HUION-tablets.json`. Loaded transparently by [data-repo/lib/dataset.ts](../data-repo/lib/dataset.ts)'s `makeShardedLoader`. For tablets and pens these files are **generated** from per-record sources (`data-repo/source/`, DrawTabData #45) and must not be hand-edited.
 
 **Cell links** — Per-route prop on `EntityExplorer` that turns specific cell values into clickable `/entity/<id>` URLs. See `cellLinks` in [src/lib/components/EntityExplorer.svelte](../src/lib/components/EntityExplorer.svelte).
 
