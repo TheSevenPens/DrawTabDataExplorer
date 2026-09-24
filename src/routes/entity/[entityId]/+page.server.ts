@@ -2,7 +2,7 @@
 // paths to emit; nothing here runs at request time (the app is `ssr = false`
 // and deploys as static files with no server).
 //
-// Why it's worth emitting ~860 near-identical shells: without them, GitHub
+// Why it's worth emitting ~1,000 near-identical shells: without them, GitHub
 // Pages has no file at /entity/<id> and falls back to 404.html — which
 // renders the app correctly but answers HTTP 404. That's invisible to a
 // browser and fatal to everything else that reads status codes: link
@@ -23,14 +23,17 @@ export async function entries() {
 		userId: 'sevenpens',
 	});
 
-	const [tablets, pens, tabletFamilies, penFamilies, drivers, brands] = await Promise.all([
-		ds.Tablets.toArray(),
-		ds.Pens.toArray(),
-		ds.TabletFamilies.toArray(),
-		ds.PenFamilies.toArray(),
-		ds.Drivers.toArray(),
-		ds.Brands.toArray(),
-	]);
+	const [tablets, pens, tabletFamilies, penFamilies, drivers, brands, sessions] = await Promise.all(
+		[
+			ds.Tablets.toArray(),
+			ds.Pens.toArray(),
+			ds.TabletFamilies.toArray(),
+			ds.PenFamilies.toArray(),
+			ds.Drivers.toArray(),
+			ds.Brands.toArray(),
+			ds.PressureResponse.toArray(),
+		],
+	);
 
 	const ids = [
 		...tablets.map((t) => t.Meta.EntityId),
@@ -39,6 +42,9 @@ export async function entries() {
 		...penFamilies.map((f) => f.EntityId),
 		...drivers.map((d) => d.EntityId),
 		...brands.map((b) => b.EntityId),
+		// Sessions store their EntityId since same-day repeats made the derived
+		// form ambiguous; every session page now gets a shell too.
+		...sessions.map((s) => s.EntityId),
 	];
 
 	// Dedupe defensively — a duplicate EntityId is a data bug the CLI already

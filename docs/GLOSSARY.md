@@ -46,7 +46,7 @@ Domain vocabulary used across this repo. Alphabetised. Each entry: short definit
 | Driver        | `brand.driver.version_os`  | `wacom.driver.6.4.13-2_windows`         |
 | Session       | `brand.session.invid_date` | `wacom.session.wap.0001_2024-09-02`     |
 
-See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/session-id.ts](../data-repo/lib/pressure/session-id.ts) for the session derivation.
+See [CLAUDE.md § EntityId formats](../CLAUDE.md) and [data-repo/lib/pressure/session-id.ts](../data-repo/lib/pressure/session-id.ts) for the session derivation. Sessions **store** their EntityId; a pen measured twice on one day gets `_<IdSuffix>` on the later session (e.g. `wacom.session.wap.0009_2026-05-25_galaxybook5pro360`).
 
 **Envelope** — `PressureResponseChart` view mode that overlays Min/Max (or P05/P95, or P25/P75) bands across all selected sessions. Implemented as a single closed-polygon dataset with `fill: 'shape'` to avoid Chart.js's between-datasets fill bug. See [CLAUDE.md § Pressure response charts](../CLAUDE.md).
 

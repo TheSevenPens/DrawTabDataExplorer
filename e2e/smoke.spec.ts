@@ -134,6 +134,20 @@ test.describe('Session detail navigation', () => {
 		await expect(page.locator('canvas').first()).toBeVisible({ timeout: 10_000 });
 		expect(errors).toEqual([]);
 	});
+
+	test('a same-day repeat session has its own URL', async ({ page }) => {
+		// WAP.0009 was measured twice on 2026-05-25, on two devices. Before
+		// sessions stored their EntityId both answered to one URL.
+		const tabletLink = (id: string) => page.locator(`a[href$="/entity/${id}"]`).first();
+		await page.goto('/entity/wacom.session.wap.0009_2026-05-25', { waitUntil: 'networkidle' });
+		await expect(tabletLink('wacom.tablet.ctc6110wl')).toBeVisible({ timeout: 10_000 });
+		await expect(tabletLink('samsung.tablet.galaxybook5pro360')).toHaveCount(0);
+		await page.goto('/entity/wacom.session.wap.0009_2026-05-25_galaxybook5pro360', {
+			waitUntil: 'networkidle',
+		});
+		await expect(tabletLink('samsung.tablet.galaxybook5pro360')).toBeVisible({ timeout: 10_000 });
+		await expect(tabletLink('wacom.tablet.ctc6110wl')).toHaveCount(0);
+	});
 });
 
 test.describe('Compare workflow', () => {
