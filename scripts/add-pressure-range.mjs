@@ -1,10 +1,12 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S npx tsx
 /**
  * Import direct pressure-range endpoint measurements (IAF / MAX) into the
  * brand-sharded `data-repo/data/pressure-range/<BRAND>-pressure-range.json`
- * files, in the legacy PowerShell wide-indent format used throughout the
- * data-repo (records at 29-space indent, fields at 33-space, array close at
- * 25-space — see existing pressure-response files for reference).
+ * files. Each file is read, the new records are pushed onto its
+ * PressureRange array (or the file is created), and it is written back
+ * through writeDataJson (data-repo/lib/data-json.ts), the dataset's one
+ * canonical JSON writer (2-space indent, LF, UTF-8 without BOM; RFC #45).
+ * On an already-canonical file the diff is just the new records.
  *
  * These are *direct measurements* from an external tool — distinct from the
  * *estimated* Piaf/Pmax derived from pressure-response curves.
@@ -26,7 +28,11 @@
  * PenInventoryId (data-repo/data/inventory/sevenpens-pens.json).
  *
  * --- Usage ---
- *   node scripts/add-pressure-range.mjs path/to/measurements.json [--dry-run]
+ * Run with tsx — the script imports a .ts module:
+ *   npx tsx scripts/add-pressure-range.mjs path/to/measurements.json [--dry-run]
+ *
+ * --data-dir <dir> reads and writes <dir> instead of data-repo/data (for
+ * testing against a copy).
  *
  * Run `npm run data-quality` afterwards to validate.
  */
@@ -34,21 +40,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { readDataJson, writeDataJson } from '../data-repo/lib/data-json.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const DATA_DIR = path.join(ROOT, 'data-repo', 'data');
-const INVENTORY_FILE = path.join(DATA_DIR, 'inventory', 'sevenpens-pens.json');
-const PR_DIR = path.join(DATA_DIR, 'pressure-range');
 
 // --- CLI ---
 
 const args = process.argv.slice(2);
+const dataDirAt = args.indexOf('--data-dir');
+const dataDirArg = dataDirAt >= 0 ? args.splice(dataDirAt, 2)[1] : undefined;
 const dryRun = args.includes('--dry-run');
 const inputArg = args.find((a) => !a.startsWith('--'));
-if (!inputArg) {
-	console.log('Usage: node scripts/add-pressure-range.mjs <measurements.json> [--dry-run]');
+if (!inputArg || (dataDirAt >= 0 && !dataDirArg)) {
+	console.log(
+		'Usage: npx tsx scripts/add-pressure-range.mjs <measurements.json> [--dry-run] [--data-dir <dir>]',
+	);
 	process.exit(args.length === 0 ? 1 : 0);
 }
+
+const DATA_DIR = dataDirArg ? path.resolve(dataDirArg) : path.join(ROOT, 'data-repo', 'data');
+const INVENTORY_FILE = path.join(DATA_DIR, 'inventory', 'sevenpens-pens.json');
+const PR_DIR = path.join(DATA_DIR, 'pressure-range');
 const inputPath = path.resolve(inputArg);
 
 // --- Load + normalise input rows ---
@@ -62,15 +74,15 @@ if (!Array.isArray(rows) || rows.length === 0) {
 	process.exit(1);
 }
 
-const inventory = JSON.parse(fs.readFileSync(INVENTORY_FILE, 'utf8')).InventoryPens;
+const inventory = readDataJson(INVENTORY_FILE).InventoryPens;
 const invById = new Map(inventory.map((p) => [p.InventoryId, p]));
 
-// Numeric value → string, preserving a `.0` on integers to match the
-// PowerShell-formatted numeric strings elsewhere in the dataset.
+// Value is stored as a numeric string (schema: NumericString), in the
+// number's plain form — no `.0` padding for integers.
 const fmtVal = (n) => {
 	const v = typeof n === 'number' ? n : Number(n);
 	if (!Number.isFinite(v)) throw new Error(`Non-numeric value: ${n}`);
-	return Number.isInteger(v) ? v.toFixed(1) : String(v);
+	return String(v);
 };
 
 const records = rows.map((r, i) => {
@@ -118,39 +130,6 @@ const records = rows.map((r, i) => {
 	};
 });
 
-// --- Wide-indent rendering ---
-
-const EOL = '\r\n';
-const I4 = ' '.repeat(4);
-const I25 = ' '.repeat(25);
-const I29 = ' '.repeat(29);
-const I33 = ' '.repeat(33);
-
-const FIELD_ORDER = [
-	'Brand',
-	'PenEntityId',
-	'PenInventoryId',
-	'Metric',
-	'Value',
-	'Date',
-	'TabletEntityId',
-	'Driver',
-	'OS',
-	'Method',
-	'_id',
-	'_CreateDate',
-	'_ModifiedDate',
-];
-
-function renderRecord(rec, isLast) {
-	const body = FIELD_ORDER.map((k, i) => {
-		const comma = i === FIELD_ORDER.length - 1 ? '' : ',';
-		const val = String(rec[k]).replace(/"/g, '\\"');
-		return `${I33}"${k}":  "${val}"${comma}`;
-	}).join(EOL);
-	return `${I29}{${EOL}${body}${EOL}${I29}}${isLast ? '' : ','}`;
-}
-
 // --- Group by brand, create-or-append each file ---
 
 const byBrand = new Map();
@@ -164,23 +143,13 @@ for (const [brand, recs] of byBrand) {
 	const filePath = path.join(PR_DIR, `${brand}-pressure-range.json`);
 	const exists = fs.existsSync(filePath);
 
-	let newText;
-	if (exists) {
-		// Append before the array tail, extending the prior last record's
-		// terminator with a comma (same splice scheme as add-pressure-session).
-		const text = fs.readFileSync(filePath, 'utf8');
-		const tailMarker = `${EOL}${I25}]${EOL}}`;
-		const tailIdx = text.lastIndexOf(tailMarker);
-		if (tailIdx < 0) {
-			console.error(`Could not find array tail in ${filePath}; format may have drifted.`);
-			process.exit(1);
-		}
-		const blocks = recs.map((r, i) => renderRecord(r, i === recs.length - 1)).join(EOL);
-		newText = `${text.slice(0, tailIdx)},${EOL}${blocks}${text.slice(tailIdx)}`;
-	} else {
-		const blocks = recs.map((r, i) => renderRecord(r, i === recs.length - 1)).join(EOL);
-		newText = `{${EOL}${I4}"PressureRange":  [${EOL}${blocks}${EOL}${I25}]${EOL}}${EOL}`;
+	// Existing file: append to its PressureRange array. New file: create it.
+	const doc = exists ? readDataJson(filePath) : { PressureRange: [] };
+	if (!Array.isArray(doc.PressureRange)) {
+		console.error(`No PressureRange array in ${filePath}.`);
+		process.exit(1);
 	}
+	doc.PressureRange.push(...recs);
 
 	if (dryRun) {
 		console.log(
@@ -188,7 +157,7 @@ for (const [brand, recs] of byBrand) {
 		);
 	} else {
 		if (!fs.existsSync(PR_DIR)) fs.mkdirSync(PR_DIR, { recursive: true });
-		fs.writeFileSync(filePath, newText);
+		writeDataJson(filePath, doc);
 		console.log(
 			`${exists ? 'Appended to' : 'Created'} ${path.relative(ROOT, filePath)} (+${recs.length})`,
 		);

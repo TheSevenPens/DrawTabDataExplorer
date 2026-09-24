@@ -17,10 +17,17 @@ Field rules:
 
 Fields the spreadsheet does NOT cover (Tilt, Hover, Shape) are never
 written.
+
+--write rewrites the whole file in the dataset's canonical JSON form —
+byte-identical to data-repo/lib/data-json.ts formatDataJson(), i.e.
+JSON.stringify(value, null, 2) + "\\n", LF, UTF-8 without BOM (RFC #45) —
+so on an already-canonical file the diff is just the updated pens.
+--json points it at a copy of the pens file (for testing).
 """
 
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import datetime
@@ -33,19 +40,6 @@ except ImportError:
 
 REPO = Path(__file__).resolve().parent.parent
 JSON_PATH = REPO / "data-repo" / "data" / "pens" / "WACOM-pens.json"
-
-# Canonical key order in the JSON output, matching the existing file
-# convention (see KP-503E / KP-504E).
-FIELD_ORDER = [
-    "EntityId", "Brand", "PenId", "PenName", "PenFamily", "PenTech",
-    "PenYear", "ButtonCount", "PressureSensitive", "PressureLevels",
-    "Wheel", "Eraser", "Shape", "Weight", "Length", "Diameter",
-    "Tilt", "BarrelRotation", "Hover", "Notes", "Tags",
-    "_id", "_CreateDate", "_ModifiedDate",
-]
-
-OUTER_INDENT = " " * 17
-INNER_INDENT = " " * 21
 
 # Manual overrides applied AFTER Excel-derived updates. Each entry maps
 # PenId → field → value, with None meaning "delete this field". Decisions
@@ -152,26 +146,43 @@ def derive_updates(row):
     return upd, flags
 
 
-def format_value(v):
-    """JSON-encode a value the way PowerShell's ConvertTo-Json does for
-    the simple primitives that appear on pen records (string only)."""
-    return json.dumps(v, ensure_ascii=False)
+def _no_duplicate_keys(pairs):
+    keys = [k for k, _ in pairs]
+    dups = sorted({k for k in keys if keys.count(k) > 1})
+    if dups:
+        raise ValueError(f"duplicate object keys: {', '.join(dups)}")
+    return dict(pairs)
 
 
-def format_pen_object(pen):
-    keys_sorted = [k for k in FIELD_ORDER if k in pen]
-    extras = [k for k in pen if k not in FIELD_ORDER]
-    keys_sorted.extend(extras)
+def _parse_float(s):
+    # JSON.stringify writes an integral number without a fraction (5.0 -> 5);
+    # Python would keep 5.0. Store integral floats as int so the dump matches.
+    f = float(s)
+    return int(f) if f.is_integer() else f
 
-    # The opening "{" gets no leading indent — the surrounding file
-    # text already provides the indent before the brace span. The closing
-    # "}" sits on its own line so it does need indenting.
-    lines = ["{"]
-    for i, k in enumerate(keys_sorted):
-        sep = "," if i < len(keys_sorted) - 1 else ""
-        lines.append(f"{INNER_INDENT}\"{k}\":  {format_value(pen[k])}{sep}")
-    lines.append(OUTER_INDENT + "}")
-    return "\n".join(lines)
+
+def read_data_json(path):
+    """Parse a dataset file like readDataJson(): BOM skipped, duplicate
+    keys rejected."""
+    with open(path, encoding="utf-8-sig") as f:
+        return json.load(f, object_pairs_hook=_no_duplicate_keys, parse_float=_parse_float)
+
+
+def format_data_json(value):
+    """Canonical dataset text — the same bytes as formatDataJson() in
+    data-repo/lib/data-json.ts (JSON.stringify(value, null, 2) + "\\n")
+    for the strings / ints / nested containers the pen files hold."""
+    return json.dumps(value, indent=2, ensure_ascii=False) + "\n"
+
+
+def write_data_json(path, value):
+    """Write canonical text atomically (temp file + rename), LF, UTF-8
+    without BOM, like writeDataJson()."""
+    text = format_data_json(value)
+    tmp = Path(f"{path}.{os.getpid()}.tmp")
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+    os.replace(tmp, path)
 
 
 def diff_fields(current, updates):
@@ -192,43 +203,6 @@ def diff_fields(current, updates):
     return out
 
 
-def find_pen_block_span(text, uuid):
-    """Return (start, end) text indices for the pen object containing the
-    given _id UUID, including the surrounding braces."""
-    m = re.search(rf'"_id":\s+"{re.escape(uuid)}"', text)
-    if not m:
-        return None
-    # walk backwards to find the opening '{'
-    i = m.start()
-    depth = 0
-    while i >= 0:
-        if text[i] == "}":
-            depth += 1
-        elif text[i] == "{":
-            if depth == 0:
-                start = i
-                break
-            depth -= 1
-        i -= 1
-    else:
-        return None
-    # walk forwards to find the matching '}'
-    i = m.start()
-    depth = 0
-    while i < len(text):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            if depth == 0:
-                end = i + 1
-                break
-            depth -= 1
-        i += 1
-    else:
-        return None
-    return (start, end)
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
@@ -237,6 +211,7 @@ def main():
         help="path to the spreadsheet",
     )
     ap.add_argument("--write", action="store_true", help="apply changes (default: dry-run)")
+    ap.add_argument("--json", default=str(JSON_PATH), help="pens JSON file to update")
     args = ap.parse_args()
 
     wb = openpyxl.load_workbook(args.xlsx, data_only=True)
@@ -253,9 +228,8 @@ def main():
             continue
         excel_rows[pid] = row
 
-    with open(JSON_PATH, encoding="utf-8") as f:
-        text = f.read()
-    data = json.loads(text)
+    json_path = Path(args.json)
+    data = read_data_json(json_path)
     pens = data["Pens"]
     by_penid = {p["PenId"]: p for p in pens}
 
@@ -321,18 +295,18 @@ def main():
         return
 
     # ---- Write phase ----
-    new_text = text
+    index_by_id = {p["_id"]: i for i, p in enumerate(pens)}
     for cur, _diffs, _flags, new_pen in updates_planned:
-        span = find_pen_block_span(new_text, cur["_id"])
-        if span is None:
+        i = index_by_id.get(cur["_id"])
+        if i is None:
             sys.exit(f"could not locate {cur['PenId']} ({cur['_id']}) in file")
-        start, end = span
-        new_text = new_text[:start] + format_pen_object(new_pen) + new_text[end:]
+        # new_pen keeps cur's key order (new fields go last), so the diff
+        # is just the changed values.
+        pens[i] = new_pen
 
-    with open(JSON_PATH, "w", encoding="utf-8", newline="\n") as f:
-        f.write(new_text)
+    write_data_json(json_path, data)
     print()
-    print(f"wrote {JSON_PATH}  ({len(updates_planned)} pens updated)")
+    print(f"wrote {json_path}  ({len(updates_planned)} pens updated)")
 
 
 if __name__ == "__main__":

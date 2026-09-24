@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S npx tsx
 /**
  * Append a pressure-response session to the right brand-specific
  * pressure-response JSON file in the data-repo.
@@ -18,24 +18,27 @@
  *   TabletEntityId       override via CLI flags
  *
  * --- Output ---
- * A new record is appended at the end of the brand's
- * pressure-response.json file in the legacy PowerShell wide-indent
- * format used throughout the data-repo (29-space indent for record
- * braces, 33-space for fields, 49-space for tuple brackets, 53-space
- * for numbers — see existing records for reference).
+ * A new record is appended to the PressureResponse array of the brand's
+ * pressure-response.json file: read → push → written back through
+ * writeDataJson (data-repo/lib/data-json.ts), the dataset's one canonical
+ * JSON writer (2-space indent, LF, UTF-8 without BOM; RFC #45). On an
+ * already-canonical file the diff is just the new record.
  *
- * Number formatting matches the rest of the file: physicalGf rounded
- * to 1dp, logicalNorm * 100 rounded to 2dp, integer-valued floats keep
- * a `.0` suffix (e.g. `5.0` not `5`) to match PowerShell ConvertTo-Json.
+ * Records are [physicalGf rounded to 1dp, logicalNorm * 100 rounded to
+ * 2dp], stored as plain JSON numbers.
  *
  * --- Usage ---
- *   node scripts/add-pressure-session.mjs path/to/2026-05-24-WAP.0047.json
- *   node scripts/add-pressure-session.mjs <file> \
+ * Run with tsx — the script imports a .ts module:
+ *   npx tsx scripts/add-pressure-session.mjs path/to/2026-05-24-WAP.0047.json
+ *   npx tsx scripts/add-pressure-session.mjs <file> \
  *       --tablet wacom.tablet.pth860 \
  *       --user SEVEN \
  *       --driver WACOM \
  *       --os WINDOWS \
  *       --notes "something to remember"
+ *
+ * --data-dir <dir> reads and writes <dir> instead of data-repo/data (for
+ * testing against a copy).
  *
  * Run `npm run data-quality` afterwards (the script doesn't do this
  * automatically — leaves room to batch multiple inserts before validating).
@@ -44,19 +47,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { readDataJson, writeDataJson } from '../data-repo/lib/data-json.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const DATA_DIR = path.join(ROOT, 'data-repo', 'data');
-const INVENTORY_FILE = path.join(DATA_DIR, 'inventory', 'sevenpens-pens.json');
-const PENS_DIR = path.join(DATA_DIR, 'pens');
-const PR_DIR = path.join(DATA_DIR, 'pressure-response');
 
 // --- CLI parsing ---
 
 const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 	console.log(
-		'Usage: node scripts/add-pressure-session.mjs <file.json> [--tablet …] [--user …] [--driver …] [--os …] [--notes …]',
+		'Usage: npx tsx scripts/add-pressure-session.mjs <file.json> [--tablet …] [--user …] [--driver …] [--os …] [--notes …] [--data-dir …]',
 	);
 	process.exit(args.length === 0 ? 1 : 0);
 }
@@ -72,6 +72,13 @@ for (let i = 1; i < args.length; i += 2) {
 	}
 	overrides[flag.slice(2)] = val;
 }
+
+const DATA_DIR = overrides['data-dir']
+	? path.resolve(overrides['data-dir'])
+	: path.join(ROOT, 'data-repo', 'data');
+const INVENTORY_FILE = path.join(DATA_DIR, 'inventory', 'sevenpens-pens.json');
+const PENS_DIR = path.join(DATA_DIR, 'pens');
+const PR_DIR = path.join(DATA_DIR, 'pressure-response');
 
 // --- Filename parse ---
 
@@ -99,7 +106,7 @@ if (!Array.isArray(src.captures) || src.captures.length === 0) {
 
 // --- Resolve pen / brand from inventory ---
 
-const inventory = JSON.parse(fs.readFileSync(INVENTORY_FILE, 'utf8')).InventoryPens;
+const inventory = readDataJson(INVENTORY_FILE).InventoryPens;
 const invPen = inventory.find((p) => p.InventoryId === inventoryId);
 if (!invPen) {
 	console.error(`InventoryId "${inventoryId}" not found in ${INVENTORY_FILE}.`);
@@ -115,7 +122,7 @@ if (!fs.existsSync(brandPensPath)) {
 	console.error(`Pens file not found: ${brandPensPath}`);
 	process.exit(1);
 }
-const brandPens = JSON.parse(fs.readFileSync(brandPensPath, 'utf8')).Pens;
+const brandPens = readDataJson(brandPensPath).Pens;
 const pen = brandPens.find((p) => p.EntityId === penEntityId);
 if (!pen) {
 	console.error(`Pen "${penEntityId}" not found in ${brandPensPath}`);
@@ -130,8 +137,7 @@ if (!fs.existsSync(prPath)) {
 	console.error(`Pressure-response file not found: ${prPath}`);
 	process.exit(1);
 }
-const prText = fs.readFileSync(prPath, 'utf8');
-const prJson = JSON.parse(prText);
+const prJson = readDataJson(prPath);
 
 // --- Defaults from the most recent prior session for this unit ---
 
@@ -152,137 +158,36 @@ if (!tabletEntityId) {
 }
 const notes = overrides.notes ?? '';
 
-// --- Build records (force 1dp, logical*100 2dp, preserve .0 for ints) ---
+// --- Build the record ---
+//
+// physicalGf rounded to 1dp, logicalNorm * 100 rounded to 2dp, stored as
+// plain JSON numbers (the canonical writer prints them in shortest form).
 
-const fmt = (n, dp) => {
-	const v = +n.toFixed(dp);
-	return Number.isInteger(v) ? v.toFixed(1) : v.toString();
-};
-const recs = src.captures.map((c) => [fmt(c.physicalGf, 1), fmt(c.logicalNorm * 100, 2)]);
-
-// --- Render new record block in PowerShell wide-indent style ---
-
-const EOL = '\r\n';
-const I25 = ' '.repeat(25);
-const I29 = ' '.repeat(29);
-const I33 = ' '.repeat(33);
-const I45 = ' '.repeat(45);
-const I49 = ' '.repeat(49);
-const I53 = ' '.repeat(53);
-
-const recLines = recs
-	.map((r, i) => {
-		const tail = i === recs.length - 1 ? ']' : '],';
-		return I49 + '[' + EOL + I53 + r[0] + ',' + EOL + I53 + r[1] + EOL + I49 + tail;
-	})
-	.join(EOL);
+const round = (n, dp) => +n.toFixed(dp);
+const recs = src.captures.map((c) => [round(c.physicalGf, 1), round(c.logicalNorm * 100, 2)]);
 
 const uuid = crypto.randomUUID();
 const isoNow = new Date(date + 'T00:00:00.000Z').toISOString();
 
-const block =
-	I29 +
-	'{' +
-	EOL +
-	I33 +
-	'"Brand":  "' +
-	brand +
-	'",' +
-	EOL +
-	I33 +
-	'"PenFamily":  "' +
-	penFamily +
-	'",' +
-	EOL +
-	I33 +
-	'"InventoryId":  "' +
-	inventoryId +
-	'",' +
-	EOL +
-	I33 +
-	'"Date":  "' +
-	date +
-	'",' +
-	EOL +
-	I33 +
-	'"User":  "' +
-	user +
-	'",' +
-	EOL +
-	I33 +
-	'"Driver":  "' +
-	driver +
-	'",' +
-	EOL +
-	I33 +
-	'"OS":  "' +
-	os +
-	'",' +
-	EOL +
-	I33 +
-	'"Notes":  "' +
-	notes.replace(/"/g, '\\"') +
-	'",' +
-	EOL +
-	I33 +
-	'"Records":  [' +
-	EOL +
-	recLines +
-	EOL +
-	I45 +
-	'],' +
-	EOL +
-	I33 +
-	'"_id":  "' +
-	uuid +
-	'",' +
-	EOL +
-	I33 +
-	'"_CreateDate":  "' +
-	isoNow +
-	'",' +
-	EOL +
-	I33 +
-	'"_ModifiedDate":  "' +
-	isoNow +
-	'",' +
-	EOL +
-	I33 +
-	'"PenEntityId":  "' +
-	penEntityId +
-	'",' +
-	EOL +
-	I33 +
-	'"TabletEntityId":  "' +
-	tabletEntityId +
-	'"' +
-	EOL +
-	I29 +
-	'}';
+// Key order matches the existing session records.
+prJson.PressureResponse.push({
+	Brand: brand,
+	PenFamily: penFamily,
+	InventoryId: inventoryId,
+	Date: date,
+	User: user,
+	Driver: driver,
+	OS: os,
+	Notes: notes,
+	Records: recs,
+	_id: uuid,
+	_CreateDate: isoNow,
+	_ModifiedDate: isoNow,
+	PenEntityId: penEntityId,
+	TabletEntityId: tabletEntityId,
+});
 
-// --- Inject before the closing `]\n}` of the PressureResponse array ---
-//
-// Locate the array's tail by searching for the very last `\n` + 25-space
-// indent + `]\n}` which closes the array and the root object. The new
-// block goes right before that, with a leading `,\r\n` to extend the
-// previous-final record's terminator.
-
-const tailMarker = EOL + I25 + ']' + EOL + '}';
-const tailIdx = prText.lastIndexOf(tailMarker);
-if (tailIdx < 0) {
-	console.error(
-		`Could not find PressureResponse array tail in ${prPath}. ` +
-			`Expected "\\r\\n${I25}]\\r\\n}" near EOF — file format may have drifted.`,
-	);
-	process.exit(1);
-}
-
-// The character right before tailMarker is the closing `}` of the last
-// record (no trailing comma). We need to insert `,\r\n<block>` between
-// that `}` and `\r\n<25sp>]\r\n}`.
-const newText = prText.slice(0, tailIdx) + ',' + EOL + block + prText.slice(tailIdx);
-
-fs.writeFileSync(prPath, newText);
+writeDataJson(prPath, prJson);
 
 console.log(`Added session for ${inventoryId} (${date}):`);
 console.log(`  pen     : ${penEntityId}`);

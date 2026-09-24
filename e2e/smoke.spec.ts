@@ -439,6 +439,11 @@ test.describe('API Explorer runs queries in a stoppable worker', () => {
 	test('every built-in example runs through the worker without an error', async ({ page }) => {
 		test.setTimeout(120_000);
 		await page.goto('/api-explorer');
+		// The options render after hydration; reading them straight after
+		// goto() raced and sometimes found none.
+		await expect(
+			page.locator('.preset-select option[value]:not([value=""])').first(),
+		).toBeAttached();
 		const labels = await page
 			.locator('.preset-select option[value]:not([value=""])')
 			.evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
