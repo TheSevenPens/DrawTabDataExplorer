@@ -192,3 +192,24 @@ test.describe('Search matches the text on screen', () => {
 		expect(drawn).toBe(stored);
 	});
 });
+
+// A data file that fails must never render as a smaller-but-complete list
+// (#331): before the fix, a 503 on WACOM-pens.json showed 64 of 143 pens
+// with no warning. Now the load fails loudly, names the file, and a retry
+// recovers once the file is reachable again.
+test.describe('Data load failures are visible, not silent', () => {
+	test('a 503 on one pen shard shows an error and Try again recovers', async ({ page }) => {
+		let failing = true;
+		await page.route('**/pens/WACOM-pens.json', (route) =>
+			failing ? route.fulfill({ status: 503, body: 'unavailable' }) : route.continue(),
+		);
+		await page.goto('/pens');
+		await expect(page.getByText(/Couldn't load .*WACOM-pens\.json: HTTP 503/)).toBeVisible();
+		await expect(page.getByRole('table')).toHaveCount(0);
+
+		failing = false;
+		await page.getByRole('button', { name: 'Try again' }).click();
+		await expect(page.locator('h1', { hasText: /Pens/i })).toBeAttached();
+		await expect(page.getByRole('table').first()).toBeVisible();
+	});
+});
