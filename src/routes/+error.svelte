@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import Nav from '$lib/components/Nav.svelte';
+	import Button from '$lib/components/Button.svelte';
 </script>
 
 <Nav />
@@ -17,6 +18,11 @@
 	</h1>
 	{#if $page.error?.message}
 		<p class="error-message">{$page.error.message}</p>
+	{/if}
+	{#if $page.status !== 404}
+		<!-- A data file that failed to load throws rather than showing a
+			 partial list (#331); a transient failure is fixed by retrying. -->
+		<Button variant="primary" onclick={() => location.reload()}>Try again</Button>
 	{/if}
 	<a class="back-link" href={resolve('/tablets')}>← Back to tablets</a>
 </div>
