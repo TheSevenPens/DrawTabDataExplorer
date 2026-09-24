@@ -186,7 +186,7 @@
 	// "differs" themselves from the data.
 	let showExport = $state(false);
 	let compareExportHeaders: string[] = $derived.by(() => {
-		const tabletCols = flaggedItems.map((t) => tabletBrandAndName(t));
+		const tabletCols = flaggedItems.map((t) => tabletFullName(t));
 		return ['Field', ...tabletCols];
 	});
 	let compareExportRows: (string | number)[][] = $derived(

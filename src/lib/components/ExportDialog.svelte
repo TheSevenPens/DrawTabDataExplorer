@@ -2,6 +2,15 @@
 	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
 	import type { RowRecord } from '$lib/table-types.js';
 	import { datedFilename } from '$lib/chart-export/filenames.js';
+	import {
+		cellString,
+		tableFromArrays,
+		toCSV,
+		toHTML,
+		toJSON,
+		toMarkdown,
+		type ExportTable,
+	} from '$lib/table-export.js';
 
 	interface Props {
 		entityType: string;
@@ -54,106 +63,35 @@
 		if (format === 'pptx' && output !== 'file') output = 'file';
 	});
 
-	interface ExportField {
-		key: string;
-		label: string;
-		getValue: (row: RowRecord) => unknown;
-	}
-
-	const exportRows: RowRecord[] = $derived.by(() => {
-		if (simpleMode) {
-			return (rows ?? []).map((arr) => {
-				const obj: Record<string, unknown> = {};
-				(headers ?? []).forEach((h, i) => {
-					obj[h] = arr[i];
-				});
-				return obj;
-			});
-		}
-		return (rowMode === 'all' ? allData : filteredData) ?? [];
-	});
-
-	const exportFields: ExportField[] = $derived.by(() => {
-		if (simpleMode) {
-			return (headers ?? []).map((h) => ({
-				key: h,
-				label: h,
-				getValue: (row: RowRecord) => row[h],
-			}));
-		}
+	// Rich mode: the FieldDefs in scope for the current column toggle.
+	const exportFieldDefs: AnyFieldDisplayDef[] = $derived.by(() => {
+		if (simpleMode) return [];
 		const keys = colMode === 'all' ? (allFields ?? []).map((f) => f.key) : (visibleFields ?? []);
 		return keys
 			.map((k) => (allFields ?? []).find((f) => f.key === k))
-			.filter((f): f is AnyFieldDisplayDef => Boolean(f))
-			.map((f) => ({ key: f.key, label: f.label, getValue: (row: RowRecord) => f.getValue(row) }));
+			.filter((f): f is AnyFieldDisplayDef => Boolean(f));
 	});
 
-	function cell(row: RowRecord, field: ExportField): string {
-		const v = field.getValue(row);
-		return v == null ? '' : String(v);
-	}
+	// One positional table feeds every format. Simple mode keeps the caller's
+	// arrays as-is — keying them by heading is what dropped same-named
+	// columns (#329).
+	const table: ExportTable = $derived.by(() => {
+		if (simpleMode) return tableFromArrays(headers ?? [], rows ?? []);
+		const data: RowRecord[] = (rowMode === 'all' ? allData : filteredData) ?? [];
+		return {
+			headers: exportFieldDefs.map((f) => f.label),
+			rows: data.map((row) => exportFieldDefs.map((f) => cellString(f.getValue(row)))),
+		};
+	});
 
-	function csvEscape(v: string): string {
-		if (v.includes(',') || v.includes('"') || v.includes('\n')) {
-			return '"' + v.replace(/"/g, '""') + '"';
-		}
-		return v;
-	}
-
-	function htmlEscape(s: string): string {
-		return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	}
-
-	function buildCSV(): string {
-		const header = exportFields.map((f) => csvEscape(f.label)).join(',');
-		const body = exportRows
-			.map((row) => exportFields.map((f) => csvEscape(cell(row, f))).join(','))
-			.join('\n');
-		return header + '\n' + body;
-	}
-
-	function buildJSON(): string {
-		return JSON.stringify(
-			exportRows.map((row) => Object.fromEntries(exportFields.map((f) => [f.key, cell(row, f)]))),
-			null,
-			2,
-		);
-	}
-
-	function buildHTML(): string {
-		const ths = exportFields.map((f) => `<th>${htmlEscape(f.label)}</th>`).join('');
-		const trs = exportRows
-			.map((row) => {
-				const tds = exportFields.map((f) => `<td>${htmlEscape(cell(row, f))}</td>`).join('');
-				return `  <tr>${tds}</tr>`;
-			})
-			.join('\n');
-		return `<table>\n<thead>\n  <tr>${ths}</tr>\n</thead>\n<tbody>\n${trs}\n</tbody>\n</table>`;
-	}
-
-	function buildMarkdown(): string {
-		const header = '| ' + exportFields.map((f) => f.label).join(' | ') + ' |';
-		const sep = '| ' + exportFields.map(() => '---').join(' | ') + ' |';
-		const body = exportRows
-			.map(
-				(row) =>
-					'| ' +
-					exportFields
-						// A newline inside a cell would end the table row, so multi-line
-						// values (Notes) fold to <br>. Pipes still need escaping.
-						.map((f) => cell(row, f).replace(/\|/g, '\\|').replace(/\r?\n/g, '<br>'))
-						.join(' | ') +
-					' |',
-			)
-			.join('\n');
-		return [header, sep, body].join('\n');
-	}
+	// JSON object keys: field keys in rich mode, headings in simple mode.
+	let jsonKeys = $derived(simpleMode ? table.headers : exportFieldDefs.map((f) => f.key));
 
 	function getContent(): string {
-		if (format === 'csv') return buildCSV();
-		if (format === 'json') return buildJSON();
-		if (format === 'html') return buildHTML();
-		return buildMarkdown();
+		if (format === 'csv') return toCSV(table);
+		if (format === 'json') return toJSON(table, jsonKeys);
+		if (format === 'html') return toHTML(table);
+		return toMarkdown(table);
 	}
 
 	function getMimeType(): string {
@@ -182,11 +120,9 @@
 			// gzipped, on pages with no export UI at all. pptx-export.ts already
 			// loads pptxgenjs itself lazily; this is the edge that defeated it (#310).
 			const { exportTableAsPptx } = await import('$lib/pptx-export.js');
-			const headers = exportFields.map((f) => f.label);
-			const rows = exportRows.map((row) => exportFields.map((f) => cell(row, f)));
 			await exportTableAsPptx({
-				headers,
-				rows,
+				headers: table.headers,
+				rows: table.rows,
 				title,
 				filename: filename ?? entityType,
 				rowsPerSlide,
@@ -266,11 +202,11 @@
 			{:else}
 				<!-- Simple mode: no scope toggles, just show what's about to be exported -->
 				<div class="summary">
-					Exporting <strong>{exportRows.length}</strong>
-					{exportRows.length === 1 ? 'row' : 'rows'}
+					Exporting <strong>{table.rows.length}</strong>
+					{table.rows.length === 1 ? 'row' : 'rows'}
 					&times;
-					<strong>{exportFields.length}</strong>
-					{exportFields.length === 1 ? 'column' : 'columns'}
+					<strong>{table.headers.length}</strong>
+					{table.headers.length === 1 ? 'column' : 'columns'}
 				</div>
 			{/if}
 
@@ -314,10 +250,10 @@
 							class="rps-input"
 						/>
 						<span class="count">
-							{exportRows.length} rows → {Math.max(
+							{table.rows.length} rows → {Math.max(
 								1,
-								Math.ceil(exportRows.length / Math.max(1, rowsPerSlide)),
-							)} slide{Math.max(1, Math.ceil(exportRows.length / Math.max(1, rowsPerSlide))) === 1
+								Math.ceil(table.rows.length / Math.max(1, rowsPerSlide)),
+							)} slide{Math.max(1, Math.ceil(table.rows.length / Math.max(1, rowsPerSlide))) === 1
 								? ''
 								: 's'}
 						</span>
@@ -347,7 +283,7 @@
 			<button
 				class="export-btn"
 				onclick={doExport}
-				disabled={exportRows.length === 0 || exportFields.length === 0}
+				disabled={table.rows.length === 0 || table.headers.length === 0}
 			>
 				{format === 'pptx' ? 'Download .pptx' : output === 'clipboard' ? 'Copy' : 'Download'}
 			</button>

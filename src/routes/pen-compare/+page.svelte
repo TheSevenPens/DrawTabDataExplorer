@@ -357,7 +357,7 @@
 	// the export is opened in a spreadsheet.
 	let showExport = $state(false);
 	let compareExportHeaders: string[] = $derived.by(() => {
-		const cols = flaggedItems.map((p) => penBrandAndName(p));
+		const cols = flaggedItems.map((p) => penFullName(p));
 		return ['Field', ...cols];
 	});
 	let compareExportRows: (string | number)[][] = $derived(
