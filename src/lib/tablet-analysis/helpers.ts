@@ -159,6 +159,27 @@ export function diagonalRows(tablets: Tablet[]): DiagonalRow[] {
 export type DiagonalDirection = 'largest' | 'smallest';
 
 /**
+ * The `count` rows with the highest (`desc`) or lowest (`asc`) value.
+ * Ties break on EntityId, so a ranking never depends on the order records
+ * happen to be stored in — sizes and densities tie a lot, and which tablets
+ * make a top-N cut used to follow the bundle file order (DrawTabData#45).
+ */
+export function rankRows<T extends { entityId: string }>(
+	rows: readonly T[],
+	value: (row: T) => number,
+	dir: 'asc' | 'desc',
+	count: number,
+): T[] {
+	return [...rows]
+		.sort(
+			(a, b) =>
+				(dir === 'desc' ? value(b) - value(a) : value(a) - value(b)) ||
+				(a.entityId < b.entityId ? -1 : a.entityId > b.entityId ? 1 : 0),
+		)
+		.slice(0, count);
+}
+
+/**
  * The `count` rows at one end of the diagonal range, optionally limited to a
  * single brand. An empty `brand` means all brands. Defaults to 'largest',
  * which is what the tables opened with before the direction was selectable.
@@ -170,11 +191,7 @@ export function topByDiagonal(
 	direction: DiagonalDirection = 'largest',
 ): DiagonalRow[] {
 	const filtered = brand ? rows.filter((r) => r.brand === brand) : rows;
-	return [...filtered]
-		.sort((a, b) =>
-			direction === 'largest' ? b.diagonalMm - a.diagonalMm : a.diagonalMm - b.diagonalMm,
-		)
-		.slice(0, count);
+	return rankRows(filtered, (r) => r.diagonalMm, direction === 'largest' ? 'desc' : 'asc', count);
 }
 
 /** Brands present in `rows`, ordered by display name. */

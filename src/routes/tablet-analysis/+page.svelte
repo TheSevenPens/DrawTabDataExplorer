@@ -32,6 +32,7 @@
 		pct,
 		diagonalRows,
 		topByDiagonal,
+		rankRows,
 		diagonalBrands,
 		touchTabletRows,
 		type DiagonalRow,
@@ -168,9 +169,7 @@
 
 	function densityRankRows(brand: string, dir: 'asc' | 'desc', count: number): DensityRow[] {
 		const filtered = brand ? densityTablets.filter((r) => r.brand === brand) : densityTablets;
-		return [...filtered]
-			.sort((a, b) => (dir === 'asc' ? a.density - b.density : b.density - a.density))
-			.slice(0, count);
+		return rankRows(filtered, (r) => r.density, dir, count);
 	}
 	let lowestDensityRows = $derived(densityRankRows(lowestDensityBrand, 'asc', lowestDensityCount));
 	let highestDensityRows = $derived(

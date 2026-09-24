@@ -1,5 +1,5 @@
-// Template for bulk-generating tablet / tablet-family / pen-compat JSON
-// for a new brand. Adapted from the script used to add Apple iPads
+// Template for bulk-generating tablet / pen / tablet-family / pen-compat
+// JSON for a new brand. Adapted from the script used to add Apple iPads
 // (35 tablets, 4 families, 4 pen-compat groups) — see CLAUDE.md
 // "Adding a new brand" for the full checklist.
 //
@@ -8,28 +8,45 @@
 //   - Display.Dimensions is derived from diagonal + pixel aspect
 //   - Meta.EntityId is derived from Brand + Model.Id consistently
 //   - Adding a new tablet = one entry in the array, not 30 lines of JSON
-//   - Files are written by writeDataJson (data-repo/lib/data-json.ts), the
-//     dataset's one canonical JSON writer (2-space indent, LF, UTF-8
-//     without BOM; RFC #45), so they can land in data-repo/data/ as-is
+//   - Everything is written in the dataset's one canonical JSON form
+//     (2-space indent, LF, UTF-8 without BOM; RFC #45), so it can land in
+//     data-repo/ as-is
+//
+// Where things go (RFC #45):
+//   - Tablets and pens are authored one record per file:
+//     source/tablets/<brand>/<EntityId>.json, source/pens/<brand>/<EntityId>.json
+//     (writeSourceRecord). The brand bundles data/tablets/<BRAND>-tablets.json
+//     and data/pens/<BRAND>-pens.json are GENERATED from them by
+//     regenerate() — never write a bundle directly (CI's `generate --check`
+//     fails on one that differs from its sources).
+//   - Families and pen-compat are still plain data/ files (writeDataJson).
 //
 // Usage:
 //   1. Copy this file within scripts/, e.g. cp gen-brand-data.example.mjs gen-foobar.mjs
-//      (the data-json import below is relative to scripts/)
-//   2. Edit BRAND, the TABLETS array, FAMILIES, and PEN_COMPAT
-//   3. Flip OUT_DIR from /tmp to data-repo/data/ when ready
-//   4. npx tsx scripts/gen-foobar.mjs   (tsx, not node — it imports a .ts module)
+//      (the data-repo imports below are relative to scripts/)
+//   2. Edit BRAND, the TABLETS and PENS arrays, FAMILIES, and PEN_COMPAT
+//   3. Preview: npx tsx scripts/gen-foobar.mjs   (tsx, not node — it imports .ts modules)
+//      writes a scratch tree under <os tmpdir>/gen-brand-output
+//   4. When ready: npx tsx scripts/gen-foobar.mjs --repo-root data-repo
 //   5. npx tsx data-repo/lib/run-data-quality.ts
 
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { writeDataJson } from '../data-repo/lib/data-json.ts';
+import { regenerate, sourceCollection, writeSourceRecord } from '../data-repo/lib/sources.ts';
 
 // --- Customize ---
 
 const BRAND = 'FOOBAR'; // must already be in BrandEnum (schemas.ts)
 const TODAY = new Date().toISOString();
-const OUT_DIR = '/tmp/gen-brand-output'; // change to absolute path of data-repo/data when ready
+// The data-repo root (the directory holding source/ and data/). Defaults to
+// a scratch tree; pass --repo-root data-repo to write the real thing.
+const rootArg = process.argv.indexOf('--repo-root');
+const REPO_ROOT = path.resolve(
+	rootArg >= 0 ? process.argv[rootArg + 1] : path.join(os.tmpdir(), 'gen-brand-output'),
+);
 
 // --- Helpers ---
 
@@ -96,6 +113,21 @@ const TABLETS = [
 		speakers: 'YES',
 	},
 	// ... add more tablets here
+];
+
+// --- Pens ---
+//
+// One entry per pen. EntityId is derived as brand.pen.<penid> (lowercase,
+// alphanumerics only), matching find-or-add-pen.ts and the data-quality check.
+
+const PENS = [
+	{
+		id: 'FBSTYLUS1', // PenId
+		name: 'Foobar Stylus', // PenName
+		family: '', // pen-family EntityId, or '' if none yet
+		year: '2025',
+	},
+	// ... add more pens here
 ];
 
 // --- Tablet families ---
@@ -189,6 +221,18 @@ function buildTablet(t) {
 
 const tabletRecords = TABLETS.map(buildTablet);
 
+const penRecords = PENS.map((p) => ({
+	EntityId: BRAND.toLowerCase() + '.pen.' + p.id.replace(/[^A-Za-z0-9]/g, '').toLowerCase(),
+	Brand: BRAND,
+	PenId: p.id,
+	PenName: p.name,
+	PenFamily: p.family,
+	ReleaseYear: p.year,
+	_id: randomUUID(),
+	_CreateDate: TODAY,
+	_ModifiedDate: TODAY,
+}));
+
 const familyRecords = FAMILIES.map((f) => ({
 	EntityId: f.entityId,
 	Brand: BRAND,
@@ -206,22 +250,40 @@ const penCompatRecords = PEN_COMPAT.map((c) => ({
 
 // --- Write ---
 
-fs.mkdirSync(path.join(OUT_DIR, 'tablets'), { recursive: true });
-fs.mkdirSync(path.join(OUT_DIR, 'tablet-families'), { recursive: true });
-fs.mkdirSync(path.join(OUT_DIR, 'pen-compat'), { recursive: true });
+// This template creates a NEW brand. Re-running over existing sources would
+// give every record a fresh _id and leave behind the files of any entry you
+// removed from the arrays, so refuse; delete the brand's source directories
+// first if you really mean to start over.
+const tablets = sourceCollection('tablets');
+const pens = sourceCollection('pens');
+for (const c of [tablets, pens]) {
+	const dir = path.join(REPO_ROOT, 'source', c.name, BRAND.toLowerCase());
+	if (fs.existsSync(dir)) {
+		console.error(`${dir} already exists; this template only creates a new brand.`);
+		process.exit(1);
+	}
+}
 
-writeDataJson(path.join(OUT_DIR, 'tablets', `${BRAND}-tablets.json`), {
-	DrawingTablets: tabletRecords,
-});
-writeDataJson(path.join(OUT_DIR, 'tablet-families', `${BRAND}-tablet-families.json`), {
+// Tablets and pens: one source file per record, then generate the bundles.
+for (const r of tabletRecords) writeSourceRecord(REPO_ROOT, tablets, r);
+for (const r of penRecords) writeSourceRecord(REPO_ROOT, pens, r);
+const regenerated = regenerate(REPO_ROOT);
+
+// Families and pen-compat stay plain data/ files.
+const dataDir = path.join(REPO_ROOT, 'data');
+fs.mkdirSync(path.join(dataDir, 'tablet-families'), { recursive: true });
+fs.mkdirSync(path.join(dataDir, 'pen-compat'), { recursive: true });
+writeDataJson(path.join(dataDir, 'tablet-families', `${BRAND}-tablet-families.json`), {
 	TabletFamilies: familyRecords,
 });
-writeDataJson(path.join(OUT_DIR, 'pen-compat', `${BRAND}-pen-compat.json`), {
+writeDataJson(path.join(dataDir, 'pen-compat', `${BRAND}-pen-compat.json`), {
 	PenCompat: penCompatRecords,
 });
 
 console.log(
-	`Wrote ${tabletRecords.length} tablets, ${familyRecords.length} families, ` +
-		`${penCompatRecords.length} pen-compat groups under ${OUT_DIR}.`,
+	`Wrote ${tabletRecords.length} tablet and ${penRecords.length} pen source files, ` +
+		`${familyRecords.length} families, ${penCompatRecords.length} pen-compat groups under ${REPO_ROOT}.`,
 );
 for (const r of tabletRecords) console.log('  ' + r.Meta.EntityId);
+for (const r of penRecords) console.log('  ' + r.EntityId);
+for (const f of regenerated) console.log(`Regenerated ${f}.`);

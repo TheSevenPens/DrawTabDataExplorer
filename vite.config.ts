@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { writeVersionJson } from './scripts/version-json.js';
+import { regenerate } from './data-repo/lib/sources.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -31,6 +32,60 @@ function localDataPlugin(): Plugin {
 					next();
 				}
 			});
+		},
+	};
+}
+
+// Tablets and pens are authored one file per record under data-repo/source/
+// and the brand bundles under data-repo/data/ are generated from them
+// (DrawTabData#45). Regenerate on dev start / build start, and in dev on
+// every source add, change or delete, so the running site always reflects
+// the sources. Writes land in data/, which the version-json watcher below
+// picks up, so the chain is source -> bundles -> version.json.
+//
+// CI never relies on this: verify.yml runs `generate --check` BEFORE any
+// build, so a stale committed bundle fails there instead of being repaired
+// here. A bad source file is reported and nothing is written.
+function sourceBundlesPlugin(): Plugin {
+	const dataRepoRoot = hasLocalData ? localDataPath : path.resolve(__dirname, 'data-repo');
+	const sourceDir = path.join(dataRepoRoot, 'source');
+	const run = (log: (msg: string) => void, fail: (msg: string) => void) => {
+		try {
+			const changed = regenerate(dataRepoRoot);
+			if (changed.length) log(`regenerated ${changed.join(', ')}`);
+		} catch (e) {
+			fail(e instanceof Error ? e.message : String(e));
+		}
+	};
+	return {
+		name: 'source-bundles',
+		buildStart() {
+			run(
+				(m) => this.info(m),
+				(m) => this.error(m),
+			);
+		},
+		configureServer(server) {
+			const logger = server.config.logger;
+			server.watcher.add(sourceDir);
+			// Coalesce bursts (an editor saving several files, a git checkout)
+			// into one run, and never run two at once.
+			let timer: ReturnType<typeof setTimeout> | undefined;
+			const schedule = (file: string) => {
+				if (!file.startsWith(sourceDir) || !file.endsWith('.json')) return;
+				clearTimeout(timer);
+				timer = setTimeout(
+					() =>
+						run(
+							(m) => logger.info(`[source-bundles] ${m}`, { timestamp: true }),
+							(m) => logger.error(`[source-bundles] ${m}`, { timestamp: true }),
+						),
+					150,
+				);
+			};
+			server.watcher.on('add', schedule);
+			server.watcher.on('change', schedule);
+			server.watcher.on('unlink', schedule);
 		},
 	};
 }
@@ -66,7 +121,14 @@ function versionJsonPlugin(): Plugin {
 }
 
 export default defineConfig({
-	plugins: [versionJsonPlugin(), ...(hasLocalData ? [localDataPlugin()] : []), sveltekit()],
+	// source-bundles first: its buildStart must finish before version-json's
+	// reads the bundles (both are synchronous, so plugin order is run order).
+	plugins: [
+		sourceBundlesPlugin(),
+		versionJsonPlugin(),
+		...(hasLocalData ? [localDataPlugin()] : []),
+		sveltekit(),
+	],
 	define: {
 		__DEV_LOCAL_DATA_AVAILABLE__: JSON.stringify(hasLocalData),
 	},

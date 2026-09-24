@@ -12,6 +12,7 @@
 		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"data-quality": "tsx data-repo/lib/run-data-quality.ts",
 		"data-format": "tsx data-repo/scripts/format-data.ts",
+		"data-generate": "tsx data-repo/scripts/generate.ts",
 		"verify-docs": "node scripts/verify-docs.mjs",
 		"pack-smoke": "node scripts/pack-smoke.mjs",
 		"lint": "eslint . && prettier --check .",

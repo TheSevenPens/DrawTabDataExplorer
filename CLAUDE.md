@@ -194,7 +194,12 @@ Anything else is automated or validated.
    `data-repo/lib/loader-shared.ts` (single source for filter dropdowns).
    The data-quality CLI's drift check (`runBrandDriftCheck`) flags it if
    you forget either.
-3. **Data files** — write `FOOBAR-tablets.json`, `FOOBAR-pens.json`, etc.
+3. **Data files** — tablets and pens are **source files**, one per record:
+   `data-repo/source/tablets/foobar/<EntityId>.json` and
+   `data-repo/source/pens/foobar/<EntityId>.json`; the `FOOBAR-tablets.json` /
+   `FOOBAR-pens.json` bundles are then **generated** by the dev server, or by
+   `npm run data-generate -- --write`. Other collections
+   (families, compat, …) are still `FOOBAR-*.json` files in `data/`.
    See `scripts/gen-brand-data.example.mjs` for a generator template that
    handles UUIDs, derived display dimensions, and EntityId derivation.
 4. **`Model.Family` convention** — the value must be the tablet-family
@@ -227,6 +232,17 @@ no BOM, LF, `JSON.stringify(v, null, 2) + "\n"`. Any script that edits
 `ConvertTo-Json` (it double-encoded non-ASCII, DrawTabData #43).
 `npm run data-format` checks every managed file byte-for-byte; `verify.yml`
 runs it first, plus a Windows job that proves checkouts stay LF.
+
+**Tablets and pens are authored one record per file** (DrawTabData #45
+phase 3): `data-repo/source/{tablets,pens}/<brand>/<EntityId>.json`. The
+`data-repo/data/{tablets,pens}/<BRAND>-*.json` bundles the app loads are
+**generated** from them — edit the source, never the bundle. Tools use
+`writeSourceRecord` + `regenerate` from `data-repo/lib/sources.ts`; the
+dev server regenerates when a source changes (`source-bundles` plugin in
+`vite.config.ts`). `npm run data-generate` checks the committed bundles
+match their sources and runs in `verify.yml` before the build. Records in
+a bundle are in EntityId order — rankings that need a stable order break
+ties on EntityId explicitly (`rankRows` in `tablet-analysis/helpers.ts`).
 
 What's automated (no manual action needed):
 

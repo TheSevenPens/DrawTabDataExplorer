@@ -42,6 +42,12 @@ jobs:
       - name: Data format
         run: npm run data-format
 
+      # Tablets/pens are generated from data-repo/source (DrawTabData#45).
+      # Check the COMMITTED bundles match before the build (whose Vite plugin
+      # regenerates) could quietly fix a stale one.
+      - name: Generated bundles match their sources
+        run: npm run data-generate
+
       - name: Lint
         run: npm run lint
 
@@ -103,6 +109,10 @@ jobs:
           bad=$(git ls-files --eol -- '*.json' | grep -v "i/lf.*w/lf" || true)
           if [ -n "$bad" ]; then echo "Not LF:"; echo "$bad"; exit 1; fi
 
-      # format-data.ts only imports node: builtins, so tsx is all it needs.
+      # These scripts only import node: builtins and data-repo/lib, so tsx
+      # is all they need.
       - name: Data format
         run: npx --yes tsx data-repo/scripts/format-data.ts
+
+      - name: Generated bundles match their sources
+        run: npx --yes tsx data-repo/scripts/generate.ts
