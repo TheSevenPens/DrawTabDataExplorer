@@ -8,17 +8,22 @@
 //   - Display.Dimensions is derived from diagonal + pixel aspect
 //   - Meta.EntityId is derived from Brand + Model.Id consistently
 //   - Adding a new tablet = one entry in the array, not 30 lines of JSON
+//   - Files are written by writeDataJson (data-repo/lib/data-json.ts), the
+//     dataset's one canonical JSON writer (2-space indent, LF, UTF-8
+//     without BOM; RFC #45), so they can land in data-repo/data/ as-is
 //
 // Usage:
-//   1. Copy this file, e.g. cp gen-brand-data.example.mjs gen-foobar.mjs
+//   1. Copy this file within scripts/, e.g. cp gen-brand-data.example.mjs gen-foobar.mjs
+//      (the data-json import below is relative to scripts/)
 //   2. Edit BRAND, the TABLETS array, FAMILIES, and PEN_COMPAT
 //   3. Flip OUT_DIR from /tmp to data-repo/data/ when ready
-//   4. node scripts/gen-foobar.mjs
+//   4. npx tsx scripts/gen-foobar.mjs   (tsx, not node — it imports a .ts module)
 //   5. npx tsx data-repo/lib/run-data-quality.ts
 
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { writeDataJson } from '../data-repo/lib/data-json.ts';
 
 // --- Customize ---
 
@@ -205,18 +210,15 @@ fs.mkdirSync(path.join(OUT_DIR, 'tablets'), { recursive: true });
 fs.mkdirSync(path.join(OUT_DIR, 'tablet-families'), { recursive: true });
 fs.mkdirSync(path.join(OUT_DIR, 'pen-compat'), { recursive: true });
 
-fs.writeFileSync(
-	path.join(OUT_DIR, 'tablets', `${BRAND}-tablets.json`),
-	JSON.stringify({ DrawingTablets: tabletRecords }, null, 2) + '\n',
-);
-fs.writeFileSync(
-	path.join(OUT_DIR, 'tablet-families', `${BRAND}-tablet-families.json`),
-	JSON.stringify({ TabletFamilies: familyRecords }, null, 2) + '\n',
-);
-fs.writeFileSync(
-	path.join(OUT_DIR, 'pen-compat', `${BRAND}-pen-compat.json`),
-	JSON.stringify({ PenCompat: penCompatRecords }, null, 2) + '\n',
-);
+writeDataJson(path.join(OUT_DIR, 'tablets', `${BRAND}-tablets.json`), {
+	DrawingTablets: tabletRecords,
+});
+writeDataJson(path.join(OUT_DIR, 'tablet-families', `${BRAND}-tablet-families.json`), {
+	TabletFamilies: familyRecords,
+});
+writeDataJson(path.join(OUT_DIR, 'pen-compat', `${BRAND}-pen-compat.json`), {
+	PenCompat: penCompatRecords,
+});
 
 console.log(
 	`Wrote ${tabletRecords.length} tablets, ${familyRecords.length} families, ` +

@@ -1,11 +1,12 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S npx tsx
 /**
  * Apply (force, 0) and/or (force, 100) endpoint records to existing
- * pressure-response sessions in the data-repo, surgically splicing the
- * new tuples into each brand's JSON file in-place while preserving the
- * PowerShell wide-indent formatting (29-space record braces, 33-space
- * fields, 45-space Records-array close, 49-space record brackets,
- * 53-space numbers).
+ * pressure-response sessions in the data-repo. Each brand's JSON file is
+ * read, the new tuples are added to the matching sessions' Records, and
+ * the file is written back through writeDataJson
+ * (data-repo/lib/data-json.ts), the dataset's one canonical JSON writer
+ * (2-space indent, LF, UTF-8 without BOM; RFC #45). On an
+ * already-canonical file the diff is just the added tuples.
  *
  * Input: a JSON file produced by the /pressure-backfill dev UI, with
  * one entry per session edit:
@@ -16,15 +17,17 @@
  *     "date":             "2024-09-02",    // for the log line only
  *     "entityId":         "wacom.session.wap.0001_2024-09-02",
  *     "penLabel":         "Pro Pen 2 (KP-504E)",
- *     "prependPiafForce":  2.2,             // optional — gets prepended as [force, 0.0]
- *     "appendPmaxForce":  714              // optional — gets appended as [force, 100.0]
+ *     "prependPiafForce":  2.2,             // optional — gets prepended as [force, 0]
+ *     "appendPmaxForce":  714              // optional — gets appended as [force, 100]
  *   }
  *
- * Usage:
- *   node scripts/apply-pressure-backfill.mjs [path/to/edits.json] [--dry-run]
+ * Usage (run with tsx — the script imports a .ts module):
+ *   npx tsx scripts/apply-pressure-backfill.mjs [path/to/edits.json] [--dry-run]
  *
  * Defaults to scripts/pressure-backfill-edits.json when no path is given.
  * With --dry-run, prints what it WOULD change without writing files.
+ * --data-dir <dir> reads and writes <dir> instead of data-repo/data (for
+ * testing against a copy).
  *
  * Per issue #212. After running, validate with `npm run data-quality`.
  */
@@ -32,11 +35,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
+import { readDataJson, writeDataJson } from '../data-repo/lib/data-json.ts';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
-const PR_DIR = path.join(ROOT, 'data-repo', 'data', 'pressure-response');
 
 const args = process.argv.slice(2);
+const dataDirAt = args.indexOf('--data-dir');
+const dataDirArg = dataDirAt >= 0 ? args.splice(dataDirAt, 2)[1] : undefined;
+if (dataDirAt >= 0 && !dataDirArg) {
+	console.error('--data-dir needs a directory');
+	process.exit(1);
+}
+const DATA_DIR = dataDirArg ? path.resolve(dataDirArg) : path.join(ROOT, 'data-repo', 'data');
+const PR_DIR = path.join(DATA_DIR, 'pressure-response');
+
 const dryRun = args.includes('--dry-run');
 const editsPath = path.resolve(
 	args.find((a) => !a.startsWith('--')) ??
@@ -54,101 +66,26 @@ if (!Array.isArray(edits)) {
 	process.exit(1);
 }
 
-// --- PowerShell ConvertTo-Json number formatting -------------------------
-//
-// Matches scripts/add-pressure-session.mjs: round to `dp` decimal places,
-// then either emit ".toString()" (preserves natural form like "167.3") or
-// ".toFixed(1)" for integer-valued floats so they keep a `.0` suffix
-// (e.g. "5.0" not "5", "100.0" not "100"). This matches how PowerShell's
-// ConvertTo-Json serialises doubles, which the rest of the file uses.
-function fmt(n, dp) {
-	const v = +n.toFixed(dp);
-	return Number.isInteger(v) ? v.toFixed(1) : v.toString();
-}
-
-const EOL = '\r\n';
-const I45 = ' '.repeat(45); // Records-array closer
-const I49 = ' '.repeat(49); // record `[` / `]`
-const I53 = ' '.repeat(53); // numbers inside a record
+// Forces are rounded to 1dp and stored as plain JSON numbers, like the
+// rest of each session's Records (add-pressure-session.mjs does the same).
+const round = (n, dp) => +n.toFixed(dp);
 
 /**
- * Build the record-block text for a single [force, pct] tuple, including
- * leading newline (so the inserter can drop it directly between existing
- * lines). The `terminator` is `'],'` for non-last and `']'` for last.
+ * Apply the prepend/append edit to its session inside the parsed brand
+ * file (mutates `doc`). Throws if the session's _id or Records array
+ * can't be found.
  */
-function recordBlock(force, pct, terminator) {
-	return (
-		I49 + '[' + EOL + I53 + fmt(force, 1) + ',' + EOL + I53 + fmt(pct, 2) + EOL + I49 + terminator
-	);
-}
+function applyEdit(doc, edit) {
+	const session = doc.PressureResponse.find((s) => s._id === edit._id);
+	if (!session) throw new Error(`Session ${edit._id} not found in file`);
+	if (!Array.isArray(session.Records)) throw new Error(`Records not found for ${edit._id}`);
 
-/**
- * Surgically apply prepend/append edits to a single session inside the
- * file text. Throws if the session's _id or Records structure can't be
- * located. Returns the new text.
- */
-function applyEditToText(text, edit) {
-	const idMarker = `"_id":  "${edit._id}"`;
-	const idIdx = text.indexOf(idMarker);
-	if (idIdx < 0) {
-		throw new Error(`Session ${edit._id} not found in file`);
-	}
-
-	// Within the session block (which appears before `_id`), find the
-	// `"Records":  [` opener immediately preceding this _id.
-	const recordsOpener = `"Records":  [`;
-	const recordsOpenerIdx = text.lastIndexOf(recordsOpener, idIdx);
-	if (recordsOpenerIdx < 0) {
-		throw new Error(`Records opener not found for ${edit._id}`);
-	}
-
-	// `<I45>],<EOL>` closes the Records array. It must lie between the
-	// opener and _id; if not the file structure has drifted.
-	const recordsCloseMarker = EOL + I45 + '],' + EOL;
-	const recordsCloseIdx = text.indexOf(recordsCloseMarker, recordsOpenerIdx);
-	if (recordsCloseIdx < 0 || recordsCloseIdx > idIdx) {
-		throw new Error(`Records close not found for ${edit._id}`);
-	}
-
-	let out = text;
-
-	// --- Append (force, 100): replace the existing last record's terminator
-	// `<EOL><I49>]<EOL>` (note: no comma) with `<EOL><I49>],<EOL>` followed by
-	// a new record block whose terminator IS `]` (since it becomes the new
-	// last record). Locate the last-record closer by searching backward from
-	// the array close (which scopes us to THIS session's Records block —
-	// indexing from the start of the file would hit the first session's
-	// Records on every iteration).
-	if (typeof edit.appendPmaxForce === 'number') {
-		const lastCloser = EOL + I49 + ']' + EOL;
-		const lastCloserIdx = out.lastIndexOf(lastCloser, recordsCloseIdx);
-		if (lastCloserIdx < 0 || lastCloserIdx < recordsOpenerIdx) {
-			throw new Error(`Last-record closer not found for ${edit._id}`);
-		}
-		const newSection = EOL + I49 + '],' + EOL + recordBlock(edit.appendPmaxForce, 100, ']') + EOL;
-		out = out.slice(0, lastCloserIdx) + newSection + out.slice(lastCloserIdx + lastCloser.length);
-	}
-
-	// --- Prepend (force, 0): insert a new record block directly after the
-	// `"Records":  [<EOL>` opener for THIS session. We must scope to the
-	// target session — `indexOf(opener)` from the start of the file would
-	// inject into the first session's Records on every iteration. Use the
-	// opener idx we already located (it's still valid: any append above ran
-	// AFTER it and extended the file later than recordsOpenerIdx).
 	if (typeof edit.prependPiafForce === 'number') {
-		const openerWithEol = recordsOpener + EOL;
-		// Re-verify the opener is still at recordsOpenerIdx after any append;
-		// the append only modifies bytes after this position so the offset
-		// should be stable, but assert it to be safe.
-		if (out.slice(recordsOpenerIdx, recordsOpenerIdx + openerWithEol.length) !== openerWithEol) {
-			throw new Error(`Records opener shifted unexpectedly for ${edit._id}`);
-		}
-		const insertAt = recordsOpenerIdx + openerWithEol.length;
-		const newSection = recordBlock(edit.prependPiafForce, 0, '],') + EOL;
-		out = out.slice(0, insertAt) + newSection + out.slice(insertAt);
+		session.Records.unshift([round(edit.prependPiafForce, 1), 0]);
 	}
-
-	return out;
+	if (typeof edit.appendPmaxForce === 'number') {
+		session.Records.push([round(edit.appendPmaxForce, 1), 100]);
+	}
 }
 
 // --- Group edits by brand and apply per file ------------------------------
@@ -178,22 +115,28 @@ for (const [brand, brandEdits] of byBrand) {
 		process.exit(1);
 	}
 
-	let text = fs.readFileSync(filePath, 'utf8');
-	const origLen = text.length;
+	const doc = readDataJson(filePath);
+	if (!Array.isArray(doc.PressureResponse)) {
+		console.error(`No PressureResponse array in ${filePath}`);
+		process.exit(1);
+	}
+	let tuples = 0;
 
 	console.log(`\n[${brand}] ${brandEdits.length} sessions`);
 	for (const e of brandEdits) {
 		const tag = `${e.inventoryId} ${e.date}`;
 		try {
-			text = applyEditToText(text, e);
+			applyEdit(doc, e);
 			const parts = [];
 			if (typeof e.prependPiafForce === 'number') {
-				parts.push(`Piaf=${fmt(e.prependPiafForce, 1)}`);
+				parts.push(`Piaf=${round(e.prependPiafForce, 1)}`);
 				totalPrepend++;
+				tuples++;
 			}
 			if (typeof e.appendPmaxForce === 'number') {
-				parts.push(`Pmax=${fmt(e.appendPmaxForce, 1)}`);
+				parts.push(`Pmax=${round(e.appendPmaxForce, 1)}`);
 				totalAppend++;
+				tuples++;
 			}
 			console.log(`  ✓ ${tag.padEnd(22)} ${parts.join(' ')}`);
 			totalApplied++;
@@ -205,9 +148,9 @@ for (const [brand, brandEdits] of byBrand) {
 
 	console.log(
 		`[${brand}] ${dryRun ? 'would write' : 'writing'} ${path.relative(ROOT, filePath)} ` +
-			`(+${text.length - origLen} bytes)`,
+			`(+${tuples} records)`,
 	);
-	if (!dryRun) fs.writeFileSync(filePath, text);
+	if (!dryRun) writeDataJson(filePath, doc);
 }
 
 console.log(

@@ -219,6 +219,15 @@ Data added ahead of its referenced entity (e.g. pressure sessions on a
 device with no tablet record) fails the check — add a minimal record for
 the referenced entity in the same change.
 
+**Data files have one canonical format** (DrawTabData #45 phase 1): UTF-8,
+no BOM, LF, `JSON.stringify(v, null, 2) + "\n"`. Any script that edits
+`data-repo/data/` reads with `readDataJson` and writes with
+`writeDataJson` from `data-repo/lib/data-json.ts` — never hand-rolled
+`JSON.stringify`, text splicing at an indentation, or PowerShell
+`ConvertTo-Json` (it double-encoded non-ASCII, DrawTabData #43).
+`npm run data-format` checks every managed file byte-for-byte; `verify.yml`
+runs it first, plus a Windows job that proves checkouts stay LF.
+
 What's automated (no manual action needed):
 
 - **Loader gating** — the URL and disk loaders both attempt every brand in

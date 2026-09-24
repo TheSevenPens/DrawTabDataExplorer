@@ -37,6 +37,11 @@ jobs:
         # static/<entity> to data-repo/data/<entity>. adapter-static
         # follows symlinks at build time and writes real files to build/.
 
+      # First, and before anything that could write data: the committed data
+      # files must already be canonical (RFC #45). This never rewrites them.
+      - name: Data format
+        run: npm run data-format
+
       - name: Lint
         run: npm run lint
 
@@ -60,8 +65,44 @@ jobs:
         env:
           NODE_ENV: production
 
+      # Packs data-repo and queriton as npm would publish them and imports
+      # them from a throwaway project. Needs the npm registry (it installs
+      # tsx), so it's its own step: a registry hiccup shows here, not as a
+      # data failure.
+      - name: Package smoke test (network)
+        run: npm run pack-smoke
+
       - name: Upload Pages artifact
         if: inputs.upload-pages
         uses: actions/upload-pages-artifact@v5
         with:
           path: build
+
+  # Line endings are the one thing the Linux job can't catch: a Windows
+  # checkout with core.autocrlf=true (the runner default) used to turn data
+  # files CRLF. data-repo/.gitattributes forces LF; this proves it on a real
+  # Windows clone and runs the byte-exact format check there.
+  data-format-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Data files are checked out LF
+        shell: bash
+        working-directory: data-repo
+        run: |
+          echo "core.autocrlf=$(git config --get core.autocrlf || echo unset)"
+          bad=$(git ls-files --eol -- '*.json' | grep -v "i/lf.*w/lf" || true)
+          if [ -n "$bad" ]; then echo "Not LF:"; echo "$bad"; exit 1; fi
+
+      # format-data.ts only imports node: builtins, so tsx is all it needs.
+      - name: Data format
+        run: npx --yes tsx data-repo/scripts/format-data.ts
