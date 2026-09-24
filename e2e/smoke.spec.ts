@@ -213,3 +213,52 @@ test.describe('Data load failures are visible, not silent', () => {
 		await expect(page.getByRole('table').first()).toBeVisible();
 	});
 });
+
+// #334: history and saved-view state.
+test.describe('Tab history and saved views', () => {
+	test('Back to the hashless URL restores the default tab', async ({ page }) => {
+		await page.goto('/entity/wacom.tablet.ctl4100');
+		const active = page.locator('.detail-tabs button.active');
+		await expect(active).toHaveText(/model/i);
+		await page.locator('.detail-tabs button', { hasText: /^specs$/i }).click();
+		await expect(active).toHaveText(/specs/i);
+		await page.goBack();
+		await expect(active).toHaveText(/model/i);
+		await page.goForward();
+		await expect(active).toHaveText(/specs/i);
+	});
+
+	test('a loaded user view can be renamed, and a name collision is refused', async ({ page }) => {
+		await page.goto('/pens');
+		await page.evaluate(() =>
+			localStorage.setItem(
+				'drawtabdata-views-pens',
+				JSON.stringify([
+					{ name: 'A', steps: [] },
+					{ name: 'B', steps: [] },
+					{ name: 'Broken', steps: [null] },
+				]),
+			),
+		);
+		await page.reload();
+		await page.getByRole('button', { name: 'Views' }).click();
+		const picker = page.locator('.saved-views select');
+		await expect(picker.locator('option')).toHaveText(['Default', '──────────', 'A', 'B']);
+
+		// Loading a view closes the panel; reopening must keep it selected.
+		await picker.selectOption('A');
+		await page.getByRole('button', { name: 'Views' }).click();
+		await expect(picker).toHaveValue('A');
+
+		await page.getByRole('button', { name: 'Rename' }).click();
+		await page.locator('.saved-views .rename-input').fill('b');
+		await page.getByRole('button', { name: 'OK' }).click();
+		await expect(page.locator('.saved-views')).toContainText('A view named "b" already exists.');
+		const stored = await page.evaluate(() =>
+			JSON.parse(localStorage.getItem('drawtabdata-views-pens') ?? '[]').map(
+				(v: { name: string }) => v.name,
+			),
+		);
+		expect(stored).toEqual(['A', 'B', 'Broken']);
+	});
+});

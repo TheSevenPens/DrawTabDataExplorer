@@ -4,6 +4,7 @@
 	import SortBar from '$lib/components/SortBar.svelte';
 	import ColumnBar from '$lib/components/ColumnBar.svelte';
 	import SavedViews from '$lib/components/SavedViews.svelte';
+	import { BUILTIN_VIEW_NAME } from '$lib/views.js';
 
 	interface FilterItem {
 		field: string;
@@ -44,6 +45,8 @@
 	} = $props();
 
 	let openPanel: 'filter' | 'sort' | 'columns' | 'views' | null = $state(null);
+	// Kept here, not in SavedViews: the views panel unmounts when a view loads.
+	let selectedViewName = $state(BUILTIN_VIEW_NAME);
 
 	function toggle(name: 'filter' | 'sort' | 'columns' | 'views') {
 		openPanel = openPanel === name ? null : name;
@@ -97,6 +100,7 @@
 		{#if openPanel === 'views'}
 			<div class="panel views-panel">
 				<SavedViews
+					bind:selectedName={selectedViewName}
 					{steps}
 					{entityType}
 					{defaultView}

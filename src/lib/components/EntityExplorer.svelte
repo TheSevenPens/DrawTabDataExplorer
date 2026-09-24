@@ -28,6 +28,7 @@
 	} from '$lib/entity-explorer/search.js';
 	import { cellText } from '$lib/cell-text.js';
 	import { migrateFilterValue } from '$lib/filter-value-migrations.js';
+	import { parseFilterParams } from '$lib/filter-url.js';
 	import { unitPreference } from '$lib/unit-store.js';
 
 	let {
@@ -90,18 +91,13 @@
 
 	function getInitialFilters(): FilterItem[] {
 		// Check URL for ?filter=Field:operator:value params
-		const urlFilters = page.url.searchParams.getAll('filter');
+		const urlFilters = parseFilterParams(page.url.searchParams);
 		if (urlFilters.length > 0) {
-			return urlFilters
-				.map((f) => {
-					const parts = f.split(':');
-					const field = parts[0] ?? '';
-					const operator = parts[1] ?? '==';
-					// Old links may carry a display label (Brand:==:Wacom) — #332.
-					const value = migrateFilterValue(field, operator, parts.slice(2).join(':'));
-					return { field, operator, value };
-				})
-				.filter((f) => f.field);
+			// Old links may carry a display label (Brand:==:Wacom) — #332.
+			return urlFilters.map((f) => ({
+				...f,
+				value: migrateFilterValue(f.field, f.operator, f.value),
+			}));
 		}
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
 		return parsed
