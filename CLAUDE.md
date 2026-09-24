@@ -196,10 +196,21 @@ Anything else is automated or validated.
    reference. Older Wacom entries with plain names like `"Cintiq"` are
    legacy and produce orphan-reference warnings — don't follow that example.
 5. **Validate** — `npm run data-quality` (alias for
-   `tsx data-repo/lib/run-data-quality.ts`). Expect zero issues introduced
-   by your changes; existing pre-existing issues (HUION/WACOM EntityId
-   mismatches, legacy Wacom plain-name family refs, VEIKK brand drift) are
-   unrelated.
+   `tsx data-repo/lib/run-data-quality.ts`). Expect **zero** issues — the
+   dataset is clean, and the `Verify` workflow runs this on every pull
+   request, so any issue fails the check.
+
+## CI — `verify.yml` gates every change
+
+[`.github/workflows/verify.yml`](.github/workflows/verify.yml) runs lint,
+type-check, unit tests, `data-quality`, e2e and the production build on
+every pull request. `deploy.yml` calls the same workflow on pushes to
+`main` and deploys the build it produced, so nothing reaches Pages
+without passing it. Add a new check to `verify.yml`, not `deploy.yml`.
+
+Data added ahead of its referenced entity (e.g. pressure sessions on a
+device with no tablet record) fails the check — add a minimal record for
+the referenced entity in the same change.
 
 What's automated (no manual action needed):
 
