@@ -4,6 +4,7 @@
 // (GitHub #219). Generic over the row type so callers keep their entity types.
 
 import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
+import { compileSearch } from '$lib/search-match.js';
 
 /** Keep rows matching every active quick filter (field key → exact value).
  * Entries with an empty value are ignored; unknown field keys pass through. */
@@ -49,19 +50,27 @@ export function applyOwnedOnly<T>(rows: T[], field: AnyFieldDisplayDef | undefin
  * Both strings are tested, not one or the other: the rendered text is what
  * the reader can see, and the raw value is what they may have pasted from a
  * URL or an id column. Case-insensitive substring; blank query is a no-op.
+ *
+ * `strippedCandidates` adds the separator-insensitive check for identity
+ * fields (PTK1240 finds PTK-1240 — GitHub #327): return the single-value
+ * candidates for a row/field, or null when the field isn't eligible. Pass
+ * `strippedCandidates` from $lib/search-match.ts. The rules live there.
  */
 export function applyTextSearch<T>(
 	rows: T[],
 	query: string,
 	searchDefs: AnyFieldDisplayDef[],
 	displayText?: (row: T, field: AnyFieldDisplayDef) => string,
+	strippedCandidates?: (row: T, field: AnyFieldDisplayDef) => string[] | null,
 ): T[] {
-	const q = query.trim().toLowerCase();
-	if (!q) return rows;
-	const hit = (s: string | null | undefined) => s != null && String(s).toLowerCase().includes(q);
+	const search = compileSearch(query);
+	if (!search) return rows;
 	return rows.filter((row) =>
 		searchDefs.some(
-			(f) => hit(f.getValue(row)) || (displayText ? hit(displayText(row, f)) : false),
+			(f) =>
+				search.exact(f.getValue(row)) ||
+				(displayText ? search.exact(displayText(row, f)) : false) ||
+				(strippedCandidates?.(row, f) ?? []).some((c) => search.stripped(c)),
 		),
 	);
 }

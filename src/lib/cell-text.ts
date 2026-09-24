@@ -26,6 +26,25 @@ export interface CellTextOptions {
 }
 
 /**
+ * The separate pieces of text a cell shows, before they are joined: one
+ * entry per link label when the field has `cellLinks`, otherwise a single
+ * entry. Separator-insensitive search matches each piece on its own, so it
+ * can never join the end of one label to the start of the next (#327).
+ */
+export function cellTextParts(
+	// Heterogeneous entity rows — see table-types.ts (#221).
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	item: any,
+	field: AnyFieldDisplayDef,
+	{ cellLinks = {}, unitPreference }: CellTextOptions,
+): string[] {
+	const links = cellLinks[field.key];
+	if (links) return links(item).map((l) => l.label);
+	if (field.getDisplayValue) return [field.getDisplayValue(item)];
+	return [formatValue(field.getValue(item), field.unit, unitPreference)];
+}
+
+/**
  * The text a cell shows for `field`, resolved in the same order
  * `ResultsTable` renders it: cell-link labels, then `getDisplayValue`,
  * then the unit-formatted stored value.
@@ -35,17 +54,10 @@ export interface CellTextOptions {
  * every label.
  */
 export function cellText(
-	// Heterogeneous entity rows — see table-types.ts (#221).
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	item: any,
 	field: AnyFieldDisplayDef,
-	{ cellLinks = {}, unitPreference }: CellTextOptions,
+	options: CellTextOptions,
 ): string {
-	const links = cellLinks[field.key];
-	if (links)
-		return links(item)
-			.map((l) => l.label)
-			.join(', ');
-	if (field.getDisplayValue) return field.getDisplayValue(item);
-	return formatValue(field.getValue(item), field.unit, unitPreference);
+	return cellTextParts(item, field, options).join(', ');
 }

@@ -400,6 +400,29 @@ Two consequences worth knowing:
   label _and_ key, which is the same rendered-plus-raw rule. Only
   `EntityExplorer` was matching something the reader could not see.
 
+### IDs match with or without separators — identity fields only
+
+People write `PTK-1240` and `PTK1240` interchangeably, so search has a
+second, **separator-insensitive** check (GitHub #327), in
+[`src/lib/search-match.ts`](src/lib/search-match.ts). The exact check
+above is unchanged; the new one only adds matches. It runs when:
+
+- **the query contains a letter** — `13.3`, `2015-11` stay exact;
+- **the field is an identity field** — `IDENTITY_SEARCH_KEYS`: the
+  tablet/pen `identity` roles from `field-roles.ts` plus link labels,
+  family/brand/driver names. **Measurements and dates stay exact**:
+  CTE-450's dimensions `147.6 x 92.3` and the query `1476 x 92.3` both strip
+  to `1476x923`, and the `x` passes the letter test.
+
+Both sides are NFC'd, lowercased and stripped to letters, **marks** and
+numbers (`[^\p{L}\p{M}\p{N}]` — keeping marks is what keeps कि ≠ की). Each
+candidate is a **single value** — every alternate name and link label on
+its own, via `cellTextParts` — never a joined string, so stripping can't
+glue the end of one value to the start of the next. Adding a new ID/name
+field? Give it an identity role or add its key to `IDENTITY_SEARCH_KEYS`;
+a list-valued one also needs an entry in `LIST_VALUES`. Both pickers use
+the same `compileSearch`. Reference-section searches don't (yet).
+
 ## `getValue` is the stored value, never a label
 
 A FieldDef's `getValue` is what filters, sorts, quick filters, saved views

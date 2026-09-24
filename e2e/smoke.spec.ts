@@ -365,3 +365,50 @@ test.describe('Data loading budget', () => {
 		expect(seen.some((r) => r.url.includes('/pressure-response/'))).toBe(false);
 	});
 });
+
+// #327: model IDs match with or without separators, on identity fields only.
+test.describe('Separator-insensitive ID search', () => {
+	async function rowsFor(page: Page, path: string, query: string): Promise<string> {
+		await page.goto(path, { waitUntil: 'networkidle' });
+		const box = page.getByPlaceholder('Search...');
+		await expect(box).toBeVisible({ timeout: 10_000 });
+		await box.fill(query);
+		await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 5_000 });
+		return (await page.locator('tbody').innerText()).replace(/\s+/g, ' ');
+	}
+
+	test('/tablets: "ptk 1240" finds PTK-1240', async ({ page }) => {
+		expect(await rowsFor(page, '/tablets', 'ptk 1240')).toContain('PTK-1240');
+	});
+
+	test('/tablet-inventory: "PTK_1240" finds PTK-1240 units', async ({ page }) => {
+		expect(await rowsFor(page, '/tablet-inventory', 'PTK_1240')).toContain('PTK-1240');
+	});
+
+	test('/pens: "kp503e" finds KP-503E', async ({ page }) => {
+		expect(await rowsFor(page, '/pens', 'kp503e')).toContain('KP-503E');
+	});
+
+	test('/pen-inventory: "KP 503E" finds KP-503E units', async ({ page }) => {
+		expect(await rowsFor(page, '/pen-inventory', 'KP 503E')).toMatch(/\w/);
+	});
+
+	test('tablet picker: "ptk1240" lists PTK-1240', async ({ page }) => {
+		await page.goto('/tablet-compare');
+		await page.getByRole('button', { name: /add tablet/i }).click();
+		const dialog = page.getByRole('dialog');
+		await dialog.locator('input').first().fill('ptk1240');
+		await expect(dialog).toContainText('PTK-1240');
+	});
+
+	test('pen picker: "kp503e" lists KP-503E', async ({ page }) => {
+		await page.goto('/pen-compare');
+		await page
+			.getByRole('button', { name: /add pen/i })
+			.first()
+			.click();
+		const dialog = page.getByRole('dialog');
+		await dialog.locator('input').first().fill('kp503e');
+		await expect(dialog).toContainText('KP-503E');
+	});
+});
