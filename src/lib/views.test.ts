@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadViews, saveView, deleteView, renameView } from './views.js';
 import type { Step, SelectStep, SortStep } from '@thesevenpens/queriton';
 
@@ -140,5 +140,66 @@ describe('migration from legacy key', () => {
 	it('does nothing when the legacy key is empty', () => {
 		expect(loadViews(ENTITY)).toEqual([]);
 		expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
+	});
+});
+
+// GitHub #334: stored state that used to crash or corrupt the picker.
+describe('invalid and colliding stored views', () => {
+	it('skips a view whose steps contain a non-step (e.g. null)', () => {
+		localStorage.setItem(
+			KEY,
+			JSON.stringify([
+				{ name: 'bad', steps: [null] },
+				{ name: 'good', steps: [STEP('select')] },
+			]),
+		);
+		expect(loadViews(ENTITY).map((v) => v.name)).toEqual(['good']);
+	});
+
+	it('suffixes duplicate names already in storage instead of dropping them', () => {
+		localStorage.setItem(
+			KEY,
+			JSON.stringify([
+				{ name: 'B', steps: [] },
+				{ name: 'B', steps: [STEP('sort')] },
+			]),
+		);
+		const views = loadViews(ENTITY);
+		expect(views.map((v) => v.name)).toEqual(['B', 'B (2)']);
+		expect(views[1].steps).toEqual([STEP('sort')]);
+	});
+
+	it('suffixes a stored view that took the built-in name', () => {
+		localStorage.setItem(KEY, JSON.stringify([{ name: 'Default', steps: [] }]));
+		expect(loadViews(ENTITY).map((v) => v.name)).toEqual(['Default (2)']);
+	});
+
+	it('refuses to rename onto an existing name (case-insensitive)', () => {
+		saveView(ENTITY, 'A', []);
+		saveView(ENTITY, 'B', []);
+		expect(renameView(ENTITY, 'A', 'b')).toBe('exists');
+		expect(loadViews(ENTITY).map((v) => v.name)).toEqual(['A', 'B']);
+	});
+
+	it('refuses the built-in name for save and rename', () => {
+		expect(saveView(ENTITY, ' default ', [])).toBe('reserved');
+		saveView(ENTITY, 'A', []);
+		expect(renameView(ENTITY, 'A', 'Default')).toBe('reserved');
+		expect(loadViews(ENTITY).map((v) => v.name)).toEqual(['A']);
+	});
+
+	it('reports a missing view on rename', () => {
+		expect(renameView(ENTITY, 'nope', 'x')).toBe('missing');
+	});
+
+	it('reports a storage failure instead of pretending it saved', () => {
+		const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+			throw new DOMException('quota', 'QuotaExceededError');
+		});
+		try {
+			expect(saveView(ENTITY, 'A', [])).toBe('storage');
+		} finally {
+			spy.mockRestore();
+		}
 	});
 });

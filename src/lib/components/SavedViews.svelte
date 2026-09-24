@@ -1,25 +1,50 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Step } from '@thesevenpens/queriton';
-	import { type SavedView, loadViews, saveView, deleteView, renameView } from '$lib/views.js';
+	import {
+		type SavedView,
+		type ViewWriteResult,
+		BUILTIN_VIEW_NAME,
+		loadViews,
+		saveView,
+		deleteView,
+		renameView,
+	} from '$lib/views.js';
 	import { promptModal } from '$lib/modal-store.js';
+	import StatusMessage from '$lib/components/StatusMessage.svelte';
 
 	let {
 		steps,
 		entityType,
 		defaultView,
 		onload,
+		selectedName = $bindable(BUILTIN_VIEW_NAME),
 	}: {
 		steps: Step[];
 		entityType: string;
 		defaultView: Step[];
 		onload: (steps: Step[]) => void;
+		/** Bound by the parent: loading a view closes the panel, which unmounts
+		 * this component, so the selection has to outlive it — otherwise the
+		 * picker reopened on "Default" and Rename/Delete could never reach a
+		 * user view. */
+		selectedName?: string;
 	} = $props();
 
-	let BUILTIN_VIEWS: SavedView[] = $derived([{ name: 'Default', steps: defaultView }]);
+	let BUILTIN_VIEWS: SavedView[] = $derived([{ name: BUILTIN_VIEW_NAME, steps: defaultView }]);
 
 	let userViews = $state<SavedView[]>([]);
-	let selectedName = $state('Default');
+	// Why the last save/rename/delete didn't happen, if it didn't.
+	let problem = $state('');
+
+	function explain(result: ViewWriteResult, name: string): string {
+		if (result === 'reserved')
+			return `"${BUILTIN_VIEW_NAME}" is the built-in view — pick another name.`;
+		if (result === 'exists') return `A view named "${name}" already exists.`;
+		if (result === 'missing') return 'That view no longer exists.';
+		if (result === 'storage') return 'The browser refused to save (storage full or blocked).';
+		return '';
+	}
 	let renaming = $state(false);
 	let renameValue = $state('');
 
@@ -39,15 +64,16 @@
 	async function handleCreate() {
 		const name = await promptModal('Save view as', '', { confirmLabel: 'Save' });
 		if (!name) return;
-		saveView(entityType, name, steps);
+		const result = saveView(entityType, name, steps);
+		problem = explain(result, name.trim());
 		refreshViews();
-		selectedName = name;
+		if (result === 'ok') selectedName = name.trim();
 	}
 
 	function handleDelete() {
 		if (!selectedView) return;
-		deleteView(entityType, selectedView.name);
-		selectedName = 'Default';
+		problem = explain(deleteView(entityType, selectedView.name), selectedView.name);
+		selectedName = BUILTIN_VIEW_NAME;
 		refreshViews();
 	}
 
@@ -61,7 +87,10 @@
 		if (!selectedView) return;
 		const newName = renameValue.trim();
 		if (newName && newName !== selectedView.name) {
-			renameView(entityType, selectedView.name, newName);
+			const result = renameView(entityType, selectedView.name, newName);
+			problem = explain(result, newName);
+			// Keep the input open on a refusal so the name can be corrected.
+			if (result !== 'ok') return;
 			refreshViews();
 			selectedName = newName;
 		}
@@ -70,6 +99,7 @@
 	}
 
 	function cancelRename() {
+		problem = '';
 		renaming = false;
 		renameValue = '';
 	}
@@ -124,6 +154,9 @@
 
 		<button class="action-btn save" onclick={handleCreate}>Create View</button>
 	</div>
+	{#if problem}
+		<StatusMessage variant="warning">{problem}</StatusMessage>
+	{/if}
 </div>
 
 <style>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { untrack } from 'svelte';
 
 	export interface Tab {
 		id: string;
@@ -28,12 +29,20 @@
 	let visibleTabs = $derived(tabs.filter((t) => t.visible !== false));
 	let validIds = $derived(new Set(visibleTabs.map((t) => t.id)));
 
+	// The tab the page opened on — what a URL with *no* hash means. Captured
+	// before the hash effect below runs, so it is the parent's default.
+	const defaultTab = untrack(() => active);
+
 	// Hash → active. Picks up the hash on mount AND on every history
-	// navigation (back/forward), because page.url is reactive.
+	// navigation (back/forward), because page.url is reactive. An empty hash
+	// restores the default tab: Back from #specs to the hashless URL used to
+	// leave Specs selected (#334). `active` is read untracked so a parent that
+	// sets the tab itself isn't overridden by this effect.
 	$effect(() => {
 		if (!hashed) return;
 		const hash = page.url.hash.slice(1);
-		if (hash && validIds.has(hash) && hash !== active) active = hash;
+		const target = hash ? (validIds.has(hash) ? hash : null) : defaultTab;
+		if (target && target !== untrack(() => active)) active = target;
 	});
 
 	function select(id: string) {
