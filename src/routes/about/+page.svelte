@@ -68,6 +68,26 @@
 			{version.counts.tablets} tablets, {version.counts.pens} pens, {version.counts.drivers} drivers,
 			{version.counts.brands} brands.
 		</p>
+		{#if version.build}
+			<!-- Generated at build time from the exact checkout that shipped (#333). -->
+			<p class="dim">
+				Built {version.build.builtAt.slice(0, 10)} from Explorer commit
+				<a
+					class="commit"
+					href="https://github.com/TheSevenPens/DrawTabDataExplorer/commit/{version.build
+						.appCommit}"
+					target="_blank"
+					rel="noopener noreferrer">{version.build.appCommit.slice(0, 7)}</a
+				>
+				and queriton
+				<a
+					class="commit"
+					href="https://github.com/TheSevenPens/queriton/commit/{version.build.queritonCommit}"
+					target="_blank"
+					rel="noopener noreferrer">{version.build.queritonCommit.slice(0, 7)}</a
+				>.
+			</p>
+		{/if}
 	{:else}
 		<p class="dim">Dataset version unavailable.</p>
 	{/if}
