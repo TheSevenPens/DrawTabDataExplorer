@@ -636,5 +636,12 @@ exist but are thin redirects to `/entity/[entityId]` — see each route's
 `/entity/...` so users land on the canonical URL without an intermediate
 hop.
 
-The route has `prerender = false` and relies on the SPA fallback
-(`404.html`) to serve the app shell for unrecognised paths.
+The route **is prerendered**: `+page.server.ts` (build-time only — it
+imports the Node disk loader, which must stay out of the client bundle)
+sets `prerender = true` and lists every EntityId in `entries()`, so each
+`/entity/<id>` gets its own ~4 KB shell and answers HTTP 200. Before
+that, Pages served `404.html` for these paths: the SPA rendered fine, but
+link previews, crawlers and uptime checks saw a 404. An EntityId added
+to the data gets its shell on the next build; a path that isn't a real
+EntityId still falls back to `404.html`. The typed redirect routes
+(`/tablets/[entityId]`, …) stay `prerender = false`.

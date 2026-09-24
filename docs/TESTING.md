@@ -4,45 +4,48 @@
 
 ## Command matrix
 
-| Command                | Scope                                     | When to run                              |
-| ---------------------- | ----------------------------------------- | ---------------------------------------- |
-| `npm run check`        | Svelte + TypeScript (`svelte-check`)      | After almost any code change             |
-| `npm run test:unit`    | Vitest — `src/lib/`, `packages/queriton/` | Helpers, queriton, pipeline-related TS   |
-| `npm run test:e2e`     | Playwright — builds app, hits routes      | Route/page/UI changes; slower (~minutes) |
-| `npm run data-quality` | `data-repo` tablet structural CLI checks  | After `data-repo/data/` edits            |
-| `npm run verify-docs`  | `docs/FUTURES.txt` vs GitHub issue state  | After editing FUTURES Open list          |
-| `npm run lint`         | ESLint + Prettier check                   | CI parity; before commit                 |
+| Command                | Scope                                                               | When to run                                                    |
+| ---------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `npm run check`        | Svelte + TypeScript (`svelte-check`)                                | After almost any code change                                   |
+| `npm run test:unit`    | Vitest — `src/`, `scripts/`, `data-repo/lib/`, `packages/queriton/` | Helpers, loaders, queriton, field defs                         |
+| `npm run test:e2e`     | Playwright — builds app, hits routes                                | Route/page/UI changes; slower (~minutes)                       |
+| `npm run data-quality` | `data-repo` schema, cross-entity and brand-drift checks             | After `data-repo/data/` edits; must report zero                |
+| `npm run verify-docs`  | `docs/FUTURES.txt` vs GitHub issue state                            | After editing FUTURES Open list                                |
+| `npm run lint`         | ESLint + Prettier check                                             | CI parity; before commit                                       |
+| `npm run pack-smoke`   | Packs data-repo + queriton, imports them from a throwaway project   | After touching either package's `package.json` (needs network) |
 
 ## Unit test locations
 
-| Path                                      | Covers                                                   |
-| ----------------------------------------- | -------------------------------------------------------- |
-| `src/lib/pen-helpers.test.ts`             | Pen name helpers                                         |
-| `src/lib/chart-palette.test.ts`           | Chart palette: no-cycling, light/dark split, accent slot |
-| `src/lib/year.test.ts`                    | Year parsing / compare helpers                           |
-| `src/lib/field-display.test.ts`           | Unit suffix / stripUnit                                  |
-| `src/lib/filter-url.test.ts`              | URL `?filter=` parsing                                   |
-| `src/lib/views.test.ts`                   | Saved views / pipeline clone                             |
-| `src/lib/storage.test.ts`                 | localStorage helpers                                     |
-| `src/lib/tablet-size-ranges.test.ts`      | Size category constants                                  |
-| `packages/queriton/test/*.test.ts`        | Query engine                                             |
-| `data-repo/lib/dataset.test.ts`           | DataSet (submodule)                                      |
-| `data-repo/lib/pressure/pressure.test.ts` | Interpolation (submodule)                                |
+Tests sit beside the code they cover (`foo.ts` → `foo.test.ts`); every
+extracted helper ships with one (CLAUDE.md § Extracted helpers). The config
+in `vitest.config.ts` picks them up from:
 
-The large Svelte pages now have section-extracted modules
-(`src/lib/data-quality/`, `src/lib/tablet-analysis/`, `src/lib/components/tablet-detail/`).
-Unit tests for those pure-TS pieces are a follow-up — `TabletDetail`,
-`data-quality`, and `tablet-analysis` are not directly unit-tested yet.
+| Path                               | Covers                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| `src/lib/**/*.test.ts`             | Helpers, search, exports, migrations, modal/tab keyboard logic, section analysis        |
+| `scripts/*.test.ts`                | Build-time scripts (`version-json`)                                                     |
+| `data-repo/lib/**/*.test.ts`       | Loaders and failure handling, DataSet, field defs (enum values), version info, pressure |
+| `packages/queriton/test/*.test.ts` | Query engine, DataSet caching, generated tutorial snippets                              |
+
+Components (`.svelte`) are covered by the e2e suite, not unit tests.
 
 ## E2E
 
 - **File:** `e2e/smoke.spec.ts`
 - **Behavior:** `playwright.config` builds and serves the app; tests assert key routes render.
-- **Coverage:** every route renders without console errors, list → detail
-  navigation for tablets / pens / brands, `SectionedPage` rendering on
-  `/tablet-analysis` and `/data-quality`, Pressure Response list → session
-  detail (canvas check), Reference left-nav sections, and the
-  flag-tablet → compare workflow.
+- **Coverage:** every route renders without console errors; list → detail
+  navigation; `SectionedPage` sections; pressure session detail; Reference
+  left-nav; flag → compare; search matches the text on screen; a failed data
+  file shows an error with Try again (#331); tab Back/Forward and saved-view
+  rename collisions (#334); keyboard containment in the picker and export
+  dialogs, ARIA tabs, keyboard-sortable headers (#335).
+
+## CI
+
+`.github/workflows/verify.yml` runs lint, type-check, unit, **data-quality**,
+e2e and the production build on every pull request; `deploy.yml` calls the
+same workflow on `main` and deploys only what it built. A red `verify`
+check blocks nothing by itself — don't merge past it.
 
 ## Chart palette
 
