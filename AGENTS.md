@@ -29,6 +29,7 @@
 | Add tablet / pen JSON    | `data-repo/docs/IMPORTING-TABLETS.md`                    | `CLAUDE.md` § Adding a brand                                                                                            |
 | Pressure / charts        | `CLAUDE.md` § Pressure response                          | `PressureResponseChart.svelte`                                                                                          |
 | Tests / verify           | [`docs/TESTING.md`](docs/TESTING.md)                     | Run commands below                                                                                                      |
+| Dependencies / npm audit | [`docs/DEPENDENCY-AUDIT.md`](docs/DEPENDENCY-AUDIT.md)   | Accepted advisories and why; never `npm audit fix --force`                                                              |
 | Planned work             | [`docs/FUTURES.txt`](docs/FUTURES.txt)                   | GitHub issue bodies                                                                                                     |
 | Don'ts (quick scan)      | [`docs/ANTI-PATTERNS.md`](docs/ANTI-PATTERNS.md)         | `CLAUDE.md` for detail                                                                                                  |
 
