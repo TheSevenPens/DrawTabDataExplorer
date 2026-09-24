@@ -3,6 +3,7 @@ import { defineConfig, type Plugin } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { writeVersionJson } from './scripts/version-json.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,8 +35,23 @@ function localDataPlugin(): Plugin {
 	};
 }
 
+// Regenerate static/version.json from the data this build ships (#333).
+// buildStart runs for dev and build alike, before SvelteKit copies static/.
+function versionJsonPlugin(): Plugin {
+	return {
+		name: 'version-json',
+		buildStart() {
+			writeVersionJson({
+				dataRepoRoot: hasLocalData ? localDataPath : path.resolve(__dirname, 'data-repo'),
+				appRoot: __dirname,
+				outFile: path.resolve(__dirname, 'static', 'version.json'),
+			});
+		},
+	};
+}
+
 export default defineConfig({
-	plugins: [...(hasLocalData ? [localDataPlugin()] : []), sveltekit()],
+	plugins: [versionJsonPlugin(), ...(hasLocalData ? [localDataPlugin()] : []), sveltekit()],
 	define: {
 		__DEV_LOCAL_DATA_AVAILABLE__: JSON.stringify(hasLocalData),
 	},

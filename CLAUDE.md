@@ -29,6 +29,12 @@ which creates symlinks (Windows: directory junctions) from `static/` →
 `data-repo/data/` for every subdirectory the dev server needs. Idempotent —
 re-runnable any time as `npm run setup-static`.
 
+`static/version.json` is **not** linked: a Vite plugin in `vite.config.ts`
+regenerates it on every dev start and build from the data actually being
+served, plus the app and queriton commits (`scripts/version-json.ts`, #333).
+Don't point it back at `data-repo/data/version.json` — that copy is
+hand-maintained and was months stale.
+
 If either submodule isn't checked out yet, the setup script warns. Run
 `git submodule update --init --recursive` first, then `npm run setup-static`.
 

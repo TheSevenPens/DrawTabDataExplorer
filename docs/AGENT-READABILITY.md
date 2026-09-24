@@ -70,13 +70,14 @@ matches" when the truth is "not recorded for these".
 
 ### 3. Data file index
 
-`version.json` is already the right shape and already generated — it just needs
-the file list. For each data file: entity type, URL, brand (where applicable),
-record count.
+`version.json` is already the right shape and, since #333, generated at build
+time from the data being shipped (`scripts/version-json.ts`, called from
+`vite.config.ts`) — it just needs the file list. For each data file: entity
+type, URL, brand (where applicable), record count.
 
-Note the local `version.json` reports `tablets: 300` while the live site loads
-**375**. Counts must be generated, never hand-maintained: a stale manifest is
-worse than no manifest.
+Counts must be generated, never hand-maintained: a stale manifest is worse than
+no manifest. (The hand-maintained copy reported `tablets: 300` against a live
+375, which is what #333 fixed.)
 
 ### 4. Combined file per entity
 

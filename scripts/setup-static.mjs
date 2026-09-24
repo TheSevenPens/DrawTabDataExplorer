@@ -41,7 +41,8 @@ const LINKS = [
 	{ name: 'otd', target: '../data-repo/data/otd', kind: 'junction' },
 	{ name: 'machollywood', target: '../data-repo/data/machollywood', kind: 'junction' },
 	{ name: 'links', target: '../data-repo/data/links', kind: 'junction' },
-	{ name: 'version.json', target: '../data-repo/data/version.json', kind: 'file' },
+	// version.json is not linked: vite.config.ts generates it from the data
+	// actually being built (#333) instead of the hand-maintained copy.
 ];
 
 function symlinkType(kind) {

@@ -8,6 +8,7 @@ export default defineConfig({
 			'src/**/*.{test,spec}.ts',
 			'packages/*/test/**/*.{test,spec}.ts',
 			'data-repo/lib/**/*.{test,spec}.ts',
+			'scripts/**/*.{test,spec}.ts',
 		],
 	},
 	resolve: {
