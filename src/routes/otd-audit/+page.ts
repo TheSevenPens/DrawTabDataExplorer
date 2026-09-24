@@ -30,11 +30,9 @@ export async function load({ parent }) {
 				allTablets.filter((t) => t.Model.Brand === brand),
 			),
 		)
-		.map(
-			(m): OtdEntityMapRow => ({
-				...m,
-				audit: (m.entityId ? otdAudit[`${m.otdFile}|${m.entityId}`] : undefined) ?? 'unreviewed',
-			}),
-		);
+		.map((m): OtdEntityMapRow => ({
+			...m,
+			audit: (m.entityId ? otdAudit[`${m.otdFile}|${m.entityId}`] : undefined) ?? 'unreviewed',
+		}));
 	return { otdEntityMatches };
 }
