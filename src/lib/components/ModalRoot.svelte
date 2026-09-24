@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { modalRequest } from '$lib/modal-store.js';
 	import { onMount, tick } from 'svelte';
+	import { modalBehavior } from '$lib/modal-behavior.js';
 
 	let inputEl: HTMLInputElement | undefined = $state();
 	let inputValue = $state('');
@@ -70,7 +71,16 @@
 			if (e.target === e.currentTarget) cancel();
 		}}
 	>
-		<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
+		<!-- modalBehavior contains Tab and returns focus (#335); Escape and
+			 Enter stay with onKey above, which knows prompt vs confirm. -->
+		<div
+			class="modal"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="modal-title"
+			tabindex="-1"
+			use:modalBehavior
+		>
 			<h2 id="modal-title" class="modal-title">{$modalRequest.title}</h2>
 
 			{#if $modalRequest.kind === 'prompt'}

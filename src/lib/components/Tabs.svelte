@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { untrack } from 'svelte';
+	import { nextTabIndex } from '$lib/tab-keys.js';
 
 	export interface Tab {
 		id: string;
@@ -58,12 +59,32 @@
 			keepFocus: true,
 		});
 	}
+
+	// WAI-ARIA tabs with manual activation (#335): one tab stop for the whole
+	// list (roving tabindex on the selected tab), arrows/Home/End move focus,
+	// Enter/Space selects via the native button click. See tab-keys.ts.
+	function onTabKeydown(e: KeyboardEvent) {
+		const buttons = [
+			...(e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]'),
+		];
+		const next = nextTabIndex(buttons.indexOf(e.target as HTMLElement), buttons.length, e.key);
+		if (next === null) return;
+		e.preventDefault();
+		buttons[next].focus();
+	}
 </script>
 
-<div class="detail-tabs">
+<div class="detail-tabs" role="tablist" tabindex="-1" onkeydown={onTabKeydown}>
 	{#each visibleTabs as tab (tab.id)}
 		{@const hasBadge = tab.badge !== undefined && tab.badge !== ''}
-		<button class:active={active === tab.id} onclick={() => select(tab.id)}>
+		<button
+			type="button"
+			role="tab"
+			aria-selected={active === tab.id}
+			tabindex={active === tab.id ? 0 : -1}
+			class:active={active === tab.id}
+			onclick={() => select(tab.id)}
+		>
 			{hasBadge ? `${tab.label} (${tab.badge})` : tab.label}
 		</button>
 	{/each}
@@ -99,5 +120,10 @@
 	}
 	.detail-tabs button.active {
 		color: var(--text);
+	}
+	/* Metro focus: an accent edge, not a halo. */
+	.detail-tabs button:focus-visible {
+		outline: 1px solid var(--accent);
+		outline-offset: 4px;
 	}
 </style>

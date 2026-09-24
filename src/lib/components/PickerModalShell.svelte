@@ -1,12 +1,15 @@
 <script lang="ts">
 	// Shared modal shell for the entity pickers (PenPicker, TabletPicker —
 	// GitHub #215). Owns the modal *mechanics* only: backdrop click-to-close,
-	// Escape-to-close, the dialog frame, and the header (title + optional
+	// the keyboard contract (modalBehavior: focus in, Tab contained, page
+	// behind inert, Escape closes, focus returns — #335), the dialog frame,
+	// and the header (title + optional
 	// accessory + close button). Each picker supplies its own filters/list as
 	// `children` and an optional `headerAccessory` (e.g. a slot-count badge) and
 	// `footer` snippet. FieldPicker is intentionally not migrated (different
 	// shape — it's a column/field picker, not an entity list).
 	import type { Snippet } from 'svelte';
+	import { modalBehavior } from '$lib/modal-behavior.js';
 
 	let {
 		title,
@@ -25,18 +28,20 @@
 	function onBackdropClick(e: MouseEvent) {
 		if (e.target === e.currentTarget) onclose();
 	}
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
-	}
 </script>
 
-<svelte:window onkeydown={onKeydown} />
-
-<!-- Backdrop = "click outside to close"; keyboard equivalent is Escape (above). -->
+<!-- Backdrop = "click outside to close"; keyboard equivalent is Escape (modalBehavior). -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="backdrop" onclick={onBackdropClick}>
-	<div class="modal" role="dialog" aria-modal="true" aria-label={title} tabindex="-1">
+	<div
+		class="modal"
+		role="dialog"
+		aria-modal="true"
+		aria-label={title}
+		tabindex="-1"
+		use:modalBehavior={{ onclose }}
+	>
 		<div class="modal-header">
 			<h2>{title}</h2>
 			{@render headerAccessory?.()}

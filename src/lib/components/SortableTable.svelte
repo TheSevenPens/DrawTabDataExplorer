@@ -4,6 +4,7 @@
 	// Cells are configured via `columns` (see SortableColumn); link cells render
 	// an <a href>. Sorting is column-driven and lives in component state.
 	import Button from '$lib/components/Button.svelte';
+	import SortableHeader from '$lib/components/SortableHeader.svelte';
 	import { sortRows, type SortDir, type SortableColumn } from './sortable-table.js';
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,16 +57,16 @@
 	<thead>
 		<tr>
 			{#each columns as col (col.key)}
-				{@const isSortable = col.sortable !== false}
-				{@const active = sortKey === col.key}
-				<th
-					class:num={col.num}
-					class:sortable={isSortable}
-					aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
-					onclick={() => headerClick(col)}
-				>
-					{col.label}{#if active}<span class="arrow">{sortDir === 'asc' ? ' ▲' : ' ▼'}</span>{/if}
-				</th>
+				{#if col.sortable !== false}
+					<SortableHeader
+						active={sortKey === col.key}
+						dir={sortDir}
+						num={col.num}
+						onclick={() => headerClick(col)}>{col.label}</SortableHeader
+					>
+				{:else}
+					<th class:num={col.num}>{col.label}</th>
+				{/if}
 			{/each}
 		</tr>
 	</thead>
@@ -106,22 +107,9 @@
 		width: auto;
 	}
 
-	th.sortable {
-		cursor: pointer;
-		user-select: none;
-	}
-
-	th.sortable:hover {
-		color: var(--text);
-	}
-
 	th.num,
 	td.num {
 		text-align: right;
-	}
-
-	.arrow {
-		font-size: 10px;
 	}
 
 	td :global(a) {
