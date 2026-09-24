@@ -262,3 +262,68 @@ test.describe('Tab history and saved views', () => {
 		expect(stored).toEqual(['A', 'B', 'Broken']);
 	});
 });
+
+// #335: keyboard contract for dialogs, tabs and sortable headers.
+test.describe('Keyboard access', () => {
+	async function focusIsInDialog(page: Page): Promise<boolean> {
+		return page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'));
+	}
+
+	test('the Add Tablet picker keeps Tab inside and returns focus on Escape', async ({ page }) => {
+		await page.goto('/tablet-compare');
+		const opener = page.getByRole('button', { name: /add tablet/i });
+		await opener.focus();
+		await page.keyboard.press('Enter');
+		await expect(page.getByRole('dialog')).toBeVisible();
+		// More presses than the dialog has controls, so a leak would show.
+		for (let i = 0; i < 40; i++) {
+			await page.keyboard.press('Tab');
+			expect(await focusIsInDialog(page)).toBe(true);
+		}
+		for (let i = 0; i < 5; i++) {
+			await page.keyboard.press('Shift+Tab');
+			expect(await focusIsInDialog(page)).toBe(true);
+		}
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('dialog')).toHaveCount(0);
+		await expect(opener).toBeFocused();
+	});
+
+	test('the export dialog keeps Tab inside and returns focus on Escape', async ({ page }) => {
+		await page.goto('/tablets');
+		const opener = page.getByRole('button', { name: /export/i }).first();
+		await opener.focus();
+		await page.keyboard.press('Enter');
+		await expect(page.getByRole('dialog')).toBeVisible();
+		for (let i = 0; i < 25; i++) {
+			await page.keyboard.press('Tab');
+			expect(await focusIsInDialog(page)).toBe(true);
+		}
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('dialog')).toHaveCount(0);
+		await expect(opener).toBeFocused();
+	});
+
+	test('detail tabs are a tablist: arrows move focus, Enter selects', async ({ page }) => {
+		await page.goto('/entity/wacom.tablet.ctl4100');
+		const selected = page.getByRole('tab', { selected: true });
+		await expect(selected).toHaveText(/model/i);
+		await selected.focus();
+		await page.keyboard.press('ArrowRight');
+		const focusedTab = page.locator('[role="tab"]:focus');
+		await expect(focusedTab).not.toHaveText(/model/i);
+		const label = (await focusedTab.textContent())?.trim() ?? '';
+		await page.keyboard.press('Enter');
+		await expect(page.getByRole('tab', { selected: true })).toHaveText(label);
+	});
+
+	test('sortable headers sort from the keyboard', async ({ page }) => {
+		await page.goto('/data-quality');
+		const header = page.locator('th:has(button.sort-btn)').first();
+		await header.locator('button').focus();
+		await page.keyboard.press('Enter');
+		await expect(header).toHaveAttribute('aria-sort', 'ascending');
+		await page.keyboard.press('Space');
+		await expect(header).toHaveAttribute('aria-sort', 'descending');
+	});
+});

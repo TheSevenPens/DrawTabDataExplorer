@@ -2,6 +2,7 @@
 	import type { AnyFieldDisplayDef } from '@thesevenpens/queriton';
 	import type { RowRecord } from '$lib/table-types.js';
 	import { datedFilename } from '$lib/chart-export/filenames.js';
+	import { modalBehavior } from '$lib/modal-behavior.js';
 	import {
 		cellString,
 		tableFromArrays,
@@ -153,20 +154,21 @@
 	function onBackdropClick(e: MouseEvent) {
 		if (e.target === e.currentTarget) onclose();
 	}
-
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
-	}
 </script>
 
-<svelte:window onkeydown={onKeydown} />
-
 <!-- Backdrop = "click outside to close" affordance. Keyboard equivalent is
-	 Escape, handled on the window above. -->
+	 Escape, handled by modalBehavior (which also contains Tab — #335). -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="backdrop" onclick={onBackdropClick}>
-	<div class="dialog" role="dialog" aria-modal="true" aria-label={title}>
+	<div
+		class="dialog"
+		role="dialog"
+		aria-modal="true"
+		aria-label={title}
+		tabindex="-1"
+		use:modalBehavior={{ onclose }}
+	>
 		<div class="dialog-header">
 			<h2>{title}</h2>
 			<button class="close-btn" onclick={onclose} aria-label="Close">✕</button>

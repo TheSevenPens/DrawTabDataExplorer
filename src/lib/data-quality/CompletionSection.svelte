@@ -2,6 +2,7 @@
 	import { buildFilterUrl } from '$lib/filter-url.js';
 	import SectionHeader from '$lib/components/SectionHeader.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import SortableHeader from '$lib/components/SortableHeader.svelte';
 	import { sortRows, type SortDir } from '$lib/components/sortable-table.js';
 	import type { CompletionStat } from '$lib/data-quality/helpers.js';
 	import MeterBar from '$lib/components/MeterBar.svelte';
@@ -80,7 +81,6 @@
 	let sortedStats = $derived(
 		sortKey ? sortRows(visibleStats, accessors[sortKey], sortDir) : visibleStats,
 	);
-	const arrow = (key: string) => (sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '');
 </script>
 
 <SectionHeader {title} />
@@ -99,10 +99,19 @@
 <table class="compact">
 	<thead>
 		<tr>
-			<th class="sortable" onclick={() => toggleSort('field')}>Field{arrow('field')}</th>
-			<th class="sortable" onclick={() => toggleSort('populated')}>Populated{arrow('populated')}</th
+			<SortableHeader active={sortKey === 'field'} dir={sortDir} onclick={() => toggleSort('field')}
+				>Field</SortableHeader
 			>
-			<th class="sortable" onclick={() => toggleSort('percent')}>%{arrow('percent')}</th>
+			<SortableHeader
+				active={sortKey === 'populated'}
+				dir={sortDir}
+				onclick={() => toggleSort('populated')}>Populated</SortableHeader
+			>
+			<SortableHeader
+				active={sortKey === 'percent'}
+				dir={sortDir}
+				onclick={() => toggleSort('percent')}>%</SortableHeader
+			>
 			<th></th>
 			{#if filterBase}<th></th>{/if}
 		</tr>
@@ -155,14 +164,6 @@
 		color: var(--text-muted);
 		cursor: pointer;
 		user-select: none;
-	}
-
-	th.sortable {
-		cursor: pointer;
-		user-select: none;
-	}
-	th.sortable:hover {
-		color: var(--text);
 	}
 
 	/*
