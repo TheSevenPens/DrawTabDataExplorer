@@ -36,6 +36,12 @@
  *       --driver WACOM \
  *       --os WINDOWS \
  *       --notes "something to remember"
+ *       --id-suffix galaxybook5pro360
+ *
+ * EntityId is stored on the session (see data-repo/lib/pressure/session-id.ts):
+ * <brand>.session.<inventoryid>_<date>. A second session of the same pen on
+ * the same day gets IdSuffix = the tablet's model segment (e.g.
+ * "_galaxybook5pro360"); if that is taken too, pass --id-suffix.
  *
  * --data-dir <dir> reads and writes <dir> instead of data-repo/data (for
  * testing against a copy).
@@ -48,6 +54,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { readDataJson, writeDataJson } from '../data-repo/lib/data-json.ts';
+import { deriveSessionEntityId } from '../data-repo/lib/pressure/session-id.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -56,7 +63,7 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 	console.log(
-		'Usage: npx tsx scripts/add-pressure-session.mjs <file.json> [--tablet …] [--user …] [--driver …] [--os …] [--notes …] [--data-dir …]',
+		'Usage: npx tsx scripts/add-pressure-session.mjs <file.json> [--tablet …] [--user …] [--driver …] [--os …] [--notes …] [--id-suffix …] [--data-dir …]',
 	);
 	process.exit(args.length === 0 ? 1 : 0);
 }
@@ -166,15 +173,35 @@ const notes = overrides.notes ?? '';
 const round = (n, dp) => +n.toFixed(dp);
 const recs = src.captures.map((c) => [round(c.physicalGf, 1), round(c.logicalNorm * 100, 2)]);
 
+// --- EntityId: derived, with an IdSuffix for a same-day repeat ---
+
+const takenIds = new Set(prJson.PressureResponse.map((s) => s.EntityId));
+const identity = { Brand: brand, InventoryId: inventoryId, Date: date };
+let idSuffix = overrides['id-suffix'];
+if (!idSuffix && takenIds.has(deriveSessionEntityId(identity))) {
+	idSuffix = tabletEntityId.split('.').pop();
+}
+const entityId = deriveSessionEntityId({ ...identity, IdSuffix: idSuffix });
+if (takenIds.has(entityId)) {
+	console.error(
+		`${entityId} already exists: ${inventoryId} was already measured on ${date}` +
+			(idSuffix ? ` with IdSuffix "${idSuffix}"` : '') +
+			'.\nPass --id-suffix <something unique> to record another session.',
+	);
+	process.exit(1);
+}
+
 const uuid = crypto.randomUUID();
 const isoNow = new Date(date + 'T00:00:00.000Z').toISOString();
 
 // Key order matches the existing session records.
 prJson.PressureResponse.push({
+	EntityId: entityId,
 	Brand: brand,
 	PenFamily: penFamily,
 	InventoryId: inventoryId,
 	Date: date,
+	...(idSuffix ? { IdSuffix: idSuffix } : {}),
 	User: user,
 	Driver: driver,
 	OS: os,
@@ -190,6 +217,7 @@ prJson.PressureResponse.push({
 writeDataJson(prPath, prJson);
 
 console.log(`Added session for ${inventoryId} (${date}):`);
+console.log(`  id      : ${entityId}`);
 console.log(`  pen     : ${penEntityId}`);
 console.log(`  family  : ${penFamily || '(none)'}`);
 console.log(`  tablet  : ${tabletEntityId}`);
