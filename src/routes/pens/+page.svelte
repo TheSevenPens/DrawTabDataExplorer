@@ -45,6 +45,7 @@
 	title="Pens"
 	entityType="pens"
 	entityLabel="pens"
+	compareAs={{ kind: 'pens', type: 'model', noun: 'pens' }}
 	data={data.pens}
 	fields={PEN_FIELDS}
 	fieldGroups={PEN_FIELD_GROUPS}
