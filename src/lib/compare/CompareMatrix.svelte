@@ -290,7 +290,9 @@
 							<th scope="row" class="spec-label">{row.label}</th>
 							{#each row.cells as cell, ci (ci)}
 								<td
-									>{#if cell.text}{cell.text}{:else}<span class="blank">—</span
+									>{#if cell.text && row.multiline}<span class="clamp" title={cell.text}
+											>{cell.text}</span
+										>{:else if cell.text}{cell.text}{:else}<span class="blank">—</span
 										>{/if}{#if cell.varies}<span class="note">varies</span>{/if}{#if cell.note}<span
 											class="note">{cell.note}</span
 										>{/if}</td
@@ -313,8 +315,8 @@
 									{#each memberHeaders[ci] as m, mi (m.id + mi)}
 										{@const val = row.values[memberOffsets[ci] + mi]}
 										<td class:band-start={mi === 0} class:multiline={row.multiline}
-											>{#if row.multiline && val}<span class="long">{val}</span>{:else}{val ||
-													'—'}{/if}</td
+											>{#if row.multiline && val}<span class="clamp" title={val}>{val}</span
+												>{:else}{val || '—'}{/if}</td
 										>
 									{/each}
 								{/if}
@@ -337,10 +339,13 @@
 		overflow-x: auto;
 	}
 
+	/* Natural width, not 100%: with a stretched table the spare width went to
+	   whichever column held the longest text, so one note made one group
+	   several times wider than the others. Every column gets the same width
+	   and its text wraps. */
 	.matrix {
 		border-collapse: collapse;
 		font-size: var(--type-body);
-		min-width: 100%;
 	}
 
 	.matrix th,
@@ -349,6 +354,35 @@
 		vertical-align: top;
 		padding: 6px 10px;
 		border-bottom: 1px solid var(--border-light);
+	}
+
+	.matrix td {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+
+	/* min-width = width: in a narrow pane the table would otherwise shrink
+	   columns unevenly (by how much text each holds). The wrapper scrolls. */
+	.matrix:not(.members) .col-head {
+		width: 260px;
+		min-width: 260px;
+	}
+
+	.member-head {
+		width: 200px;
+		min-width: 200px;
+		overflow-wrap: anywhere;
+	}
+
+	/* A long note wraps within its column and stops after a few lines; the
+	   full text is in the tooltip and in every export. */
+	.clamp {
+		display: -webkit-box;
+		-webkit-line-clamp: 5;
+		line-clamp: 5;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		white-space: pre-wrap;
 	}
 
 	.spec-col {
@@ -555,9 +589,11 @@
 		cursor: pointer;
 	}
 
+	/* Member names wrap within their fixed-width column (a nowrap here let the
+	   longest names widen their columns). */
 	.member-row th {
 		font-size: var(--type-caption);
-		white-space: nowrap;
+		white-space: normal;
 	}
 
 	.member-row a {
@@ -602,12 +638,5 @@
 
 	td.multiline {
 		vertical-align: top;
-	}
-
-	td.multiline .long {
-		display: block;
-		min-width: 24ch;
-		max-width: 40ch;
-		white-space: pre-wrap;
 	}
 </style>
