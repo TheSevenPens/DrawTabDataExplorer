@@ -22,6 +22,7 @@
 	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
 	import CompareWorkspace from '$lib/compare/CompareWorkspace.svelte';
 	import PenPressureView from '$lib/compare/PenPressureView.svelte';
+	import CompareRangeChart from '$lib/compare/CompareRangeChart.svelte';
 	import { penCompareData } from '$lib/compare/contexts';
 	import { columnMeasurements, columnSessions } from '$lib/compare/pen-groups';
 	import type { MemberRef } from '$lib/compare/model';
@@ -94,6 +95,16 @@
 				tabletNameById={data.tabletNameById}
 			/>
 		{:else if tab === 'iaf' || tab === 'max'}
+			{#if columns.length > 1}
+				<CompareRangeChart
+					metric={tab === 'iaf' ? 'IAF' : 'MAX'}
+					{columns}
+					{colors}
+					{sessions}
+					measurements={tab === 'iaf' ? iaf : max}
+					defectsByInventoryId={defects}
+				/>
+			{/if}
 			{#each columns as col, i (col.id)}
 				{@const colSessions = columnSessions(col, sessions)}
 				{@const colMeasurements = columnMeasurements(col, tab === 'iaf' ? iaf : max)}
