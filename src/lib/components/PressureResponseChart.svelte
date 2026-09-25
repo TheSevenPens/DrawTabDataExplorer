@@ -10,6 +10,7 @@
 		IAF_LOGICAL_PCT,
 	} from '$data/lib/pressure/interpolate.js';
 	import { paletteColor } from '$lib/chart-palette.js';
+	import { groupForEnvelope } from '$lib/pressure/chart-session-state.js';
 	import { theme } from '$lib/theme-store.js';
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
@@ -60,6 +61,12 @@
 		color?: string;
 		defective?: boolean;
 		defectInfo?: string;
+		/** Envelope group. Sessions sharing a key get one band + median in
+		 * the envelope view, in their shared colour (#377); with no keys the
+		 * view draws a single envelope over everything, as before. */
+		group?: string;
+		/** The group's name, for its envelope's tooltip / export label. */
+		groupLabel?: string;
 	}
 
 	type ViewMode = 'raw' | 'estimates' | 'standardized' | 'envelope';
@@ -204,39 +211,48 @@
 		if (sessionsToPlot.length === 0) return [];
 
 		if (viewMode === 'envelope') {
-			const { low, mid, high } = buildEnvelope(sessionsToPlot);
-			// The envelope is the primary (and only) data in this view, so it
-			// takes slot 0 — the accent — per theme, rather than a fixed blue.
-			// colorFor reads $theme, so the rebuild repaints it on a switch.
-			const color = colorFor(0);
-			// Chart.js between-datasets fills are x-axis-parametric, so when the
-			// high line extends past the low line's max x (common at p=99→100),
-			// the fill terminates at the low line's right edge and leaves a
-			// triangular gap. Trace the envelope as a single closed-polygon
-			// dataset and use fill:'shape' to fill the interior instead.
-			const polygon = [...low, ...[...high].reverse()];
-			return [
-				{
-					type: 'line',
-					label: `Envelope (${envelopeRange})`,
-					data: polygon,
-					borderColor: 'transparent',
-					backgroundColor: color + '33',
-					borderWidth: 0,
-					pointRadius: 0,
-					fill: 'shape',
-				},
-				{
-					type: 'line',
-					label: 'Median',
-					data: mid,
-					borderColor: color,
-					backgroundColor: color,
-					borderWidth: 2,
-					pointRadius: 0,
-					fill: false,
-				},
-			];
+			// One envelope per group (#377) — a single group when the sessions
+			// carry no `group`, which is every caller but Compare.
+			const groups = groupForEnvelope(sessionsToPlot);
+			const single = groups.length === 1 && groups[0].key === '';
+			return groups.flatMap((g, i) => {
+				const { low, mid, high } = buildEnvelope(g.sessions);
+				// A lone envelope is the primary (and only) data in this view, so
+				// it takes slot 0 — the accent — per theme, rather than a fixed
+				// blue. Groups take their sessions' identity colour. colorFor
+				// reads $theme, so the rebuild repaints either on a switch.
+				const color = single ? colorFor(0) : colorFor(i, g.color);
+				const name = single ? '' : `${g.sessions[0].groupLabel ?? g.key} · `;
+				// Chart.js between-datasets fills are x-axis-parametric, so when the
+				// high line extends past the low line's max x (common at p=99→100),
+				// the fill terminates at the low line's right edge and leaves a
+				// triangular gap. Trace the envelope as a single closed-polygon
+				// dataset and use fill:'shape' to fill the interior instead.
+				const polygon = [...low, ...[...high].reverse()];
+				return [
+					{
+						type: 'line',
+						label: `${name}Envelope (${envelopeRange})`,
+						data: polygon,
+						borderColor: 'transparent',
+						// Overlapping bands stay readable at a lighter wash.
+						backgroundColor: color + (single ? '33' : '24'),
+						borderWidth: 0,
+						pointRadius: 0,
+						fill: 'shape',
+					},
+					{
+						type: 'line',
+						label: `${name}Median`,
+						data: mid,
+						borderColor: color,
+						backgroundColor: color,
+						borderWidth: 2,
+						pointRadius: 0,
+						fill: false,
+					},
+				];
+			});
 		}
 
 		if (viewMode === 'standardized') {

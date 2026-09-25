@@ -6,8 +6,8 @@
 	//
 	// The group table below is the pooled chart's legend: it names each series
 	// (the palette leans on that — see chart-palette.ts) and summarises it.
-	// True per-group envelope bands need a PressureResponseChart change; that
-	// is a follow-up.
+	// Sessions carry `group` (the column, or the pen when split), so the
+	// chart's Envelope view draws one band + median per group (#377).
 	import type { Pen, PressureResponse, PressureRange } from '$data/lib/drawtab-loader.js';
 	import type { DefectInfo } from '$data/lib/pressure/defects.js';
 	import { fmtP } from '$data/lib/pressure/interpolate.js';
@@ -66,6 +66,8 @@
 					color: g.color,
 					defective: !!info,
 					defectInfo: info?.detailsLabel,
+					group: g.col.id,
+					groupLabel: g.col.name,
 				};
 			}),
 		),
@@ -95,6 +97,8 @@
 				color: splitColors.get(s._id),
 				defective: !!info,
 				defectInfo: info?.detailsLabel,
+				group: s.PenEntityId,
+				groupLabel: penNameById.get(s.PenEntityId) ?? s.PenEntityId,
 			};
 		}),
 	);
@@ -121,15 +125,12 @@
 		/>
 	</div>
 
-	{#if mode === 'pooled'}
-		<PressureResponseChart
-			sessions={pooledSessions}
-			title="Compared pens"
-			hiddenIds={pooledHidden}
-		/>
-	{:else}
-		<PressureResponseChart sessions={splitSessions} title="Compared pens" hiddenIds={splitHidden} />
-	{/if}
+	<!-- One chart for both modes, so its View / Zoom / Range survive the switch. -->
+	<PressureResponseChart
+		sessions={mode === 'pooled' ? pooledSessions : splitSessions}
+		title="Compared pens"
+		hiddenIds={mode === 'pooled' ? pooledHidden : splitHidden}
+	/>
 
 	<div class="table-wrap">
 		<table class="groups">

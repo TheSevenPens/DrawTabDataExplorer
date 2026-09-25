@@ -16,6 +16,9 @@ export type ChartSession = {
 	color: string | undefined;
 	defective: boolean;
 	defectInfo: string | undefined;
+	/** Envelope group key and name — see PressureResponseChart's ChartSession. */
+	group?: string;
+	groupLabel?: string;
 };
 
 export function buildSessionColors(
@@ -95,4 +98,33 @@ export function toggleInSet<T>(set: ReadonlySet<T>, id: T): Set<T> {
 	if (next.has(id)) next.delete(id);
 	else next.add(id);
 	return next;
+}
+
+export interface SeriesGroup<S> {
+	/** The sessions' `group` key; '' for sessions without one. */
+	key: string;
+	/** The first session's colour — every session in a group shares it. */
+	color: string | undefined;
+	sessions: S[];
+}
+
+/**
+ * Split sessions into envelope groups by their `group` key, in order of first
+ * appearance (#377). Sessions with no key form one group, so a chart whose
+ * sessions carry no groups gets exactly one envelope, as before.
+ */
+export function groupForEnvelope<S extends { group?: string; color?: string }>(
+	sessions: readonly S[],
+): SeriesGroup<S>[] {
+	const byKey = new Map<string, SeriesGroup<S>>();
+	for (const s of sessions) {
+		const key = s.group ?? '';
+		let g = byKey.get(key);
+		if (!g) {
+			g = { key, color: s.color, sessions: [] };
+			byKey.set(key, g);
+		}
+		g.sessions.push(s);
+	}
+	return [...byKey.values()];
 }
