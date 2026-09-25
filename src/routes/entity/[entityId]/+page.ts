@@ -9,6 +9,11 @@
 
 import { error } from '@sveltejs/kit';
 import { sessionEntityId } from '$data/lib/pressure/session-id.js';
+import {
+	buildDriverIndex,
+	LAST_SUPPORTED_DRIVER_FIELDS,
+	resolveDriver,
+} from '$data/lib/driver-lookup.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 import { buildTabletNameAndIdMap } from '$lib/tablet-helpers.js';
 
@@ -56,6 +61,19 @@ export async function load({ params, parent }) {
 				ds.InventoryTablets.toArray(),
 				ds.InventoryPens.toArray(),
 			]);
+			// Last-supported-driver strings link to their Driver when one matches
+			// (#307). Drivers load only for tablets that name one.
+			const namesDriver = LAST_SUPPORTED_DRIVER_FIELDS.some(({ field }) => tablet.Model[field]);
+			const driverIndex = namesDriver ? buildDriverIndex(await ds.Drivers.toArray()) : undefined;
+			const lastDriverIds: Record<string, string> = {};
+			for (const { field, platform } of LAST_SUPPORTED_DRIVER_FIELDS) {
+				const version = tablet.Model[field];
+				const id =
+					driverIndex &&
+					version &&
+					resolveDriver(driverIndex, tablet.Model.Brand, platform, version);
+				if (id) lastDriverIds[field] = id;
+			}
 			const inventoryUnits = allInventoryTablets.filter((u) => u.TabletEntityId === entityId);
 			// How many of each compatible pen model are in the inventory.
 			const inventoryPenCounts = countByEntity(allInventoryPens, (p) => p.PenEntityId);
@@ -69,6 +87,7 @@ export async function load({ params, parent }) {
 				family,
 				inventoryUnits,
 				inventoryPenCounts,
+				lastDriverIds,
 			};
 		}
 

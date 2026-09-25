@@ -135,7 +135,7 @@
 
 <section class="tab-content">
 	{#if activeTab === 'model'}
-		<TabletModelTab {tablet} {family} {includedPenItems} />
+		<TabletModelTab {tablet} {family} {includedPenItems} lastDriverIds={data.lastDriverIds ?? {}} />
 	{:else if activeTab === 'specs'}
 		<TabletSpecsTab {tablet} {isoSizes} />
 	{:else if activeTab === 'size'}
