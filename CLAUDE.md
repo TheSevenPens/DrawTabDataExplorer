@@ -263,7 +263,9 @@ What's automated (no manual action needed):
   filter dropdown automatically.
 - **`static/` symlinks** — `npm install` wires up the static directory.
 - **Cross-entity orphan checks** — typos in `Model.Family`, `PenFamily`,
-  `PenCompat.PenId`, or `PenCompat.TabletIds` fail validation.
+  `Model.IncludedPen`, `PenCompat.PenId`, or `PenCompat.TabletIds` fail
+  validation. A tablet whose year is earlier than an included pen's
+  `ReleaseYear` fails too (#312) — a pen exists once a tablet ships it.
 
 ## Design tokens — never hard-code a colour
 
