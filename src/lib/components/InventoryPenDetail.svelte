@@ -2,6 +2,7 @@
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import { resolve } from '$app/paths';
 	import Nav from '$lib/components/Nav.svelte';
+	import CompareMenu from '$lib/compare/CompareMenu.svelte';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import PressureResponseChart from '$lib/components/PressureResponseChart.svelte';
 	import SessionStats from '$lib/components/SessionStats.svelte';
@@ -56,6 +57,12 @@
 	<span class="model-link">
 		<a href={resolve('/entity/[entityId]', { entityId: item.PenEntityId })}>{modelName}</a>
 	</span>
+	<CompareMenu
+		kind="pens"
+		item={{ type: 'unit', id: item.InventoryId }}
+		family={{ type: 'model', id: item.PenEntityId }}
+		familyLabel="Compare with its pen model"
+	/>
 </div>
 
 <Tabs

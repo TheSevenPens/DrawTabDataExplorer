@@ -3,6 +3,9 @@
 	import { resolve } from '$app/paths';
 	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
+	import FlagButton from '$lib/components/FlagButton.svelte';
+	import CompareMenu from '$lib/compare/CompareMenu.svelte';
+	import { flaggedTabletFamilies, toggleFlaggedTabletFamily } from '$lib/flagged-store.js';
 	import {
 		type TabletFamily,
 		TABLET_FAMILY_FIELDS,
@@ -76,7 +79,20 @@
 	);
 </script>
 
-<DetailPageFrame title={family.FamilyName} />
+<DetailPageFrame title={family.FamilyName}>
+	{#snippet actions()}
+		<FlagButton
+			flagged={$flaggedTabletFamilies.includes(family.EntityId.toLowerCase())}
+			onclick={() => toggleFlaggedTabletFamily(family.EntityId)}
+			label="Flag this tablet family"
+		/>
+		<CompareMenu
+			kind="tablets"
+			item={{ type: 'family', id: family.EntityId }}
+			members={familyTablets.map((t) => ({ type: 'model' as const, id: t.Meta.EntityId }))}
+		/>
+	{/snippet}
+</DetailPageFrame>
 <DetailView item={family} fields={TABLET_FAMILY_FIELDS} fieldGroups={TABLET_FAMILY_FIELD_GROUPS} />
 
 <section class="family-section">

@@ -16,6 +16,7 @@
 	import PressureResponseChartLegendTable from '$lib/components/PressureResponseChartLegendTable.svelte';
 	import { theme } from '$lib/theme-store.js';
 	import FlagButton from '$lib/components/FlagButton.svelte';
+	import CompareMenu from '$lib/compare/CompareMenu.svelte';
 	import PressureRangeTab from '$lib/components/PressureRangeTab.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import {
@@ -120,6 +121,11 @@
 			flagged={$flaggedPenModels.includes(pen.EntityId.toLowerCase())}
 			onclick={() => toggleFlaggedPenModel(pen.EntityId)}
 			label="Flag this pen model"
+		/>
+		<CompareMenu
+			kind="pens"
+			item={{ type: 'model', id: pen.EntityId }}
+			family={pen.PenFamily ? { type: 'family', id: pen.PenFamily } : undefined}
 		/>
 	{/snippet}
 </DetailPageFrame>
