@@ -248,6 +248,11 @@ Sessions store their EntityId (`<brand>.session.<invid>_<date>`, plus
 `_<IdSuffix>` for a second session of a pen on one day) — same-day
 repeats used to share one derived ID and one `/entity` URL.
 
+After the build, `verify.yml` runs `npm run verify-snapshot -- build/version.json`:
+the deployed bundles must hash as `version.json` records and regenerate
+byte-for-byte from the data commit it names. The same command checks the
+live site for anyone (`data-repo/docs/CONSUMERS.md`).
+
 What's automated (no manual action needed):
 
 - **Loader gating** — the URL and disk loaders both attempt every brand in
