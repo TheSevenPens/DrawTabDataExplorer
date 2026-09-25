@@ -266,6 +266,10 @@ What's automated (no manual action needed):
   `Model.IncludedPen`, `PenCompat.PenId`, or `PenCompat.TabletIds` fail
   validation. A tablet whose year is earlier than an included pen's
   `ReleaseYear` fails too (#312) — a pen exists once a tablet ships it.
+  Inventory rows must point at real models too: `TabletEntityId` /
+  `PenEntityId` must exist, a tablet unit's `ModelId` must be that
+  tablet's `Model.Id`, and `WithTabletInventoryId` must name a tablet unit
+  (DrawTabData #44).
 
 ## Design tokens — never hard-code a colour
 
