@@ -82,11 +82,21 @@ export function tabletCompareData(
 	return { ctx, candidates };
 }
 
+/**
+ * "UNASSIGNED" is the repeatable placeholder for a unit that has no inventory
+ * id yet (data-quality exempts it for that reason), so it isn't an
+ * addressable unit: several records share it, and offering them as units gave
+ * the add rail duplicate keys.
+ */
+export const isAssignedUnit = (u: Pick<InventoryPen, 'InventoryId'>): boolean =>
+	!!u.InventoryId && u.InventoryId !== 'UNASSIGNED';
+
 export function penCompareData(
 	pens: readonly Pen[],
 	families: readonly PenFamily[],
-	units: readonly InventoryPen[],
+	allUnits: readonly InventoryPen[],
 ): CompareData<Pen> {
+	const units = allUnits.filter(isAssignedUnit);
 	const byId = new Map(pens.map((p) => [lc(p.EntityId), p]));
 	const members = groupBy(pens, (p) => lc(p.PenFamily ?? ''));
 	const familyName = new Map(families.map((f) => [lc(f.EntityId), f.FamilyName]));
