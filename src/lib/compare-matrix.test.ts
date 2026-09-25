@@ -47,6 +47,15 @@ describe('buildCompareGroups', () => {
 		]);
 	});
 
+	it('marks free-text (multiline) rows so the page can wrap them', () => {
+		const fields = [F('Weight', 'Physical'), F('Notes', 'Physical', { multiline: true })];
+		const rows = buildCompareGroups([{ ...A, Notes: 'x' }, B], fields, GROUPS, plain)[0].fields;
+		expect(rows.map((r) => [r.key, r.multiline])).toEqual([
+			['Weight', false],
+			['Notes', true],
+		]);
+	});
+
 	it('treats a blank as missing data, not a difference', () => {
 		// "266" against a field nobody filled in is a gap in our dataset. Marking
 		// it as differing sends the reader chasing a spec change that isn't there.
@@ -134,7 +143,15 @@ describe('toExportRows', () => {
 		const groups: CompareGroup[] = [
 			{
 				group: 'Display',
-				fields: [{ key: 'k', label: 'Contrast', values: ['1000', '1200'], differs: true }],
+				fields: [
+					{
+						key: 'k',
+						label: 'Contrast',
+						values: ['1000', '1200'],
+						differs: true,
+						multiline: false,
+					},
+				],
 			},
 		];
 		expect(toExportRows(groups, 2)).toEqual([

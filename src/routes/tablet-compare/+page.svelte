@@ -62,21 +62,11 @@
 		return converted + valueSuffix(f.label, f.unit, $unitPreference);
 	}
 
-	// Fields kept out of the comparison matrix. Every cell is `white-space:
-	// nowrap`, so a single long free-text value stretches its column to the
-	// full length of the text and pushes the other tablet columns off-screen.
-	// Notes is the only field long enough to do that today. Temporary — see
-	// GitHub #309 for bringing it back with per-field wrapping.
-	const LAYOUT_EXCLUDED_FIELD_KEYS = new Set(['ModelNotes']);
-
-	// Two separate exclusions, deliberately not merged. The set above is a
-	// presentational workaround tracked in GitHub #309. The role filter below is
-	// semantic: identity and metadata fields differ between any two rows by
-	// definition, and the column headers already print each tablet's name, so a
-	// Name / Entity ID / Brand row underneath only restates them.
-	const COMPARABLE_FIELDS = comparableFields(TABLET_FIELDS, TABLET_FIELD_ROLES).filter(
-		(f) => !LAYOUT_EXCLUDED_FIELD_KEYS.has(f.key),
-	);
+	// Identity and metadata fields differ between any two rows by definition,
+	// and the column headers already print each tablet's name, so a Name /
+	// Entity ID / Brand row underneath only restates them. (Notes is back:
+	// free-text rows wrap at a fixed width instead of being left out, #309.)
+	const COMPARABLE_FIELDS = comparableFields(TABLET_FIELDS, TABLET_FIELD_ROLES);
 
 	// Group fields and filter out those with no data across all flagged tablets.
 	// Each row carries `key` (the unique field key, used as the {#each} key) and
@@ -291,7 +281,10 @@
 							<tr>
 								<td class="spec-label">{row.label}</td>
 								{#each row.values as val, i (i)}
-									<td class:differs={row.differs && val !== ''}>{val || '-'}</td>
+									<td class:differs={row.differs && val !== ''} class:multiline={row.multiline}>
+										{#if row.multiline && val}<span class="long">{val}</span>{:else}{val ||
+												'-'}{/if}
+									</td>
 								{/each}
 							</tr>
 						{/each}
@@ -548,6 +541,22 @@
 		text-align: left;
 		border-bottom: 1px solid var(--border);
 		white-space: nowrap;
+	}
+
+	/* Free-text rows (Notes) wrap at a fixed measure; every other cell stays
+	   on one line. Without the cap, one long note stretched its column to the
+	   full length of the text and pushed the other columns off-screen (#309).
+	   The cap sits on an inner block because a table cell's own max-width
+	   doesn't bound its column. */
+	.compare-table td.multiline {
+		vertical-align: top;
+	}
+
+	.compare-table td.multiline .long {
+		display: block;
+		min-width: 24ch;
+		max-width: 40ch;
+		white-space: pre-wrap;
 	}
 
 	.compare-table th {
