@@ -14,6 +14,7 @@
 		"data-format": "tsx data-repo/scripts/format-data.ts",
 		"data-generate": "tsx data-repo/scripts/generate.ts",
 		"verify-snapshot": "tsx data-repo/scripts/verify-snapshot.ts",
+		"data-edit": "tsx data-repo/scripts/edit.ts",
 		"verify-docs": "node scripts/verify-docs.mjs",
 		"pack-smoke": "node scripts/pack-smoke.mjs",
 		"lint": "eslint . && prettier --check .",

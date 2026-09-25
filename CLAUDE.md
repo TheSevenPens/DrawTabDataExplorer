@@ -237,7 +237,9 @@ runs it first, plus a Windows job that proves checkouts stay LF.
 (DrawTabData #45 phases 3 and 5):
 `data-repo/source/{tablets,pens,pressure-response}/<brand>/<EntityId>.json`.
 The matching `data-repo/data/<collection>/<BRAND>-*.json` bundles the app loads are
-**generated** from them — edit the source, never the bundle. Tools use
+**generated** from them — edit the source, never the bundle. For one
+record, `npm run data-edit -- <EntityId> Field=value` does it safely
+(schema-validated, regenerated, reverted if data-quality objects). Tools use
 `writeSourceRecord` + `regenerate` from `data-repo/lib/sources.ts`; the
 dev server regenerates when a source changes (`source-bundles` plugin in
 `vite.config.ts`). `npm run data-generate` checks the committed bundles
