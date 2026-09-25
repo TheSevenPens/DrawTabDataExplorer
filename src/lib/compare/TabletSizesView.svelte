@@ -1,13 +1,14 @@
 <script lang="ts">
-	// The Compare "sizes" view for tablets (#373), ported from the old
-	// /tablet-compare Compare sizes tab: the compared tablets' digitizer
-	// outlines, then where their diagonals sit among all tablets. Every
-	// member of every column is drawn once.
+	// The Compare "sizes" view for tablets (#373): the compared tablets'
+	// digitizer outlines, then their diagonals on the size-category scale,
+	// one marker per member in its column's colour. The population of all
+	// tablets is a context layer (on by default, #380) with its own year
+	// filter — the text always says which marks are the comparison.
 	import { getDiagonal, type Tablet } from '$data/lib/drawtab-loader.js';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SegmentedControl from '$lib/components/SegmentedControl.svelte';
 	import TabletDimensionComparison from '$lib/components/TabletDimensionComparison.svelte';
-	import ValueHistogram, { type HistogramMarker } from '$lib/components/ValueHistogram.svelte';
+	import ValueHistogram from '$lib/components/ValueHistogram.svelte';
 	import { unitPreference } from '$lib/unit-store.js';
 	import { tabletBrandAndName } from '$lib/tablet-helpers.js';
 	import {
@@ -20,21 +21,34 @@
 		MM_TO_IN,
 		MM_TO_CM,
 	} from '$lib/tablet-size-ranges.js';
+	import type { ResolvedColumn } from './resolve';
+	import {
+		populationNoun,
+		sizeMarkers,
+		sizeSubtitle,
+		sizeTypeFilter,
+		type SizeTypeFilter,
+	} from './tablet-sizes';
 
-	let { tablets, allTablets }: { tablets: Tablet[]; allTablets: Tablet[] } = $props();
+	let {
+		columns,
+		colors,
+		allTablets,
+	}: { columns: ResolvedColumn<Tablet>[]; colors: string[]; allTablets: Tablet[] } = $props();
 
-	type TypeFilter = 'PENTABLET' | 'PENDISPLAY' | 'ALL';
+	// Each tablet once, for the outlines.
+	let tablets = $derived([
+		...new Map(columns.flatMap((c) => c.models).map((t) => [t.Meta.EntityId, t])).values(),
+	]);
 
 	let isMetric = $derived($unitPreference === 'metric');
 	const currentYear = new Date().getFullYear();
 	let compareYears = $state<number | null>(15);
+	let showContext = $state(true);
 	let layout: 'stacked' | 'side' = $state('stacked');
 
-	let hasPenTablets = $derived(tablets.some((t) => t.Model.Type === 'PENTABLET'));
-	let hasDisplays = $derived(tablets.some((t) => t.Model.Type !== 'PENTABLET'));
-	let typeFilter: TypeFilter = $derived(
-		hasPenTablets && hasDisplays ? 'ALL' : hasPenTablets ? 'PENTABLET' : 'PENDISPLAY',
-	);
+	let typeFilter: SizeTypeFilter = $derived(sizeTypeFilter(tablets.map((t) => t.Model.Type)));
+	let noun = $derived(populationNoun(typeFilter));
 
 	let dimItems = $derived(
 		tablets
@@ -44,7 +58,7 @@
 			.map((t) => ({ dims: t.Digitizer!.Dimensions!, label: tabletBrandAndName(t) })),
 	);
 
-	const ofType = (t: Tablet, f: TypeFilter) =>
+	const ofType = (t: Tablet, f: SizeTypeFilter) =>
 		f === 'ALL' ||
 		(f === 'PENTABLET' ? t.Model.Type === 'PENTABLET' : t.Model.Type !== 'PENTABLET');
 	const diag = (t: Tablet) => {
@@ -63,14 +77,7 @@
 			.map(diag)
 			.filter((d): d is number => d !== null),
 	);
-	let markers: HistogramMarker[] = $derived(
-		tablets
-			.map((t) => {
-				const d = diag(t);
-				return d === null ? null : { value: d, label: t.Model.Name };
-			})
-			.filter((m): m is HistogramMarker => m !== null),
-	);
+	let markers = $derived(sizeMarkers(columns, colors, diag, (t) => t.Model.Name));
 
 	let ranges = $derived(
 		typeFilter === 'ALL'
@@ -85,12 +92,12 @@
 					? displayRangesCm
 					: displayRangesIn,
 	);
-	let population = $derived(
-		typeFilter === 'ALL'
-			? 'all tablets'
-			: typeFilter === 'PENTABLET'
-				? 'all pen tablets'
-				: 'all pen displays',
+	let subtitle = $derived(
+		sizeSubtitle({
+			markerCount: markers.length,
+			columnCount: columns.length,
+			context: showContext ? { noun, years: compareYears, count: histValues.length } : null,
+		}),
 	);
 </script>
 
@@ -113,12 +120,14 @@
 	</section>
 {/if}
 
-{#if histValues.length > 0 && markers.length > 0}
+{#if markers.length > 0}
 	<section>
-		<h2>size among {population}</h2>
+		<h2>diagonal size</h2>
 		<ValueHistogram
-			title="Compared tablets against {population}"
+			title="Diagonal size of the compared tablets"
+			{subtitle}
 			values={histValues}
+			distribution={showContext}
 			currentValue={null}
 			{ranges}
 			unit={isMetric ? ' cm' : '"'}
@@ -126,7 +135,22 @@
 			bandwidthMultiplier={0.2}
 			{markers}
 			bind:compareYears
-		/>
+		>
+			{#snippet extraControls()}
+				<label class="context">
+					<input type="checkbox" bind:checked={showContext} />
+					show all {noun} for context
+				</label>
+			{/snippet}
+		</ValueHistogram>
+		<!-- The markers' colours are identities: this names each one. -->
+		<ul class="legend" aria-label="Columns">
+			{#each columns as col, i (col.id)}
+				<li>
+					<span class="swatch" style:background={colors[i]} aria-hidden="true"></span>{col.name}
+				</li>
+			{/each}
+		</ul>
 	</section>
 {/if}
 
@@ -152,5 +176,30 @@
 
 	.head h2 {
 		margin: 0;
+	}
+
+	.context {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		cursor: pointer;
+	}
+
+	.legend {
+		list-style: none;
+		margin: 8px 0 0 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px 18px;
+		font-size: var(--type-caption);
+		color: var(--text);
+	}
+
+	.swatch {
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		margin-right: 6px;
 	}
 </style>
