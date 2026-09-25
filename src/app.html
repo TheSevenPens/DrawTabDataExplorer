@@ -5,6 +5,15 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>DrawTabData Explorer</title>
 		<link rel="icon" href="data:," />
+		<!--
+			Every page's layout load reads version.json before any data file
+			(the manifest says which files exist). Preloading it here lets it
+			download alongside the JS instead of after it — one round trip off
+			every cold load (#359). `crossorigin` makes the preload match the
+			loader's plain fetch() (CORS mode, same-origin credentials), so the
+			browser reuses the response rather than fetching twice.
+		-->
+		<link rel="preload" href="%sveltekit.assets%/version.json" as="fetch" crossorigin="anonymous" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
