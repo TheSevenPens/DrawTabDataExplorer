@@ -46,6 +46,7 @@
 		markers = [],
 		shadedRange,
 		shadedRanges,
+		rowHeight,
 	}: {
 		bands: Band[];
 		axisMax: number;
@@ -81,7 +82,11 @@
 		 * stripes so multiple pens' min/max bands don't pile up on each
 		 * other. Each range gets its own vertical slice of the marker area.
 		 * Color defaults to red if omitted, matching `shadedRange`. */
-		shadedRanges?: { min: number; max: number; color?: string }[];
+		shadedRanges?: { min: number; max: number; color?: string; label?: string }[];
+		/** Minimum height (px, in viewBox units) of each `shadedRanges` row. The
+		 * chart grows taller as rows are added so each stays readable — used by
+		 * Compare's combined IAF / MAX rows. Omit to keep the fixed height. */
+		rowHeight?: number;
 	} = $props();
 
 	let svgEl: SVGElement | undefined = $state();
@@ -95,7 +100,15 @@
 	const headingOffset = $derived(
 		(heading ? HEADING_BAND : 0) + (heading && subtitle ? SUBTITLE_BAND : 0),
 	);
-	const H = $derived(220 + headingOffset);
+	// The marker area is 64px at the base height; with `rowHeight`, rows get
+	// at least that much each and the chart grows to fit them.
+	const BASE_MARKER_AREA = 64;
+	const rowsExtra = $derived(
+		rowHeight && shadedRanges?.length
+			? Math.max(0, shadedRanges.length * rowHeight - BASE_MARKER_AREA)
+			: 0,
+	);
+	const H = $derived(220 + headingOffset + rowsExtra);
 	const PAD_L = 40;
 	const PAD_R = 40;
 	const PAD_TOP = $derived(80 + headingOffset);
@@ -116,6 +129,13 @@
 	const markerSliceH = $derived(
 		markerSliceN > 0 ? (markerBandBot - markerBandTop) / markerSliceN : 0,
 	);
+	// A labelled row puts its name above its stripe; the stripe and any
+	// row-pinned markers take the rest of the row.
+	const ROW_LABEL_H = 15;
+	const labelledRows = $derived(!!shadedRanges?.some((r) => r.label));
+	const stripeTop = (i: number) =>
+		markerBandTop + i * markerSliceH + (labelledRows ? ROW_LABEL_H : 0);
+	const stripeH = $derived(Math.max(2, markerSliceH - (labelledRows ? ROW_LABEL_H + 3 : 0)));
 
 	let ticks = $derived.by(() => {
 		const out: number[] = [];
@@ -261,12 +281,30 @@
 				{#each shadedRanges as r, i (i)}
 					{@const lo = Math.max(0, Math.min(r.min, r.max))}
 					{@const hi = Math.min(axisMax, Math.max(r.min, r.max))}
+					{#if labelledRows && i > 0}
+						<line
+							x1={PAD_L}
+							y1={markerBandTop + i * markerSliceH}
+							x2={W - PAD_R}
+							y2={markerBandTop + i * markerSliceH}
+							stroke="var(--bands-divider, var(--border))"
+							stroke-width="1"
+						/>
+					{/if}
+					{#if r.label}
+						<text
+							x={PAD_L}
+							y={markerBandTop + i * markerSliceH + 11}
+							class="row-label"
+							style={svgTextStyle('annotation')}>{r.label}</text
+						>
+					{/if}
 					{#if hi > lo}
 						<rect
 							x={x(lo)}
-							y={markerBandTop + i * markerSliceH}
+							y={stripeTop(i)}
 							width={x(hi) - x(lo)}
-							height={markerSliceH}
+							height={stripeH}
 							fill={r.color ?? 'var(--accent)'}
 							fill-opacity="0.22"
 						/>
@@ -282,10 +320,8 @@
 			{#each markers as m, i (i)}
 				{#if m.value >= 0 && m.value <= axisMax}
 					{@const sliced = m.seriesIndex !== undefined && markerSliceN > 0}
-					{@const y1Val = sliced ? markerBandTop + m.seriesIndex! * markerSliceH : markerBandTop}
-					{@const y2Val = sliced
-						? markerBandTop + (m.seriesIndex! + 1) * markerSliceH
-						: markerBandBot}
+					{@const y1Val = sliced ? stripeTop(m.seriesIndex!) : markerBandTop}
+					{@const y2Val = sliced ? stripeTop(m.seriesIndex!) + stripeH : markerBandBot}
 					<line
 						x1={x(m.value)}
 						y1={y1Val}
@@ -336,6 +372,9 @@
 		fill: var(--text-muted);
 	}
 	.marker-label {
+		fill: var(--text);
+	}
+	.row-label {
 		fill: var(--text);
 	}
 </style>

@@ -64,3 +64,82 @@ export function penGroupStats(
 		max: unitMedian('MAX'),
 	};
 }
+
+/**
+ * One column's resolved IAF / MAX values, one per pen unit, by the same rule
+ * as PressureRangeTab (#377 follow-up): defective sessions are dropped, and a
+ * unit flagged as an outlier for this metric loses its direct measurements
+ * too. Measured wins per unit, else the median session estimate. Sorted.
+ */
+export function columnRangeValues(
+	metric: RangeMetric,
+	sessions: readonly PressureResponse[],
+	measurements: readonly PressureRange[],
+	defects: ReadonlyMap<string, DefectInfo>,
+): number[] {
+	const outlierKind = metric === 'IAF' ? 'pressure-outlier-iaf' : 'pressure-outlier-max';
+	const isOutlier = (id: string) => !!defects.get(id)?.defects.some((d) => d.Kind === outlierKind);
+	return resolveRangeByUnit(
+		metric,
+		sessions.filter((s) => !defects.has(s.InventoryId)),
+		measurements.filter((m) => m.Metric === metric && !isOutlier(m.PenInventoryId)),
+	)
+		.map((u) => u.value)
+		.sort((a, b) => a - b);
+}
+
+export interface RangeRow {
+	label: string;
+	color: string;
+	/** Resolved per-unit values, ascending; empty when the column has no data. */
+	values: number[];
+	median: number | null;
+}
+
+/** Chart inputs for the combined rows: a min–max stripe per column, a tick per
+ * unit, and a heavy median — all pinned to the column's own row. */
+export function rangeRowsChart(
+	rows: readonly RangeRow[],
+	axisMax: number,
+): {
+	shadedRanges: { min: number; max: number; color: string; label: string }[];
+	markers: {
+		value: number;
+		color: string;
+		seriesIndex: number;
+		dashed: boolean;
+		strokeWidth: number;
+	}[];
+} {
+	const clamp = (v: number) => Math.min(v, axisMax);
+	return {
+		shadedRanges: rows.map((r) => ({
+			min: r.values.length ? clamp(r.values[0]) : 0,
+			max: r.values.length ? clamp(r.values[r.values.length - 1]) : 0,
+			color: r.color,
+			label: r.values.length
+				? `${r.label} · ${r.values.length} ${r.values.length === 1 ? 'unit' : 'units'}`
+				: `${r.label} · no data`,
+		})),
+		markers: rows.flatMap((r, i) => [
+			...r.values.map((v) => ({
+				value: clamp(v),
+				color: r.color,
+				seriesIndex: i,
+				dashed: false,
+				strokeWidth: 1.5,
+			})),
+			...(r.median === null
+				? []
+				: [
+						{
+							value: clamp(r.median),
+							color: r.color,
+							seriesIndex: i,
+							dashed: false,
+							strokeWidth: 4,
+						},
+					]),
+		]),
+	};
+}

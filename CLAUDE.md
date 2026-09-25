@@ -649,7 +649,10 @@ unit / By sample) all derive from
 applies **measured-wins-per-unit**: a pen unit with any direct
 `PressureRange` measurement uses those, else the per-session estimate.
 On `/compare/pens` there is one `PressureRangeTab` per comparison column,
-over that column's sessions and measurements.
+over that column's sessions and measurements, under a combined
+`CompareRangeChart`: every column as its own row of one `PressureBandsChart`
+(labelled `shadedRanges` + row-pinned markers, `rowHeight` grows the chart),
+resolved by the same per-unit rule (`columnRangeValues`).
 
 ## Compare workspace (#373)
 
