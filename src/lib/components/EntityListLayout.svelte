@@ -9,6 +9,7 @@
 	import EntityExplorer from '$lib/components/EntityExplorer.svelte';
 	import type { SubNavTab } from '$lib/nav/subnav-tabs.js';
 	import type { AnyFieldDisplayDef, Step } from '@thesevenpens/queriton';
+	import type { CompareKind, MemberType } from '$lib/compare/model';
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	type CellLinkFn = (item: any) => { label: string; href: string }[];
@@ -33,6 +34,7 @@
 		alwaysSearchFields?: string[];
 		flaggedIds?: Set<string>;
 		onToggleFlag?: (entityId: string) => void;
+		compareAs?: { kind: CompareKind; type: MemberType; noun: string };
 	}
 
 	let { subNavTabs, ...explorerProps }: { subNavTabs?: SubNavTab[] } & ExplorerProps = $props();

@@ -675,6 +675,10 @@ pressure). Everything that changes a comparison is a pure function in
 - **Entry points:** `CompareMenu` on tablet, pen, family and pen-unit
   detail pages (idempotent add, compare with its family / model, compare a
   family's members, start new).
+- **List pages** (`/tablets`, `/pens`, both family lists) pass `compareAs`
+  to `EntityExplorer`: a select column (header box = the rows shown) and a
+  fixed `CompareSelectionBar` — compare these, add to comparison, add as
+  one group (#379). Selection helpers are in `src/lib/selection.ts`.
 - **Image export** ("image ▾"): `layoutMatrixImage` (`compare/matrix-image.ts`)
   lays the visible matrix out as positioned SVG text — widths estimated from
   the type scale, long values ellipsised — and `CompareMatrixImage` draws it

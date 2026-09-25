@@ -7,6 +7,7 @@
 import {
 	addRefs,
 	emptyComparison,
+	newGroup,
 	refKey,
 	type CompareKind,
 	type Comparison,
@@ -30,4 +31,9 @@ export function addMissing(c: Comparison, refs: readonly MemberRef[]): Compariso
 /** Replace the comparison with these refs, one column each. */
 export function startWith(kind: CompareKind, refs: readonly MemberRef[]): Comparison {
 	return addRefs(emptyComparison(kind), refs);
+}
+
+/** Add the refs together as one new, auto-named group column (any number of members). */
+export function addAsGroup(c: Comparison, refs: readonly MemberRef[]): Comparison {
+	return refs.length === 0 ? c : newGroup(c, refs);
 }

@@ -179,6 +179,17 @@ test.describe('Compare workflow', () => {
 		await expect(page.locator('.offscreen svg text').first()).toHaveText('Tablet comparison');
 	});
 
+	test('select rows on a list page and compare them (#379)', async ({ page }) => {
+		await page.goto('/tablets', { waitUntil: 'networkidle' });
+		const boxes = page.locator('td.select-col input');
+		await boxes.nth(0).check();
+		await boxes.nth(1).check();
+		await expect(page.locator('.bar')).toContainText('2 tablets selected');
+		await page.getByRole('button', { name: 'compare these' }).click();
+		await expect(page).toHaveURL(/\/compare\/tablets$/);
+		await expect(page.locator('.count')).toContainText('2 of 8 columns');
+	});
+
 	test('the old compare URLs land on the new workspace', async ({ page }) => {
 		await page.goto('/tablet-compare');
 		await expect(page).toHaveURL(/\/compare\/tablets$/);

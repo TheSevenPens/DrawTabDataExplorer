@@ -17,6 +17,7 @@
 <EntityListLayout
 	subNavTabs={penTabs}
 	title="Pen Families"
+	compareAs={{ kind: 'pens', type: 'family', noun: 'pen families' }}
 	entityType="pen-families"
 	entityLabel="pen families"
 	data={data.families}
