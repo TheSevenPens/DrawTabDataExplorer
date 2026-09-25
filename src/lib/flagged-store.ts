@@ -1,10 +1,13 @@
 import { writable, derived } from 'svelte/store';
 import { getStorageJson, setStorageJson } from '$lib/storage.js';
 
-// --- Tablet flagging (drives the Tablets > Compare sub-tab) ---
+// --- Tablet flagging (Tablets > Flagged; an inbox for /compare, #373) ---
+//
+// Flags collect candidates; they are never required to compare. No cap —
+// the comparison itself holds at most 8 columns (compare/model.ts).
 
 const TABLETS_KEY = 'drawtabdata-flagged-tablets';
-const MAX_FLAGGED_TABLETS = 6;
+const TABLET_FAMILIES_KEY = 'drawtabdata-flagged-tablet-families';
 
 // --- Pen flagging (drives the Pens > Flagged sub-tab) ---
 //
@@ -38,10 +41,8 @@ export function toggleFlag(entityId: string) {
 		let next: string[];
 		if (idx >= 0) {
 			next = ids.filter((_, i) => i !== idx);
-		} else if (ids.length < MAX_FLAGGED_TABLETS) {
-			next = [...ids, entityId];
 		} else {
-			return ids;
+			next = [...ids, entityId];
 		}
 		persist(TABLETS_KEY, next);
 		return next;
@@ -53,7 +54,29 @@ export function clearFlags() {
 	persist(TABLETS_KEY, []);
 }
 
-export const flaggedCount = derived(flaggedTablets, ($f) => $f.length);
+// --- Tablet families (by lowercase EntityId) ---
+
+export const flaggedTabletFamilies = writable<string[]>(loadList(TABLET_FAMILIES_KEY));
+
+export function toggleFlaggedTabletFamily(entityId: string) {
+	const id = entityId.toLowerCase();
+	flaggedTabletFamilies.update((ids) => {
+		const next = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
+		persist(TABLET_FAMILIES_KEY, next);
+		return next;
+	});
+}
+
+export function clearFlaggedTabletFamilies() {
+	flaggedTabletFamilies.set([]);
+	persist(TABLET_FAMILIES_KEY, []);
+}
+
+/** Everything flagged on the tablet side: models plus families. */
+export const flaggedCount = derived(
+	[flaggedTablets, flaggedTabletFamilies],
+	([$t, $f]) => $t.length + $f.length,
+);
 
 // --- Pen units (inventory IDs) ---
 
@@ -102,19 +125,6 @@ export function clearAllPenFlags() {
 	persist(PEN_MODELS_KEY, []);
 	persist(PEN_FAMILIES_KEY, []);
 }
-
-/**
- * Clear only the pen-model flags. Used by /pen-compare's "Clear all"
- * button — mirrors the tablet-side `clearFlags` which only touches the
- * flag set that page actually manages.
- */
-export function clearFlaggedPenModels() {
-	flaggedPenModels.set([]);
-	persist(PEN_MODELS_KEY, []);
-}
-
-/** Count of flagged pen models (drives the /pen-compare sub-nav badge). */
-export const flaggedPenModelCount = derived(flaggedPenModels, ($f) => $f.length);
 
 export const flaggedPenTotalCount = derived(
 	[flaggedPenUnits, flaggedPenModels, flaggedPenFamilies],

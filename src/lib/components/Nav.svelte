@@ -16,19 +16,14 @@
 		{
 			href: '/tablets',
 			label: 'Tablets',
-			altActive: ['/tablet-families', '/tablet-analysis', '/tablet-inventory', '/tablet-compare'],
+			altActive: ['/tablet-families', '/tablet-analysis', '/tablet-inventory', '/tablet-flagged'],
 		},
 		{
 			href: '/pens',
 			label: 'Pens',
-			altActive: [
-				'/pen-families',
-				'/pen-analysis',
-				'/pen-inventory',
-				'/pen-flagged',
-				'/pen-compare',
-			],
+			altActive: ['/pen-families', '/pen-analysis', '/pen-inventory', '/pen-flagged'],
 		},
+		{ href: '/compare', label: 'Compare', altActive: ['/compare/tablets', '/compare/pens'] },
 		{ href: '/drivers', label: 'Drivers' },
 		{
 			href: '/reference',

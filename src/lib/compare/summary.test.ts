@@ -49,6 +49,16 @@ describe('summarizeCell', () => {
 		expect(summarizeCell(touch, many, show).text).toBe('4 values');
 	});
 
+	it('ISO dates of mixed precision get an earliest – latest range', () => {
+		const date = F('Released', 'Model');
+		const c = summarizeCell(
+			date,
+			[{ Released: '2019-05-16' }, { Released: '2017-01' }, { Released: '2018-03-02' }],
+			show,
+		);
+		expect(c.text).toBe('2017-01 – 2019-05-16');
+	});
+
 	it('blanks are not values; partial coverage is noted; all-blank is blank', () => {
 		const rate = F('Rate', 'Digitizer');
 		expect(summarizeCell(rate, [{ Rate: '' }, { Rate: '200' }], show)).toEqual({

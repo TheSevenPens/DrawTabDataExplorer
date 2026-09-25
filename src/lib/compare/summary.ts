@@ -40,6 +40,8 @@ export interface SummaryGroup {
 
 const MAX_LISTED = 3;
 
+const ISO_DATE = /^\d{4}(-\d{2}(-\d{2})?)?$/;
+
 export function summarizeCell<T>(
 	field: FieldDisplayDef<T>,
 	models: readonly T[],
@@ -63,6 +65,12 @@ export function summarizeCell<T>(
 		const lo = sorted[0];
 		const hi = sorted[sorted.length - 1];
 		return { text: `${lo.text} – ${hi.text}`, varies: true, note };
+	}
+	// ISO dates of any precision ("2019", "2019-05", "2019-05-16") order as
+	// text, so they get a range too.
+	if (present.every((v) => ISO_DATE.test(v.raw.trim()))) {
+		const sorted = [...present].sort((a, b) => a.raw.trim().localeCompare(b.raw.trim()));
+		return { text: `${sorted[0].text} – ${sorted[sorted.length - 1].text}`, varies: true, note };
 	}
 	const text = distinct.length <= MAX_LISTED ? distinct.join(' / ') : `${distinct.length} values`;
 	return { text, varies: true, note };

@@ -80,8 +80,8 @@
 	<h1 class="sr-only">Flagged Pens</h1>
 	<p class="meta">
 		{$flaggedPenTotalCount} item{$flaggedPenTotalCount === 1 ? '' : 's'} flagged across pen units, models,
-		and families. See the pressure-response overlay on
-		<a href={resolve('/pen-compare')}>Pens ▸ Compare ▸ Pressure Response</a>.
+		and families. Flags are an inbox for
+		<a href={resolve('/compare/pens')}>compare</a>, where they can be added to a comparison.
 	</p>
 	{#if $flaggedPenTotalCount > 0}
 		<Button variant="danger" onclick={clearAllPenFlags}>Clear all flags</Button>

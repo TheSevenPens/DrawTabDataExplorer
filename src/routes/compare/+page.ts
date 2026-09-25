@@ -1,5 +1,4 @@
-// The old tablet comparison moved to /compare/tablets (#373); old links and
-// bookmarks land there. Its Flagged list is now /tablet-flagged.
+// /compare has no page of its own: it opens the tablets comparison (#373).
 import { redirect } from '@sveltejs/kit';
 import { base } from '$app/paths';
 
