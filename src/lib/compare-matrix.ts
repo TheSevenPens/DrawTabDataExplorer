@@ -23,6 +23,13 @@ export interface CompareRow {
 	/** One entry per compared item, in input order. `''` for no value. */
 	values: string[];
 	differs: boolean;
+	/**
+	 * The field is free text (`multiline` on its FieldDisplayDef — the Notes
+	 * fields). The matrix is otherwise one line per cell; these cells wrap at
+	 * a fixed width instead, so one long note can't stretch its column across
+	 * the page (#309). Exports carry the full text either way.
+	 */
+	multiline: boolean;
 }
 
 export interface CompareGroup {
@@ -56,6 +63,7 @@ export function buildCompareGroups<T>(
 				label: stripUnit(field.label, field.unit),
 				values,
 				differs: countDistinct(values) > 1,
+				multiline: field.multiline === true,
 			});
 		}
 		if (rows.length > 0) groups.push({ group, fields: rows });

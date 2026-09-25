@@ -457,7 +457,10 @@
 							<tr>
 								<td class="spec-label">{row.label}</td>
 								{#each row.values as val, i (i)}
-									<td class:differs={row.differs && val !== ''}>{val || '-'}</td>
+									<td class:differs={row.differs && val !== ''} class:multiline={row.multiline}>
+										{#if row.multiline && val}<span class="long">{val}</span>{:else}{val ||
+												'-'}{/if}
+									</td>
 								{/each}
 							</tr>
 						{/each}
@@ -777,6 +780,22 @@
 		text-align: left;
 		border-bottom: 1px solid var(--border);
 		white-space: nowrap;
+	}
+
+	/* Free-text rows (Notes) wrap at a fixed measure; every other cell stays
+	   on one line. Without the cap, one long note stretched its column to the
+	   full length of the text and pushed the other columns off-screen (#309).
+	   The cap sits on an inner block because a table cell's own max-width
+	   doesn't bound its column. */
+	.compare-table td.multiline {
+		vertical-align: top;
+	}
+
+	.compare-table td.multiline .long {
+		display: block;
+		min-width: 24ch;
+		max-width: 40ch;
+		white-space: pre-wrap;
 	}
 
 	.compare-table th {
