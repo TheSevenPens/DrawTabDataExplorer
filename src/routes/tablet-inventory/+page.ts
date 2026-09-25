@@ -1,4 +1,4 @@
-import { buildTabletNameMap } from '$lib/tablet-helpers.js';
+import { buildTabletNameMap, tabletBrandAndName } from '$lib/tablet-helpers.js';
 
 export async function load({ parent }) {
 	const { ds } = await parent();
@@ -7,5 +7,11 @@ export async function load({ parent }) {
 		ds.Tablets.toArray(),
 	]);
 	const tabletNameMap = buildTabletNameMap(allTablets);
-	return { tablets, tabletNameMap };
+	// The Timeline tab labels each unit from its model record — the canonical
+	// "Brand Name" (no "Wacom Wacom One") and the model's own Type, not the
+	// copy of it on the inventory row.
+	const modelById = new Map(
+		allTablets.map((t) => [t.Meta.EntityId, { label: tabletBrandAndName(t), type: t.Model.Type }]),
+	);
+	return { tablets, tabletNameMap, modelById };
 }
