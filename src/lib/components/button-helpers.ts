@@ -3,7 +3,8 @@
 // holds the one non-obvious behavior (disabled buttons surface their reason as a
 // tooltip), so it lives here and is unit-tested independently of the component.
 
-export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'danger' | 'icon' | 'menu-trigger';
+export type ButtonVariant =
+	'primary' | 'secondary' | 'subtle' | 'danger' | 'icon' | 'menu-trigger' | 'add';
 export type ButtonSize = 'sm' | 'md';
 
 /**

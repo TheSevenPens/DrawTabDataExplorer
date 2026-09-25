@@ -15,7 +15,7 @@ The reusable building blocks from the UX-architecture pass (GitHub #228). Prefer
 
 ### `Button`
 
-Shared command button. _Props:_ `variant` (`primary` / `secondary` / `subtle` / `danger` / `icon` / `menu-trigger`), `size` (`sm` / `md`), `pressed?` (aria-pressed for toggles), `disabled`, `disabledReason?` (surfaced as the tooltip when disabled). The one bit of logic — `resolveButtonTitle` — lives in [button-helpers.ts](../src/lib/components/button-helpers.ts) with tests.
+Shared command button. _Props:_ `variant` (`primary` / `secondary` / `subtle` / `danger` / `icon` / `menu-trigger` / `add` — the 26px dashed square `+` ending the FilterBar / SortBar / ColumnBar pill rows), `size` (`sm` / `md`), `pressed?` (aria-pressed for toggles), `disabled`, `disabledReason?` (surfaced as the tooltip when disabled). The one bit of logic — `resolveButtonTitle` — lives in [button-helpers.ts](../src/lib/components/button-helpers.ts) with tests.
 
 Metro: square outlines on the page ground, no fill by default. **Only `primary` spends the accent as a fill** — everything else states itself with an edge, so a screen full of commands stays quiet. `danger` reads from `--danger`, never the accent. Labels are wide-tracked caps at `sm`.
 

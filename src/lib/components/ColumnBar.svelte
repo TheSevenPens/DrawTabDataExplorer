@@ -4,6 +4,7 @@
 	import PopoverMenu from '$lib/components/PopoverMenu.svelte';
 	import { moveItem } from '$lib/pill-dnd.js';
 	import { fieldOptionLabelForKey } from '$lib/field-option-label.js';
+	import Button from './Button.svelte';
 	import {
 		type PipelineSection,
 		setPipelineFieldDragData,
@@ -201,7 +202,12 @@
 					>
 				{/each}
 				<div class="add-wrapper" class:picker-open={showPicker} role="none">
-					<button class="add-btn col-add" onclick={() => (showPicker = !showPicker)}>+</button>
+					<Button
+						variant="add"
+						onclick={() => (showPicker = !showPicker)}
+						title="Add column"
+						aria-label="Add column">+</Button
+					>
 					{#if showPicker}
 						<FieldPicker
 							{fields}
@@ -357,24 +363,6 @@
 		border-color: var(--accent);
 	}
 
-	.add-btn {
-		width: 26px;
-		height: 26px;
-		border: 1px dashed var(--border);
-		border-radius: var(--radius);
-		background: transparent;
-		cursor: pointer;
-		font-size: 14px;
-		color: var(--text-muted);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-	.col-add:hover {
-		border-color: var(--accent);
-		color: var(--accent);
-	}
 	.add-wrapper {
 		position: relative;
 		z-index: 1;

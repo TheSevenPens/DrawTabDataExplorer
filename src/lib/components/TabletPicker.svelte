@@ -5,6 +5,7 @@
 	import { toggleFlag } from '$lib/flagged-store.js';
 	import PickerModalShell from '$lib/components/PickerModalShell.svelte';
 	import { onMount } from 'svelte';
+	import Button from './Button.svelte';
 
 	interface Props {
 		allTablets: Tablet[];
@@ -100,13 +101,14 @@
 				</div>
 				<span class="type-badge type-{t.Model.Type.toLowerCase()}">{typeLabel(t.Model.Type)}</span>
 				{#if alreadyAdded}
-					<button class="add-btn is-added" disabled>✓ Added</button>
+					<span class="added-status">✓ Added</span>
 				{:else}
-					<button
-						class="add-btn"
+					<Button
+						variant="secondary"
 						disabled={isFull}
+						disabledReason="Maximum 6 tablets reached"
 						onclick={() => toggleFlag(t.Meta.EntityId)}
-						title={isFull ? 'Maximum 6 tablets reached' : `Add ${t.Model.Name}`}>+ Add</button
+						title={`Add ${t.Model.Name}`}>+ Add</Button
 					>
 				{/if}
 			</li>
@@ -254,34 +256,21 @@
 		flex-shrink: 0;
 	}
 
-	.add-btn {
+	/* Status, not a command: the row is already in the comparison. Sized like
+	   the "+ Add" Button beside it so the rows stay one height. */
+	.added-status {
 		flex-shrink: 0;
-		padding: 4px 12px;
+		/* Button size sm metrics, so both controls are the same height. */
+		padding: 4px 9px;
+		line-height: 1;
 		font-size: var(--type-micro);
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: var(--track-wide);
-		border-radius: var(--radius);
-		border: 1px solid var(--accent);
-		background: transparent;
-		color: var(--accent);
-		cursor: pointer;
-		white-space: nowrap;
-	}
-
-	.add-btn:hover:not(:disabled) {
-		background: var(--accent);
-		color: var(--accent-contrast);
-	}
-
-	.add-btn:disabled {
-		opacity: 0.5;
-		cursor: default;
-	}
-
-	.add-btn.is-added {
-		border-color: var(--good);
+		border: 1px solid var(--good);
 		color: var(--good);
+		opacity: 0.5;
+		white-space: nowrap;
 	}
 
 	.empty {

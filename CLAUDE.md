@@ -343,7 +343,8 @@ for these instead of one-off markup — the full catalog with props is in
 [docs/UXCOMPONENTS.md](docs/UXCOMPONENTS.md) § 0.
 
 - **`Button`** / **`SegmentedControl`** — command buttons
-  (variants primary/secondary/subtle/danger/icon/menu-trigger; pass
+  (variants primary/secondary/subtle/danger/icon/menu-trigger/add — `add` is
+  the dashed `+` that ends a query toolbar's pill row; pass
   `disabledReason` for a disabled-state tooltip) and view toggles. Don't
   add bespoke `.copy-btn`/`.add-btn`/`.view-toggle` styles.
 - **`EmptyState` / `StatusMessage` / `LoadingState`** — no-data, good/warn/
