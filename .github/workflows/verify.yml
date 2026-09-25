@@ -71,6 +71,12 @@ jobs:
         env:
           NODE_ENV: production
 
+      # The build's own version.json must verify: its bundles hash as
+      # recorded and regenerate byte-for-byte from the data commit it names
+      # (RFC #45). So every deploy is a snapshot outsiders can check.
+      - name: Published snapshot verifies
+        run: npm run verify-snapshot -- build/version.json
+
       # Packs data-repo and queriton as npm would publish them and imports
       # them from a throwaway project. Needs the npm registry (it installs
       # tsx), so it's its own step: a registry hiccup shows here, not as a
