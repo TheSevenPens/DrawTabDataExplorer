@@ -675,6 +675,11 @@ pressure). Everything that changes a comparison is a pure function in
 - **Entry points:** `CompareMenu` on tablet, pen, family and pen-unit
   detail pages (idempotent add, compare with its family / model, compare a
   family's members, start new).
+- **Image export** ("image ▾"): `layoutMatrixImage` (`compare/matrix-image.ts`)
+  lays the visible matrix out as positioned SVG text — widths estimated from
+  the type scale, long values ellipsised — and `CompareMatrixImage` draws it
+  off screen for `ChartExportButton` (PNG / SVG / PowerPoint, theme baked in,
+  #378). Full values stay in the Markdown / CSV exports.
 - Pressure response is pooled **one series per column** (the column's
   palette colour) with a "split into pens" toggle; the per-column table
   under the chart is its legend. Sessions carry a `group` (the column, or

@@ -13,6 +13,9 @@
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SegmentedControl from '$lib/components/SegmentedControl.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
+	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
+	import CompareMatrixImage from './CompareMatrixImage.svelte';
+	import { layoutMatrixImage, membersImageInput, summaryImageInput } from './matrix-image';
 	import { buildCompareGroups, onlyDifferences } from '$lib/compare-matrix.js';
 	import { paletteColor } from '$lib/chart-palette.js';
 	import { theme } from '$lib/theme-store.js';
@@ -162,6 +165,32 @@
 	}
 
 	const kindNoun = $derived(kind === 'tablets' ? 'tablets' : 'pens');
+
+	// --- export as an image: what's on screen, drawn as SVG (#378) ---
+	let imageSvg: SVGSVGElement | undefined = $state();
+	let imageLayout = $derived.by(() => {
+		const title = `${kind === 'tablets' ? 'Tablet' : 'Pen'} comparison`;
+		const subtitle = [
+			`${resolved.length} ${resolved.length === 1 ? 'column' : 'columns'}`,
+			`${flatMembers.length} ${kindNoun}`,
+			view === 'summary' ? 'summary' : 'every member',
+			diffsOnly ? 'only differences' : '',
+		]
+			.filter(Boolean)
+			.join(' · ');
+		const cols = resolved.map((c, i) => ({ name: c.name, color: colors[i] }));
+		return layoutMatrixImage(
+			view === 'summary'
+				? summaryImageInput(title, subtitle, cols, summaryGroups)
+				: membersImageInput(
+						title,
+						subtitle,
+						cols,
+						memberHeaders.map((hs) => hs.map((h) => h.label)),
+						memberGroups,
+					),
+		);
+	});
 </script>
 
 <Nav />
@@ -193,6 +222,12 @@
 		</label>
 		<Button variant="subtle" onclick={copyMarkdown}>{mdStatus || 'copy markdown'}</Button>
 		<Button variant="subtle" onclick={() => (showExport = true)}>export</Button>
+		<ChartExportButton
+			label="image ▾"
+			title="{kind === 'tablets' ? 'Tablet' : 'Pen'} comparison"
+			filename="{kind}-comparison"
+			getSvg={() => imageSvg}
+		/>
 	{/if}
 	{#if resolved.length > 0}
 		<Button variant="subtle" onclick={() => update(() => emptyComparison(kind))}>clear</Button>
@@ -259,6 +294,10 @@
 		{/if}
 	</div>
 </div>
+
+{#if activeTab === 'specs' && resolved.length > 0}
+	<CompareMatrixImage layout={imageLayout} bind:svg={imageSvg} />
+{/if}
 
 {#if showExport}
 	<ExportDialog

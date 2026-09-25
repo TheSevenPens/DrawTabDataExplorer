@@ -25,8 +25,10 @@
 		 * present, two extra menu items appear: "Copy data" and
 		 * "Download HTML". Only valid in canvas mode. */
 		getDataHtml?: () => string;
+		/** Trigger text; defaults to "Export ▾". */
+		label?: string;
 	}
-	let { getSvg, getCanvas, getDataHtml, title, filename }: Props = $props();
+	let { getSvg, getCanvas, getDataHtml, title, filename, label = 'Export ▾' }: Props = $props();
 	let mode: 'svg' | 'canvas' = $derived(getCanvas ? 'canvas' : 'svg');
 
 	let open = $state(false);
@@ -323,7 +325,7 @@ ${html}
 			open = !open;
 		}}
 	>
-		{toast ?? 'Export ▾'}
+		{toast ?? label}
 	</button>
 	{#if open}
 		<div class="dropdown">
