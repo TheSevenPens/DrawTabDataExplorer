@@ -628,6 +628,10 @@ will surprise contributors:
   `visibleSessions` (which honours `hiddenIds` and the defective
   filter), so the `$effect` block explicitly reads `maxPmax` to track
   it.
+- **Envelope groups**: sessions may carry `group` / `groupLabel`
+  (`groupForEnvelope` in `chart-session-state.ts`). Each group gets its own
+  closed-polygon band and median, built the same way; no groups means the
+  original single envelope in the accent colour.
 
 The `lockedZoom` prop on `PressureResponseChart` hides the Zoom dropdown and
 forces a preset — used by `/pressure-backfill` to embed IAF- and
@@ -673,8 +677,10 @@ pressure). Everything that changes a comparison is a pure function in
   family's members, start new).
 - Pressure response is pooled **one series per column** (the column's
   palette colour) with a "split into pens" toggle; the per-column table
-  under the chart is its legend. True per-group envelope bands would need a
-  `PressureResponseChart` change.
+  under the chart is its legend. Sessions carry a `group` (the column, or
+  the pen when split), and the chart's **Envelope** view draws one band +
+  median per group in that group's colour (#377). Ungrouped sessions — every
+  other caller — still get one envelope over everything.
 
 ## Extracted helpers ship with tests
 
