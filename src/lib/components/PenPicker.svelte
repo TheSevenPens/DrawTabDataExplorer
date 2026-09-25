@@ -10,6 +10,7 @@
 	import { toggleFlaggedPenModel } from '$lib/flagged-store.js';
 	import PickerModalShell from '$lib/components/PickerModalShell.svelte';
 	import { onMount } from 'svelte';
+	import Button from './Button.svelte';
 
 	interface Props {
 		allPens: Pen[];
@@ -85,12 +86,12 @@
 					<span class="pen-id">{p.PenId}</span>
 				</div>
 				{#if alreadyAdded}
-					<button class="add-btn is-added" disabled>✓ Added</button>
+					<span class="added-status">✓ Added</span>
 				{:else}
-					<button
-						class="add-btn"
+					<Button
+						variant="secondary"
 						onclick={() => toggleFlaggedPenModel(p.EntityId)}
-						title={`Add ${p.PenName}`}>+ Add</button
+						title={`Add ${p.PenName}`}>+ Add</Button
 					>
 				{/if}
 			</li>
@@ -207,34 +208,21 @@
 		color: var(--text-muted);
 	}
 
-	.add-btn {
+	/* Status, not a command: the row is already in the comparison. Sized like
+	   the "+ Add" Button beside it so the rows stay one height. */
+	.added-status {
 		flex-shrink: 0;
-		padding: 4px 12px;
+		/* Button size sm metrics, so both controls are the same height. */
+		padding: 4px 9px;
+		line-height: 1;
 		font-size: var(--type-micro);
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: var(--track-wide);
-		border-radius: var(--radius);
-		border: 1px solid var(--accent);
-		background: transparent;
-		color: var(--accent);
-		cursor: pointer;
-		white-space: nowrap;
-	}
-
-	.add-btn:hover:not(:disabled) {
-		background: var(--accent);
-		color: var(--accent-contrast);
-	}
-
-	.add-btn:disabled {
-		opacity: 0.5;
-		cursor: default;
-	}
-
-	.add-btn.is-added {
-		border-color: var(--good);
+		border: 1px solid var(--good);
 		color: var(--good);
+		opacity: 0.5;
+		white-space: nowrap;
 	}
 
 	.empty {

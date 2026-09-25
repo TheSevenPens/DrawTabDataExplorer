@@ -44,6 +44,7 @@
 	class:danger={variant === 'danger'}
 	class:icon={variant === 'icon'}
 	class:menu-trigger={variant === 'menu-trigger'}
+	class:add={variant === 'add'}
 	class:md={size === 'md'}
 	class:sm={size === 'sm'}
 	{disabled}
@@ -170,6 +171,29 @@
 	.btn.menu-trigger:hover:not(:disabled) {
 		background: var(--hover-bg);
 		color: var(--text);
+	}
+
+	/*
+	 * add — the dashed square "+" that ends a query toolbar's pill row
+	 * (FilterBar / SortBar / ColumnBar, #265). Dashed because it is a slot
+	 * for the next pill, not a command; square and fixed-size so it lines
+	 * up with the pills whatever the size prop says.
+	 */
+	.btn.add {
+		width: 26px;
+		height: 26px;
+		padding: 0;
+		flex-shrink: 0;
+		background: transparent;
+		border: 1px dashed var(--border);
+		color: var(--text-muted);
+		font-size: var(--type-body);
+		text-transform: none;
+		letter-spacing: normal;
+	}
+	.btn.add:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
 	}
 
 	/* toggle pressed state (used with subtle/menu-trigger for view toggles) */

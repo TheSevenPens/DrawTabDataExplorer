@@ -7,6 +7,7 @@
 	import FieldPicker from '$lib/components/FieldPicker.svelte';
 	import PopoverMenu from '$lib/components/PopoverMenu.svelte';
 	import { fieldOptionLabelForKey } from '$lib/field-option-label.js';
+	import Button from './Button.svelte';
 	import {
 		type PipelineSection,
 		setPipelineFieldDragData,
@@ -250,10 +251,11 @@
 					>
 				{/each}
 				<div class="add-wrapper" class:picker-open={showAddPicker} role="none">
-					<button
-						class="add-btn filter-add"
+					<Button
+						variant="add"
 						onclick={() => (inline ? (showAddPicker = !showAddPicker) : addFilter())}
-						title="Add filter">+</button
+						title="Add filter"
+						aria-label="Add filter">+</Button
 					>
 					{#if inline && showAddPicker}
 						<FieldPicker
@@ -490,24 +492,6 @@
 		text-decoration: line-through;
 	}
 
-	.add-btn {
-		width: 26px;
-		height: 26px;
-		border: 1px dashed var(--border);
-		border-radius: var(--radius);
-		background: transparent;
-		cursor: pointer;
-		font-size: 14px;
-		color: var(--text-muted);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-	.filter-add:hover {
-		border-color: var(--accent);
-		color: var(--accent);
-	}
 	.add-wrapper {
 		position: relative;
 		z-index: 1;
