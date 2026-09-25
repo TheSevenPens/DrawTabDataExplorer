@@ -11,6 +11,8 @@ import type { Tablet, Pen, TabletFamily, PenFamily } from '$data/lib/drawtab-loa
 import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 import { tabletBrandAndName } from '$lib/tablet-helpers.js';
 import { penBrandAndName } from '$lib/pen-helpers.js';
+import { tabletIdRedundantInName } from '$data/lib/entities/tablet-fields.js';
+import { penIdRedundantInName } from '$data/lib/entities/pen-fields.js';
 import type { Candidate } from './candidates';
 import type { ResolveContext } from './resolve';
 
@@ -70,7 +72,9 @@ export function tabletCompareData(
 			ref: { type: 'model' as const, id: lc(t.Meta.EntityId) },
 			kindLabel: t.Model.Type === 'PENTABLET' ? 'pen tablet' : 'pen display',
 			label: tabletBrandAndName(t),
-			detail: t.Model.Id,
+			// The id only when the name doesn't already say it (same rule as
+			// tabletFullName) — "Huion PW517 (PW517)" restates itself.
+			detail: tabletIdRedundantInName(t) ? undefined : t.Model.Id,
 			modelId: lc(t.Meta.EntityId),
 			searchTexts: [t.Model.Id, ...(t.Model.AlternateNames ?? [])],
 		})),
@@ -107,7 +111,7 @@ export function penCompareData(
 			ref: { type: 'model' as const, id: lc(p.EntityId) },
 			kindLabel: 'pen',
 			label: penBrandAndName(p),
-			detail: p.PenId,
+			detail: penIdRedundantInName(p) ? undefined : p.PenId,
 			modelId: lc(p.EntityId),
 			searchTexts: [p.PenId],
 		})),

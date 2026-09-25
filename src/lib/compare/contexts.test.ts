@@ -85,6 +85,24 @@ describe('penCompareData', () => {
 		);
 	});
 
+	it('drops the id detail when the name already carries it', () => {
+		const { candidates: cs } = penCompareData(
+			[
+				{
+					EntityId: 'huion.pen.pw517',
+					Brand: 'HUION',
+					PenId: 'PW517',
+					PenName: 'PW517',
+					PenFamily: '',
+				},
+			] as unknown as Pen[],
+			[],
+			[],
+		);
+		expect(cs[0].detail).toBeUndefined();
+		expect(candidates[1].detail).toBe('KP-504E');
+	});
+
 	it('offers families, models and units', () => {
 		expect(candidates.map((c) => c.ref.type)).toEqual(['family', 'model', 'model', 'unit']);
 		const unit = candidates[3];
