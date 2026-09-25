@@ -103,6 +103,19 @@ describe('penCompareData', () => {
 		expect(candidates[1].detail).toBe('KP-504E');
 	});
 
+	it('skips UNASSIGNED placeholder units, which several records share', () => {
+		const withPlaceholders = [
+			...units,
+			{ InventoryId: 'UNASSIGNED', PenEntityId: 'wacom.pen.kp503e' },
+			{ InventoryId: 'UNASSIGNED', PenEntityId: 'wacom.pen.kp503e' },
+		] as InventoryPen[];
+		const { candidates: cs, ctx: c } = penCompareData(pens, families, withPlaceholders);
+		const unitIds = cs.filter((x) => x.ref.type === 'unit').map((x) => x.ref.id);
+		expect(unitIds).toEqual(['wap.0030']);
+		expect(new Set(cs.map((x) => x.ref.type + x.ref.id)).size).toBe(cs.length);
+		expect(c.unitModelId?.('unassigned')).toBeUndefined();
+	});
+
 	it('offers families, models and units', () => {
 		expect(candidates.map((c) => c.ref.type)).toEqual(['family', 'model', 'model', 'unit']);
 		const unit = candidates[3];

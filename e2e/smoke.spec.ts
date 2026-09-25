@@ -458,6 +458,18 @@ test.describe('Separator-insensitive ID search', () => {
 		await expect(dialog).toContainText('PTK-1240');
 	});
 
+	test('compare rail: UNASSIGNED placeholder units never crash the list', async ({ page }) => {
+		// Several inventory pens share the placeholder id "UNASSIGNED"; offered as
+		// units they gave the keyed list duplicate keys (each_key_duplicate).
+		const errors: string[] = [];
+		page.on('pageerror', (e) => errors.push(e.message));
+		await page.goto('/compare/pens');
+		await page.locator('.rail input[type="search"]').fill('apple');
+		await expect(page.locator('.rail')).toContainText('Apple Pencil (2nd Generation)');
+		await expect(page.locator('.rail')).not.toContainText('UNASSIGNED');
+		expect(errors).toEqual([]);
+	});
+
 	test('compare rail: "kp503e" lists KP-503E', async ({ page }) => {
 		await page.goto('/compare/pens');
 		await page.locator('.rail input[type="search"]').fill('kp503e');
