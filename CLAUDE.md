@@ -679,6 +679,11 @@ pressure). Everything that changes a comparison is a pure function in
   to `EntityExplorer`: a select column (header box = the rows shown) and a
   fixed `CompareSelectionBar` — compare these, add to comparison, add as
   one group (#379). Selection helpers are in `src/lib/selection.ts`.
+- **Image export** ("image ▾"): `layoutMatrixImage` (`compare/matrix-image.ts`)
+  lays the visible matrix out as positioned SVG text — widths estimated from
+  the type scale, long values ellipsised — and `CompareMatrixImage` draws it
+  off screen for `ChartExportButton` (PNG / SVG / PowerPoint, theme baked in,
+  #378). Full values stay in the Markdown / CSV exports.
 - Pressure response is pooled **one series per column** (the column's
   palette colour) with a "split into pens" toggle; the per-column table
   under the chart is its legend. Sessions carry a `group` (the column, or

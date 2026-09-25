@@ -174,6 +174,9 @@ test.describe('Compare workflow', () => {
 		await page.getByRole('button', { name: '+ add all' }).click();
 		await expect(page.locator('.count')).toContainText('1 of 8 columns');
 		await expect(page.locator('.col-head')).toHaveCount(1);
+		// The matrix is drawn off screen for image export (#378).
+		await expect(page.getByRole('button', { name: 'image ▾' })).toBeVisible();
+		await expect(page.locator('.offscreen svg text').first()).toHaveText('Tablet comparison');
 	});
 
 	test('select rows on a list page and compare them (#379)', async ({ page }) => {
