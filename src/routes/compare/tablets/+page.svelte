@@ -52,14 +52,9 @@
 	memberHeader={(t) => ({ id: t.Meta.EntityId, label: tabletBrandAndName(t) })}
 	extraTabs={[{ id: 'sizes', label: 'Sizes' }]}
 >
-	{#snippet views(tab, columns)}
+	{#snippet views(tab, columns, colors)}
 		{#if tab === 'sizes'}
-			<TabletSizesView
-				tablets={[
-					...new Map(columns.flatMap((c) => c.models).map((t) => [t.Meta.EntityId, t])).values(),
-				]}
-				{allTablets}
-			/>
+			<TabletSizesView {columns} {colors} {allTablets} />
 		{/if}
 	{/snippet}
 </CompareWorkspace>

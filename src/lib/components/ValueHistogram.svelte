@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ChartExportButton from '$lib/components/ChartExportButton.svelte';
 	import ChartFrame from '$lib/components/ChartFrame.svelte';
+	import type { Snippet } from 'svelte';
 	import { svgTextStyle, CHART_FONT_FAMILY } from '$lib/chart-type.js';
 
 	export interface HistogramRange {
@@ -12,6 +13,10 @@
 	export interface HistogramMarker {
 		value: number;
 		label: string;
+		/** Identity colour for the marker line (a `paletteColor` slot). Omit
+		 * for the default ink reference mark. A coloured marker needs a legend
+		 * naming its series — the caller supplies one. */
+		color?: string;
 	}
 
 	let {
@@ -32,6 +37,8 @@
 		showUnitInBands = true,
 		showUnitInAxis = true,
 		subtitle = '',
+		distribution = true,
+		extraControls,
 	}: {
 		title?: string;
 		/** Optional sub-line rendered under the title, e.g. "313 tablets · 2018–2025". */
@@ -59,6 +66,12 @@
 		showUnitInBands?: boolean;
 		/** Show units on the x-axis tick labels (e.g. "100 cd/m²"). Default true. */
 		showUnitInAxis?: boolean;
+		/** Draw the population — bars, KDE curve and the year filter that
+		 * scopes them. False leaves the markers alone on the banded scale
+		 * (Compare's sizes view with its context layer turned off, #380). */
+		distribution?: boolean;
+		/** Extra controls rendered before the year filter in the chart frame. */
+		extraControls?: Snippet;
 	} = $props();
 
 	let titleText = $derived(showUnitInTitle && unit ? `${title} (${unit.trim()})` : title);
@@ -93,7 +106,7 @@
 	let bins = $derived.by(() => {
 		const binCount = Math.ceil((scaleMax - scaleMin) / binSize);
 		const counts: number[] = new Array(binCount).fill(0);
-		for (const d of values) {
+		for (const d of distribution ? values : []) {
 			const idx = Math.floor((d - scaleMin) / binSize);
 			if (idx >= 0 && idx < binCount) counts[idx]++;
 		}
@@ -255,12 +268,13 @@
 	let svgEl: SVGSVGElement | undefined = $state();
 </script>
 
-{#if values.length > 0}
+{#if values.length > 0 || (!distribution && markers.length > 0)}
 	<div class="histogram-container">
 		<div class="histogram-frame">
 			<ChartFrame>
 				{#snippet controls()}
-					{#if compareYears !== undefined}
+					{@render extraControls?.()}
+					{#if distribution && compareYears !== undefined}
 						<label class="compare-label">
 							Compare to tablets released in last:
 							<select class="compare-select" bind:value={compareYears}>
@@ -388,7 +402,7 @@
 					{/each}
 
 					<!-- KDE curve (in front of bars) -->
-					{#if kdePath}
+					{#if distribution && kdePath}
 						<path d={kdePath} fill="var(--accent)" opacity="0.1" />
 						<path d={kdePath} fill="none" stroke="var(--accent)" stroke-width="2" opacity="0.9" />
 					{/if}
@@ -401,10 +415,10 @@
 							y1={padTop - 8}
 							x2={marker.x}
 							y2={labelY - 4}
-							stroke="var(--text)"
-							stroke-width="1.5"
+							stroke={marker.color ?? 'var(--text)'}
+							stroke-width={marker.color ? 2 : 1.5}
 							stroke-dasharray="4 3"
-							opacity="0.7"
+							opacity={marker.color ? 1 : 0.7}
 						/>
 						<text
 							x={marker.side === 'left' ? marker.x - 4 : marker.x + 4}
