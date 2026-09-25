@@ -8,7 +8,9 @@
 
 	let { tablet, allTablets }: { tablet: Tablet; allTablets: Tablet[] } = $props();
 
-	let filterSimilarSize = $state(true);
+	// Size: diagonal within ±10% (the default, as the old "Similar size"
+	// checkbox was), that band plus anything bigger (#24), or any size.
+	let sizeFilter = $state<'similar' | 'larger' | 'any'>('similar');
 	let filterSamePen = $state(false);
 	let filterBrand = $state('all');
 	let filterSameYearOrLater = $state(false);
@@ -39,7 +41,8 @@
 
 	let similarTablets = $derived.by(() => {
 		let results = findSimilarTablets(tablet, allTablets, {
-			similarSize: filterSimilarSize,
+			similarSize: sizeFilter === 'similar',
+			sameSizeOrLarger: sizeFilter === 'larger',
 			samePen: filterSamePen,
 			sameYearOrLater: filterSameYearOrLater,
 		});
@@ -91,7 +94,14 @@
 
 <div class="section-header">
 	<div class="similar-filters">
-		<label><input type="checkbox" bind:checked={filterSimilarSize} /> Similar size</label>
+		<label>
+			Size:
+			<select class="filter-select" bind:value={sizeFilter}>
+				<option value="similar">Similar (±10%)</option>
+				<option value="larger">Same or larger</option>
+				<option value="any">Any</option>
+			</select>
+		</label>
 		<label><input type="checkbox" bind:checked={filterSamePen} /> Same included pen</label>
 		<label><input type="checkbox" bind:checked={filterSameYearOrLater} /> Same year or later</label>
 		<label>
