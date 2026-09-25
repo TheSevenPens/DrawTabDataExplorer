@@ -15,8 +15,6 @@
 
 	let { allTablets, flaggedIds, onclose }: Props = $props();
 
-	const MAX_FLAGGED = 6;
-
 	let searchText = $state('');
 	let filterBrand = $state('');
 	let filterType = $state('');
@@ -49,8 +47,6 @@
 		});
 	});
 
-	let isFull = $derived(flaggedIds.length >= MAX_FLAGGED);
-
 	function typeLabel(type: string) {
 		if (type === 'PENTABLET') return 'Pen Tablet';
 		if (type === 'PENDISPLAY') return 'Pen Display';
@@ -59,9 +55,10 @@
 	}
 </script>
 
-<PickerModalShell title="Add Tablet" {onclose}>
+<!-- Flags are an inbox for Compare, not its columns, so there is no cap (#373). -->
+<PickerModalShell title="Flag Tablets" {onclose}>
 	{#snippet headerAccessory()}
-		<span class="slot-count" class:full={isFull}>{flaggedIds.length}/{MAX_FLAGGED} slots used</span>
+		<span class="slot-count">{flaggedIds.length} flagged</span>
 	{/snippet}
 
 	<div class="filters">
@@ -105,8 +102,6 @@
 				{:else}
 					<Button
 						variant="secondary"
-						disabled={isFull}
-						disabledReason="Maximum 6 tablets reached"
 						onclick={() => toggleFlag(t.Meta.EntityId)}
 						title={`Add ${t.Model.Name}`}>+ Add</Button
 					>
@@ -117,12 +112,6 @@
 			<li class="empty" role="listitem">No tablets match your search.</li>
 		{/if}
 	</ul>
-
-	{#snippet footer()}
-		{#if isFull}
-			<p class="full-notice">All 6 slots are used. Unflag a tablet to make room.</p>
-		{/if}
-	{/snippet}
 </PickerModalShell>
 
 <style>
@@ -135,12 +124,6 @@
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		padding: 2px 8px;
-	}
-
-	.slot-count.full {
-		color: var(--danger);
-		border-color: var(--danger);
-		background: transparent;
 	}
 
 	.filters {
@@ -279,15 +262,5 @@
 		font-style: italic;
 		padding: 16px;
 		text-align: center;
-	}
-
-	.full-notice {
-		font-size: 12px;
-		color: var(--danger);
-		text-align: center;
-		padding: 8px 16px;
-		margin: 0;
-		border-top: 1px solid var(--border);
-		flex-shrink: 0;
 	}
 </style>

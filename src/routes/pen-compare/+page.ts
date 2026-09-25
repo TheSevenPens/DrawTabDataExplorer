@@ -1,26 +1,10 @@
-import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
-import { buildTabletNameAndIdMap } from '$lib/tablet-helpers.js';
+// The old pen comparison moved to /compare/pens (#373); old links and
+// bookmarks land there. Flagged pens stay on /pen-flagged.
+import { redirect } from '@sveltejs/kit';
+import { base } from '$app/paths';
 
 export const prerender = true;
 
-export async function load({ parent }) {
-	const { ds } = await parent();
-	const [allPens, allTablets, allSessions, allInventory, allRange] = await Promise.all([
-		ds.Pens.toArray(),
-		ds.Tablets.toArray(),
-		ds.PressureResponse.toArray(),
-		ds.InventoryPens.toArray(),
-		ds.PressureRange.toArray(),
-	]);
-	const defectsByInventoryId = buildInventoryDefects(allInventory);
-	const iafMeasurements = allRange.filter((m) => m.Metric === 'IAF');
-	const maxMeasurements = allRange.filter((m) => m.Metric === 'MAX');
-	return {
-		allPens,
-		allSessions,
-		defectsByInventoryId,
-		iafMeasurements,
-		maxMeasurements,
-		tabletNameById: buildTabletNameAndIdMap(allTablets),
-	};
+export function load() {
+	throw redirect(307, `${base}/compare/pens`);
 }

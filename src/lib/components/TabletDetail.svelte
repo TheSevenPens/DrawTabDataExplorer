@@ -3,6 +3,7 @@
 	import { brandName, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
 	import DetailPageFrame from '$lib/components/DetailPageFrame.svelte';
 	import FlagButton from '$lib/components/FlagButton.svelte';
+	import CompareMenu from '$lib/compare/CompareMenu.svelte';
 	import { type Pen } from '$data/lib/entities/pen-fields.js';
 	import { type TabletFamily } from '$data/lib/entities/tablet-family-fields.js';
 	import type { InventoryTablet } from '$data/lib/entities/inventory-tablet-fields.js';
@@ -55,6 +56,11 @@
 			flagged={$flaggedTablets.includes(tablet.Meta.EntityId)}
 			onclick={() => toggleFlag(tablet.Meta.EntityId)}
 			label="Flag this tablet for comparison"
+		/>
+		<CompareMenu
+			kind="tablets"
+			item={{ type: 'model', id: tablet.Meta.EntityId }}
+			family={tablet.Model.Family ? { type: 'family', id: tablet.Model.Family } : undefined}
 		/>
 	{/snippet}
 </DetailPageFrame>

@@ -14,7 +14,9 @@ export function tabletSubNavTabs(opts: { flaggedCount?: number } = {}): SubNavTa
 		{ href: '/tablet-families', label: 'Tablet families' },
 		{ href: '/tablet-analysis', label: 'Analysis' },
 		{ href: '/tablet-inventory', label: 'Inventory' },
-		{ href: '/tablet-compare', label: 'Compare', badge: opts.flaggedCount },
+		// Flags are an inbox for the top-level Compare (#373); comparing
+		// itself lives at /compare, reached from the main nav.
+		{ href: '/tablet-flagged', label: 'Flagged', badge: opts.flaggedCount },
 	];
 }
 
@@ -30,15 +32,12 @@ export function dataSubNavTabs(): SubNavTab[] {
 	];
 }
 
-export function penSubNavTabs(
-	opts: { flaggedPenCount?: number; flaggedPenModelCount?: number } = {},
-): SubNavTab[] {
+export function penSubNavTabs(opts: { flaggedPenCount?: number } = {}): SubNavTab[] {
 	return [
 		{ href: '/pens', label: 'Pen models' },
 		{ href: '/pen-families', label: 'Pen families' },
 		{ href: '/pen-analysis', label: 'Analysis' },
 		{ href: '/pen-inventory', label: 'Inventory' },
 		{ href: '/pen-flagged', label: 'Flagged', badge: opts.flaggedPenCount },
-		{ href: '/pen-compare', label: 'Compare', badge: opts.flaggedPenModelCount },
 	];
 }

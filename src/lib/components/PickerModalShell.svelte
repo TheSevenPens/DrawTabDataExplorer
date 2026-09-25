@@ -1,5 +1,5 @@
 <script lang="ts">
-	// Shared modal shell for the entity pickers (PenPicker, TabletPicker —
+	// Shared modal shell for the entity pickers (TabletPicker —
 	// GitHub #215). Owns the modal *mechanics* only: backdrop click-to-close,
 	// the keyboard contract (modalBehavior: focus in, Tab contained, page
 	// behind inert, Escape closes, focus returns — #335), the dialog frame,

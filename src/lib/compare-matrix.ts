@@ -1,5 +1,5 @@
 /**
- * The grouped spec matrix behind `/tablet-compare` and `/pen-compare`.
+ * The grouped spec matrix behind the members view of `/compare/tablets` and `/compare/pens` (#373).
  *
  * Both pages had built this inline, and the two copies had drifted into being
  * character-for-character identical — including the comment warning that

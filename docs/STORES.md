@@ -7,12 +7,12 @@ The Explorer keeps cross-page state in four small Svelte stores. Each one is a s
 
 ## At a glance
 
-| Store           | File                                                    | Persists to localStorage                                                                                                             | Drives                                                                                                                                                       |
-| --------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `flagged-store` | [src/lib/flagged-store.ts](../src/lib/flagged-store.ts) | `drawtabdata-flagged-tablets`, `drawtabdata-flagged-pen-units`, `drawtabdata-flagged-pen-models`, `drawtabdata-flagged-pen-families` | The Tablets ▸ Compare sub-tab badge, the `/tablet-compare` page, the Pens ▸ Flagged sub-tab badge, the `/pen-flagged` overlay chart, the `/pen-compare` page |
-| `theme-store`   | [src/lib/theme-store.ts](../src/lib/theme-store.ts)     | `drawtabdata-theme` (`'light'` \| `'dark'`)                                                                                          | The `data-theme` attribute on `<html>` (CSS variables flip)                                                                                                  |
-| `unit-store`    | [src/lib/unit-store.ts](../src/lib/unit-store.ts)       | (via [data-repo/lib/units.ts](../data-repo/lib/units.ts)) + `drawtabdata-show-alt-units`                                             | Every dimension / weight / force formatter (metric ↔ imperial), the "show alt units in parens" toggle                                                        |
-| `modal-store`   | [src/lib/modal-store.ts](../src/lib/modal-store.ts)     | Not persisted — in-memory request slot                                                                                               | `ModalRoot` (mounted once in the root layout); back-ends `promptModal()` and `confirmModal()` as awaitable functions                                         |
+| Store           | File                                                    | Persists to localStorage                                                                                                                                                    | Drives                                                                                                               |
+| --------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `flagged-store` | [src/lib/flagged-store.ts](../src/lib/flagged-store.ts) | `drawtabdata-flagged-tablets`, `drawtabdata-flagged-tablet-families`, `drawtabdata-flagged-pen-units`, `drawtabdata-flagged-pen-models`, `drawtabdata-flagged-pen-families` | The Tablets / Pens ▸ Flagged sub-tab badges and pages, and the flagged inbox in the `/compare` add rail              |
+| `theme-store`   | [src/lib/theme-store.ts](../src/lib/theme-store.ts)     | `drawtabdata-theme` (`'light'` \| `'dark'`)                                                                                                                                 | The `data-theme` attribute on `<html>` (CSS variables flip)                                                          |
+| `unit-store`    | [src/lib/unit-store.ts](../src/lib/unit-store.ts)       | (via [data-repo/lib/units.ts](../data-repo/lib/units.ts)) + `drawtabdata-show-alt-units`                                                                                    | Every dimension / weight / force formatter (metric ↔ imperial), the "show alt units in parens" toggle                |
+| `modal-store`   | [src/lib/modal-store.ts](../src/lib/modal-store.ts)     | Not persisted — in-memory request slot                                                                                                                                      | `ModalRoot` (mounted once in the root layout); back-ends `promptModal()` and `confirmModal()` as awaitable functions |
 
 `storage.ts` ([src/lib/storage.ts](../src/lib/storage.ts)) wraps `localStorage` with SSR-safe getters / JSON helpers so each store can hydrate without `try/catch` around every read. Use those helpers in any new store rather than touching `localStorage` directly.
 
@@ -20,24 +20,24 @@ The Explorer keeps cross-page state in four small Svelte stores. Each one is a s
 
 ## `flagged-store`
 
-Drives the comparison features. There are **four independent lists**, each with its own `localStorage` key and toggle function. They are independent so a user can flag at any granularity:
+The inbox for Compare (#373). There are **five independent lists**, each with its own `localStorage` key and toggle function. They are independent so a user can flag at any granularity:
 
-| Writable             | localStorage key                   | Cap | Toggle                        |
-| -------------------- | ---------------------------------- | --- | ----------------------------- |
-| `flaggedTablets`     | `drawtabdata-flagged-tablets`      | 6   | `toggleFlag(entityId)`        |
-| `flaggedPenUnits`    | `drawtabdata-flagged-pen-units`    | —   | `toggleFlaggedPenUnit(invId)` |
-| `flaggedPenModels`   | `drawtabdata-flagged-pen-models`   | —   | `toggleFlaggedPenModel(eid)`  |
-| `flaggedPenFamilies` | `drawtabdata-flagged-pen-families` | —   | `toggleFlaggedPenFamily(eid)` |
+| Writable                | localStorage key                      | Cap | Toggle                           |
+| ----------------------- | ------------------------------------- | --- | -------------------------------- |
+| `flaggedTablets`        | `drawtabdata-flagged-tablets`         | —   | `toggleFlag(entityId)`           |
+| `flaggedTabletFamilies` | `drawtabdata-flagged-tablet-families` | —   | `toggleFlaggedTabletFamily(eid)` |
+| `flaggedPenUnits`       | `drawtabdata-flagged-pen-units`       | —   | `toggleFlaggedPenUnit(invId)`    |
+| `flaggedPenModels`      | `drawtabdata-flagged-pen-models`      | —   | `toggleFlaggedPenModel(eid)`     |
+| `flaggedPenFamilies`    | `drawtabdata-flagged-pen-families`    | —   | `toggleFlaggedPenFamily(eid)`    |
 
-The tablet cap is 6 because `/tablet-compare` renders SVG side-by-side outlines that become unreadable past that. The pen lists are uncapped because `/pen-flagged` aggregates pressure-response overlays where more is fine.
+No list is capped: flags only collect candidates. The cap that matters is the comparison's own (8 columns, any number of members each — `MAX_COLUMNS` in `src/lib/compare/model.ts`).
 
 Derived stores (read-only) feed sub-nav badge counts:
 
-- `flaggedCount` — tablet flag count
-- `flaggedPenModelCount` — drives the `/pen-compare` sub-tab badge
+- `flaggedCount` — tablet + tablet-family flag count (Tablets ▸ Flagged badge)
 - `flaggedPenTotalCount` — drives the Pens ▸ Flagged sub-tab badge (sum of all three pen sets)
 
-Clear-all helpers: `clearFlags()` (tablets), `clearAllPenFlags()` (all three pen sets), `clearFlaggedPenModels()` (just pen models — mirrors the tablet-side scope).
+Clear-all helpers: `clearFlags()` (tablets), `clearFlaggedTabletFamilies()`, `clearAllPenFlags()` (all three pen sets). The working comparison itself lives in `src/lib/compare/store.ts` (`drawtabdata-compare-tablets` / `-pens`), not here.
 
 The `FlagButton` component ([src/lib/components/FlagButton.svelte](../src/lib/components/FlagButton.svelte)) is the canonical UI; list pages embed it in the row's first column.
 

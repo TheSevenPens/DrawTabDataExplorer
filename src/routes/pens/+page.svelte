@@ -12,7 +12,6 @@
 	import SubNav from '$lib/components/SubNav.svelte';
 	import {
 		flaggedPenModels,
-		flaggedPenModelCount,
 		flaggedPenTotalCount,
 		toggleFlaggedPenModel,
 	} from '$lib/flagged-store.js';
@@ -20,12 +19,7 @@
 
 	let { data } = $props();
 
-	let penTabs = $derived(
-		penSubNavTabs({
-			flaggedPenCount: $flaggedPenTotalCount,
-			flaggedPenModelCount: $flaggedPenModelCount,
-		}),
-	);
+	let penTabs = $derived(penSubNavTabs({ flaggedPenCount: $flaggedPenTotalCount }));
 
 	// flaggedPenModels stores lowercased EntityIds, which matches the lowercase
 	// EntityIds the rows expose, so direct Set.has() lookups work.

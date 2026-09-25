@@ -32,9 +32,11 @@ DrawTabDataExplorer/
 │   │   ├── tablet-inventory/     # Personal tablet inventory (Tablets sub-tab)
 │   │   ├── tablet-analysis/      # Tablet distributions (Tablets sub-tab)
 │   │   ├── pen-analysis/         # Pen / pressure distributions (Pens sub-tab)
-│   │   ├── tablet-compare/       # Flagged-tablet compare (Tablets sub-tab)
-│   │   ├── pen-compare/          # Flagged-pen compare (Pens sub-tab)
-│   │   ├── pen-flagged/          # Flagged-pen pressure overlay (Pens sub-tab)
+│   │   ├── compare/              # Compare workspace: /compare/tablets, /compare/pens (#373)
+│   │   ├── tablet-compare/       # Redirect → /compare/tablets
+│   │   ├── pen-compare/          # Redirect → /compare/pens
+│   │   ├── tablet-flagged/       # Flagged tablets + tablet families (Tablets sub-tab)
+│   │   ├── pen-flagged/          # Flagged pen units / models / families (Pens sub-tab)
 │   │   ├── timeline/             # Timeline of releases by year
 │   │   ├── reference/            # Reference (tablet sizes, ISO paper sizes)
 │   │   ├── data-dictionary/      # Field dictionary (Data sub-tab)
@@ -196,10 +198,12 @@ routes are collapsed under a single parent link via the
 should also mark the link as active:
 
 - **Tablets** (`/tablets`) — also active on `/tablet-families`,
-  `/tablet-analysis`, `/tablet-inventory`, `/tablet-compare` (the bare
+  `/tablet-analysis`, `/tablet-inventory`, `/tablet-flagged` (the bare
   `/` redirects to `/tablets`)
 - **Pens** (`/pens`) — also active on `/pen-families`, `/pen-analysis`,
-  `/pen-inventory`, `/pen-flagged`, `/pen-compare`, `/pressure-response`
+  `/pen-inventory`, `/pen-flagged`, `/pressure-response`
+- **Compare** (`/compare`) — also active on `/compare/tablets`,
+  `/compare/pens`
 - **Data** (`/reference`) — also active on `/data-dictionary`,
   `/api-explorer`, `/data-quality`, `/pen-compat`, `/wacom-driver-compat`
 
@@ -225,15 +229,15 @@ sub-tabs are declared inline on each Data page.
 ## Pressure response charts
 
 `PressureResponseChart.svelte` — Chart.js scatter for force (gf) vs pressure (%).
-Used on the Pressure Response tabs and the `/pen-compare` combined Pmax
-comparison (`lockedZoom="pmax"`).
+Used on the Pressure Response tabs, `/compare/pens`, and `/pressure-backfill`
+(`lockedZoom`).
 
 **Must-read before editing:** [CLAUDE.md](../CLAUDE.md) § Pressure response charts
 (envelope `fill: 'shape'` polygon, dynamic Pmax x-axis, `lockedZoom`).
 
 ## IAF & MAX tabs (`PressureRangeTab`)
 
-The pen, pen-family, inventory-unit, and pen-compare views all embed one
+The pen, pen-family, inventory-unit views and `/compare/pens` all embed one
 shared [`PressureRangeTab.svelte`](../src/lib/components/PressureRangeTab.svelte),
 parameterised by a `metric` prop (`"IAF"` | `"MAX"`). It replaces the
 former separate `PiafTab` / `PmaxTab`. A toggle at the top switches three
@@ -254,10 +258,8 @@ bracket-midpoint estimate. Defective sessions are excluded via
 `defectsByInventoryId`. Bands (`PIAF_BANDS` / `PMAX_BANDS`) and axis are
 chosen from the metric.
 
-On `/pen-compare`, the IAF tab additionally renders one combined
-`PressureRangeTab` over the union of every flagged pen (a Pen column
-distinguishes models) above the per-pen sections; the MAX tab keeps its
-multi-colour combined overlay comparison.
+On `/compare/pens`, the IAF and MAX tabs render one `PressureRangeTab` per
+comparison column, over that column's sessions and measurements.
 
 ## Label formatting (model id suppression)
 
@@ -270,30 +272,22 @@ Canonical formatters: `penFullName`, `tabletFullName`, etc. in
 
 ## Compare feature
 
-Users can flag tablets for side-by-side comparison. The feature spans
-several files:
+See [CLAUDE.md](../CLAUDE.md) § Compare workspace for the model. Files:
 
-- **`src/lib/flagged-store.ts`** — Svelte writable store backed by
-  localStorage (`drawtabdata-flagged-tablets`). Stores an array of
-  EntityId strings, max 6. Exports `flaggedTablets`, `toggleFlag()`,
-  `clearFlags()`, and `flaggedCount` (derived).
-
-- **Flag from list page** — `ResultsTable` accepts optional `flaggedIds`
-  (Set) and `onToggleFlag` callback props. When provided, renders a
-  flag icon column. The tablets list page (`+page.svelte`) passes these
-  through `EntityExplorer`.
-
-- **Flag from detail page** — Tablet detail page shows a Flag/Unflag
-  button in the title row.
-
-- **Compare page** (`/tablet-compare`) — Two tabs:
-  - _Flagged_ — list of flagged tablets with unflag buttons and clear all.
-  - _Compare_ — side-by-side spec table with specs as rows and tablets
-    as columns. Rows are grouped by field group (Model, Digitizer,
-    Display, Physical). Cells with differing values are highlighted.
-    Includes Copy as HTML and Export as HTML buttons. Below the table,
-    size histograms show the flagged tablets as markers against the
-    full distribution.
+- **`src/lib/compare/`** — `model.ts` (pure comparison operations),
+  `resolve.ts` (refs → records, overlaps), `summary.ts` (per-column
+  summary cells), `candidates.ts` / `contexts.ts` (add-rail search and the
+  per-kind lookups), `entry.ts` (detail-page menu actions), `pen-groups.ts`
+  (pressure data per column), `store.ts` (one comparison per kind in
+  localStorage). Components: `CompareWorkspace` (frame), `AddRail`,
+  `CompareMatrix` (summary / members views, grouping by drag or menu),
+  `TabletSizesView`, `PenPressureView`, `CompareMenu`.
+- **Routes** — `/compare/tablets`, `/compare/pens`; `/compare`,
+  `/tablet-compare` and `/pen-compare` redirect.
+- **Flags** — `src/lib/flagged-store.ts`: the inbox the add rail offers.
+  Tablets and tablet families on `/tablet-flagged`; pen units, models and
+  families on `/pen-flagged`. `ResultsTable` renders the flag column on the
+  list pages (`flaggedIds` + `onToggleFlag`).
 
 ## Shared modules
 
