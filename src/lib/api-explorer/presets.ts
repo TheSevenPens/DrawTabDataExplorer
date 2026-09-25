@@ -91,8 +91,7 @@ export const presets: Preset[] = [
 		body: `return await ds.Tablets
   .filter('Brand', '==', 'WACOM')
   .filter('ModelType', '==', 'PENDISPLAY')
-  .sort('ModelReleaseYear', 'desc')
-  .take(5)
+  .top(5, 'ModelReleaseYear')   // sort desc + take, skipping tablets with no year
   .toArray();`,
 	},
 	{
@@ -417,8 +416,7 @@ return await ds.PressureResponse
     median: { medianPiaf: 'Piaf' },
     count: 'sessions',
   })
-  .sort('medianPiaf', 'desc')
-  .take(10)
+  .top(10, 'medianPiaf')
   .toArray();`,
 	},
 	{
