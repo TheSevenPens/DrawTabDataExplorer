@@ -233,9 +233,10 @@ no BOM, LF, `JSON.stringify(v, null, 2) + "\n"`. Any script that edits
 `npm run data-format` checks every managed file byte-for-byte; `verify.yml`
 runs it first, plus a Windows job that proves checkouts stay LF.
 
-**Tablets and pens are authored one record per file** (DrawTabData #45
-phase 3): `data-repo/source/{tablets,pens}/<brand>/<EntityId>.json`. The
-`data-repo/data/{tablets,pens}/<BRAND>-*.json` bundles the app loads are
+**Tablets, pens and pressure sessions are authored one record per file**
+(DrawTabData #45 phases 3 and 5):
+`data-repo/source/{tablets,pens,pressure-response}/<brand>/<EntityId>.json`.
+The matching `data-repo/data/<collection>/<BRAND>-*.json` bundles the app loads are
 **generated** from them — edit the source, never the bundle. Tools use
 `writeSourceRecord` + `regenerate` from `data-repo/lib/sources.ts`; the
 dev server regenerates when a source changes (`source-bundles` plugin in
@@ -243,6 +244,9 @@ dev server regenerates when a source changes (`source-bundles` plugin in
 match their sources and runs in `verify.yml` before the build. Records in
 a bundle are in EntityId order — rankings that need a stable order break
 ties on EntityId explicitly (`rankRows` in `tablet-analysis/helpers.ts`).
+Sessions store their EntityId (`<brand>.session.<invid>_<date>`, plus
+`_<IdSuffix>` for a second session of a pen on one day) — same-day
+repeats used to share one derived ID and one `/entity` URL.
 
 What's automated (no manual action needed):
 

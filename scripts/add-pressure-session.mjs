@@ -18,11 +18,11 @@
  *   TabletEntityId       override via CLI flags
  *
  * --- Output ---
- * A new record is appended to the PressureResponse array of the brand's
- * pressure-response.json file: read → push → written back through
- * writeDataJson (data-repo/lib/data-json.ts), the dataset's one canonical
- * JSON writer (2-space indent, LF, UTF-8 without BOM; RFC #45). On an
- * already-canonical file the diff is just the new record.
+ * A new session source file, data-repo/source/pressure-response/<brand>/
+ * <EntityId>.json (sessions are authored one per file, RFC #45 phase 5),
+ * written with writeSourceRecord; then the brand bundles under
+ * data/pressure-response/ are regenerated. The diff is the new file plus
+ * the same record in its bundle.
  *
  * Records are [physicalGf rounded to 1dp, logicalNorm * 100 rounded to
  * 2dp], stored as plain JSON numbers.
@@ -35,7 +35,7 @@
  *       --user SEVEN \
  *       --driver WACOM \
  *       --os WINDOWS \
- *       --notes "something to remember"
+ *       --notes "something to remember" \
  *       --id-suffix galaxybook5pro360
  *
  * EntityId is stored on the session (see data-repo/lib/pressure/session-id.ts):
@@ -43,8 +43,8 @@
  * the same day gets IdSuffix = the tablet's model segment (e.g.
  * "_galaxybook5pro360"); if that is taken too, pass --id-suffix.
  *
- * --data-dir <dir> reads and writes <dir> instead of data-repo/data (for
- * testing against a copy).
+ * --repo-root <dir> reads and writes that data-repo copy (holding source/
+ * and data/) instead of data-repo/ (for testing).
  *
  * Run `npm run data-quality` afterwards (the script doesn't do this
  * automatically — leaves room to batch multiple inserts before validating).
@@ -53,8 +53,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { readDataJson, writeDataJson } from '../data-repo/lib/data-json.ts';
+import { readDataJson } from '../data-repo/lib/data-json.ts';
 import { deriveSessionEntityId } from '../data-repo/lib/pressure/session-id.ts';
+import {
+	readSources,
+	regenerate,
+	sourceCollection,
+	writeSourceRecord,
+} from '../data-repo/lib/sources.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -63,7 +69,7 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
 	console.log(
-		'Usage: npx tsx scripts/add-pressure-session.mjs <file.json> [--tablet …] [--user …] [--driver …] [--os …] [--notes …] [--id-suffix …] [--data-dir …]',
+		'Usage: npx tsx scripts/add-pressure-session.mjs <file.json> [--tablet …] [--user …] [--driver …] [--os …] [--notes …] [--id-suffix …] [--repo-root …]',
 	);
 	process.exit(args.length === 0 ? 1 : 0);
 }
@@ -80,12 +86,12 @@ for (let i = 1; i < args.length; i += 2) {
 	overrides[flag.slice(2)] = val;
 }
 
-const DATA_DIR = overrides['data-dir']
-	? path.resolve(overrides['data-dir'])
-	: path.join(ROOT, 'data-repo', 'data');
+const REPO_ROOT = overrides['repo-root']
+	? path.resolve(overrides['repo-root'])
+	: path.join(ROOT, 'data-repo');
+const DATA_DIR = path.join(REPO_ROOT, 'data');
 const INVENTORY_FILE = path.join(DATA_DIR, 'inventory', 'sevenpens-pens.json');
 const PENS_DIR = path.join(DATA_DIR, 'pens');
-const PR_DIR = path.join(DATA_DIR, 'pressure-response');
 
 // --- Filename parse ---
 
@@ -137,18 +143,20 @@ if (!pen) {
 }
 const penFamily = pen.PenFamily ?? '';
 
-// --- Load destination pressure-response file ---
+// --- Load the existing sessions (their sources are the editable copy) ---
 
-const prPath = path.join(PR_DIR, `${brand}-pressure-response.json`);
-if (!fs.existsSync(prPath)) {
-	console.error(`Pressure-response file not found: ${prPath}`);
+const sessions = sourceCollection('pressure-response');
+const { records: existing, issues } = readSources(REPO_ROOT, sessions);
+if (issues.length) {
+	console.error('Session source problems (fix these first; nothing was written):');
+	for (const i of issues) console.error(`  ${i.file}: ${i.problem}`);
 	process.exit(1);
 }
-const prJson = readDataJson(prPath);
+const brandSessions = existing.filter((r) => r.brand === brand).map((r) => r.record);
 
 // --- Defaults from the most recent prior session for this unit ---
 
-const priorSessions = prJson.PressureResponse.filter((s) => s.InventoryId === inventoryId);
+const priorSessions = brandSessions.filter((s) => s.InventoryId === inventoryId);
 priorSessions.sort((a, b) => (a.Date < b.Date ? 1 : -1));
 const prior = priorSessions[0];
 
@@ -175,10 +183,21 @@ const recs = src.captures.map((c) => [round(c.physicalGf, 1), round(c.logicalNor
 
 // --- EntityId: derived, with an IdSuffix for a same-day repeat ---
 
-const takenIds = new Set(prJson.PressureResponse.map((s) => s.EntityId));
+const takenIds = new Set(brandSessions.map((s) => s.EntityId));
 const identity = { Brand: brand, InventoryId: inventoryId, Date: date };
 let idSuffix = overrides['id-suffix'];
-if (!idSuffix && takenIds.has(deriveSessionEntityId(identity))) {
+const sameDay = brandSessions.filter((s) => s.InventoryId === inventoryId && s.Date === date);
+if (!idSuffix && sameDay.length > 0) {
+	// Same pen, same day, same tablet is far more likely a re-run of this
+	// script than a real second session — refuse unless told otherwise.
+	if (sameDay.some((s) => s.TabletEntityId === tabletEntityId)) {
+		console.error(
+			`${inventoryId} already has a session on ${date} on ${tabletEntityId} ` +
+				`(${sameDay.map((s) => s.EntityId).join(', ')}).\n` +
+				'If this is a genuine second session, pass --id-suffix <something unique>.',
+		);
+		process.exit(1);
+	}
 	idSuffix = tabletEntityId.split('.').pop();
 }
 const entityId = deriveSessionEntityId({ ...identity, IdSuffix: idSuffix });
@@ -195,7 +214,7 @@ const uuid = crypto.randomUUID();
 const isoNow = new Date(date + 'T00:00:00.000Z').toISOString();
 
 // Key order matches the existing session records.
-prJson.PressureResponse.push({
+const sourceRel = writeSourceRecord(REPO_ROOT, sessions, {
 	EntityId: entityId,
 	Brand: brand,
 	PenFamily: penFamily,
@@ -214,7 +233,7 @@ prJson.PressureResponse.push({
 	TabletEntityId: tabletEntityId,
 });
 
-writeDataJson(prPath, prJson);
+const regenerated = regenerate(REPO_ROOT);
 
 console.log(`Added session for ${inventoryId} (${date}):`);
 console.log(`  id      : ${entityId}`);
@@ -226,5 +245,6 @@ console.log(`  os      : ${os}`);
 console.log(`  user    : ${user}`);
 console.log(`  records : ${recs.length}`);
 console.log(`  uuid    : ${uuid}`);
-console.log(`  → ${path.relative(ROOT, prPath)}`);
+console.log(`  → ${sourceRel}`);
+for (const f of regenerated) console.log(`  regenerated ${f}`);
 console.log(`\nRun \`npm run data-quality\` to validate.`);
