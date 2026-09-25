@@ -12,10 +12,13 @@
 		tablet,
 		family,
 		includedPenItems,
+		lastDriverIds = {},
 	}: {
 		tablet: Tablet;
 		family: TabletFamily | null;
 		includedPenItems: { entityId: string; name: string }[];
+		/** Driver EntityId per last-supported-driver field key, where one matches (#307). */
+		lastDriverIds?: Record<string, string>;
 	} = $props();
 
 	const modelTabGroups = ['Model', 'Physical'];
@@ -66,6 +69,8 @@
 											{/each}
 										{:else if f.key === 'ModelFamily' && family}
 											<EntityLink entityId={family.EntityId}>{family.FamilyName}</EntityLink>
+										{:else if lastDriverIds[f.key]}
+											<EntityLink entityId={lastDriverIds[f.key]}>{val}</EntityLink>
 										{:else if isUrl(val)}
 											<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 											<a href={val} target="_blank" rel="noopener">

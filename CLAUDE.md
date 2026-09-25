@@ -270,6 +270,10 @@ What's automated (no manual action needed):
   `PenEntityId` must exist, a tablet unit's `ModelId` must be that
   tablet's `Model.Id`, and `WithTabletInventoryId` must name a tablet unit
   (DrawTabData #44).
+  `Model.LastSupported{Windows,MacOS}Driver` must name a Driver: kept as
+  the verbatim EOSL string and resolved on read, ignoring `-` vs `.` before
+  the build number (`data-repo/lib/driver-lookup.ts`, #307). The three
+  unrecorded macOS builds in `UNRECORDED_DRIVERS` are exempt.
 
 ## Design tokens — never hard-code a colour
 
