@@ -32,6 +32,7 @@
 		<li><code>.skip(n)</code></li>
 		<li><code>.last(n)</code></li>
 		<li><code>.reverse()</code></li>
+		<li><code>.top(n, field?)</code> / <code>.bottom(n, field?)</code></li>
 		<li><code>.select(fields)</code></li>
 		<li><code>.derive(cols)</code></li>
 		<li><code>.unroll(field)</code></li>
@@ -43,6 +44,7 @@
 		<li><code>.concat(other)</code> / <code>.union(other)</code></li>
 		<li><code>.distinct(field)</code></li>
 		<li><code>.values(field)</code></li>
+		<li><code>.pluck(field)</code></li>
 		<li><code>.keyBy(field)</code></li>
 		<li><code>.collectBy(field)</code></li>
 		<li><code>.toArray()</code></li>
@@ -108,6 +110,10 @@
 	<p>
 		<code>.skip(n)</code> drops the first n rows; <code>.last(n)</code> keeps the trailing n;
 		<code>.reverse()</code> flips order without re-sorting.
+		<code>.top(n, field)</code> / <code>.bottom(n, field)</code> are sort desc / asc + take, ranking
+		only rows that have a value — tablets with no year are not "the oldest".
+		<code>.pluck(field)</code> returns one value per row as a plain array (duplicates kept, unlike
+		<code>.distinct()</code>).
 		<code>.sort([...])</code> takes an array form for multi-key sorts (primary-by-first, matching
 		SQL <code>ORDER BY</code>); chained <code>.sort()</code> calls compose via stable sort but with
 		the <em>last</em> call as primary — prefer the array form for multi-key sorts.
