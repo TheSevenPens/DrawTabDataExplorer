@@ -489,3 +489,18 @@ test.describe('API Explorer runs queries in a stoppable worker', () => {
 		await expect(page.locator('.result-pane')).toHaveText('42');
 	});
 });
+
+test.describe('Tablet inventory timeline (#80)', () => {
+	test('lists every unit by order date, undated ones included', async ({ page }) => {
+		const errors = await watchConsoleErrors(page);
+		await page.goto('/tablet-inventory', { waitUntil: 'networkidle' });
+		const units = await page.locator('table tbody tr').count();
+		await page.getByRole('tab', { name: /timeline/i }).click();
+		await expect(page).toHaveURL(/#timeline$/);
+		await expect(page.locator('.timeline .unit').first()).toBeVisible();
+		// Nothing is dropped: dated plus "Order date unknown" = the Units tab.
+		await expect(page.locator('.timeline .unit')).toHaveCount(units);
+		await expect(page.locator('.timeline h2').first()).toHaveText(/^\d{4}/);
+		expect(errors).toEqual([]);
+	});
+});
