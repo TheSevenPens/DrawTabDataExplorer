@@ -4,8 +4,7 @@
  * pressure-response sessions in the data-repo. Sessions are authored one per
  * file (data-repo/source/pressure-response/<brand>/<EntityId>.json, RFC #45
  * phase 5): each matching session's source gets the new tuples and is
- * written back with writeSourceRecord, then the brand bundles are
- * regenerated once. Every edit is checked before anything is written.
+ * validated and committed with bundles and metadata in one transaction. Every edit is checked before anything is written.
  *
  * Input: a JSON file produced by the /pressure-backfill dev UI, with
  * one entry per session edit:
@@ -31,15 +30,11 @@
  * Per issue #212. After running, validate with `npm run data-quality`.
  */
 
+import { commitDatasetUpdate } from '../data-repo/lib/update-dataset.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
-import {
-	readSources,
-	regenerate,
-	sourceCollection,
-	writeSourceRecord,
-} from '../data-repo/lib/sources.ts';
+import { readSources, sourceCollection } from '../data-repo/lib/sources.ts';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 
@@ -131,6 +126,7 @@ for (const [brand, brandEdits] of byBrand) {
 				throw new Error(`Session ${e._id} not found in the ${brand} sources`);
 			}
 			applyEdit(src.record, e);
+			src.record._ModifiedDate = new Date().toISOString();
 			touched.push(src);
 			const parts = [];
 			if (typeof e.prependPiafForce === 'number') {
@@ -154,10 +150,12 @@ for (const [brand, brandEdits] of byBrand) {
 }
 
 // All edits validated before anything is written.
-if (!dryRun) {
-	for (const { record } of touched) writeSourceRecord(REPO_ROOT, sessions, record);
-	for (const f of regenerate(REPO_ROOT)) console.log(`Regenerated ${f}`);
-}
+const result = commitDatasetUpdate(
+	REPO_ROOT,
+	touched.map(({ record }) => ({ collection: 'pressure-response', record })),
+	{ dryRun },
+);
+for (const f of result.changed) console.log(`Regenerated ${f}`);
 
 console.log(
 	`\nApplied ${totalApplied} edits (${totalPrepend} Piaf prepends, ${totalAppend} Pmax appends).`,

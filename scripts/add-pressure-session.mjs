@@ -20,8 +20,7 @@
  * --- Output ---
  * A new session source file, data-repo/source/pressure-response/<brand>/
  * <EntityId>.json (sessions are authored one per file, RFC #45 phase 5),
- * written with writeSourceRecord; then the brand bundles under
- * data/pressure-response/ are regenerated. The diff is the new file plus
+ * validated and committed with its bundles and metadata in one transaction. The diff is the new file plus
  * the same record in its bundle.
  *
  * Records are [physicalGf rounded to 1dp, logicalNorm * 100 rounded to
@@ -46,21 +45,16 @@
  * --repo-root <dir> reads and writes that data-repo copy (holding source/
  * and data/) instead of data-repo/ (for testing).
  *
- * Run `npm run data-quality` afterwards (the script doesn't do this
- * automatically — leaves room to batch multiple inserts before validating).
+ * Schema, UUID and cross-reference checks run before committing.
  */
 
+import { commitDatasetUpdate } from '../data-repo/lib/update-dataset.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { readDataJson } from '../data-repo/lib/data-json.ts';
 import { deriveSessionEntityId } from '../data-repo/lib/pressure/session-id.ts';
-import {
-	readSources,
-	regenerate,
-	sourceCollection,
-	writeSourceRecord,
-} from '../data-repo/lib/sources.ts';
+import { readSources, sourceCollection } from '../data-repo/lib/sources.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -214,7 +208,7 @@ const uuid = crypto.randomUUID();
 const isoNow = new Date(date + 'T00:00:00.000Z').toISOString();
 
 // Key order matches the existing session records.
-const sourceRel = writeSourceRecord(REPO_ROOT, sessions, {
+const newRecord = {
 	EntityId: entityId,
 	Brand: brand,
 	PenFamily: penFamily,
@@ -231,9 +225,12 @@ const sourceRel = writeSourceRecord(REPO_ROOT, sessions, {
 	_ModifiedDate: isoNow,
 	PenEntityId: penEntityId,
 	TabletEntityId: tabletEntityId,
-});
+};
 
-const regenerated = regenerate(REPO_ROOT);
+const regenerated = commitDatasetUpdate(REPO_ROOT, [
+	{ collection: 'pressure-response', record: newRecord },
+]).changed;
+const sourceRel = 'source/pressure-response/' + brand.toLowerCase() + '/' + entityId + '.json';
 
 console.log(`Added session for ${inventoryId} (${date}):`);
 console.log(`  id      : ${entityId}`);
@@ -247,4 +244,3 @@ console.log(`  records : ${recs.length}`);
 console.log(`  uuid    : ${uuid}`);
 console.log(`  → ${sourceRel}`);
 for (const f of regenerated) console.log(`  regenerated ${f}`);
-console.log(`\nRun \`npm run data-quality\` to validate.`);

@@ -70,3 +70,12 @@ the result in the PR. See [CLAUDE.md](../CLAUDE.md) § Chart colours.
 3. If `src/routes/` or major components: `npm run test:e2e`
 4. If data JSON changed: `npm run data-quality`
 5. If `docs/FUTURES.txt` Open changed: `npm run verify-docs`
+
+## Data pipeline regression checks
+
+- `npm test --prefix data-repo`: also runs the data CLI tests, which the Explorer suite does not discover.
+- `npm run typecheck:scripts --prefix data-repo`: checks TypeScript CLI entry points and their shared library.
+- `scripts/data-writers.test.ts`: exercises successful imports, batch rejection and dry runs against a dataset copy.
+- `scripts/data-pipeline.test.ts`: starts a real Vite watcher and checks source add/change/delete, invalid-source errors, bundle bytes and metadata.
+- `scripts/version-json.test.ts`: publication rejects dirty inputs; local previews retain explicit provenance.
+- `npm run pack-smoke`: checks counts and every generated bundle hash in the actual npm tarball.

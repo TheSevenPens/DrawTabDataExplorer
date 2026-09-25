@@ -14,7 +14,9 @@ import { buildVersionInfo } from '../data-repo/lib/version-info.js';
 
 function gitHead(cwd: string): string {
 	try {
-		return execFileSync('git', ['rev-parse', 'HEAD'], { cwd }).toString().trim();
+		return execFileSync('git', ['rev-parse', 'HEAD'], { cwd, stdio: ['ignore', 'pipe', 'ignore'] })
+			.toString()
+			.trim();
 	} catch {
 		return 'unknown';
 	}
@@ -28,6 +30,9 @@ export interface VersionJsonOptions {
 	/** Where to write; normally `<appRoot>/static/version.json`. */
 	outFile: string;
 	now?: Date;
+	/** CI rejects dirty inputs; local development retains explicit dirty provenance. */
+	requireClean?: boolean;
+	onWarning?: (message: string) => void;
 }
 
 export function writeVersionJson({
@@ -35,9 +40,17 @@ export function writeVersionJson({
 	appRoot,
 	outFile,
 	now = new Date(),
+	requireClean = process.env.CI === 'true' || process.env.CI === '1',
+	onWarning = console.warn,
 }: VersionJsonOptions): void {
+	const dataInfo = buildVersionInfo(dataRepoRoot);
+	if (dataInfo.provenance.dirty) {
+		const message = `Data inputs differ from the recorded commit: ${dataInfo.provenance.dirtyPaths?.join(', ')}`;
+		if (requireClean) throw new Error(message);
+		onWarning(message);
+	}
 	const info = {
-		...buildVersionInfo(dataRepoRoot),
+		...dataInfo,
 		build: {
 			appCommit: gitHead(appRoot),
 			queritonCommit: gitHead(path.join(appRoot, 'packages', 'queriton')),

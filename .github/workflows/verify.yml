@@ -54,6 +54,16 @@ jobs:
       - name: Type-check
         run: npx svelte-kit sync && npm run check
 
+      - name: Data scripts type-check and tests
+        run: npm run typecheck:scripts --prefix data-repo && npm test --prefix data-repo
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Python importer bridge test
+        run: python -m unittest discover -s scripts -p "test_*.py"
+
       - name: Unit tests
         run: npm run test:unit
 
@@ -115,8 +125,10 @@ jobs:
           bad=$(git ls-files --eol -- '*.json' | grep -v "i/lf.*w/lf" || true)
           if [ -n "$bad" ]; then echo "Not LF:"; echo "$bad"; exit 1; fi
 
-      # These scripts only import node: builtins and data-repo/lib, so tsx
-      # is all they need.
+      # Source validation also uses the installed Valibot schemas.
+      - name: Install dependencies
+        run: npm ci
+
       - name: Data format
         run: npx --yes tsx data-repo/scripts/format-data.ts
 

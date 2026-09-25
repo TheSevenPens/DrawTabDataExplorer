@@ -21,3 +21,6 @@ static/version.json
 .claude/
 playwright-report/
 test-results/
+
+# Python importer tests
+__pycache__/

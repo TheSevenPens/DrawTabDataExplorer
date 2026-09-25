@@ -33,7 +33,7 @@ re-runnable any time as `npm run setup-static`.
 regenerates it on every dev start and build from the data actually being
 served, plus the app and queriton commits (`scripts/version-json.ts`, #333).
 Don't point it back at `data-repo/data/version.json` — that copy is
-hand-maintained and was months stale.
+deterministic content metadata; publication adds commit and dirty-input provenance.
 
 If either submodule isn't checked out yet, the setup script warns. Run
 `git submodule update --init --recursive` first, then `npm run setup-static`.
@@ -227,7 +227,7 @@ the referenced entity in the same change.
 **Data files have one canonical format** (DrawTabData #45 phase 1): UTF-8,
 no BOM, LF, `JSON.stringify(v, null, 2) + "\n"`. Any script that edits
 `data-repo/data/` reads with `readDataJson` and writes with
-`writeDataJson` from `data-repo/lib/data-json.ts` — never hand-rolled
+`commitDatasetUpdate` from `data-repo/lib/update-dataset.ts` (grouped files use its `dataFiles` option) — never hand-rolled
 `JSON.stringify`, text splicing at an indentation, or PowerShell
 `ConvertTo-Json` (it double-encoded non-ASCII, DrawTabData #43).
 `npm run data-format` checks every managed file byte-for-byte; `verify.yml`
@@ -239,11 +239,10 @@ runs it first, plus a Windows job that proves checkouts stay LF.
 The matching `data-repo/data/<collection>/<BRAND>-*.json` bundles the app loads are
 **generated** from them — edit the source, never the bundle. For one
 record, `npm run data-edit -- <EntityId> Field=value` does it safely
-(schema-validated, regenerated, reverted if data-quality objects). Tools use
-`writeSourceRecord` + `regenerate` from `data-repo/lib/sources.ts`; the
-dev server regenerates when a source changes (`source-bundles` plugin in
-`vite.config.ts`). `npm run data-generate` checks the committed bundles
-match their sources and runs in `verify.yml` before the build. Records in
+(validated before writing sources, bundles and metadata together). Tools use
+`commitDatasetUpdate` from `data-repo/lib/update-dataset.ts`; the
+dev server refreshes them in order (`scripts/data-pipeline.ts`). `npm run data-generate` checks the committed bundles
+and deterministic `data/version.json` match their sources and runs in `verify.yml` before the build. Records in
 a bundle are in EntityId order — rankings that need a stable order break
 ties on EntityId explicitly (`rankRows` in `tablet-analysis/helpers.ts`).
 Sessions store their EntityId (`<brand>.session.<invid>_<date>`, plus
@@ -251,7 +250,8 @@ Sessions store their EntityId (`<brand>.session.<invid>_<date>`, plus
 repeats used to share one derived ID and one `/entity` URL.
 
 After the build, `verify.yml` runs `npm run verify-snapshot -- build/version.json`:
-the deployed bundles must hash as `version.json` records and regenerate
+CI rejects dirty data/generator inputs; local builds warn and record `provenance.dirty`.
+The deployed bundles must hash as `version.json` records and regenerate
 byte-for-byte from the data commit it names. The same command checks the
 live site for anyone (`data-repo/docs/CONSUMERS.md`).
 
