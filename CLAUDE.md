@@ -94,7 +94,7 @@ export async function load({ parent }) {
 
 This means the per-collection load cache (inherited from queriton's
 `DataSet`) is session-scoped: navigating from `/tablets` to
-`/tablet-compare` reuses the already-fetched tablet data. The layout
+`/compare/tablets` reuses the already-fetched tablet data. The layout
 also loads `version.json` eagerly so the schema-mismatch banner is
 visible on every page.
 
@@ -441,8 +441,8 @@ Two consequences worth knowing:
   search corpus — that is what makes a result explainable ("it matched
   something I can see"). A field that must stay searchable while hidden goes
   in `alwaysSearchFields` (only `/tablets` uses it, for `AlternateNames`).
-- **Other search surfaces already comply.** `TabletPicker` / `PenPicker`
-  search `tabletFullName` / `penBrandAndName` — the labels they draw — and
+- **Other search surfaces already comply.** `TabletPicker` and the Compare
+  add rail search `tabletFullName` / `penBrandAndName` — the labels they draw — and
   the reference sections search `tabletFullName`. `FieldPicker` searches
   label _and_ key, which is the same rendered-plus-raw rule. Only
   `EntityExplorer` was matching something the reader could not see.
@@ -630,12 +630,13 @@ will surprise contributors:
   it.
 
 The `lockedZoom` prop on `PressureResponseChart` hides the Zoom dropdown and
-forces a preset — used by the `/pen-compare` combined Pmax comparison to
-embed a max-zoomed overlay chart.
+forces a preset — used by `/pressure-backfill` to embed IAF- and
+MAX-zoomed charts.
 
 ## IAF / MAX tabs
 
-The pen, pen-family, inventory-unit, and pen-compare detail views share
+The pen, pen-family, inventory-unit detail views and the `/compare/pens`
+IAF / MAX tabs share
 one `PressureRangeTab.svelte` (prop `metric: "IAF" | "MAX"`) — it
 replaced the old `PiafTab` / `PmaxTab`. Three modes (Summary default / By
 unit / By sample) all derive from
@@ -643,8 +644,37 @@ unit / By sample) all derive from
 `data-repo/lib/pressure/range-resolve.ts` (was `iaf-resolve.ts`), which
 applies **measured-wins-per-unit**: a pen unit with any direct
 `PressureRange` measurement uses those, else the per-session estimate.
-The `/pen-compare` IAF tab also shows one combined `PressureRangeTab`
-over all flagged pens at the top.
+On `/compare/pens` there is one `PressureRangeTab` per comparison column,
+over that column's sessions and measurements.
+
+## Compare workspace (#373)
+
+`/compare/tablets` and `/compare/pens` (top-level nav word "compare";
+`/compare`, `/tablet-compare` and `/pen-compare` redirect there) hold **one
+working comparison per kind**, kept in the browser
+([`src/lib/compare/store.ts`](src/lib/compare/store.ts)). A comparison is
+up to `MAX_COLUMNS` (8) columns; a column holds refs to models, families
+(expanded **live** from the data, minus excluded members) and, for pens,
+inventory units (the unit's model for specs, only its own sessions for
+pressure). Everything that changes a comparison is a pure function in
+[`compare/model.ts`](src/lib/compare/model.ts); the UI only calls them.
+
+- **Resolve, then summarise.** `resolveColumns` turns refs into records;
+  `buildSummaryGroups` summarises each column (shared value, smallest –
+  largest range by _stored_ value, ISO-date range, distinct values, "n of m
+  recorded"). Blanks never count as a difference.
+- **Flags are an inbox, not a precondition.** The add rail lists flagged
+  items as candidates; nothing requires flagging. Tablet families are
+  flaggable (`flaggedTabletFamilies`); the tablet flag cap is gone.
+- **Every drag has a menu path** (move / merge / remove / add to column),
+  so grouping never depends on a pointer.
+- **Entry points:** `CompareMenu` on tablet, pen, family and pen-unit
+  detail pages (idempotent add, compare with its family / model, compare a
+  family's members, start new).
+- Pressure response is pooled **one series per column** (the column's
+  palette colour) with a "split into pens" toggle; the per-column table
+  under the chart is its legend. True per-group envelope bands would need a
+  `PressureResponseChart` change.
 
 ## Extracted helpers ship with tests
 

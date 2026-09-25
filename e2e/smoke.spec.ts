@@ -13,7 +13,9 @@ const ROUTES: { path: string; h1: RegExp }[] = [
 	{ path: '/pen-inventory', h1: /Pen Inventory/i },
 	{ path: '/tablet-inventory', h1: /Tablet Inventory/i },
 	{ path: '/timeline', h1: /Timeline/i },
-	{ path: '/tablet-compare', h1: /Compare/i },
+	{ path: '/compare/tablets', h1: /Compare/i },
+	{ path: '/compare/pens', h1: /Compare/i },
+	{ path: '/tablet-flagged', h1: /Flagged/i },
 	{ path: '/tablet-analysis', h1: /Analysis/i },
 	{ path: '/pen-analysis', h1: /Pen Analysis/i },
 	{ path: '/reference', h1: /Reference/i },
@@ -151,7 +153,7 @@ test.describe('Session detail navigation', () => {
 });
 
 test.describe('Compare workflow', () => {
-	test('flag a tablet from the list, then see it on /tablet-compare', async ({ page }) => {
+	test('flag a tablet from the list, then add it from the compare inbox', async ({ page }) => {
 		await page.goto('/tablets', { waitUntil: 'networkidle' });
 
 		// Flag the first tablet. The flag-toggle button at the start of every
@@ -160,14 +162,41 @@ test.describe('Compare workflow', () => {
 		await expect(firstFlagButton).toBeVisible({ timeout: 10_000 });
 		await firstFlagButton.click();
 
-		// Compare sub-tab should now show a count badge.
-		await expect(page.locator('a[href*="/tablet-compare"] .badge').first()).toBeVisible({
+		// The Flagged sub-tab should now show a count badge.
+		await expect(page.locator('a[href*="/tablet-flagged"] .badge').first()).toBeVisible({
 			timeout: 5_000,
 		});
 
-		await page.goto('/tablet-compare', { waitUntil: 'networkidle' });
-		// Compare page should mention flagged tablets.
-		await expect(page.locator('body')).toContainText(/flagged/i);
+		// Flags are the compare inbox (#373): the rail lists it, "+ add all"
+		// turns it into a column.
+		await page.goto('/compare/tablets', { waitUntil: 'networkidle' });
+		await expect(page.locator('.rail')).toContainText(/flagged · 1/i);
+		await page.getByRole('button', { name: '+ add all' }).click();
+		await expect(page.locator('.count')).toContainText('1 of 8 columns');
+		await expect(page.locator('.col-head')).toHaveCount(1);
+	});
+
+	test('the old compare URLs land on the new workspace', async ({ page }) => {
+		await page.goto('/tablet-compare');
+		await expect(page).toHaveURL(/\/compare\/tablets$/);
+		await page.goto('/pen-compare');
+		await expect(page).toHaveURL(/\/compare\/pens$/);
+	});
+
+	test('search, add and group from the rail', async ({ page }) => {
+		await page.goto('/compare/tablets', { waitUntil: 'networkidle' });
+		const search = page.locator('.rail input[type="search"]');
+		await search.fill('ctl4100');
+		await page.getByRole('button', { name: 'Add Wacom Intuos Small as its own column' }).click();
+		await expect(page.locator('.count')).toContainText('1 of 8 columns');
+		// The keyboard path for the drag: add the Bluetooth model into that column.
+		await page
+			.getByRole('button', { name: 'Add Wacom Intuos Small Bluetooth to a column' })
+			.click();
+		await page.getByRole('menuitem', { name: 'Add to Wacom Intuos Small' }).click();
+		// Still one column, now a named group of two.
+		await expect(page.locator('.count')).toContainText('1 of 8 columns · 2 tablets');
+		await expect(page.locator('.col-head input')).toHaveValue('Group 1');
 	});
 });
 
@@ -283,9 +312,9 @@ test.describe('Keyboard access', () => {
 		return page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'));
 	}
 
-	test('the Add Tablet picker keeps Tab inside and returns focus on Escape', async ({ page }) => {
-		await page.goto('/tablet-compare');
-		const opener = page.getByRole('button', { name: /add tablet/i });
+	test('the tablet picker keeps Tab inside and returns focus on Escape', async ({ page }) => {
+		await page.goto('/tablet-flagged');
+		const opener = page.getByRole('button', { name: /flag a tablet/i });
 		await opener.focus();
 		await page.keyboard.press('Enter');
 		await expect(page.getByRole('dialog')).toBeVisible();
@@ -408,22 +437,17 @@ test.describe('Separator-insensitive ID search', () => {
 	});
 
 	test('tablet picker: "ptk1240" lists PTK-1240', async ({ page }) => {
-		await page.goto('/tablet-compare');
-		await page.getByRole('button', { name: /add tablet/i }).click();
+		await page.goto('/tablet-flagged');
+		await page.getByRole('button', { name: /flag a tablet/i }).click();
 		const dialog = page.getByRole('dialog');
 		await dialog.locator('input').first().fill('ptk1240');
 		await expect(dialog).toContainText('PTK-1240');
 	});
 
-	test('pen picker: "kp503e" lists KP-503E', async ({ page }) => {
-		await page.goto('/pen-compare');
-		await page
-			.getByRole('button', { name: /add pen/i })
-			.first()
-			.click();
-		const dialog = page.getByRole('dialog');
-		await dialog.locator('input').first().fill('kp503e');
-		await expect(dialog).toContainText('KP-503E');
+	test('compare rail: "kp503e" lists KP-503E', async ({ page }) => {
+		await page.goto('/compare/pens');
+		await page.locator('.rail input[type="search"]').fill('kp503e');
+		await expect(page.locator('.rail')).toContainText('KP-503E');
 	});
 });
 

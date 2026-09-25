@@ -231,7 +231,7 @@ These are reusable sub-views referenced by the `Tabs` strip on pen / pen-family 
 
 ### `PressureRangeTab`
 
-Shared IAF / MAX tab, parameterised by a `metric` prop (`"IAF" | "MAX"`); replaced the former `PiafTab` / `PmaxTab`. A toggle selects three modes — _Summary_ (min/median/max, default), _By unit_ (one row per pen unit), _By sample_ (every datapoint) — all rendered as a `PressureBandsChart` + table. Values come from `resolveRangeByUnit` (measured-wins-per-unit: a direct `PressureRange` measurement beats the per-session estimate); measured markers are solid, estimated dashed. Used by the pen / pen-family / inventory-unit detail tabs and `/pen-compare` (per-pen and one combined-across-flagged-pens instance on the IAF tab).
+Shared IAF / MAX tab, parameterised by a `metric` prop (`"IAF" | "MAX"`); replaced the former `PiafTab` / `PmaxTab`. A toggle selects three modes — _Summary_ (min/median/max, default), _By unit_ (one row per pen unit), _By sample_ (every datapoint) — all rendered as a `PressureBandsChart` + table. Values come from `resolveRangeByUnit` (measured-wins-per-unit: a direct `PressureRange` measurement beats the per-session estimate); measured markers are solid, estimated dashed. Used by the pen / pen-family / inventory-unit detail tabs and `/compare/pens` (one instance per comparison column on the IAF and MAX tabs).
 
 ---
 
@@ -241,7 +241,7 @@ Pure presentation components. Each has clear inputs and produces an SVG or canva
 
 ### `PressureResponseChart`
 
-Chart.js scatter of physical force (gf) vs logical pressure (%). View modes: _Raw_ / _Raw + estimates_ / _Standardized_ / _Envelope_. Zoom modes: _Normal_ / _Piaf detail (0-20 gf)_ / _Pmax detail (95-100%)_. Optional `lockedZoom` hides the dropdown and forces a preset (used by the `/pen-compare` combined Pmax comparison).
+Chart.js scatter of physical force (gf) vs logical pressure (%). View modes: _Raw_ / _Raw + estimates_ / _Standardized_ / _Envelope_. Zoom modes: _Normal_ / _Piaf detail (0-20 gf)_ / _Pmax detail (95-100%)_. Optional `lockedZoom` hides the dropdown and forces a preset (used by `/pressure-backfill`).
 
 Series colours come from [chart-palette.ts](../src/lib/chart-palette.ts) via `paletteColor(i, $theme)` — a validated categorical palette, per theme, never cycled. **Always render this chart with its `PressureResponseChartLegendTable`**: a few palette slots sit just under 3:1 on their surface, and the legend is the relief channel that keeps them accessible.
 
@@ -312,17 +312,13 @@ _Used by:_ `/pressure-response`, `SessionDetail`.
 
 Modal popups triggered by user actions. All render through `ModalRoot`'s backdrop / centering.
 
-### `PenPicker`
-
-Pen-model search modal. Type to filter, click to select. Used by `/pen-compare` to add pens to the comparison.
-
 ### `TabletPicker`
 
-Tablet-model search modal. Mirror of `PenPicker`, used by `/tablet-compare`. Capped at 6 flags (matches the inventory comparison limit).
+Tablet-model search modal that flags tablets; used by `/tablet-flagged`. Uncapped — flags are the Compare inbox, not its columns (#373). (Its pen twin, `PenPicker`, went with the old `/pen-compare`: the Compare add rail searches pens, families and units.)
 
 ### `PickerModalShell`
 
-Shared modal shell behind `PenPicker` / `TabletPicker` (#215): backdrop click-to-close, Escape, the dialog frame, and the header (title + optional accessory + close button). Each picker supplies its own filters/list as `children` plus an optional `headerAccessory` (slot-count badge) and `footer`. `FieldPicker` is intentionally not migrated (it's an anchored popover, not a centered modal).
+Shared modal shell behind `TabletPicker` (#215; `PenPicker` used it too until #373): backdrop click-to-close, Escape, the dialog frame, and the header (title + optional accessory + close button). Each picker supplies its own filters/list as `children` plus an optional `headerAccessory` (slot-count badge) and `footer`. `FieldPicker` is intentionally not migrated (it's an anchored popover, not a centered modal).
 
 ### `ExportDialog`
 
