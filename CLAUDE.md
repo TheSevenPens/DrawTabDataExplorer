@@ -675,6 +675,10 @@ pressure). Everything that changes a comparison is a pure function in
 - **Entry points:** `CompareMenu` on tablet, pen, family and pen-unit
   detail pages (idempotent add, compare with its family / model, compare a
   family's members, start new).
+- **List pages** (`/tablets`, `/pens`, both family lists) pass `compareAs`
+  to `EntityExplorer`: a select column (header box = the rows shown) and a
+  fixed `CompareSelectionBar` — compare these, add to comparison, add as
+  one group (#379). Selection helpers are in `src/lib/selection.ts`.
 - Pressure response is pooled **one series per column** (the column's
   palette colour) with a "split into pens" toggle; the per-column table
   under the chart is its legend. Sessions carry a `group` (the column, or

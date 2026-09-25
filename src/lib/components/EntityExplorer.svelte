@@ -12,6 +12,9 @@
 	import { onMount } from 'svelte';
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
+	import CompareSelectionBar from '$lib/compare/CompareSelectionBar.svelte';
+	import type { CompareKind, MemberType } from '$lib/compare/model';
+	import { setAll, toggleOne } from '$lib/selection.js';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
 	import { loadColumnWidths, saveColumnWidths } from '$lib/column-widths.js';
@@ -50,6 +53,7 @@
 		ownedOnlyFilter,
 		flaggedIds,
 		onToggleFlag,
+		compareAs,
 	}: {
 		/** Page title. Rendered for assistive tech and the document
 		 * outline only — the Metro Nav already states the section in
@@ -82,7 +86,12 @@
 		ownedOnlyFilter?: { field: string; label: string };
 		flaggedIds?: Set<string>;
 		onToggleFlag?: (entityId: string) => void;
+		/** Turns on row selection with a Compare action bar (#379): which
+		 * comparison the rows go to, and whether a row is a model or a family. */
+		compareAs?: { kind: CompareKind; type: MemberType; noun: string };
 	} = $props();
+
+	let selectedIds = $state(new Set<string>());
 
 	function getInitialColumns(): string[] {
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
@@ -287,9 +296,28 @@
 	onwidthchange={onWidthChange}
 	{flaggedIds}
 	{onToggleFlag}
+	selectedIds={compareAs ? selectedIds : undefined}
+	onToggleSelect={compareAs ? (id) => (selectedIds = toggleOne(selectedIds, id)) : undefined}
+	onSelectAll={compareAs ? (ids, on) => (selectedIds = setAll(selectedIds, ids, on)) : undefined}
 />
 
+{#if compareAs && selectedIds.size > 0}
+	<!-- Room for the fixed bar, so it never covers the last rows. -->
+	<div class="bar-spacer"></div>
+	<CompareSelectionBar
+		kind={compareAs.kind}
+		type={compareAs.type}
+		noun={compareAs.noun}
+		ids={[...selectedIds]}
+		onclear={() => (selectedIds = new Set())}
+	/>
+{/if}
+
 <style>
+	.bar-spacer {
+		height: 64px;
+	}
+
 	/* The h1 is .sr-only, so this row paints only the count. */
 	.title-row {
 		display: flex;

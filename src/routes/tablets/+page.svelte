@@ -36,6 +36,7 @@
 	title="Tablets"
 	entityType="tablets"
 	entityLabel="tablets"
+	compareAs={{ kind: 'tablets', type: 'model', noun: 'tablets' }}
 	data={data.tablets}
 	fields={TABLET_FIELDS}
 	fieldGroups={TABLET_FIELD_GROUPS}

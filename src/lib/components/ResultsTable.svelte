@@ -6,6 +6,7 @@
 	import { getFieldLabel } from '$data/lib/units.js';
 	import { cellText } from '$lib/cell-text.js';
 	import FlagButton from '$lib/components/FlagButton.svelte';
+	import { selectionState } from '$lib/selection.js';
 	import type { CellLinks } from '$lib/table-types.js';
 
 	let {
@@ -19,6 +20,9 @@
 		onwidthchange,
 		flaggedIds,
 		onToggleFlag,
+		selectedIds,
+		onToggleSelect,
+		onSelectAll,
 	}: {
 		// Heterogeneous entity rows — see EntityExplorer / table-types.ts (#221).
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,9 +36,22 @@
 		onwidthchange?: () => void;
 		flaggedIds?: Set<string>;
 		onToggleFlag?: (entityId: string) => void;
+		/** Row selection (#379): a leading checkbox column, and a header
+		 * checkbox over the rows shown. All three props or none. */
+		selectedIds?: Set<string>;
+		onToggleSelect?: (entityId: string) => void;
+		onSelectAll?: (entityIds: string[], on: boolean) => void;
 	} = $props();
 
+	// The one row-id rule, shared by the flag and select columns.
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const rowId = (item: any): string =>
+		item.Meta?.EntityId ?? item.EntityId ?? item.InventoryId ?? '';
+
 	let showFlags = $derived(!!flaggedIds && !!onToggleFlag);
+	let showSelect = $derived(!!selectedIds && !!onToggleSelect && !!onSelectAll);
+	let shownIds = $derived(showSelect ? data.map(rowId).filter((id) => id !== '') : []);
+	let headerState = $derived(showSelect ? selectionState(selectedIds!, shownIds) : 'none');
 
 	let fieldDefs = $derived(
 		visibleFields.map((k) => getFieldDef(k, fields)).filter((f) => f !== undefined),
@@ -70,6 +87,17 @@
 	<table style="table-layout: {Object.keys(columnWidths).length > 0 ? 'fixed' : 'auto'};">
 		<thead>
 			<tr>
+				{#if showSelect}
+					<th class="select-col">
+						<input
+							type="checkbox"
+							aria-label="Select all {shownIds.length} rows shown"
+							checked={headerState === 'all'}
+							indeterminate={headerState === 'some'}
+							onchange={() => onSelectAll!(shownIds, headerState !== 'all')}
+						/>
+					</th>
+				{/if}
 				{#if showFlags}
 					<th class="flag-col"></th>
 				{/if}
@@ -94,9 +122,19 @@
 		</thead>
 		<tbody>
 			{#each data as item, i (i)}
-				<tr>
+				<tr class:selected={showSelect && selectedIds!.has(rowId(item))}>
+					{#if showSelect}
+						<td class="select-col">
+							<input
+								type="checkbox"
+								aria-label="Select row"
+								checked={selectedIds!.has(rowId(item))}
+								onchange={() => onToggleSelect!(rowId(item))}
+							/>
+						</td>
+					{/if}
 					{#if showFlags}
-						{@const eid = item.Meta?.EntityId ?? item.EntityId ?? item.InventoryId ?? ''}
+						{@const eid = rowId(item)}
 						<td class="flag-col">
 							<FlagButton
 								compact
@@ -188,5 +226,16 @@
 		width: 28px;
 		padding: 0 2px;
 		text-align: center;
+	}
+
+	.select-col {
+		width: 28px;
+		padding: 0 2px 0 6px;
+		text-align: center;
+	}
+
+	/* A selected row is "what you clicked": the accent wash marks it. */
+	tr.selected td {
+		background: var(--accent-wash);
 	}
 </style>
