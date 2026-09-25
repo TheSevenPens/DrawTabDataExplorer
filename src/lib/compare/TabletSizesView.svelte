@@ -1,6 +1,7 @@
 <script lang="ts">
 	// The Compare "sizes" view for tablets (#373): the compared tablets'
-	// digitizer outlines, then their diagonals on the size-category scale,
+	// digitizer outlines — all together or one set per column, at one shared
+	// scale — then their diagonals on the size-category scale,
 	// one marker per member in its column's colour. The population of all
 	// tablets is a context layer (on by default, #380) with its own year
 	// filter — the text always says which marks are the comparison.
@@ -23,6 +24,7 @@
 	} from '$lib/tablet-size-ranges.js';
 	import type { ResolvedColumn } from './resolve';
 	import {
+		outlineGroups,
 		populationNoun,
 		sizeMarkers,
 		sizeSubtitle,
@@ -46,17 +48,22 @@
 	let compareYears = $state<number | null>(15);
 	let showContext = $state(true);
 	let layout: 'stacked' | 'side' = $state('stacked');
+	let grouping = $state<'together' | 'column'>('together');
 
 	let typeFilter: SizeTypeFilter = $derived(sizeTypeFilter(tablets.map((t) => t.Model.Type)));
 	let noun = $derived(populationNoun(typeFilter));
 
-	let dimItems = $derived(
-		tablets
-			.filter(
-				(t) => t.Digitizer?.Dimensions?.Width != null && t.Digitizer?.Dimensions?.Height != null,
-			)
-			.map((t) => ({ dims: t.Digitizer!.Dimensions!, label: tabletBrandAndName(t) })),
+	let outlines = $derived(
+		outlineGroups(
+			columns,
+			colors,
+			(t) => t.Digitizer?.Dimensions,
+			(t) => t.Meta.EntityId,
+			tabletBrandAndName,
+		),
 	);
+	// Splitting only means something with more than one column to split into.
+	let byColumn = $derived(grouping === 'column' && outlines.byColumn.length > 1);
 
 	const ofType = (t: Tablet, f: SizeTypeFilter) =>
 		f === 'ALL' ||
@@ -101,7 +108,7 @@
 	);
 </script>
 
-{#if dimItems.length === 0}
+{#if outlines.together.length === 0}
 	<EmptyState>None of the compared tablets has digitizer dimensions recorded.</EmptyState>
 {:else}
 	<section>
@@ -115,8 +122,42 @@
 				]}
 				bind:value={layout}
 			/>
+			{#if outlines.byColumn.length > 1}
+				<SegmentedControl
+					ariaLabel="Outline grouping"
+					options={[
+						{ value: 'together', label: 'together' },
+						{ value: 'column', label: 'by column' },
+					]}
+					bind:value={grouping}
+				/>
+			{/if}
 		</div>
-		<TabletDimensionComparison items={dimItems} showISO={false} stacked={layout === 'stacked'} />
+		{#if byColumn}
+			<!-- One chart per column, all at the same mm-to-pixel scale. -->
+			<div class="by-column" class:stacked={layout === 'stacked'}>
+				{#each outlines.byColumn as g (g.id)}
+					<div class="column-outlines">
+						<h3>
+							<span class="swatch" style:background={g.color} aria-hidden="true"></span>{g.name}
+						</h3>
+						<TabletDimensionComparison
+							items={g.items}
+							showISO={false}
+							stacked={layout === 'stacked'}
+							scaleRefMm={outlines.scaleRefMm}
+							title="{g.name} dimensions"
+						/>
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<TabletDimensionComparison
+				items={outlines.together}
+				showISO={false}
+				stacked={layout === 'stacked'}
+			/>
+		{/if}
 	</section>
 {/if}
 
@@ -176,6 +217,33 @@
 
 	.head h2 {
 		margin: 0;
+	}
+
+	.by-column {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
+	}
+
+	/* Stacks are compact: put them side by side so groups compare at a glance. */
+	.by-column.stacked {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 18px 32px;
+	}
+
+	.column-outlines {
+		min-width: 0;
+	}
+
+	h3 {
+		display: flex;
+		align-items: center;
+		font-size: var(--type-body);
+		font-weight: 600;
+		color: var(--text);
+		margin: 0 0 4px 0;
 	}
 
 	.context {

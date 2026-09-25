@@ -11,13 +11,20 @@
 		showISO = true,
 		stacked = false,
 		title = 'tablet-dimensions',
+		scaleRefMm,
 	}: {
 		dims?: Dimensions;
-		items?: Array<{ dims: Dimensions; label: string }>;
+		/** `color` is an identity colour (a `paletteColor` slot, e.g. a Compare
+		 * column); items without one use the built-in stack palette. */
+		items?: Array<{ dims: Dimensions; label: string; color?: string }>;
 		isoSizes?: ISOPaperSize[];
 		showISO?: boolean;
 		stacked?: boolean;
 		title?: string;
+		/** Short side (mm) that fills the chart height. Pass the same value to
+		 * several charts to draw them at one scale — Compare's per-column
+		 * outlines (#380). Defaults to this chart's own largest item. */
+		scaleRefMm?: number;
 	} = $props();
 
 	let svgEl: SVGSVGElement | undefined = $state();
@@ -36,6 +43,7 @@
 		wMm: number; // landscape orientation
 		hMm: number;
 		isTablet: boolean;
+		color?: string;
 	}
 
 	interface ChartRect {
@@ -46,10 +54,11 @@
 		label: string;
 		dimsLabel: string;
 		colorIdx?: number;
+		color?: string;
 	}
 
 	// Normalize to array — either explicit items or the single dims prop
-	let tabletItems = $derived.by((): Array<{ dims: Dimensions; label: string }> => {
+	let tabletItems = $derived.by((): Array<{ dims: Dimensions; label: string; color?: string }> => {
 		if (items && items.length > 0)
 			return items.filter((i) => i.dims.Width != null && i.dims.Height != null);
 		if (dims && dims.Width != null && dims.Height != null) return [{ dims, label: 'Active Area' }];
@@ -111,7 +120,7 @@
 			hMm: Math.min(p.Width_mm, p.Height_mm),
 			isTablet: false,
 		}));
-		const tabItems: ChartItem[] = tabletItems.map(({ dims: d, label }) => {
+		const tabItems: ChartItem[] = tabletItems.map(({ dims: d, label, color }) => {
 			const dw = d.Width!;
 			const dh = d.Height!;
 			return {
@@ -120,6 +129,7 @@
 				wMm: Math.max(dw, dh),
 				hMm: Math.min(dw, dh),
 				isTablet: true,
+				color,
 			};
 		});
 		return [...isoItems, ...tabItems].sort((a, b) => b.wMm * b.hMm - a.wMm * a.hMm);
@@ -127,7 +137,7 @@
 
 	let layout = $derived.by((): { rects: ChartRect[]; svgW: number } | null => {
 		if (chartItems.length === 0) return null;
-		const maxH = Math.max(...chartItems.map((it) => it.hMm));
+		const maxH = scaleRefMm ?? Math.max(...chartItems.map((it) => it.hMm));
 		const scale = CHART_H / maxH;
 
 		if (stacked) {
@@ -148,6 +158,7 @@
 					label: it.label,
 					dimsLabel: it.dimsLabel,
 					colorIdx: i,
+					color: it.color,
 				};
 			});
 			return { rects, svgW };
@@ -164,6 +175,7 @@
 				isTablet: it.isTablet,
 				label: it.label,
 				dimsLabel: it.dimsLabel,
+				color: it.color,
 			};
 			x += sw + GAP;
 			return r;
@@ -188,7 +200,36 @@
 			>
 				<g transform="translate(0,{PAD_TOP})">
 					{#each layout.rects as r, i (i)}
-						{#if stacked && r.colorIdx != null}
+						{#if r.color}
+							<!-- Identity colour: the outline carries it; labels stay ink,
+							     since some palette slots are under 3:1 as text. -->
+							<rect
+								x={r.x}
+								y={CHART_H - r.sh}
+								width={r.sw}
+								height={r.sh}
+								fill={r.color}
+								fill-opacity={stacked ? 0.08 : 0.15}
+								stroke={r.color}
+								stroke-width="2"
+							/>
+							<text
+								x={r.x + r.sw / 2}
+								y={CHART_H - r.sh - 6}
+								text-anchor="middle"
+								style={svgTextStyle('seriesLabel')}
+								fill="var(--text)">{r.label}</text
+							>
+							{#if !stacked}
+								<text
+									x={r.x + r.sw / 2}
+									y={CHART_H + 14}
+									text-anchor="middle"
+									style={svgTextStyle('subtitle')}
+									class="lbl-dims">{r.dimsLabel}</text
+								>
+							{/if}
+						{:else if stacked && r.colorIdx != null}
 							<rect
 								x={r.x}
 								y={CHART_H - r.sh}
@@ -241,9 +282,9 @@
 						<div class="legend-item">
 							<span
 								class="legend-swatch"
-								style="background:{STACK_FILLS[
-									r.colorIdx % STACK_FILLS.length
-								]};border-color:{STACK_STROKES[r.colorIdx % STACK_STROKES.length]}"
+								style="background:{r.color ??
+									STACK_FILLS[r.colorIdx % STACK_FILLS.length]};border-color:{r.color ??
+									STACK_STROKES[r.colorIdx % STACK_STROKES.length]}"
 							></span>
 							<span class="legend-label">{r.label}</span>
 							<span class="legend-dims">{r.dimsLabel} mm</span>

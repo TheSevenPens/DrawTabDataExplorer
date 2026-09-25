@@ -55,3 +55,64 @@ export function sizeMarkers<T>(
 		}),
 	);
 }
+
+export interface OutlineItem<D> {
+	dims: D;
+	label: string;
+	color: string;
+}
+
+export interface OutlineGroups<D> {
+	/** Every compared tablet once, in its first column's colour. */
+	together: OutlineItem<D>[];
+	/** One outline set per column that has any dimensions. */
+	byColumn: { id: string; name: string; color: string; items: OutlineItem<D>[] }[];
+	/** Largest short side (mm) across every column: pass it to each per-column
+	 * chart so they share one scale and stay comparable. */
+	scaleRefMm: number;
+}
+
+/** Digitizer outlines for the sizes view, together or split by column (#380). */
+export function outlineGroups<T, D extends { Width?: number; Height?: number }>(
+	columns: readonly { id: string; name: string; models: readonly T[] }[],
+	colors: readonly string[],
+	dims: (t: T) => D | undefined,
+	id: (t: T) => string,
+	label: (t: T) => string,
+): OutlineGroups<D> {
+	const itemsOf = (col: (typeof columns)[number], color: string) =>
+		col.models.flatMap((t) => {
+			const d = dims(t);
+			return d?.Width != null && d?.Height != null
+				? [{ key: id(t), item: { dims: d, label: label(t), color } }]
+				: [];
+		});
+	const perColumn = columns.map((col, i) => ({
+		col,
+		color: colors[i],
+		items: itemsOf(col, colors[i]),
+	}));
+
+	const seen = new Set<string>();
+	const together: OutlineItem<D>[] = [];
+	for (const c of perColumn)
+		for (const { key, item } of c.items)
+			if (!seen.has(key)) {
+				seen.add(key);
+				together.push(item);
+			}
+
+	const shortSides = together.map((it) => Math.min(it.dims.Width!, it.dims.Height!));
+	return {
+		together,
+		byColumn: perColumn
+			.filter((c) => c.items.length > 0)
+			.map((c) => ({
+				id: c.col.id,
+				name: c.col.name,
+				color: c.color,
+				items: c.items.map((x) => x.item),
+			})),
+		scaleRefMm: shortSides.length ? Math.max(...shortSides) : 0,
+	};
+}

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { populationNoun, sizeMarkers, sizeSubtitle, sizeTypeFilter } from './tablet-sizes';
+import {
+	outlineGroups,
+	populationNoun,
+	sizeMarkers,
+	sizeSubtitle,
+	sizeTypeFilter,
+} from './tablet-sizes';
 
 describe('sizeTypeFilter / populationNoun', () => {
 	it('names the population the compared set belongs to', () => {
@@ -54,5 +60,36 @@ describe('sizeMarkers', () => {
 			{ value: 20, label: 'S', color: '#a' },
 			{ value: 20, label: 'S', color: '#b' },
 		]);
+	});
+});
+
+describe('outlineGroups', () => {
+	const t = (id: string, w?: number, h?: number) => ({ id, dims: { Width: w, Height: h } });
+	const cols = [
+		{ id: 'a', name: 'Pro 2017', models: [t('s', 160, 100), t('l', 311, 216)] },
+		{ id: 'b', name: 'Pro 2025', models: [t('s', 160, 100), t('x')] },
+		{ id: 'c', name: 'Empty', models: [t('y')] },
+	];
+	const g = outlineGroups(
+		cols,
+		['#a', '#b', '#c'],
+		(m) => m.dims,
+		(m) => m.id,
+		(m) => m.id,
+	);
+
+	it('together: each tablet once, in its first column colour', () => {
+		expect(g.together.map((i) => `${i.label}${i.color}`)).toEqual(['s#a', 'l#a']);
+	});
+
+	it('by column: a set per column with dimensions, all in the column colour', () => {
+		expect(g.byColumn.map((c) => [c.name, c.items.map((i) => i.label + i.color)])).toEqual([
+			['Pro 2017', ['s#a', 'l#a']],
+			['Pro 2025', ['s#b']],
+		]);
+	});
+
+	it('one shared scale: the largest short side anywhere', () => {
+		expect(g.scaleRefMm).toBe(216);
 	});
 });
