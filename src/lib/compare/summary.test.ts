@@ -98,6 +98,7 @@ describe('buildSummaryGroups', () => {
 		expect(groups[0].rows[0].cells.map((c) => c.text)).toEqual(['2025', '2017 – 2019']);
 		expect(countIdenticalRows(groups)).toBe(1);
 		expect(onlyDifferingRows(groups).map((g) => g.group)).toEqual(['Model']);
+		expect(groups[0].rows.every((r) => r.multiline === false)).toBe(true);
 	});
 
 	it('exports rows with varies and notes spelled out, and as Markdown', () => {

@@ -31,6 +31,8 @@ export interface SummaryRow {
 	label: string;
 	cells: SummaryCell[];
 	differs: boolean;
+	/** Free text (the Notes fields) — clamped in the matrix, full in exports. */
+	multiline: boolean;
 }
 
 export interface SummaryGroup {
@@ -101,6 +103,7 @@ export function buildSummaryGroups<T>(
 				label: stripUnit(field.label, field.unit),
 				cells,
 				differs: texts.size > 1,
+				multiline: !!field.multiline,
 			});
 		}
 		if (rows.length > 0) groups.push({ group, rows });
