@@ -3,8 +3,7 @@ import { defineConfig, type Plugin } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { writeVersionJson } from './scripts/version-json.js';
-import { regenerate } from './data-repo/lib/sources.js';
+import { dataPipelinePlugin } from './scripts/data-pipeline.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,96 +35,15 @@ function localDataPlugin(): Plugin {
 	};
 }
 
-// Tablets and pens are authored one file per record under data-repo/source/
-// and the brand bundles under data-repo/data/ are generated from them
-// (DrawTabData#45). Regenerate on dev start / build start, and in dev on
-// every source add, change or delete, so the running site always reflects
-// the sources. Writes land in data/, which the version-json watcher below
-// picks up, so the chain is source -> bundles -> version.json.
-//
-// CI never relies on this: verify.yml runs `generate --check` BEFORE any
-// build, so a stale committed bundle fails there instead of being repaired
-// here. A bad source file is reported and nothing is written.
-function sourceBundlesPlugin(): Plugin {
-	const dataRepoRoot = hasLocalData ? localDataPath : path.resolve(__dirname, 'data-repo');
-	const sourceDir = path.join(dataRepoRoot, 'source');
-	const run = (log: (msg: string) => void, fail: (msg: string) => void) => {
-		try {
-			const changed = regenerate(dataRepoRoot);
-			if (changed.length) log(`regenerated ${changed.join(', ')}`);
-		} catch (e) {
-			fail(e instanceof Error ? e.message : String(e));
-		}
-	};
-	return {
-		name: 'source-bundles',
-		buildStart() {
-			run(
-				(m) => this.info(m),
-				(m) => this.error(m),
-			);
-		},
-		configureServer(server) {
-			const logger = server.config.logger;
-			server.watcher.add(sourceDir);
-			// Coalesce bursts (an editor saving several files, a git checkout)
-			// into one run, and never run two at once.
-			let timer: ReturnType<typeof setTimeout> | undefined;
-			const schedule = (file: string) => {
-				if (!file.startsWith(sourceDir) || !file.endsWith('.json')) return;
-				clearTimeout(timer);
-				timer = setTimeout(
-					() =>
-						run(
-							(m) => logger.info(`[source-bundles] ${m}`, { timestamp: true }),
-							(m) => logger.error(`[source-bundles] ${m}`, { timestamp: true }),
-						),
-					150,
-				);
-			};
-			server.watcher.on('add', schedule);
-			server.watcher.on('change', schedule);
-			server.watcher.on('unlink', schedule);
-		},
-	};
-}
-
-// Regenerate static/version.json from the data this build ships (#333).
-// buildStart runs for dev and build alike, before SvelteKit copies static/.
-// version.json also carries the file manifest and the session-count index
-// the URL loaders trust (#346), so in dev it is rewritten whenever a data
-// file is added, removed or edited — otherwise a new brand file would be
-// skipped, or a count stale, until the server restarted.
-function versionJsonPlugin(): Plugin {
-	const dataRepoRoot = hasLocalData ? localDataPath : path.resolve(__dirname, 'data-repo');
-	const write = () =>
-		writeVersionJson({
-			dataRepoRoot,
-			appRoot: __dirname,
-			outFile: path.resolve(__dirname, 'static', 'version.json'),
-		});
-	return {
-		name: 'version-json',
-		buildStart: write,
-		configureServer(server) {
-			const dataDir = path.join(dataRepoRoot, 'data');
-			server.watcher.add(dataDir);
-			const onChange = (file: string) => {
-				if (file.startsWith(dataDir) && file.endsWith('.json')) write();
-			};
-			server.watcher.on('add', onChange);
-			server.watcher.on('unlink', onChange);
-			server.watcher.on('change', onChange);
-		},
-	};
-}
-
 export default defineConfig({
-	// source-bundles first: its buildStart must finish before version-json's
-	// reads the bundles (both are synchronous, so plugin order is run order).
+	// Generate and validate once, then write publication metadata before SvelteKit copies static/.
 	plugins: [
-		sourceBundlesPlugin(),
-		versionJsonPlugin(),
+		dataPipelinePlugin({
+			dataRepoRoot: hasLocalData ? localDataPath : path.resolve(__dirname, 'data-repo'),
+			appRoot: __dirname,
+			outFile: path.resolve(__dirname, 'static/version.json'),
+		}),
+
 		...(hasLocalData ? [localDataPlugin()] : []),
 		sveltekit(),
 	],

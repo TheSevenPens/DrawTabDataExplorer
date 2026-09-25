@@ -15,11 +15,11 @@
 // Where things go (RFC #45):
 //   - Tablets and pens are authored one record per file:
 //     source/tablets/<brand>/<EntityId>.json, source/pens/<brand>/<EntityId>.json
-//     (writeSourceRecord). The brand bundles data/tablets/<BRAND>-tablets.json
+//     via commitDatasetUpdate. The brand bundles data/tablets/<BRAND>-tablets.json
 //     and data/pens/<BRAND>-pens.json are GENERATED from them by
-//     regenerate() — never write a bundle directly (CI's `generate --check`
+//     the shared transaction — never write a bundle directly (CI's `generate --check`
 //     fails on one that differs from its sources).
-//   - Families and pen-compat are still plain data/ files (writeDataJson).
+//   - Families and pen-compat join the same transaction as grouped dataFiles.
 //
 // Usage:
 //   1. Copy this file within scripts/, e.g. cp gen-brand-data.example.mjs gen-foobar.mjs
@@ -34,8 +34,8 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { writeDataJson } from '../data-repo/lib/data-json.ts';
-import { regenerate, sourceCollection, writeSourceRecord } from '../data-repo/lib/sources.ts';
+import { commitDatasetUpdate } from '../data-repo/lib/update-dataset.ts';
+import { sourceCollection } from '../data-repo/lib/sources.ts';
 
 // --- Customize ---
 
@@ -250,6 +250,16 @@ const penCompatRecords = PEN_COMPAT.map((c) => ({
 
 // --- Write ---
 
+// The default preview explicitly starts an empty dataset. A supplied root must
+// already have all required source collections, so missing inputs remain errors.
+if (rootArg < 0) {
+	for (const name of ['tablets', 'pens', 'pressure-response']) {
+		const dir = path.join(REPO_ROOT, 'source', name);
+		fs.mkdirSync(dir, { recursive: true });
+		fs.writeFileSync(path.join(dir, '.gitkeep'), '');
+	}
+}
+
 // This template creates a NEW brand. Re-running over existing sources would
 // give every record a fresh _id and leave behind the files of any entry you
 // removed from the arrays, so refuse; delete the brand's source directories
@@ -264,21 +274,23 @@ for (const c of [tablets, pens]) {
 	}
 }
 
-// Tablets and pens: one source file per record, then generate the bundles.
-for (const r of tabletRecords) writeSourceRecord(REPO_ROOT, tablets, r);
-for (const r of penRecords) writeSourceRecord(REPO_ROOT, pens, r);
-const regenerated = regenerate(REPO_ROOT);
-
-// Families and pen-compat stay plain data/ files.
-const dataDir = path.join(REPO_ROOT, 'data');
-fs.mkdirSync(path.join(dataDir, 'tablet-families'), { recursive: true });
-fs.mkdirSync(path.join(dataDir, 'pen-compat'), { recursive: true });
-writeDataJson(path.join(dataDir, 'tablet-families', `${BRAND}-tablet-families.json`), {
-	TabletFamilies: familyRecords,
-});
-writeDataJson(path.join(dataDir, 'pen-compat', `${BRAND}-pen-compat.json`), {
-	PenCompat: penCompatRecords,
-});
+// One validated transaction includes sources and related grouped records.
+const regenerated = commitDatasetUpdate(
+	REPO_ROOT,
+	[
+		...tabletRecords.map((record) => ({ collection: 'tablets', record })),
+		...penRecords.map((record) => ({ collection: 'pens', record })),
+	],
+	{
+		dataFiles: new Map([
+			[
+				'data/tablet-families/' + BRAND + '-tablet-families.json',
+				{ TabletFamilies: familyRecords },
+			],
+			['data/pen-compat/' + BRAND + '-pen-compat.json', { PenCompat: penCompatRecords }],
+		]),
+	},
+).changed;
 
 console.log(
 	`Wrote ${tabletRecords.length} tablet and ${penRecords.length} pen source files, ` +

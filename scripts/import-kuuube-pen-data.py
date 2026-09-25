@@ -3,11 +3,10 @@
 
 Reads the spreadsheet, matches Excel rows to the Wacom pen source files
 data-repo/source/pens/wacom/<EntityId>.json by PenId, computes per-pen
-updates, and either prints a dry-run diff (default) or (--write) rewrites
-the affected pens' source files and then regenerates the pen bundles
-(data-repo/data/pens/*-pens.json) with
-`npx tsx data-repo/scripts/generate.ts --write`. The bundles are generated
-from the sources (RFC #45) and are never edited directly.
+updates, and either prints a dry-run diff (default) or sends the complete
+plan to data-repo/scripts/apply-update.ts (--write). The shared TypeScript
+transaction validates schemas and references before committing source files,
+bundles and metadata. Python never writes dataset JSON.
 
 Field rules:
   - Weight: strip "g"; first numeric token; "???" / annotated → flag, skip
@@ -21,24 +20,19 @@ Field rules:
 Fields the spreadsheet does NOT cover (Tilt, Hover, Shape) are never
 written.
 
---write rewrites each updated pen's source file in the dataset's canonical
-JSON form — byte-identical to data-repo/lib/data-json.ts formatDataJson(),
-i.e. JSON.stringify(value, null, 2) + "\\n", LF, UTF-8 without BOM (RFC #45),
-key order kept — so the diff is just the updated values. Before writing it
-runs the generator in check mode and stops if the bundles are already out of
-sync; after writing it regenerates them and fails loudly if that fails.
+--write first checks committed bundle/metadata freshness, then submits one
+validated transaction. A rejected batch leaves existing files unchanged.
 --repo-root points it at a copy of the data-repo (the directory holding
 source/ and data/), for testing.
 """
 
 import argparse
 import json
-import os
 import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 try:
@@ -177,23 +171,6 @@ def read_data_json(path):
         return json.load(f, object_pairs_hook=_no_duplicate_keys, parse_float=_parse_float)
 
 
-def format_data_json(value):
-    """Canonical dataset text — the same bytes as formatDataJson() in
-    data-repo/lib/data-json.ts (JSON.stringify(value, null, 2) + "\\n")
-    for the strings / ints / nested containers the pen files hold."""
-    return json.dumps(value, indent=2, ensure_ascii=False) + "\n"
-
-
-def write_data_json(path, value):
-    """Write canonical text atomically (temp file + rename), LF, UTF-8
-    without BOM, like writeDataJson()."""
-    text = format_data_json(value)
-    tmp = Path(f"{path}.{os.getpid()}.tmp")
-    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
-    os.replace(tmp, path)
-
-
 def read_wacom_pen_sources(repo_root):
     """{path: record} for every Wacom pen source file, sorted by path."""
     src_dir = Path(repo_root) / "source" / "pens" / "wacom"
@@ -266,14 +243,12 @@ def main():
     repo_root = Path(args.repo_root).resolve()
     sources = read_wacom_pen_sources(repo_root)
     pens = list(sources.values())
-    path_of = {p["EntityId"]: f for f, p in sources.items()}
     by_penid = {p["PenId"]: p for p in pens}
 
-    today_iso = datetime.utcnow().strftime("%Y-%m-%dT00:00:00.000Z")
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00.000Z")
 
     updates_planned = []  # list of (pen_dict, diffs, flags, new_pen_dict)
     no_match_excel = []
-    no_match_db = []
     no_changes = []
 
     for pid, row in excel_rows.items():
@@ -344,23 +319,21 @@ def main():
         sys.exit("generate.ts check failed before writing; nothing was written")
 
     print()
-    for cur, _diffs, _flags, new_pen in updates_planned:
-        path = path_of[cur["EntityId"]]
-        if path.name != f"{cur['EntityId']}.json":
-            sys.exit(f"{path}: file name does not match EntityId {cur['EntityId']}")
-        # new_pen keeps cur's key order (new fields go last), so the diff
-        # is just the changed values.
-        write_data_json(path, new_pen)
-        print(f"wrote {path.relative_to(repo_root).as_posix()}")
-
-    code, out = run_generator(repo_root, write=True)
-    print(out)
-    if code != 0:
-        sys.exit(
-            f"generate.ts --write FAILED (exit {code}): the {len(updates_planned)} source file(s) "
-            "above were written but the pen bundles were NOT regenerated"
-        )
-    print(f"{len(updates_planned)} pens updated; bundles regenerated")
+    # Send a complete plan to the shared TypeScript transaction boundary.
+    npx = shutil.which("npx")
+    if npx is None:
+        sys.exit("npx not found on PATH")
+    plan = [{"collection": "pens", "record": new_pen}
+            for _cur, _diffs, _flags, new_pen in updates_planned]
+    cmd = [npx, "tsx", str(DATA_REPO / "scripts" / "apply-update.ts"),
+           "--repo-root", str(repo_root)]
+    result = subprocess.run(cmd, cwd=REPO, input=json.dumps(plan, ensure_ascii=False),
+                            capture_output=True, text=True, encoding="utf-8")
+    if result.returncode != 0:
+        print(result.stderr, file=sys.stderr)
+        sys.exit("import rejected; no source or bundle changes were committed")
+    print(result.stdout.strip())
+    print(f"{len(updates_planned)} pens updated; bundles and metadata regenerated")
 
 
 if __name__ == "__main__":

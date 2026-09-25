@@ -4,8 +4,7 @@
  * brand-sharded `data-repo/data/pressure-range/<BRAND>-pressure-range.json`
  * files. Each file is read, the new records are pushed onto its
  * PressureRange array (or the file is created), and it is written back
- * through writeDataJson (data-repo/lib/data-json.ts), the dataset's one
- * canonical JSON writer (2-space indent, LF, UTF-8 without BOM; RFC #45).
+ * through the shared validated transaction, along with refreshed metadata.
  * On an already-canonical file the diff is just the new records.
  *
  * These are *direct measurements* from an external tool — distinct from the
@@ -34,13 +33,15 @@
  * --data-dir <dir> reads and writes <dir> instead of data-repo/data (for
  * testing against a copy).
  *
- * Run `npm run data-quality` afterwards to validate.
+ * Validation runs before committing the entire batch.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { readDataJson, writeDataJson } from '../data-repo/lib/data-json.ts';
+import { readDataJson } from '../data-repo/lib/data-json.ts';
+
+import { commitDatasetUpdate } from '../data-repo/lib/update-dataset.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -139,6 +140,7 @@ for (const rec of records) {
 }
 
 let totalWritten = 0;
+const dataFiles = new Map();
 for (const [brand, recs] of byBrand) {
 	const filePath = path.join(PR_DIR, `${brand}-pressure-range.json`);
 	const exists = fs.existsSync(filePath);
@@ -156,14 +158,16 @@ for (const [brand, recs] of byBrand) {
 			`[dry-run] ${exists ? 'append to' : 'create'} ${path.relative(ROOT, filePath)} (+${recs.length})`,
 		);
 	} else {
-		if (!fs.existsSync(PR_DIR)) fs.mkdirSync(PR_DIR, { recursive: true });
-		writeDataJson(filePath, doc);
+		// Commit all brands together after validation below.
 		console.log(
-			`${exists ? 'Appended to' : 'Created'} ${path.relative(ROOT, filePath)} (+${recs.length})`,
+			`${exists ? 'Planned append to' : 'Planned creation of'} ${path.relative(ROOT, filePath)} (+${recs.length})`,
 		);
 	}
+	dataFiles.set('data/pressure-range/' + brand + '-pressure-range.json', doc);
 	totalWritten += recs.length;
 }
+
+commitDatasetUpdate(path.dirname(DATA_DIR), [], { dataFiles, dryRun });
 
 console.log(
 	`\n${dryRun ? 'Would import' : 'Imported'} ${totalWritten} measurement(s) across ${byBrand.size} brand file(s).`,
