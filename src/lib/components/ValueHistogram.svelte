@@ -115,6 +115,14 @@
 
 	let maxCount = $derived(Math.max(...bins, 1));
 
+	// Bars are magnitude, so they take the accent — unless the markers carry
+	// identity colours. Then the markers are the subject and the population
+	// is context behind them: neutral ink, so palette slot 1 (which tracks
+	// the accent) doesn't vanish into the bars (#380 follow-up).
+	let contextOnly = $derived(markers.some((m) => m.color));
+	let distFill = $derived(contextOnly ? 'var(--text-dim)' : 'var(--accent)');
+	let distOpacity = $derived(contextOnly ? 0.35 : 0.75);
+
 	// KDE (Kernel Density Estimation)
 	let kdePath = $derived.by(() => {
 		if (values.length < 2) return '';
@@ -394,8 +402,8 @@
 								y={padTop + chartH - barH}
 								width={barW}
 								height={barH}
-								fill="var(--accent)"
-								opacity="0.75"
+								fill={distFill}
+								opacity={distOpacity}
 								rx="0"
 							/>
 						{/if}
@@ -403,8 +411,14 @@
 
 					<!-- KDE curve (in front of bars) -->
 					{#if distribution && kdePath}
-						<path d={kdePath} fill="var(--accent)" opacity="0.1" />
-						<path d={kdePath} fill="none" stroke="var(--accent)" stroke-width="2" opacity="0.9" />
+						<path d={kdePath} fill={distFill} opacity="0.1" />
+						<path
+							d={kdePath}
+							fill="none"
+							stroke={distFill}
+							stroke-width="2"
+							opacity={contextOnly ? 0.6 : 0.9}
+						/>
 					{/if}
 
 					<!-- Markers -->
