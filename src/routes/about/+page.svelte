@@ -1,13 +1,13 @@
 <script lang="ts">
-	import Nav from '$lib/components/Nav.svelte';
-
 	// `version` comes from the root +layout.ts load, merged into every page's
 	// data. It used to sit in a footer on every page; it lives here now.
 	let { data } = $props();
 	let version = $derived(data.version);
 </script>
 
-<Nav />
+<svelte:head>
+	<title>About — DrawTab Data Explorer</title>
+</svelte:head>
 
 <h1 class="sr-only">About</h1>
 

@@ -35,4 +35,14 @@
 | E2E smoke tests                   | `e2e/smoke.spec.ts`                                                                                           | See [TESTING.md](TESTING.md)                                                                                                             |
 | GitHub Pages base path            | `svelte.config.js`, `vite.config.ts`                                                                          | `base` / `paths`                                                                                                                         |
 
+About → Agents: `src/routes/about/+layout.svelte` (Overview / Agents tabs),
+`src/routes/about/agents/+page.svelte` (brief WebMCP tool reference for humans and agents).
+
+WebMCP tablet lookup: `src/lib/webmcp/tablet-specs.ts` (name resolution and specs),
+`src/lib/webmcp/open-tablet-specs.ts` (navigate directly to the Specs tab),
+`src/lib/webmcp/compare-tablet-sizes.ts` (populate a comparison and open Sizes),
+`src/lib/webmcp/query-tablets.ts` (type/year filters, active-area ranking and list navigation),
+`src/lib/webmcp/register.ts` (browser registration), `src/routes/+layout.svelte`
+(session lifecycle). See [AGENT-READABILITY.md](AGENT-READABILITY.md#webmcp-pilot--tablet-specs).
+
 See also: [ARCHITECTURE.md](ARCHITECTURE.md) (runtime data flow), [UXCOMPONENTS.md](UXCOMPONENTS.md) (component catalog), [FIELDDEFS.md](FIELDDEFS.md) (how columns / filters are defined), [STORES.md](STORES.md) (Svelte stores), [SCRIPTS.md](SCRIPTS.md) (CLI tools), [GLOSSARY.md](GLOSSARY.md) (domain vocab), [AGENTS.md](../AGENTS.md) (read order).

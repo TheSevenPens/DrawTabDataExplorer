@@ -9,6 +9,7 @@
 		executePipeline,
 	} from '@thesevenpens/queriton';
 	import { page } from '$app/state';
+	import { afterNavigate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import QueryPipelineBar from '$lib/components/QueryPipelineBar.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
@@ -32,7 +33,7 @@
 	import { cellText } from '$lib/cell-text.js';
 	import { strippedCandidates } from '$lib/search-match.js';
 	import { migrateFilterValue } from '$lib/filter-value-migrations.js';
-	import { parseFilterParams } from '$lib/filter-url.js';
+	import { parseFilterParams, parseSortParams, parseColumnParams } from '$lib/filter-url.js';
 	import { unitPreference } from '$lib/unit-store.js';
 
 	let {
@@ -94,6 +95,10 @@
 	let selectedIds = $state(new Set<string>());
 
 	function getInitialColumns(): string[] {
+		const urlColumns = parseColumnParams(page.url.searchParams).filter((key) =>
+			fields.some((field) => field.key === key),
+		);
+		if (urlColumns.length) return urlColumns;
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
 		const selectStep = parsed.find((s): s is SelectStepType => s.kind === 'select');
 		return selectStep ? selectStep.fields : [...defaultColumns];
@@ -116,6 +121,10 @@
 	}
 
 	function getInitialSorts(): SortItem[] {
+		const urlSorts = parseSortParams(page.url.searchParams).filter((sort) =>
+			fields.some((field) => field.key === sort.field),
+		);
+		if (urlSorts.length) return urlSorts;
 		const parsed = JSON.parse(JSON.stringify(defaultView)) as Step[];
 		return parsed
 			.filter((s): s is SortStepType => s.kind === 'sort')
@@ -131,6 +140,26 @@
 	let quickFilters: Record<string, string> = $state({});
 	let ownedOnly = $state(false);
 	let showExport = $state(false);
+
+	// SvelteKit reuses this component when query parameters change. Treat an
+	// explicit list-link navigation (including Back or a repeated WebMCP
+	// query) as a fresh query, without stale search/quick filters narrowing it.
+	afterNavigate(({ from, to }) => {
+		if (!from?.url || !to?.url || from.url.pathname !== to.url.pathname) return;
+		if (
+			!['filter', 'sort', 'column'].some(
+				(key) => from.url.searchParams.has(key) || to.url.searchParams.has(key),
+			)
+		)
+			return;
+		filters = getInitialFilters();
+		sorts = getInitialSorts();
+		selectedColumns = getInitialColumns();
+		searchText = '';
+		quickFilters = {};
+		ownedOnly = false;
+		selectedIds = new Set();
+	});
 
 	interface QuickFilterOption {
 		fieldDef: AnyFieldDisplayDef;

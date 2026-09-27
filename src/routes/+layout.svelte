@@ -3,9 +3,23 @@
 	import DevErrorBanner from '$lib/components/DevErrorBanner.svelte';
 	import ModalRoot from '$lib/components/ModalRoot.svelte';
 	import { SUPPORTED_SCHEMA_MAJOR } from '$lib/schema-version.js';
-	import { beforeNavigate } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { updated } from '$app/state';
+	import { base } from '$app/paths';
+	import { registerExplorerTools } from '$lib/webmcp/register.js';
+	import { comparisons } from '$lib/compare/store.js';
 	let { children, data } = $props();
+
+	$effect(() => {
+		const ds = data.ds;
+		return registerExplorerTools(document, {
+			loadTablets: () => ds.Tablets.toArray(),
+			baseUrl: new URL(`${base}/`, location.origin).href,
+			version: data.version,
+			navigate: goto,
+			setTabletComparison: comparisons.tablets.set,
+		});
+	});
 
 	// A deploy replaces every content-hashed chunk under _app/immutable/, so a
 	// client-side navigation made by a tab that predates the deploy tries to

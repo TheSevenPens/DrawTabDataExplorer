@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { buildFilterUrl, parseFilterParams, type UrlFilter } from './filter-url.js';
+import {
+	buildFilterUrl,
+	buildFilterParams,
+	parseFilterParams,
+	parseSortParams,
+	parseColumnParams,
+	type UrlFilter,
+} from './filter-url.js';
 
 function roundTrip(filters: UrlFilter[]): UrlFilter[] {
 	const url = buildFilterUrl('/tablets', filters);
@@ -30,6 +37,25 @@ describe('parseFilterParams', () => {
 });
 
 describe('round trip', () => {
+	it('preserves sorting and visible columns in a ranked-list link', () => {
+		const filters = [{ field: 'ModelType', operator: '==', value: 'PENTABLET' }];
+		const sorts = [{ field: 'DigitizerActiveAreaMm2', direction: 'desc' as const }];
+		const columns = ['ModelName', 'DigitizerDimensions', 'DigitizerActiveAreaCm2'];
+		const params = buildFilterParams(filters, { sorts, columns });
+		expect(parseFilterParams(params)).toEqual(filters);
+		expect(parseSortParams(params)).toEqual(sorts);
+		expect(parseColumnParams(params)).toEqual(columns);
+	});
+
+	it('ignores malformed sorts and deduplicates columns', () => {
+		const params = new URLSearchParams();
+		for (const sort of ['Name', ':desc', 'Name:down', 'Name:asc:', 'Year:desc:extra', 'Name:asc'])
+			params.append('sort', sort);
+		for (const column of ['', 'ModelName', 'ModelName', 'ModelId']) params.append('column', column);
+		expect(parseSortParams(params)).toEqual([{ field: 'Name', direction: 'asc' }]);
+		expect(parseColumnParams(params)).toEqual(['ModelName', 'ModelId']);
+	});
+
 	it('preserves reserved characters in values (#334)', () => {
 		const filters = [
 			{ field: 'ModelName', operator: 'contains', value: 'A&B #2 + 50% / ?x=y' },
