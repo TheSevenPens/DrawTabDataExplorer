@@ -1,0 +1,82 @@
+name: Pages freshness
+
+# Watchdog for the deploy pipeline. On 2026-09-25 a deploy job sat "queued"
+# for ~19 hours without ever starting; with one `pages` concurrency group,
+# every later deploy waited behind it and the live site fell 12 merges
+# behind main with nothing failing. deploy.yml now cancels superseded runs,
+# but that only helps once another push arrives — this catches the case where
+# nobody pushes again.
+#
+# Every 6 hours: if the live site's version.json names a different app commit
+# than main, and no deploy for it is plausibly still on its way, cancel any
+# stuck deploy runs, start a fresh one, and fail so the failure is noticed.
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write # cancel stuck runs, dispatch deploy.yml
+  contents: read
+  pages: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      # A deploy younger than this is still on its way (queued, building, or
+      # the Pages CDN — max-age 600 — hasn't caught up yet).
+      GRACE_SECONDS: 3600
+    steps:
+      - name: Compare the live site with main
+        run: |
+          set -euo pipefail
+          site=$(gh api "repos/$REPO/pages" -q .html_url)
+          live=$(curl -fsS "${site%/}/version.json?freshness=$(date +%s)" |
+            node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).build?.appCommit ?? ""))')
+          head=$(gh api "repos/$REPO/commits/main" -q .sha)
+          echo "live: ${live:-unknown}"
+          echo "main: $head"
+          if [ "$live" = "$head" ]; then
+            echo "The live site is current."
+            exit 0
+          fi
+
+          # gh's built-in jq: no jq install needed, and the same script runs locally.
+          deploys() {
+            gh run list -R "$REPO" --workflow deploy.yml --branch main --limit 20 \
+              --json databaseId,headSha,status,conclusion,createdAt,updatedAt --jq "$1"
+          }
+          age='(now - (.createdAt | fromdateiso8601))'
+
+          # A successful deploy of main that finished within the grace window:
+          # the CDN is still serving the previous version.
+          recent_ok=$(deploys "[.[] | select(.headSha == \"$head\" and .conclusion == \"success\"
+            and (now - (.updatedAt | fromdateiso8601)) < $GRACE_SECONDS)] | length")
+          if [ "$recent_ok" -gt 0 ]; then
+            echo "main deployed within the grace window; waiting for the CDN."
+            exit 0
+          fi
+
+          # Unfinished runs past the grace window are stuck: cancel them so
+          # they stop holding the `pages` concurrency group.
+          stuck=$(deploys ".[] | select(.status != \"completed\" and $age > $GRACE_SECONDS) | .databaseId")
+          for id in $stuck; do
+            echo "Cancelling stuck deploy run $id"
+            gh run cancel "$id" -R "$REPO" || true
+          done
+
+          active=$(deploys "[.[] | select(.status != \"completed\" and $age <= $GRACE_SECONDS)] | length")
+          if [ "$active" -gt 0 ]; then
+            echo "A deploy started within the grace window is still running."
+            exit 0
+          fi
+
+          echo "Starting a fresh deploy of main."
+          gh workflow run deploy.yml -R "$REPO" --ref main
+          echo "::error::The live site was serving ${live:-an unknown commit}, not main ($head). Cancelled stuck runs: ${stuck:-none}. A fresh deploy has been started."
+          exit 1
