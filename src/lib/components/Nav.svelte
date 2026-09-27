@@ -36,7 +36,7 @@
 				'/data-quality',
 			],
 		},
-		{ href: '/about', label: 'About' },
+		{ href: '/about', label: 'About', altActive: ['/about/agents'] },
 	];
 
 	function isActive(link: LinkSpec, path: string): boolean {

@@ -21,6 +21,7 @@ const ROUTES: { path: string; h1: RegExp }[] = [
 	{ path: '/reference', h1: /Reference/i },
 	{ path: '/data-quality', h1: /Data Quality/i },
 	{ path: '/about', h1: /About/i },
+	{ path: '/about/agents', h1: /Agents/i },
 ];
 
 // Console errors that aren't from our code and shouldn't fail the test
@@ -48,6 +49,55 @@ test.describe('Smoke — every route renders without console errors', () => {
 			expect(errors, `console errors on ${path}`).toEqual([]);
 		});
 	}
+});
+
+test('filter links reset list state during same-route navigation and Back', async ({ page }) => {
+	const filters = new URLSearchParams();
+	filters.append('filter', 'ModelType:==:PENDISPLAY');
+	filters.append('filter', 'ModelReleaseYear:==:2026');
+	await page.goto(`/tablets?${filters}`, { waitUntil: 'networkidle' });
+	const count = page.locator('.results-count');
+	const filteredCount = (await count.textContent())!.trim();
+	await page.getByRole('textbox', { name: 'Search...' }).fill('no-such-tablet-xyz');
+	await expect(count).toContainText('Showing 0 of');
+	await page.getByRole('link', { name: 'Tablet models', exact: true }).click();
+	await expect(page).toHaveURL(/\/tablets$/);
+	await expect(page.getByRole('textbox', { name: 'Search...' })).toHaveValue('');
+	const allCount = (await count.textContent())!.trim();
+	const parts = allCount.match(/Showing (\d+) of (\d+)/);
+	expect(parts).not.toBeNull();
+	expect(parts?.[1]).toBe(parts?.[2]);
+	await page.goBack();
+	await expect(count).toHaveText(filteredCount);
+	await expect(page.getByRole('button', { name: 'Filters 2', exact: true })).toBeVisible();
+});
+
+test('ranked list links restore area ordering and columns through Back', async ({ page }) => {
+	const params = new URLSearchParams();
+	params.append('filter', 'ModelType:==:PENTABLET');
+	params.append('filter', 'DigitizerActiveAreaMm2:>:0');
+	params.append('sort', 'DigitizerActiveAreaMm2:desc');
+	for (const column of ['ModelName', 'DigitizerDimensions', 'DigitizerActiveAreaCm2'])
+		params.append('column', column);
+	await page.goto(`/tablets?${params}`, { waitUntil: 'networkidle' });
+	await expect(
+		page.getByRole('columnheader', { name: 'Active Area (cm²)', exact: true }),
+	).toBeVisible();
+	const areas = (await page.locator('tbody tr td:last-child').allTextContents()).map(Number);
+	expect(areas.length).toBeGreaterThan(1);
+	expect(areas.every((area) => Number.isFinite(area) && area > 0)).toBe(true);
+	expect(areas).toEqual([...areas].sort((a, b) => b - a));
+	await page.getByRole('link', { name: 'Tablet models', exact: true }).click();
+	await expect(
+		page.getByRole('columnheader', { name: 'Active Area (cm²)', exact: true }),
+	).toHaveCount(0);
+	await page.goBack();
+	await expect(
+		page.getByRole('columnheader', { name: 'Active Area (cm²)', exact: true }),
+	).toBeVisible();
+	expect((await page.locator('tbody tr td:last-child').allTextContents()).map(Number)).toEqual(
+		areas,
+	);
 });
 
 test.describe('List → detail navigation', () => {

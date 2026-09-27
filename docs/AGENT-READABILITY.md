@@ -1,10 +1,10 @@
 # Agent readability
 
-**Audience:** agents & contributors · **Status:** proposed, none of it built.
+**Audience:** agents & contributors · **Status:** static deliverables below are a proposal; the file manifest now ships in `version.json`. A small WebMCP pilot is implemented (see below).
 
-Making the dataset usable by AI assistants that are **not** driving a browser.
-Static output only — no runtime code, no new dependencies, nothing that can
-break the running app.
+The static-output proposal below makes the dataset usable by AI assistants
+that are **not** driving a browser. It needs no runtime code or new dependencies.
+The WebMCP pilot at the end covers agents using a supported browser.
 
 ## Why (measured, not theoretical)
 
@@ -182,10 +182,112 @@ the argument.
 5. **Naming.** `all-tablets-flat.json`? A `flat/` directory? This becomes a
    published contract, so the name outlives the decision.
 
-## Not this
+## WebMCP pilot — tablet specs
 
-Live agent tooling (WebMCP and similar) was considered and set aside. It serves
-only agents that pilot a browser, carries a dependency on an unstable proposal,
-and needs runtime code in the app. Static files reach every agent, cannot break
-the site, and are cacheable and crawlable. If live tooling is ever revisited,
-these files are still the right foundation under it.
+The in-app **About → Agents** page (`/about/agents`) lists the available tools,
+example inputs and query options for humans and agents. Keep its brief reference
+aligned with the tools registered in `src/lib/webmcp/register.ts`.
+
+The Explorer exposes `lookup_tablet_specs` (read-only data for chat) and
+`open_tablet_specs` (show specs in the browser), plus `compare_tablet_sizes`
+(visual size comparison), and the query tools below, in browsers that implement
+`document.modelContext.registerTool`. All are registered from the root layout
+and use the session's existing dataset, loading tablets only when
+called. No server, polyfill or new dependency is needed. Unsupported browsers
+continue to use the normal UI.
+
+| Input / result                  | Behavior                                                                                 |
+| ------------------------------- | ---------------------------------------------------------------------------------------- |
+| `{ "query": "Wacom CTL-4100" }` | Look up a name, alternate name, model ID or EntityId                                     |
+| `found`                         | Identity, entity URL, labeled specs, units, derived-value markers and dataset provenance |
+| `ambiguous`                     | Up to 10 candidates plus total count; retry with an exact EntityId                       |
+| `not_found`                     | The loaded dataset has no match                                                          |
+| `invalid_input` / `unavailable` | Invalid arguments or a loading failure; never evidence that a product does not exist     |
+
+Values are projected from `TABLET_FIELDS` in canonical units (the `unit` property
+or units in the label), independent of the UI's unit preference. Numeric fields
+return numbers when possible. `YES`/`NO` remain strings; missing and inapplicable
+values are null with distinct status values. Lookup does not navigate, change
+filters, or modify the working comparison.
+
+`open_tablet_specs` accepts the same input and resolves the same candidates.
+For a unique match it navigates directly to `/entity/<EntityId>#specs` using
+the app router; the existing URL hash selects the Specs tab without a click.
+It returns `opened` only after navigation completes, or `navigation_failed`
+with the destination URL if navigation rejects. Invalid input, ambiguity,
+missing matches and unavailable data leave the current page alone. Unlike the
+lookup, its annotation is not read-only because it changes the visible page.
+
+Implementation: `src/lib/webmcp/tablet-specs.ts`, `open-tablet-specs.ts` and `register.ts`. Registration
+is feature-detected, failures are contained, and the registration is removed
+with an AbortSignal when the layout is torn down.
+
+To try it, run `npm run dev`, open the local Explorer in a browser/agent with
+WebMCP support, and ask: **“Use the Explorer to look up the specs for Wacom
+CTL-4100 in chat.”** For navigation, ask **“Show the Wacom PTH660 specs in the
+browser.”** Inspect the browser's site tools for the tools above. Try
+“Cintiq” to exercise disambiguation. This is page-based access; static data
+access and conventional MCP connectors remain separate options for agents
+without a supported browser.
+
+### Visual size comparison
+
+Ask **“Compare the sizes of the PTH660 and PTK670 in the browser.”** The
+`compare_tablet_sizes` tool accepts `{ "tablets": ["PTH660", "PTK670"] }`
+(2–8 names, model IDs or EntityIds). It replaces the working tablet comparison
+with exactly the requested models, one per column in request order, and opens
+`/compare/tablets#sizes` directly. The existing Sizes view shows active drawing
+area outlines and diagonal sizes; these are not the tablets' outer dimensions.
+
+All names must resolve uniquely to distinct models with usable active-area
+width and height before navigation. `needs_resolution` returns a result per
+query so the agent can resolve every ambiguous or missing name and retry the
+full request. Invalid input, unavailable data, `missing_dimensions` and failed
+navigation leave the working comparison unchanged. Flags and the pen comparison
+are unaffected. The comparison is replaced only after navigation succeeds.
+
+Implementation: `src/lib/webmcp/compare-tablet-sizes.ts`, using the existing
+`startWith` comparison operation and the tablet comparison store. No UI clicks
+or separate chart implementation are needed.
+
+API reference: [WebMCP imperative API](https://developer.chrome.com/docs/ai/webmcp/imperative-api).
+
+### Simple tablet queries
+
+Ask **“Which pen displays were released in 2026?”** The `query_tablets` tool
+accepts `{ "tabletType": "PENDISPLAY", "releaseYear": 2026 }`. Type and year
+filters are optional when ranking by area; at least one filter or `sortBy` is
+required. Unsupported fields are rejected rather than ignored.
+
+| Tool                | Behavior                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| `query_tablets`     | Read-only: returns every match, count, applied filters, source provenance and a filtered-list URL |
+| `open_tablet_query` | Returns the same results and opens the regular Tablets list with editable filters and sorting     |
+
+Filters are ANDed through `buildActiveSteps` and queriton's `executePipeline`,
+using `TABLET_FIELDS`, exactly like the regular list. `ModelReleaseYear` is the
+recorded release-year field. No implicit five-row limit is applied. A successful
+zero-match result is distinct from unavailable data. Results describe the
+Explorer's dataset, not a guarantee that its catalog covers every product.
+
+Ask **“What are the largest pen tablets?”** with
+`{ "tabletType": "PENTABLET", "sortBy": "activeArea" }`. Area ranking defaults
+to descending; `sortDirection: "asc"` gives smallest first. It uses the existing
+`DigitizerActiveAreaMm2` field (width × height), not diagonal or outer body size.
+The ranking excludes missing/nonpositive area with a visible `> 0` filter and
+reports the excluded count. It includes historical/discontinued models and
+returns status and dimensions so answers can make that scope clear. Every
+ranked match is returned; an agent may summarize the leaders in chat.
+
+Ranked browser links carry `sort` and `column` parameters so the same ordering
+opens with dimensions, area, year and model status visible. These are ordinary,
+editable list controls; following another query or using Back restores them.
+
+These queries use the regular list's filters and sorting. The advanced Query Builder's
+grouping, aggregations and other pipeline operations remain a separate future
+WebMCP surface. Navigating to a filter URL on an already-open list reapplies the
+URL filters, sorting and columns and clears temporary search, quick filters and selection so stale
+UI state cannot silently narrow the requested result.
+
+Implementation: `src/lib/webmcp/query-tablets.ts`, with the shared encoder in
+`src/lib/filter-url.ts` and URL navigation handling in `EntityExplorer.svelte`.
