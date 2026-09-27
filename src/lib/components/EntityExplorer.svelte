@@ -145,7 +145,7 @@
 	// explicit list-link navigation (including Back or a repeated WebMCP
 	// query) as a fresh query, without stale search/quick filters narrowing it.
 	afterNavigate(({ from, to }) => {
-		if (!from || !to || from.url.pathname !== to.url.pathname) return;
+		if (!from?.url || !to?.url || from.url.pathname !== to.url.pathname) return;
 		if (
 			!['filter', 'sort', 'column'].some(
 				(key) => from.url.searchParams.has(key) || to.url.searchParams.has(key),
