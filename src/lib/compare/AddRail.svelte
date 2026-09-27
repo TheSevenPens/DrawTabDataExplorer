@@ -15,6 +15,7 @@
 		full,
 		searchLabel,
 		presence,
+		heldIn,
 		onadd,
 		onaddto,
 	}: {
@@ -26,6 +27,9 @@
 		searchLabel: string;
 		/** Where a candidate already sits ("in Mediums"), or ''. */
 		presence: (c: Candidate) => string;
+		/** The column that already holds this exact item, if any — it can't be
+		 * added a second time, only moved (see model.ts). */
+		heldIn: (c: Candidate) => { id: string; name: string } | undefined;
 		onadd: (ref: MemberRef) => void;
 		onaddto: (ref: MemberRef, columnId: string) => void;
 	} = $props();
@@ -44,15 +48,21 @@
 	function addToMenu(e: MouseEvent, c: Candidate) {
 		e.stopPropagation();
 		const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		const holder = heldIn(c);
 		menu = {
 			x: r.left,
 			y: r.bottom + 4,
-			items: columns.map((col) => ({
-				label: `Add to ${col.name}`,
-				onclick: () => onaddto(c.ref, col.id),
-			})),
+			items: columns
+				.filter((col) => col.id !== holder?.id)
+				.map((col) => ({
+					label: `${holder ? 'Move' : 'Add'} to ${col.name}`,
+					onclick: () => onaddto(c.ref, col.id),
+				})),
 		};
 	}
+
+	// "+ add all" only has something to do if a flagged item isn't in yet.
+	let flaggedToAdd = $derived(flagged.filter((c) => !heldIn(c)));
 </script>
 
 <aside class="rail" aria-label="Add to comparison">
@@ -63,6 +73,7 @@
 	</label>
 
 	{#snippet row(c: Candidate)}
+		{@const holder = heldIn(c)}
 		<li class="res" draggable="true" ondragstart={(e) => dragStart(e, c)}>
 			<div class="res-main">
 				<div class="kind">{c.kindLabel}</div>
@@ -72,21 +83,31 @@
 				{#if presence(c)}<div class="where">{presence(c)}</div>{/if}
 			</div>
 			<div class="res-actions">
-				<button
-					type="button"
-					class="add"
-					disabled={full}
-					title={full
-						? 'All 8 columns are used — add it to a column instead'
-						: 'Add as its own column'}
-					aria-label="Add {c.label} as its own column"
-					onclick={() => onadd(c.ref)}>+ add</button
-				>
-				{#if columns.length > 0}
+				{#if holder}
+					<button
+						type="button"
+						class="add"
+						disabled
+						title="Already in {holder.name} — use ▾ to move it"
+						aria-label="{c.label} is already in {holder.name}">added</button
+					>
+				{:else}
+					<button
+						type="button"
+						class="add"
+						disabled={full}
+						title={full
+							? 'All 8 columns are used — add it to a column instead'
+							: 'Add as its own column'}
+						aria-label="Add {c.label} as its own column"
+						onclick={() => onadd(c.ref)}>+ add</button
+					>
+				{/if}
+				{#if columns.length > (holder ? 1 : 0)}
 					<button
 						type="button"
 						class="more"
-						aria-label="Add {c.label} to a column"
+						aria-label="{holder ? 'Move' : 'Add'} {c.label} to a column"
 						onclick={(e) => addToMenu(e, c)}>▾</button
 					>
 				{/if}
@@ -110,8 +131,9 @@
 			<button
 				type="button"
 				class="add"
-				disabled={full}
-				onclick={() => flagged.forEach((c) => onadd(c.ref))}>+ add all</button
+				disabled={full || flaggedToAdd.length === 0}
+				title={flaggedToAdd.length === 0 ? 'All flagged items are already in' : undefined}
+				onclick={() => flaggedToAdd.forEach((c) => onadd(c.ref))}>+ add all</button
 			>
 		{/if}
 	</div>

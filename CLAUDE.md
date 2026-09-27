@@ -673,6 +673,12 @@ pressure). Everything that changes a comparison is a pure function in
 - **Flags are an inbox, not a precondition.** The add rail lists flagged
   items as candidates; nothing requires flagging. Tablet families are
   flaggable (`flaggedTabletFamilies`); the tablet flag cap is gone.
+- **A ref appears at most once.** The same pen, family or unit can't be in
+  two columns: "+ add" on something present is a no-op (the rail shows
+  "added"), and adding it into a column moves it there (`holderOf`,
+  `model.ts`). Different refs may overlap on purpose — a pen beside its own
+  family — and `findOverlaps` reports it. Saved comparisons with duplicates
+  keep each ref's first occurrence on load.
 - **Every drag has a menu path** (move / merge / remove / add to column),
   so grouping never depends on a pointer.
 - **Entry points:** `CompareMenu` on tablet, pen, family and pen-unit

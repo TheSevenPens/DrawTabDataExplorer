@@ -28,6 +28,7 @@
 		MAX_COLUMNS,
 		addRef,
 		emptyComparison,
+		holderOf,
 		isFull,
 		mergeColumns,
 		moveRef,
@@ -244,6 +245,12 @@
 			? 'Search tablets and families'
 			: 'Search pens, families and units'}
 		{presence}
+		heldIn={(c) => {
+			const col = holderOf(comparison, c.ref);
+			return col
+				? { id: col.id, name: resolved.find((r) => r.id === col.id)?.name ?? '' }
+				: undefined;
+		}}
 		onadd={(ref) => update((c) => addRef(c, ref))}
 		onaddto={(ref, id) => update((c) => addRef(intoGroup(c, id), ref, id))}
 	/>

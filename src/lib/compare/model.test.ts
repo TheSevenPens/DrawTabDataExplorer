@@ -102,3 +102,68 @@ describe('parseComparison', () => {
 		expect(parseComparison(bad, 'pens').columns).toEqual([]);
 	});
 });
+
+describe('a ref appears at most once', () => {
+	const ids = (c: ReturnType<typeof emptyComparison>) =>
+		c.columns.map((col) => col.refs.map((r) => r.id));
+
+	it('adding something already present as its own column does nothing', () => {
+		const c = addRef(emptyComparison('pens'), model('kp504e'));
+		expect(addRef(c, model('KP504E'))).toBe(c);
+		expect(addRefs(c, [model('kp504e'), model('kp504e')]).columns).toHaveLength(1);
+	});
+
+	it('it still counts when the ref sits inside a group', () => {
+		let c = newGroup(emptyComparison('pens'), [model('a'), model('b')]);
+		c = addRef(c, model('b'));
+		expect(ids(c)).toEqual([['a', 'b']]);
+	});
+
+	it('adding into another column moves it there', () => {
+		let c = addRefs(emptyComparison('pens'), [model('a'), model('b')]);
+		const [colA, colB] = c.columns;
+		c = addRef(c, model('a'), colB.id);
+		// a's own (unnamed) column is gone; b's column now holds both.
+		expect(c.columns.map((col) => col.id)).toEqual([colB.id]);
+		expect(ids(c)).toEqual([['b', 'a']]);
+		expect(colA.id).not.toBe(colB.id);
+	});
+
+	it('a named group keeps its column when its last ref moves out', () => {
+		let c = newGroup(emptyComparison('pens'), [model('a')]);
+		c = addRef(c, model('b'));
+		c = addRef(c, model('a'), c.columns[1].id);
+		expect(c.columns[0].name).toBe('Group 1');
+		expect(ids(c)).toEqual([[], ['b', 'a']]);
+	});
+
+	it('a new group takes its refs from wherever they were, once each', () => {
+		let c = addRefs(emptyComparison('pens'), [model('a'), model('b'), model('c')]);
+		c = newGroup(c, [model('a'), model('b'), model('a')]);
+		expect(ids(c)).toEqual([['c'], ['a', 'b']]);
+	});
+
+	it('different refs may overlap on purpose: a pen beside its own family', () => {
+		const c = addRefs(emptyComparison('pens'), [model('kp504e'), family('kpgen2')]);
+		expect(c.columns).toHaveLength(2);
+	});
+
+	it('loading a comparison saved with duplicates keeps the first of each', () => {
+		const saved = {
+			kind: 'pens',
+			seq: 3,
+			columns: [
+				{ id: 'c1', refs: [model('a')], excluded: [] },
+				{ id: 'c2', refs: [model('A'), model('b')], excluded: [] },
+				{ id: 'c3', refs: [model('b')], excluded: [] },
+				{ id: 'c4', name: 'Kept', refs: [model('a')], excluded: [] },
+			],
+		};
+		const c = parseComparison(saved, 'pens');
+		expect(c.columns.map((col) => [col.id, col.refs.map((r) => r.id)])).toEqual([
+			['c1', ['a']],
+			['c2', ['b']],
+			['c4', []],
+		]);
+	});
+});

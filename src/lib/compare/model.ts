@@ -10,6 +10,12 @@
  * All operations are pure: they take a Comparison and return a new one, so
  * the Svelte store reassigns (see CLAUDE.md on reactive state) and the logic
  * is testable without a DOM.
+ *
+ * **A ref appears at most once.** The same pen, family or unit can't sit in
+ * two columns (or twice in one): adding one that's already present is a
+ * no-op, and adding it *into* a column moves it there. Overlap through
+ * different refs stays allowed on purpose — a pen beside its own family, a
+ * unit beside its pen — and resolve.ts's findOverlaps reports it.
  */
 
 export type CompareKind = 'tablets' | 'pens';
@@ -53,6 +59,25 @@ export function isFull(c: Comparison): boolean {
 	return c.columns.length >= MAX_COLUMNS;
 }
 
+/** The column that holds `ref` directly, if any. */
+export function holderOf(c: Comparison, ref: MemberRef): CompareColumn | undefined {
+	const key = refKey(ref);
+	return c.columns.find((col) => col.refs.some((r) => refKey(r) === key));
+}
+
+/** Drop refs from every column except `keepId`; unnamed columns left empty go. */
+function withoutRefs(c: Comparison, refs: readonly MemberRef[], keepId: string): Comparison {
+	const keys = new Set(refs.map(refKey));
+	return {
+		...c,
+		columns: c.columns
+			.map((col) =>
+				col.id === keepId ? col : { ...col, refs: col.refs.filter((r) => !keys.has(refKey(r))) },
+			)
+			.filter((col) => col.id === keepId || col.refs.length > 0 || col.name !== undefined),
+	};
+}
+
 function nextColumn(c: Comparison, refs: MemberRef[], name?: string): [CompareColumn, number] {
 	const seq = c.seq + 1;
 	return [
@@ -63,23 +88,28 @@ function nextColumn(c: Comparison, refs: MemberRef[], name?: string): [CompareCo
 
 /**
  * Add a reference as a column of its own, or into an existing column.
- * A new column past MAX_COLUMNS is refused (returns the comparison
- * unchanged); adding into a column never is. Adding a ref the target
- * already holds is a no-op.
+ *
+ * - As its own column: a no-op if the ref is already anywhere in the
+ *   comparison, and refused past MAX_COLUMNS.
+ * - Into a column: a no-op if that column holds it; if another column does,
+ *   the ref *moves* here (that column goes if it was unnamed and is now empty).
  */
 export function addRef(c: Comparison, ref: MemberRef, intoColumnId?: string): Comparison {
 	const r = normalize(ref);
+	const holder = holderOf(c, r);
 	if (intoColumnId) {
+		if (holder?.id === intoColumnId || !c.columns.some((col) => col.id === intoColumnId)) return c;
+		const moved = holder ? withoutRefs(c, [r], intoColumnId) : c;
 		return {
-			...c,
-			columns: c.columns.map((col) =>
-				col.id !== intoColumnId || col.refs.some((x) => refKey(x) === refKey(r))
+			...moved,
+			columns: moved.columns.map((col) =>
+				col.id !== intoColumnId
 					? col
 					: { ...col, refs: [...col.refs, r], excluded: col.excluded.filter((e) => e !== r.id) },
 			),
 		};
 	}
-	if (isFull(c)) return c;
+	if (holder || isFull(c)) return c;
 	const [col, seq] = nextColumn(c, [r]);
 	return { ...c, seq, columns: [...c.columns, col] };
 }
@@ -97,11 +127,16 @@ export function nextGroupName(c: Comparison): string {
 	return `Group ${n}`;
 }
 
-/** A new named group holding `refs` (possibly none yet — a drop target). */
+/**
+ * A new named group holding `refs` (possibly none yet — a drop target). Refs
+ * already in other columns move into it, so nothing appears twice.
+ */
 export function newGroup(c: Comparison, refs: readonly MemberRef[] = []): Comparison {
 	if (isFull(c)) return c;
-	const [col, seq] = nextColumn(c, [...refs], nextGroupName(c));
-	return { ...c, seq, columns: [...c.columns, col] };
+	const unique = [...new Map(refs.map((r) => [refKey(r), normalize(r)])).values()];
+	const [col, seq] = nextColumn(c, unique, nextGroupName(c));
+	const cleared = withoutRefs(c, unique, col.id);
+	return { ...cleared, seq, columns: [...cleared.columns, col] };
 }
 
 export function removeColumn(c: Comparison, columnId: string): Comparison {
@@ -200,5 +235,29 @@ export function parseComparison(raw: unknown, kind: CompareKind): Comparison {
 				? col.excluded.filter((e) => typeof e === 'string')
 				: [],
 		}));
-	return { kind, columns, seq: typeof r.seq === 'number' ? r.seq : columns.length };
+	return {
+		kind,
+		columns: firstOccurrences(columns),
+		seq: typeof r.seq === 'number' ? r.seq : columns.length,
+	};
+}
+
+/**
+ * Keep each ref's first occurrence across the columns — comparisons saved
+ * before refs were unique may repeat one — and drop unnamed columns that end
+ * up empty.
+ */
+function firstOccurrences(columns: CompareColumn[]): CompareColumn[] {
+	const seen = new Set<string>();
+	const out: CompareColumn[] = [];
+	for (const col of columns) {
+		const refs = col.refs.filter((r) => {
+			const key = refKey(r);
+			if (seen.has(key)) return false;
+			seen.add(key);
+			return true;
+		});
+		if (refs.length > 0 || col.name !== undefined) out.push({ ...col, refs });
+	}
+	return out;
 }
