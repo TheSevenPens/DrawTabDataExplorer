@@ -10,9 +10,15 @@ permissions:
   pages: write
   id-token: write
 
+# Every deploy publishes the whole site from main, so a newer run always makes
+# an older one redundant: cancel it rather than queue behind it. With
+# cancel-in-progress: false, one deploy job stuck "queued" (2026-09-25) held the
+# group for ~19 hours and every later deploy waited, then got superseded — the
+# site fell 12 merges behind. pages-freshness.yml catches a stuck run when no
+# later push arrives to cancel it.
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   # The same checks pull requests run (verify.yml), then the build it
@@ -28,6 +34,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: verify
+    # Deploys take under a minute; a job that starts and hangs should fail
+    # loudly, not hold the concurrency group.
+    timeout-minutes: 15
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
