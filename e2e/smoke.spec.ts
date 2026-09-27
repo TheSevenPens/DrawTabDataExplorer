@@ -203,6 +203,10 @@ test.describe('Compare workflow', () => {
 		await search.fill('ctl4100');
 		await page.getByRole('button', { name: 'Add Wacom Intuos Small as its own column' }).click();
 		await expect(page.locator('.count')).toContainText('1 of 8 columns');
+		// The same tablet can't be added twice: its button now says so.
+		await expect(
+			page.getByRole('button', { name: 'Wacom Intuos Small is already in Wacom Intuos Small' }),
+		).toBeDisabled();
 		// The keyboard path for the drag: add the Bluetooth model into that column.
 		await page
 			.getByRole('button', { name: 'Add Wacom Intuos Small Bluetooth to a column' })
