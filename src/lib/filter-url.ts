@@ -1,12 +1,14 @@
 import { base } from '$app/paths';
 import type { ResolvedPathname } from '$app/types';
 import type { SortItem } from '$lib/entity-explorer/view-state.js';
+import { renameFieldKey } from '$lib/field-key-migrations.js';
 
 // Deep links into an entity list: `?filter=Field:operator:value`, repeatable.
 // The builder and the parser live together so they can't drift — a value
 // containing `&`, `#`, `+` or `%` used to be written raw and read back
 // truncated or altered (#334). Only the first two `:` separate; the value
-// may itself contain colons.
+// may itself contain colons. Field keys are passed through renameFieldKey so
+// links made before a key was renamed still resolve (field-key-migrations.ts).
 
 export interface UrlFilter {
 	field: string;
@@ -40,13 +42,13 @@ export function parseSortParams(params: URLSearchParams): SortItem[] {
 		const parts = value.split(':');
 		const [field, direction] = parts;
 		return field && parts.length === 2 && (direction === 'asc' || direction === 'desc')
-			? [{ field, direction }]
+			? [{ field: renameFieldKey(field), direction }]
 			: [];
 	});
 }
 
 export function parseColumnParams(params: URLSearchParams): string[] {
-	return [...new Set(params.getAll('column').filter(Boolean))];
+	return [...new Set(params.getAll('column').filter(Boolean).map(renameFieldKey))];
 }
 
 /** Read the `filter` params back. Entries without a field are dropped; a
@@ -57,7 +59,7 @@ export function parseFilterParams(params: URLSearchParams): UrlFilter[] {
 		.map((raw) => {
 			const parts = raw.split(':');
 			return {
-				field: parts[0] ?? '',
+				field: renameFieldKey(parts[0] ?? ''),
 				operator: parts[1] || '==',
 				value: parts.slice(2).join(':'),
 			};

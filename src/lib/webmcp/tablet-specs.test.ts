@@ -34,7 +34,7 @@ describe('tablet specs lookup', () => {
 		const field = (key: string) => result.specs.find((f) => f.key === key);
 		expect(field('DigitizerPressureLevels')).toMatchObject({ value: 4096, status: 'recorded' });
 		expect(field('DigitizerTilt')).toMatchObject({ value: 0, status: 'recorded' });
-		expect(field('DigitizerSupportsTouch')).toMatchObject({ value: 'NO', status: 'recorded' });
+		expect(field('OtherInputsTouch')).toMatchObject({ value: 'NO', status: 'recorded' });
 		expect(field('DigitizerMaxHover')).toMatchObject({ value: null, status: 'not_recorded' });
 		expect(field('DisplayBrightness')).toMatchObject({ value: null, status: 'not_applicable' });
 		expect(field('DigitizerDimensions')).toMatchObject({ value: '152 x 95', unit: 'mm' });
@@ -45,6 +45,31 @@ describe('tablet specs lookup', () => {
 		});
 		expect(field('UnitsInInventory')).toBeUndefined();
 		expect(result.specs.some((f) => f.group === 'Standalone')).toBe(false);
+		// Connectivity applies to every tablet type, so a pen tablet still reports it.
+		expect(field('ConnectivityPorts')).toMatchObject({
+			group: 'Connectivity',
+			value: null,
+			status: 'not_recorded',
+		});
+	});
+
+	it('reports Connectivity on a pen tablet and on a standalone', () => {
+		const pth660 = lookupTabletSpecs(tablets, 'wacom.tablet.pth660', baseUrl);
+		if (pth660.status !== 'found') throw new Error(pth660.status);
+		const field = (key: string) => pth660.specs.find((f) => f.key === key);
+		expect(field('ConnectivityPorts')).toMatchObject({ value: 'USB-C', status: 'recorded' });
+		expect(field('ConnectivityAttachedCable')).toMatchObject({ value: 'None', status: 'recorded' });
+		expect(field('ConnectivityBluetooth')).toMatchObject({ value: 'YES', status: 'recorded' });
+		expect(field('ConnectivityBluetoothVersion')).toMatchObject({ status: 'not_recorded' });
+
+		const msp = lookupTabletSpecs(tablets, 'wacom.tablet.dthw1621', baseUrl);
+		if (msp.status !== 'found') throw new Error(msp.status);
+		expect(msp.specs.find((f) => f.key === 'ConnectivityPorts')).toMatchObject({
+			value: 'USB-C (USB 3.1), USB-C (Thunderbolt 3), USB-C (Thunderbolt 3)',
+		});
+		expect(msp.specs.find((f) => f.key === 'ConnectivityBluetoothVersion')).toMatchObject({
+			value: '5.0',
+		});
 	});
 
 	it('returns bounded candidates for a broad name instead of guessing', () => {

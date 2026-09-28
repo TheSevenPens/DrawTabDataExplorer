@@ -112,8 +112,8 @@ file. Today it takes ten and can silently fail.
 
 ### The problem
 
-The field catalogue will say `DigitizerSupportsTouch`. The raw JSON says
-`Digitizer.SupportsTouch`. An agent reads the catalogue, learns the key, goes to
+The field catalogue will say `OtherInputsTouch` (formerly
+`DigitizerSupportsTouch`). The raw JSON says `OtherInputs.Touch`. An agent reads the catalogue, learns the key, goes to
 filter the data, and the key is not there. It then has to infer the mapping —
 a second inference step, in exactly the place the catalogue was meant to remove
 inference. This is the same failure class as `true` vs `"YES"`.

@@ -43,8 +43,9 @@ import { INVENTORY_TABLET_FIELDS } from '$data/lib/entities/inventory-tablet-fie
 // be all 375 tablets, so the number would measure how many tablets are pen-only
 // rather than how complete the data is: ComputeOS is filled on 43 of the 47
 // standalones (91.5%) but reads 11.5% against the full set, and emptiest-first
-// sorting then parks all 16 Standalone rows above the digitizer gaps this page
-// exists to surface.
+// sorting then parks every Standalone row above the digitizer gaps this page
+// exists to surface. Connectivity applies to every tablet type, so its fields
+// stay in the main table against all tablets.
 const DISPLAY_FIELDS = TABLET_FIELDS.filter((f) => f.group === 'Display');
 const STANDALONE_FIELDS = TABLET_FIELDS.filter((f) => f.group === 'Standalone');
 const CORE_TABLET_FIELDS = TABLET_FIELDS.filter(

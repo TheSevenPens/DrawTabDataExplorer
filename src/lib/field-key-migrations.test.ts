@@ -99,6 +99,17 @@ describe('migrateFieldKeys', () => {
 		for (const [from, to] of Object.entries(RENAMED_FIELD_KEYS)) expect(from).not.toBe(to);
 	});
 
+	it('renames a tablet view saved before SupportsTouch moved to OtherInputs', () => {
+		const steps = [
+			{ kind: 'filter', field: 'DigitizerSupportsTouch', operator: '==', value: 'YES' },
+			{ kind: 'select', fields: ['ModelName', 'DigitizerSupportsTouch'] },
+		];
+		expect(migrateFieldKeys(steps)).toEqual([
+			{ kind: 'filter', field: 'OtherInputsTouch', operator: '==', value: 'YES' },
+			{ kind: 'select', fields: ['ModelName', 'OtherInputsTouch'] },
+		]);
+	});
+
 	it('renames a pen view saved before PenYear became ReleaseYear', () => {
 		const steps = [{ kind: 'sort', field: 'PenYear', direction: 'desc' }];
 		expect(migrateFieldKeys(steps)).toEqual([

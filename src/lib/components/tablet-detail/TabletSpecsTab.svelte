@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getDiagonal, type Tablet, type ISOPaperSize } from '$data/lib/drawtab-loader.js';
-	import { TABLET_FIELDS } from '$data/lib/entities/tablet-fields.js';
+	import { TABLET_FIELDS, OTHER_INPUTS_GROUP } from '$data/lib/entities/tablet-fields.js';
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import { unitPreference, showAltUnits } from '$lib/unit-store.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
@@ -10,7 +10,12 @@
 
 	const specsCol1Groups = ['Digitizer'];
 	const specsCol2Groups = ['Display'];
-	let specsCol3Groups = $derived(tablet.Model.Type === 'STANDALONE' ? ['Standalone'] : []);
+	// Other Inputs and Connectivity apply to every tablet type; Standalone only to STANDALONE.
+	let specsCol3Groups = $derived([
+		OTHER_INPUTS_GROUP,
+		'Connectivity',
+		...(tablet.Model.Type === 'STANDALONE' ? ['Standalone'] : []),
+	]);
 
 	function getGroupFields(groups: string[]) {
 		return TABLET_FIELDS.filter((f) => groups.includes(f.group));
@@ -70,7 +75,7 @@
 	/>
 </div>
 <div class="detail-columns">
-	{#each [specsCol1Groups, specsCol2Groups, ...specsCol3Groups.map((g) => [g])] as groups, i (i)}
+	{#each [specsCol1Groups, specsCol2Groups, specsCol3Groups] as groups, i (i)}
 		<div class="detail-col">
 			{#each groups as group (group)}
 				{@const groupFields = getGroupFields([group])}
@@ -79,7 +84,7 @@
 					return v && v !== '-';
 				})}
 				{#if hasValues}
-					<section class="field-group" id="group-{group.toLowerCase()}">
+					<section class="field-group" id="group-{group.toLowerCase().replace(/\s+/g, '-')}">
 						<div class="group-header"><h2>{group}</h2></div>
 						<dl>
 							{#each groupFields as f (f.key)}

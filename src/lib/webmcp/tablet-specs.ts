@@ -98,6 +98,7 @@ export function lookupTabletSpecs(tablets: readonly Tablet[], query: string, bas
 		tablet: identify(tablet, baseUrl),
 		valueConventions:
 			'Values use the units in unit or label, independent of the UI unit preference. YES/NO are recorded enum values. A null value is not recorded or not applicable, as indicated by status; it does not mean no or zero.',
+		// Standalone fields only apply to STANDALONE; Connectivity applies to every type.
 		specs: specFields
 			.filter((f) => f.group !== 'Standalone' || tablet.Model.Type === 'STANDALONE')
 			.map((f) => {

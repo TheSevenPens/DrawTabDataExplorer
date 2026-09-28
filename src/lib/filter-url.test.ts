@@ -65,3 +65,16 @@ describe('round trip', () => {
 		expect(roundTrip(filters)).toEqual(filters);
 	});
 });
+
+describe('renamed field keys in deep links', () => {
+	it('maps a pre-rename key in filter, sort and column params to the current key', () => {
+		const params = new URLSearchParams(
+			'filter=DigitizerSupportsTouch:==:YES&sort=DigitizerSupportsTouch:desc&column=DigitizerSupportsTouch',
+		);
+		expect(parseFilterParams(params)).toEqual([
+			{ field: 'OtherInputsTouch', operator: '==', value: 'YES' },
+		]);
+		expect(parseSortParams(params)).toEqual([{ field: 'OtherInputsTouch', direction: 'desc' }]);
+		expect(parseColumnParams(params)).toEqual(['OtherInputsTouch']);
+	});
+});

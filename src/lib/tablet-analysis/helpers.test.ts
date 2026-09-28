@@ -127,7 +127,7 @@ describe('touchTabletRows', () => {
 		({
 			Meta: { EntityId: `${brand.toLowerCase()}.tablet.${id.toLowerCase()}` },
 			Model: { Brand: brand, Id: id, Name: name, Type: type, ReleaseYear: year },
-			Digitizer: supportsTouch === undefined ? {} : { SupportsTouch: supportsTouch },
+			OtherInputs: supportsTouch === undefined ? {} : { Touch: supportsTouch },
 		}) as unknown as Tablet;
 
 	const ident = (b: string) => b;

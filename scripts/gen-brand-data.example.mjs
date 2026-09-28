@@ -106,10 +106,13 @@ const TABLETS = [
 		physD: 7.0, // mm
 		weight: '477', // grams (NumericString)
 
+		// Connectivity (any Type). One entry per physical port; PortType values
+		// are listed in data-repo/docs/FIELDS.txt. [] = none, omit = unknown.
+		ports: [{ Type: 'USB_C' }],
+
 		// Standalone (only when Type === "STANDALONE")
 		os: 'FoobarOS 1.0',
 		processor: 'Foobar X1',
-		usb: 'USB-C',
 		speakers: 'YES',
 	},
 	// ... add more tablets here
@@ -157,7 +160,6 @@ function buildTablet(t) {
 	if (t.pressureLevels) digitizer.PressureLevels = t.pressureLevels;
 	if (t.diag && t.pxW && t.pxH) digitizer.Dimensions = physDim(t.diag, t.pxW, t.pxH);
 	if (t.tilt) digitizer.Tilt = t.tilt;
-	if (t.supportsTouch) digitizer.SupportsTouch = t.supportsTouch;
 
 	const record = {
 		Meta: {
@@ -206,12 +208,21 @@ function buildTablet(t) {
 		};
 	}
 
+	// OtherInputs group: allowed on every tablet type.
+	if (t.supportsTouch) {
+		record.OtherInputs = { Touch: t.supportsTouch };
+	}
+
+	// Connectivity group: allowed on every tablet type.
+	if (t.ports) {
+		record.Connectivity = { Ports: t.ports };
+	}
+
 	// Standalone group: only on STANDALONE (schema enforces this).
 	if (t.type === 'STANDALONE') {
 		record.Standalone = {
 			...(t.os ? { OS: t.os } : {}),
 			...(t.processor ? { Processor: t.processor } : {}),
-			...(t.usb ? { USB: t.usb } : {}),
 			...(t.speakers ? { Speakers: t.speakers } : {}),
 		};
 	}

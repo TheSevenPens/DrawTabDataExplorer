@@ -239,7 +239,7 @@ export interface TouchTabletRow {
 }
 
 /**
- * Tablets whose digitizer reports `SupportsTouch: "YES"`, limited to the
+ * Tablets that report finger touch (`OtherInputs.Touch: "YES"`), limited to the
  * selected device types and ordered by brand then name. An empty `types` set
  * means no type is selected, which yields no rows — the same "you filtered
  * everything out" reading the brand dropdowns give, not an implicit "all".
@@ -250,7 +250,7 @@ export function touchTabletRows(
 	brandLabel: (b: string) => string,
 ): TouchTabletRow[] {
 	return tablets
-		.filter((t) => t.Digitizer?.SupportsTouch === 'YES' && types.has(t.Model.Type))
+		.filter((t) => t.OtherInputs?.Touch === 'YES' && types.has(t.Model.Type))
 		.map((t) => ({
 			entityId: t.Meta.EntityId,
 			name: t.Model.Name,

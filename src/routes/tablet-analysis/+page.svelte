@@ -193,7 +193,7 @@
 	let touchSupportRows = $derived.by(() => {
 		const counts = new Map<string, number>();
 		for (const t of allTablets) {
-			const v = t.Digitizer?.SupportsTouch;
+			const v = t.OtherInputs?.Touch;
 			const key = v === 'YES' || v === 'NO' ? v : '(not specified)';
 			counts.set(key, (counts.get(key) ?? 0) + 1);
 		}

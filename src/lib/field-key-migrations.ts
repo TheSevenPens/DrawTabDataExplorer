@@ -25,6 +25,9 @@ export const RENAMED_FIELD_KEYS: Readonly<Record<string, string>> = {
 	// entity-name prefix distinguished nothing — PenYear on a pen reads the way
 	// TabletYear would on a tablet.
 	PenYear: 'ReleaseYear',
+	// Digitizer.SupportsTouch moved into the new OtherInputs group as
+	// OtherInputs.Touch (finger touch is an input, not a digitizer property).
+	DigitizerSupportsTouch: 'OtherInputsTouch',
 };
 
 /** Properties of a Step that hold a single field key. */
@@ -32,9 +35,12 @@ const SINGLE_KEY_PROPS = new Set(['field']);
 /** Properties that hold an array of field keys. */
 const ARRAY_KEY_PROPS = new Set(['fields', 'groupBy']);
 
-function rename(key: string): string {
+/** Current key for a possibly-renamed one. Also used for `?filter=`,
+ * `?sort=` and `?column=` deep links (filter-url.ts). */
+export function renameFieldKey(key: string): string {
 	return RENAMED_FIELD_KEYS[key] ?? key;
 }
+const rename = renameFieldKey;
 
 /**
  * Deep-copy `value`, rewriting renamed field keys wherever a step holds one.
