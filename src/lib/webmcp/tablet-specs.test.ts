@@ -48,8 +48,8 @@ describe('tablet specs lookup', () => {
 		// Connectivity applies to every tablet type, so a pen tablet still reports it.
 		expect(field('ConnectivityPorts')).toMatchObject({
 			group: 'Connectivity',
-			value: null,
-			status: 'not_recorded',
+			value: 'Micro-USB',
+			status: 'recorded',
 		});
 	});
 
