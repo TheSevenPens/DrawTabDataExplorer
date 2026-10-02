@@ -10,10 +10,12 @@
 
 	const specsCol1Groups = ['Digitizer'];
 	const specsCol2Groups = ['Display'];
-	// Other Inputs and Connectivity apply to every tablet type; Standalone only to STANDALONE.
+	// Other Inputs and Connectivity apply to every tablet type; Power only when the
+	// manufacturer published it; Standalone only to STANDALONE.
 	let specsCol3Groups = $derived([
 		OTHER_INPUTS_GROUP,
 		'Connectivity',
+		...(tablet.Power ? ['Power'] : []),
 		...(tablet.Model.Type === 'STANDALONE' ? ['Standalone'] : []),
 	]);
 
