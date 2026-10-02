@@ -81,6 +81,7 @@ const TABLET_SPEC = [
 	'DigitizerAccuracyCenter',
 	'DigitizerAccuracyCorner',
 	'DigitizerMaxHover',
+	'DigitizerMaxHoverMin',
 	'DigitizerDimensions',
 	'DigitizerAspectRatio',
 	'DigitizerAspectRatioFraction',
