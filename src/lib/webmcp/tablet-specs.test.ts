@@ -35,7 +35,8 @@ describe('tablet specs lookup', () => {
 		expect(field('DigitizerPressureLevels')).toMatchObject({ value: 4096, status: 'recorded' });
 		expect(field('DigitizerTilt')).toMatchObject({ value: 0, status: 'recorded' });
 		expect(field('OtherInputsTouch')).toMatchObject({ value: 'NO', status: 'recorded' });
-		expect(field('DigitizerMaxHover')).toMatchObject({ value: null, status: 'not_recorded' });
+		// Wacom publishes one accuracy figure for the Intuos, stored as center (#54).
+		expect(field('DigitizerAccuracyCorner')).toMatchObject({ value: null, status: 'not_recorded' });
 		expect(field('DisplayBrightness')).toMatchObject({ value: null, status: 'not_applicable' });
 		expect(field('DigitizerDimensions')).toMatchObject({ value: '152 x 95', unit: 'mm' });
 		expect(field('DigitizerActiveAreaMm2')).toMatchObject({
