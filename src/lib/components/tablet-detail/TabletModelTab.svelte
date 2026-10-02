@@ -67,6 +67,13 @@
 												{/if}
 												<EntityLink entityId={pen.entityId}>{pen.name}</EntityLink>
 											{/each}
+										{:else if f.key === 'IncludedInBox'}
+											<!-- One item per line; getValue's ", " join is for tables and search. -->
+											<ul class="box-items">
+												{#each tablet.Model.IncludedInBox ?? [] as item, i (i)}
+													<li>{item}</li>
+												{/each}
+											</ul>
 										{:else if f.key === 'ModelFamily' && family}
 											<EntityLink entityId={family.EntityId}>{family.FamilyName}</EntityLink>
 										{:else if lastDriverIds[f.key]}
@@ -167,6 +174,13 @@
 
 	dd a:hover {
 		text-decoration: underline;
+	}
+
+	.box-items {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		word-break: normal;
 	}
 
 	.computed-badge {

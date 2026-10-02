@@ -71,6 +71,7 @@ const TABLET_SPEC = [
 	'LastSupportedWindowsDriver',
 	'LastSupportedMacOSDriver',
 	'ModelIncludedPen',
+	'IncludedInBox',
 	'DigitizerType',
 	'DigitizerPressureLevels',
 	'DigitizerReportRate',
