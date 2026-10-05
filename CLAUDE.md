@@ -269,9 +269,9 @@ What's automated (no manual action needed):
   validation. A tablet whose year is earlier than an included pen's
   `ReleaseYear` fails too (#312) — a pen exists once a tablet ships it.
   Inventory rows must point at real models too: `TabletEntityId` /
-  `PenEntityId` must exist, a tablet unit's `ModelId` must be that
-  tablet's `Model.Id`, and `WithTabletInventoryId` must name a tablet unit
-  (DrawTabData #44).
+  `PenEntityId` must exist, a tablet unit's `ModelId` and `TabletType`
+  must be that tablet's `Model.Id` and `Model.Type`, and
+  `WithTabletInventoryId` must name a tablet unit (DrawTabData #44, #63).
   `Model.LastSupported{Windows,MacOS}Driver` must name a Driver: kept as
   the verbatim EOSL string and resolved on read, ignoring `-` vs `.` before
   the build number (`data-repo/lib/driver-lookup.ts`, #307). The three
