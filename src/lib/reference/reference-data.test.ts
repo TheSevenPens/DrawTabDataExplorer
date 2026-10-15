@@ -66,16 +66,18 @@ describe('formatBandRange', () => {
 });
 
 describe('sortBandsByRank', () => {
-	it('orders bands S, A, B, C, D, X and preserves extra fields', () => {
+	it('orders bands S, A, B, C, D, F, X and preserves extra fields', () => {
 		const bands = [
-			{ label: 'D', min: 100, max: 150, name: 'AVOID' },
-			{ label: 'S', min: 500, max: 900, name: 'EXCELLENT' },
-			{ label: 'B', min: 200, max: 350, name: 'GOOD' },
+			{ label: 'X', min: 900, max: null, name: 'EXCESSIVE' },
+			{ label: 'D', min: 100, max: 200, name: 'AVOID' },
+			{ label: 'S', min: 500, max: 900, name: 'SUPER' },
+			{ label: 'F', min: 0, max: 100, name: 'FAIL' },
+			{ label: 'B', min: 300, max: 400, name: 'GOOD' },
 		];
 		const sorted = sortBandsByRank(bands);
-		expect(sorted.map((b) => b.label)).toEqual(['S', 'B', 'D']);
+		expect(sorted.map((b) => b.label)).toEqual(['S', 'B', 'D', 'F', 'X']);
 		// extra `name` field survives (generic, not widened to SpecBand)
-		expect(sorted[0].name).toBe('EXCELLENT');
+		expect(sorted[0].name).toBe('SUPER');
 	});
 });
 

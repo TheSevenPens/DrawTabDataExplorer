@@ -292,7 +292,7 @@ See [CLAUDE.md](../CLAUDE.md) § Compare workspace for the model. Files:
 ## Shared modules
 
 - **`src/lib/bands.ts`** — Reference band definitions (IAF / MAX ranking,
-  each band carrying an optional `name` rating like "EXCELLENT", plus pen
+  each band carrying an optional `name` rating like "SUPER", plus pen
   dimension bands) shared by the Reference page, `PressureRangeTab`, and
   the pen-analysis distribution sections. (Pages that need multiple datasets read
   them from the session `DrawTabDataSet` exposed as `ds` via

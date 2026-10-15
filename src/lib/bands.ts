@@ -8,12 +8,15 @@
 // pressure bands.
 
 /** Open-ended right edge allowed (used by PressureBandsChart for Piaf / Pmax
- * where the trailing band is "AVOID" or "EXCESSIVE", i.e. ≥ N). */
+ * where the trailing band is "FAIL" or "EXCESSIVE", i.e. ≥ N).
+ *
+ * A band includes its lower value and excludes its upper value: 4 gf of IAF
+ * is C, 300 gf of max pressure is B. */
 export interface Band {
 	label: string;
 	min: number;
 	max: number | null;
-	/** Optional human-readable rating for the band (e.g. "EXCELLENT"),
+	/** Optional human-readable rating for the band (e.g. "SUPER"),
 	 * shown alongside the short `label` in the Reference ranking tables. */
 	name?: string;
 }
@@ -30,26 +33,30 @@ export interface SpecBand {
 
 /** Piaf (Initial Activation Force) ranking bands in gram-force. Lower is
  * better — a lighter touch means more natural shading and less hand
- * fatigue. Labelled S/A/B/C/D (tier-list style) so the single-letter
- * names fit comfortably above the narrow lower bands on a 22 gf axis. */
+ * fatigue. Labelled S/A/B/C/D/F (tier-list style) so the single-letter
+ * names fit comfortably above the narrow lower bands on a 22 gf axis.
+ * Same bands as the 7P Demos "IAF ranking" page (GitHub #408). */
 export const PIAF_BANDS: Band[] = [
-	{ min: 0, max: 1, label: 'S', name: 'EXCELLENT' },
+	{ min: 0, max: 1, label: 'S', name: 'SUPER' },
 	{ min: 1, max: 2, label: 'A', name: 'GREAT' },
-	{ min: 2, max: 3.5, label: 'B', name: 'GOOD' },
-	{ min: 3.5, max: 5, label: 'C', name: 'OK' },
-	{ min: 5, max: null, label: 'D', name: 'AVOID' },
+	{ min: 2, max: 4, label: 'B', name: 'GOOD' },
+	{ min: 4, max: 6, label: 'C', name: 'OK' },
+	{ min: 6, max: 10, label: 'D', name: 'AVOID' },
+	{ min: 10, max: null, label: 'F', name: 'FAIL' },
 ];
 
 /** Pmax (Maximum Force) ranking bands in gram-force. Higher = more
  * dynamic range before the pen saturates; too high = excessive arm
- * fatigue to reach full pressure. Labelled S/A/B/C/D/X (tier-list
- * style, with X reserved for the EXCESSIVE upper tail). */
+ * fatigue to reach full pressure. Labelled F/D/C/B/A/S/X (tier-list
+ * style, with X reserved for the EXCESSIVE upper tail). Same bands as the
+ * 7P Demos "Max pressure ranking" page (GitHub #408). */
 export const PMAX_BANDS: Band[] = [
-	{ min: 100, max: 150, label: 'D', name: 'AVOID' },
-	{ min: 150, max: 200, label: 'C', name: 'OK' },
-	{ min: 200, max: 350, label: 'B', name: 'GOOD' },
-	{ min: 350, max: 500, label: 'A', name: 'GREAT' },
-	{ min: 500, max: 900, label: 'S', name: 'EXCELLENT' },
+	{ min: 0, max: 100, label: 'F', name: 'FAIL' },
+	{ min: 100, max: 200, label: 'D', name: 'AVOID' },
+	{ min: 200, max: 300, label: 'C', name: 'OK' },
+	{ min: 300, max: 400, label: 'B', name: 'GOOD' },
+	{ min: 400, max: 500, label: 'A', name: 'GREAT' },
+	{ min: 500, max: 900, label: 'S', name: 'SUPER' },
 	{ min: 900, max: null, label: 'X', name: 'EXCESSIVE' },
 ];
 
