@@ -196,9 +196,7 @@ export function topByDiagonal(
 
 /** Brands present in `rows`, ordered by display name. */
 export function diagonalBrands(rows: DiagonalRow[], brandLabel: (b: string) => string): string[] {
-	return [...new Set(rows.map((r) => r.brand))].sort((a, b) =>
-		brandLabel(a).localeCompare(brandLabel(b)),
-	);
+	return rankBrands(rows, brandLabel);
 }
 
 // --- Touch support listing --------------------------------------------------
@@ -264,4 +262,70 @@ export function touchTabletRows(
 			(a, b) =>
 				brandLabel(a.brand).localeCompare(brandLabel(b.brand)) || a.name.localeCompare(b.name),
 		);
+}
+
+// --- Metric rankings (lowest / highest) --------------------------------------
+//
+// Backs the "Lowest" / "Highest" tables for digitizer density and display
+// pixel density. Like the diagonal rankings, they rank every tablet with a
+// value, independent of any histogram's compare-years control.
+
+export interface MetricRankRow {
+	entityId: string;
+	name: string;
+	id: string;
+	brand: string;
+	year: string;
+	value: number;
+}
+
+/** Rows for the tablets where `getValue` yields a finite number. */
+export function metricRankRows(
+	tablets: Tablet[],
+	getValue: (t: Tablet) => number | null,
+): MetricRankRow[] {
+	return tablets
+		.map((t) => {
+			const value = getValue(t);
+			if (value === null || !Number.isFinite(value)) return null;
+			return {
+				entityId: t.Meta.EntityId,
+				name: t.Model.Name,
+				id: t.Model.Id,
+				brand: t.Model.Brand as string,
+				year: t.Model.ReleaseYear ?? '',
+				value,
+			};
+		})
+		.filter((r): r is MetricRankRow => r !== null);
+}
+
+/** Brands present in `rows`, ordered by display name. */
+export function rankBrands(
+	rows: readonly { brand: string }[],
+	brandLabel: (b: string) => string,
+): string[] {
+	return [...new Set(rows.map((r) => r.brand))].sort((a, b) =>
+		brandLabel(a).localeCompare(brandLabel(b)),
+	);
+}
+
+/** Digitizer density in LPmm, or null when not recorded. */
+export function digitizerDensity(t: Tablet): number | null {
+	const raw = t.Digitizer?.Density;
+	if (raw == null || raw === '') return null;
+	const n = Number(raw);
+	return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Display pixel density in PPI, from the panel's horizontal resolution over
+ * the active-area width — the same inputs as the `DisplayDensity` field
+ * (px/mm), times 25.4. Null when either input is missing.
+ */
+export function displayPpi(t: Tablet): number | null {
+	const res = t.Display?.PixelDimensions;
+	const dim = t.Digitizer?.Dimensions;
+	if (!res?.Width || !dim?.Width) return null;
+	return (res.Width / dim.Width) * 25.4;
 }

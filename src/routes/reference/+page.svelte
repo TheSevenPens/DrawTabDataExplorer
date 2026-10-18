@@ -40,6 +40,7 @@
 		CONTRAST_BANDS,
 		RESPONSE_TIME_BANDS,
 		DENSITY_BANDS,
+		PIXEL_DENSITY_BANDS,
 		ACCURACY_CENTER_BANDS,
 		ACCURACY_CORNER_BANDS,
 		REPORT_RATE_BANDS,
@@ -77,6 +78,7 @@
 		{ id: 'bands-brightness', category: 'Display Bands', label: 'Brightness' },
 		{ id: 'bands-contrast', category: 'Display Bands', label: 'Contrast' },
 		{ id: 'bands-response-time', category: 'Display Bands', label: 'Response Time' },
+		{ id: 'bands-pixel-density', category: 'Display Bands', label: 'Pixel Density' },
 		{ id: 'bands-density', category: 'Digitizer Bands', label: 'Density' },
 		{ id: 'bands-accuracy-center', category: 'Digitizer Bands', label: 'Accuracy (Center)' },
 		{ id: 'bands-accuracy-corner', category: 'Digitizer Bands', label: 'Accuracy (Corner)' },
@@ -130,6 +132,15 @@
 			unit: 'ms',
 			filename: 'bands-response-time',
 			bands: RESPONSE_TIME_BANDS,
+		},
+		{
+			id: 'bands-pixel-density',
+			title: 'Pixel Density Bands',
+			blurb:
+				'Display pixels per inch, from the panel resolution and active-area width. Higher density gives sharper lines and text at the same viewing distance.',
+			unit: 'PPI',
+			filename: 'bands-pixel-density',
+			bands: PIXEL_DENSITY_BANDS,
 		},
 		{
 			id: 'bands-density',

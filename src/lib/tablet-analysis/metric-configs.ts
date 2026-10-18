@@ -7,7 +7,9 @@ import {
 	ACCURACY_CENTER_BANDS as ACCURACY_CENTER_RANGES,
 	ACCURACY_CORNER_BANDS as ACCURACY_CORNER_RANGES,
 	REPORT_RATE_BANDS as REPORT_RATE_RANGES,
+	PIXEL_DENSITY_BANDS as PIXEL_DENSITY_RANGES,
 } from '$lib/bands.js';
+import { displayPpi } from '$lib/tablet-analysis/helpers.js';
 import {
 	buildMetric,
 	DISPLAY_POOL_LABEL,
@@ -64,6 +66,21 @@ export const ANALYSIS_METRICS: AnalysisMetricConfig[] = [
 		ranges: RESPONSE_TIME_RANGES,
 		valuesMax: 30,
 		binSize: 1,
+	},
+	{
+		source: 'displays',
+		id: 'display-pixel-density',
+		title: 'Pixel Density',
+		unit: 'PPI',
+		// Rounded to whole PPI so the distribution table groups near-equal
+		// panels instead of listing every computed decimal on its own row.
+		getValue: (t) => {
+			const ppi = displayPpi(t);
+			return ppi === null ? null : String(Math.round(ppi));
+		},
+		ranges: PIXEL_DENSITY_RANGES,
+		binSize: 10,
+		tickStep: 50,
 	},
 	{
 		source: 'displays',

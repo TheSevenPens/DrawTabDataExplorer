@@ -64,10 +64,15 @@ function rawNumericValues(
 	max: number | undefined,
 	yearsFilter: number | null,
 ): number[] {
-	return source
-		.filter((t) => withinYears(t, yearsFilter))
-		.map((t) => Number(getValue(t)))
-		.filter((v): v is number => Number.isFinite(v) && (max == null || v <= max));
+	return (
+		source
+			.filter((t) => withinYears(t, yearsFilter))
+			.map((t) => getValue(t))
+			// Number(null) and Number('') are 0, which would chart a missing value as a real one.
+			.filter((v): v is string => v != null && v !== '')
+			.map(Number)
+			.filter((v): v is number => Number.isFinite(v) && (max == null || v <= max))
+	);
 }
 
 export type MetricOptions = {

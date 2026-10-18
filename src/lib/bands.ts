@@ -109,6 +109,15 @@ export const RESPONSE_TIME_BANDS: SpecBand[] = [
 	{ label: 'Slow', min: 15, max: 30 },
 ];
 
+// Pixel density in PPI. Anchors: a 24" 1080p panel is ~92 PPI, a 16" 1080p
+// ~138, a 16" 2.5K ~189 and a 16" 4K ~276.
+export const PIXEL_DENSITY_BANDS: SpecBand[] = [
+	{ label: 'Low', min: 0, max: 120 },
+	{ label: 'Standard', min: 120, max: 170 },
+	{ label: 'High', min: 170, max: 250 },
+	{ label: 'Very High', min: 250, max: 350 },
+];
+
 // --- Digitizer ---
 
 export const DENSITY_BANDS: SpecBand[] = [
