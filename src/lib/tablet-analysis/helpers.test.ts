@@ -8,6 +8,7 @@ import {
 	rankRows,
 	metricRankRows,
 	rankBrands,
+	matchesTypeBrand,
 	digitizerDensity,
 	displayPpi,
 } from './helpers.js';
@@ -259,12 +260,34 @@ describe('metricRankRows', () => {
 			(t) => t.Digitizer?.Dimensions?.Width ?? null,
 		);
 		expect(rows).toEqual([
-			{ entityId: 'wacom.tablet.a', name: 'A', id: 'A', brand: 'WACOM', year: '2019', value: 3 },
+			{
+				entityId: 'wacom.tablet.a',
+				name: 'A',
+				id: 'A',
+				brand: 'WACOM',
+				type: 'PENTABLET',
+				year: '2019',
+				value: 3,
+			},
 		]);
 	});
 
 	it('drops NaN values', () => {
 		expect(metricRankRows([tablet('A', 'WACOM', 3, 4)], () => NaN)).toEqual([]);
+	});
+});
+
+describe('matchesTypeBrand', () => {
+	const item = { type: 'PENDISPLAY', brand: 'WACOM' };
+
+	it('treats an empty filter as "all"', () => {
+		expect(matchesTypeBrand(item, '', '')).toBe(true);
+	});
+
+	it('requires each set filter to match', () => {
+		expect(matchesTypeBrand(item, 'PENDISPLAY', 'WACOM')).toBe(true);
+		expect(matchesTypeBrand(item, 'STANDALONE', '')).toBe(false);
+		expect(matchesTypeBrand(item, '', 'HUION')).toBe(false);
 	});
 });
 

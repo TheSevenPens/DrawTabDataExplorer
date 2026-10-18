@@ -9,7 +9,7 @@ import {
 	REPORT_RATE_BANDS as REPORT_RATE_RANGES,
 	PIXEL_DENSITY_BANDS as PIXEL_DENSITY_RANGES,
 } from '$lib/bands.js';
-import { displayPpi } from '$lib/tablet-analysis/helpers.js';
+import { displayPpi, matchesTypeBrand } from '$lib/tablet-analysis/helpers.js';
 import {
 	buildMetric,
 	DISPLAY_POOL_LABEL,
@@ -135,13 +135,23 @@ export const ANALYSIS_METRICS: AnalysisMetricConfig[] = [
 	},
 ];
 
+/** A section's type and brand dropdown values; '' means "all". */
+export type PoolFilter = { type: string; brand: string };
+
 export function buildAnalysisSections(
 	allTablets: Tablet[],
 	penDisplays: Tablet[],
 	yearFilters: Record<string, number | null>,
+	poolFilters: Record<string, PoolFilter> = {},
 ): NumericSection[] {
 	return ANALYSIS_METRICS.map(({ source, ...opts }) => {
-		const tablets = source === 'displays' ? penDisplays : allTablets;
+		const base = source === 'displays' ? penDisplays : allTablets;
+		const f = poolFilters[opts.id];
+		const tablets = f
+			? base.filter((t) =>
+					matchesTypeBrand({ type: t.Model.Type, brand: t.Model.Brand as string }, f.type, f.brand),
+				)
+			: base;
 		const poolLabel = source === 'displays' ? DISPLAY_POOL_LABEL : TABLET_POOL_LABEL;
 		return buildMetric(opts, tablets, tablets.length, poolLabel, 'analysis-', yearFilters[opts.id]);
 	});

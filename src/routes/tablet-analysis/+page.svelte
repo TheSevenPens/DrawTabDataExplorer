@@ -36,6 +36,8 @@
 		diagonalBrands,
 		metricRankRows,
 		rankBrands,
+		matchesTypeBrand,
+		TABLET_TYPE_OPTIONS,
 		digitizerDensity,
 		displayPpi,
 		type MetricRankRow,
@@ -143,14 +145,29 @@
 		'digitizer-report-rate': null,
 	});
 
-	let numericSections = $derived(buildAnalysisSections(allTablets, penDisplays, yearFilters));
+	// Type and brand dropdowns on the Pixel Density chart. '' = all.
+	const DISPLAY_TYPE_OPTIONS = TABLET_TYPE_OPTIONS.filter((o) => o.value !== 'PENTABLET');
+	let ppiChartType = $state('');
+	let ppiChartBrand = $state('');
+
+	let numericSections = $derived(
+		buildAnalysisSections(allTablets, penDisplays, yearFilters, {
+			'display-pixel-density': { type: ppiChartType, brand: ppiChartBrand },
+		}),
+	);
 
 	// --- Density rankings (lowest / highest) ---
 
 	const RANK_COUNT_OPTIONS = [10, 20, 30];
 
-	function rankBy(rows: MetricRankRow[], brand: string, dir: 'asc' | 'desc', count: number) {
-		const filtered = brand ? rows.filter((r) => r.brand === brand) : rows;
+	function rankBy(
+		rows: MetricRankRow[],
+		type: string,
+		brand: string,
+		dir: 'asc' | 'desc',
+		count: number,
+	) {
+		const filtered = rows.filter((r) => matchesTypeBrand(r, type, brand));
 		return rankRows(filtered, (r) => r.value, dir, count);
 	}
 
@@ -161,10 +178,10 @@
 	let lowestDensityBrand = $state('');
 	let highestDensityBrand = $state('');
 	let lowestDensityRows = $derived(
-		rankBy(densityTablets, lowestDensityBrand, 'asc', lowestDensityCount),
+		rankBy(densityTablets, '', lowestDensityBrand, 'asc', lowestDensityCount),
 	);
 	let highestDensityRows = $derived(
-		rankBy(densityTablets, highestDensityBrand, 'desc', highestDensityCount),
+		rankBy(densityTablets, '', highestDensityBrand, 'desc', highestDensityCount),
 	);
 
 	// Same pool as the Pixel Density histogram: pen displays and standalones.
@@ -172,10 +189,16 @@
 	let ppiBrands = $derived(rankBrands(ppiTablets, brandName));
 	let lowestPpiCount = $state(10);
 	let highestPpiCount = $state(10);
+	let lowestPpiType = $state('');
+	let highestPpiType = $state('');
 	let lowestPpiBrand = $state('');
 	let highestPpiBrand = $state('');
-	let lowestPpiRows = $derived(rankBy(ppiTablets, lowestPpiBrand, 'asc', lowestPpiCount));
-	let highestPpiRows = $derived(rankBy(ppiTablets, highestPpiBrand, 'desc', highestPpiCount));
+	let lowestPpiRows = $derived(
+		rankBy(ppiTablets, lowestPpiType, lowestPpiBrand, 'asc', lowestPpiCount),
+	);
+	let highestPpiRows = $derived(
+		rankBy(ppiTablets, highestPpiType, highestPpiBrand, 'desc', highestPpiCount),
+	);
 
 	// --- Pressure Levels ---
 
@@ -411,9 +434,43 @@
 	{/if}
 {/snippet}
 
+{#snippet typeBrandSelects(p: {
+	/** Type choices; the Type dropdown is left out when omitted. */
+	types?: { value: string; label: string }[];
+	type?: string;
+	onTypeChange?: (t: string) => void;
+	brands: string[];
+	brand: string;
+	onBrandChange: (b: string) => void;
+})}
+	{#if p.types}
+		<label class="show-count">
+			Type
+			<select onchange={(e) => p.onTypeChange?.(e.currentTarget.value)}>
+				<option value="" selected={p.type === ''}>All types</option>
+				{#each p.types as t (t.value)}
+					<option value={t.value} selected={p.type === t.value}>{t.label}</option>
+				{/each}
+			</select>
+		</label>
+	{/if}
+	<label class="show-count">
+		Brand
+		<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
+			<option value="" selected={p.brand === ''}>All brands</option>
+			{#each p.brands as b (b)}
+				<option value={b} selected={p.brand === b}>{brandName(b)}</option>
+			{/each}
+		</select>
+	</label>
+{/snippet}
+
 {#snippet metricRankSection(p: {
 	rows: MetricRankRow[];
 	allRows: MetricRankRow[];
+	types?: { value: string; label: string }[];
+	type?: string;
+	onTypeChange?: (t: string) => void;
 	brands: string[];
 	title: string;
 	description: string;
@@ -434,15 +491,7 @@
 	{:else}
 		<div class="rank-controls">
 			<div class="controls-left">
-				<label class="show-count">
-					Brand
-					<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
-						<option value="" selected={p.brand === ''}>All brands</option>
-						{#each p.brands as b (b)}
-							<option value={b} selected={p.brand === b}>{brandName(b)}</option>
-						{/each}
-					</select>
-				</label>
+				{@render typeBrandSelects(p)}
 				<label class="show-count">
 					Show
 					<select onchange={(e) => p.onCountChange(Number(e.currentTarget.value))}>
@@ -467,7 +516,7 @@
 			/>
 		</div>
 		{#if p.rows.length === 0}
-			<EmptyState>No tablets match this brand.</EmptyState>
+			<EmptyState>No tablets match {p.types ? 'these filters' : 'this brand'}.</EmptyState>
 		{:else}
 			<table class="rank-table">
 				<thead>
@@ -497,6 +546,21 @@
 			</table>
 		{/if}
 	{/if}
+{/snippet}
+
+{#snippet ppiChartControls()}
+	<div class="rank-controls">
+		<div class="controls-left">
+			{@render typeBrandSelects({
+				types: DISPLAY_TYPE_OPTIONS,
+				type: ppiChartType,
+				onTypeChange: (t) => (ppiChartType = t),
+				brands: ppiBrands,
+				brand: ppiChartBrand,
+				onBrandChange: (b) => (ppiChartBrand = b),
+			})}
+		</div>
+	</div>
 {/snippet}
 
 <ChromeLayout subNavTabs={tabletTabs}>
@@ -591,6 +655,7 @@
 						<section class="section">
 							<NumericMetricSection
 								{section}
+								controls={section.id === 'display-pixel-density' ? ppiChartControls : undefined}
 								bind:compareYears={yearFilters[section.id]}
 								onExport={() =>
 									openExport(
@@ -676,6 +741,9 @@
 					{@render metricRankSection({
 						rows: lowest ? lowestPpiRows : highestPpiRows,
 						allRows: ppiTablets,
+						types: DISPLAY_TYPE_OPTIONS,
+						type: lowest ? lowestPpiType : highestPpiType,
+						onTypeChange: (t) => (lowest ? (lowestPpiType = t) : (highestPpiType = t)),
 						brands: ppiBrands,
 						title: lowest ? 'Lowest Pixel Density' : 'Highest Pixel Density',
 						description:

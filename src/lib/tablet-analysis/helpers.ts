@@ -275,6 +275,7 @@ export interface MetricRankRow {
 	name: string;
 	id: string;
 	brand: string;
+	type: string;
 	year: string;
 	value: number;
 }
@@ -293,11 +294,24 @@ export function metricRankRows(
 				name: t.Model.Name,
 				id: t.Model.Id,
 				brand: t.Model.Brand as string,
+				type: t.Model.Type as string,
 				year: t.Model.ReleaseYear ?? '',
 				value,
 			};
 		})
 		.filter((r): r is MetricRankRow => r !== null);
+}
+
+/**
+ * True when `item` matches the type and brand dropdowns; an empty string
+ * for either means "all" and lets every value through.
+ */
+export function matchesTypeBrand(
+	item: { type: string; brand: string },
+	type: string,
+	brand: string,
+): boolean {
+	return (type === '' || item.type === type) && (brand === '' || item.brand === brand);
 }
 
 /** Brands present in `rows`, ordered by display name. */
