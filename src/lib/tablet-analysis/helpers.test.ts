@@ -6,6 +6,11 @@ import {
 	diagonalBrands,
 	touchTabletRows,
 	rankRows,
+	metricRankRows,
+	rankBrands,
+	matchesTypeBrand,
+	digitizerDensity,
+	displayPpi,
 } from './helpers.js';
 
 const tablet = (
@@ -214,5 +219,86 @@ describe('rankRows', () => {
 			'a.tablet.one',
 			'a.tablet.zero',
 		]);
+	});
+});
+
+describe('displayPpi', () => {
+	const display = (px: number | null, mm: number | null) =>
+		({
+			Display: px === null ? {} : { PixelDimensions: { Width: px, Height: 1 } },
+			Digitizer: mm === null ? {} : { Dimensions: { Width: mm, Height: 1 } },
+		}) as unknown as Tablet;
+
+	it('converts horizontal px per mm of active width to PPI', () => {
+		// 3840 px across 345.6 mm is the 16" 4K class: ~282 PPI.
+		expect(displayPpi(display(3840, 345.6))).toBeCloseTo(282.2, 1);
+		expect(displayPpi(display(254, 254))).toBeCloseTo(25.4);
+	});
+
+	it('is null when the resolution or the width is missing', () => {
+		expect(displayPpi(display(null, 300))).toBeNull();
+		expect(displayPpi(display(1920, null))).toBeNull();
+		expect(displayPpi(display(1920, 0))).toBeNull();
+	});
+});
+
+describe('digitizerDensity', () => {
+	const withDensity = (d: unknown) => ({ Digitizer: { Density: d } }) as unknown as Tablet;
+	it('reads numeric strings and numbers, null otherwise', () => {
+		expect(digitizerDensity(withDensity('200'))).toBe(200);
+		expect(digitizerDensity(withDensity(100))).toBe(100);
+		expect(digitizerDensity(withDensity(''))).toBeNull();
+		expect(digitizerDensity(withDensity(undefined))).toBeNull();
+		expect(digitizerDensity(withDensity('n/a'))).toBeNull();
+	});
+});
+
+describe('metricRankRows', () => {
+	it('keeps tablets with a finite value and carries the identifying fields', () => {
+		const rows = metricRankRows(
+			[tablet('A', 'WACOM', 3, 4, '2019'), tablet('B', 'HUION', null, null)],
+			(t) => t.Digitizer?.Dimensions?.Width ?? null,
+		);
+		expect(rows).toEqual([
+			{
+				entityId: 'wacom.tablet.a',
+				name: 'A',
+				id: 'A',
+				brand: 'WACOM',
+				type: 'PENTABLET',
+				year: '2019',
+				value: 3,
+			},
+		]);
+	});
+
+	it('drops NaN values', () => {
+		expect(metricRankRows([tablet('A', 'WACOM', 3, 4)], () => NaN)).toEqual([]);
+	});
+});
+
+describe('matchesTypeBrand', () => {
+	const item = { type: 'PENDISPLAY', brand: 'WACOM' };
+
+	it('treats an empty filter as "all"', () => {
+		expect(matchesTypeBrand(item, '', '')).toBe(true);
+	});
+
+	it('requires each set filter to match', () => {
+		expect(matchesTypeBrand(item, 'PENDISPLAY', 'WACOM')).toBe(true);
+		expect(matchesTypeBrand(item, 'STANDALONE', '')).toBe(false);
+		expect(matchesTypeBrand(item, '', 'HUION')).toBe(false);
+	});
+});
+
+describe('rankBrands', () => {
+	it('dedupes and orders by display label', () => {
+		const label = (b: string) => ({ XPPEN: 'XP-Pen', HUION: 'Huion', WACOM: 'Wacom' })[b] ?? b;
+		expect(
+			rankBrands(
+				[{ brand: 'XPPEN' }, { brand: 'WACOM' }, { brand: 'HUION' }, { brand: 'XPPEN' }],
+				label,
+			),
+		).toEqual(['HUION', 'WACOM', 'XPPEN']);
 	});
 });

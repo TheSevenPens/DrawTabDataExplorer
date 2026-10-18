@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import DistributionTable from '$lib/components/DistributionTable.svelte';
 	import ValueHistogram from '$lib/components/ValueHistogram.svelte';
 	import AnalysisExportRow from '$lib/tablet-analysis/AnalysisExportRow.svelte';
@@ -9,10 +10,13 @@
 		section,
 		compareYears = $bindable(),
 		onExport,
+		controls,
 	}: {
 		section: NumericSection;
 		compareYears: number | null;
 		onExport: () => void;
+		/** Optional filter dropdowns, shown between the description and the chart. */
+		controls?: Snippet;
 	} = $props();
 </script>
 
@@ -22,6 +26,9 @@
 	{section.poolLabel} have {section.title.toLowerCase()}
 	data.
 </p>
+{#if controls}
+	{@render controls()}
+{/if}
 {#if section.histogram && section.histogram.values.length > 0}
 	<ValueHistogram
 		title={`${section.title} distribution`}

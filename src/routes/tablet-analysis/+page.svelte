@@ -34,6 +34,13 @@
 		topByDiagonal,
 		rankRows,
 		diagonalBrands,
+		metricRankRows,
+		rankBrands,
+		matchesTypeBrand,
+		TABLET_TYPE_OPTIONS,
+		digitizerDensity,
+		displayPpi,
+		type MetricRankRow,
 		touchTabletRows,
 		type DiagonalRow,
 		type DiagonalDirection,
@@ -83,6 +90,17 @@
 		{ id: 'display-contrast', category: 'Display Tech', label: 'Contrast' },
 		{ id: 'display-refresh-rate', category: 'Display Tech', label: 'Refresh Rate' },
 		{ id: 'display-response-time', category: 'Display Tech', label: 'Response Time' },
+		{ id: 'display-pixel-density', category: 'Display Tech', label: 'Pixel Density' },
+		{
+			id: 'display-pixel-density-lowest',
+			category: 'Display Tech',
+			label: 'Pixel Density — Lowest',
+		},
+		{
+			id: 'display-pixel-density-highest',
+			category: 'Display Tech',
+			label: 'Pixel Density — Highest',
+		},
 		{ id: 'display-bit-depth', category: 'Display Tech', label: 'Bit Depth' },
 		{ id: 'pressure-levels', category: 'Tablet Features', label: 'Pressure Levels' },
 		{ id: 'touch-support', category: 'Tablet Features', label: 'Touch Support' },
@@ -120,60 +138,66 @@
 		'display-refresh-rate': null,
 		'display-response-time': null,
 		'display-bit-depth': null,
+		'display-pixel-density': null,
 		'digitizer-density': null,
 		'digitizer-accuracy-center': null,
 		'digitizer-accuracy-corner': null,
 		'digitizer-report-rate': null,
 	});
 
-	let numericSections = $derived(buildAnalysisSections(allTablets, penDisplays, yearFilters));
+	// Type and brand dropdowns on the Pixel Density chart. '' = all.
+	const DISPLAY_TYPE_OPTIONS = TABLET_TYPE_OPTIONS.filter((o) => o.value !== 'PENTABLET');
+	let ppiChartType = $state('');
+	let ppiChartBrand = $state('');
 
-	// --- Digitizer density ranking (lowest / highest) ---
-
-	type DensityRow = {
-		entityId: string;
-		name: string;
-		id: string;
-		brand: string;
-		year: string;
-		density: number;
-	};
-	let densityTablets = $derived<DensityRow[]>(
-		allTablets
-			.map((t) => {
-				const raw = t.Digitizer?.Density;
-				const density = Number(raw);
-				if (raw == null || raw === '' || !Number.isFinite(density)) return null;
-				return {
-					entityId: t.Meta.EntityId,
-					name: t.Model.Name,
-					id: t.Model.Id,
-					brand: t.Model.Brand as string,
-					year: t.Model.ReleaseYear ?? '',
-					density,
-				};
-			})
-			.filter((r): r is DensityRow => r !== null),
-	);
-	let densityBrands = $derived(
-		[...new Set(densityTablets.map((r) => r.brand))].sort((a, b) =>
-			brandName(a).localeCompare(brandName(b)),
-		),
+	let numericSections = $derived(
+		buildAnalysisSections(allTablets, penDisplays, yearFilters, {
+			'display-pixel-density': { type: ppiChartType, brand: ppiChartBrand },
+		}),
 	);
 
-	const DENSITY_COUNT_OPTIONS = [10, 20, 30];
+	// --- Density rankings (lowest / highest) ---
+
+	const RANK_COUNT_OPTIONS = [10, 20, 30];
+
+	function rankBy(
+		rows: MetricRankRow[],
+		type: string,
+		brand: string,
+		dir: 'asc' | 'desc',
+		count: number,
+	) {
+		const filtered = rows.filter((r) => matchesTypeBrand(r, type, brand));
+		return rankRows(filtered, (r) => r.value, dir, count);
+	}
+
+	let densityTablets = $derived(metricRankRows(allTablets, digitizerDensity));
+	let densityBrands = $derived(rankBrands(densityTablets, brandName));
 	let lowestDensityCount = $state(10);
 	let highestDensityCount = $state(10);
 	let lowestDensityBrand = $state('');
 	let highestDensityBrand = $state('');
-
-	function densityRankRows(brand: string, dir: 'asc' | 'desc', count: number): DensityRow[] {
-		const filtered = brand ? densityTablets.filter((r) => r.brand === brand) : densityTablets;
-		return rankRows(filtered, (r) => r.density, dir, count);
-	}
-	let lowestDensityRows = $derived(densityRankRows(lowestDensityBrand, 'asc', lowestDensityCount));
+	let lowestDensityRows = $derived(
+		rankBy(densityTablets, '', lowestDensityBrand, 'asc', lowestDensityCount),
+	);
 	let highestDensityRows = $derived(
-		densityRankRows(highestDensityBrand, 'desc', highestDensityCount),
+		rankBy(densityTablets, '', highestDensityBrand, 'desc', highestDensityCount),
+	);
+
+	// Same pool as the Pixel Density histogram: pen displays and standalones.
+	let ppiTablets = $derived(metricRankRows(penDisplays, displayPpi));
+	let ppiBrands = $derived(rankBrands(ppiTablets, brandName));
+	let lowestPpiCount = $state(10);
+	let highestPpiCount = $state(10);
+	let lowestPpiType = $state('');
+	let highestPpiType = $state('');
+	let lowestPpiBrand = $state('');
+	let highestPpiBrand = $state('');
+	let lowestPpiRows = $derived(
+		rankBy(ppiTablets, lowestPpiType, lowestPpiBrand, 'asc', lowestPpiCount),
+	);
+	let highestPpiRows = $derived(
+		rankBy(ppiTablets, highestPpiType, highestPpiBrand, 'desc', highestPpiCount),
 	);
 
 	// --- Pressure Levels ---
@@ -410,38 +434,68 @@
 	{/if}
 {/snippet}
 
-{#snippet densityRankSection(p: {
-	rows: DensityRow[];
+{#snippet typeBrandSelects(p: {
+	/** Type choices; the Type dropdown is left out when omitted. */
+	types?: { value: string; label: string }[];
+	type?: string;
+	onTypeChange?: (t: string) => void;
+	brands: string[];
+	brand: string;
+	onBrandChange: (b: string) => void;
+})}
+	{#if p.types}
+		<label class="show-count">
+			Type
+			<select onchange={(e) => p.onTypeChange?.(e.currentTarget.value)}>
+				<option value="" selected={p.type === ''}>All types</option>
+				{#each p.types as t (t.value)}
+					<option value={t.value} selected={p.type === t.value}>{t.label}</option>
+				{/each}
+			</select>
+		</label>
+	{/if}
+	<label class="show-count">
+		Brand
+		<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
+			<option value="" selected={p.brand === ''}>All brands</option>
+			{#each p.brands as b (b)}
+				<option value={b} selected={p.brand === b}>{brandName(b)}</option>
+			{/each}
+		</select>
+	</label>
+{/snippet}
+
+{#snippet metricRankSection(p: {
+	rows: MetricRankRow[];
+	allRows: MetricRankRow[];
+	types?: { value: string; label: string }[];
+	type?: string;
+	onTypeChange?: (t: string) => void;
+	brands: string[];
 	title: string;
+	description: string;
+	emptyText: string;
 	filename: string;
+	valueLabel: string;
+	unit: string;
+	format: (v: number) => string;
 	brand: string;
 	onBrandChange: (b: string) => void;
 	count: number;
 	onCountChange: (n: number) => void;
 })}
 	<h2>{p.title}</h2>
-	<p class="description">
-		Tablets ranked by digitizer density (lines per mm). Higher density gives finer positional
-		resolution under the pen tip.
-	</p>
-	{#if densityTablets.length === 0}
-		<EmptyState>No tablets with a recorded digitizer density.</EmptyState>
+	<p class="description">{p.description}</p>
+	{#if p.allRows.length === 0}
+		<EmptyState>{p.emptyText}</EmptyState>
 	{:else}
 		<div class="rank-controls">
 			<div class="controls-left">
-				<label class="show-count">
-					Brand
-					<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
-						<option value="" selected={p.brand === ''}>All brands</option>
-						{#each densityBrands as b (b)}
-							<option value={b} selected={p.brand === b}>{brandName(b)}</option>
-						{/each}
-					</select>
-				</label>
+				{@render typeBrandSelects(p)}
 				<label class="show-count">
 					Show
 					<select onchange={(e) => p.onCountChange(Number(e.currentTarget.value))}>
-						{#each DENSITY_COUNT_OPTIONS as n (n)}
+						{#each RANK_COUNT_OPTIONS as n (n)}
 							<option value={n} selected={p.count === n}>{n}</option>
 						{/each}
 					</select>
@@ -451,18 +505,18 @@
 				entityType="analysis"
 				title={p.title}
 				filename={p.filename}
-				headers={['Rank', 'Tablet', 'Brand', 'Year', 'Density (LPmm)']}
+				headers={['Rank', 'Tablet', 'Brand', 'Year', `${p.valueLabel} (${p.unit})`]}
 				rows={p.rows.map((r, i) => [
 					i + 1,
 					`${r.name} (${r.id})`,
 					brandName(r.brand),
 					r.year,
-					r.density,
+					p.format(r.value),
 				])}
 			/>
 		</div>
 		{#if p.rows.length === 0}
-			<EmptyState>No tablets match this brand.</EmptyState>
+			<EmptyState>No tablets match {p.types ? 'these filters' : 'this brand'}.</EmptyState>
 		{:else}
 			<table class="rank-table">
 				<thead>
@@ -471,7 +525,7 @@
 						<th>Tablet</th>
 						<th>Brand</th>
 						<th class="num">Year</th>
-						<th class="num">Density <span class="unit">(LPmm)</span></th>
+						<th class="num">{p.valueLabel} <span class="unit">({p.unit})</span></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -485,13 +539,28 @@
 							</td>
 							<td>{brandName(r.brand)}</td>
 							<td class="num mono">{r.year || '—'}</td>
-							<td class="num mono">{r.density}</td>
+							<td class="num mono">{p.format(r.value)}</td>
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 		{/if}
 	{/if}
+{/snippet}
+
+{#snippet ppiChartControls()}
+	<div class="rank-controls">
+		<div class="controls-left">
+			{@render typeBrandSelects({
+				types: DISPLAY_TYPE_OPTIONS,
+				type: ppiChartType,
+				onTypeChange: (t) => (ppiChartType = t),
+				brands: ppiBrands,
+				brand: ppiChartBrand,
+				onBrandChange: (b) => (ppiChartBrand = b),
+			})}
+		</div>
+	</div>
 {/snippet}
 
 <ChromeLayout subNavTabs={tabletTabs}>
@@ -586,6 +655,7 @@
 						<section class="section">
 							<NumericMetricSection
 								{section}
+								controls={section.id === 'display-pixel-density' ? ppiChartControls : undefined}
 								bind:compareYears={yearFilters[section.id]}
 								onExport={() =>
 									openExport(
@@ -640,30 +710,55 @@
 				</section>
 			{/if}
 
-			{#if activeSection === 'digitizer-density-lowest'}
+			{#if activeSection === 'digitizer-density-lowest' || activeSection === 'digitizer-density-highest'}
+				{@const lowest = activeSection === 'digitizer-density-lowest'}
 				<section class="section">
-					{@render densityRankSection({
-						rows: lowestDensityRows,
-						title: 'Lowest Digitizer Density',
-						filename: 'analysis-digitizer-density-lowest',
-						brand: lowestDensityBrand,
-						onBrandChange: (b) => (lowestDensityBrand = b),
-						count: lowestDensityCount,
-						onCountChange: (n) => (lowestDensityCount = n),
+					{@render metricRankSection({
+						rows: lowest ? lowestDensityRows : highestDensityRows,
+						allRows: densityTablets,
+						brands: densityBrands,
+						title: lowest ? 'Lowest Digitizer Density' : 'Highest Digitizer Density',
+						description:
+							'Tablets ranked by digitizer density (lines per mm). Higher density gives finer positional resolution under the pen tip.',
+						emptyText: 'No tablets with a recorded digitizer density.',
+						filename: lowest
+							? 'analysis-digitizer-density-lowest'
+							: 'analysis-digitizer-density-highest',
+						valueLabel: 'Density',
+						unit: 'LPmm',
+						format: (v) => String(v),
+						brand: lowest ? lowestDensityBrand : highestDensityBrand,
+						onBrandChange: (b) => (lowest ? (lowestDensityBrand = b) : (highestDensityBrand = b)),
+						count: lowest ? lowestDensityCount : highestDensityCount,
+						onCountChange: (n) => (lowest ? (lowestDensityCount = n) : (highestDensityCount = n)),
 					})}
 				</section>
 			{/if}
 
-			{#if activeSection === 'digitizer-density-highest'}
+			{#if activeSection === 'display-pixel-density-lowest' || activeSection === 'display-pixel-density-highest'}
+				{@const lowest = activeSection === 'display-pixel-density-lowest'}
 				<section class="section">
-					{@render densityRankSection({
-						rows: highestDensityRows,
-						title: 'Highest Digitizer Density',
-						filename: 'analysis-digitizer-density-highest',
-						brand: highestDensityBrand,
-						onBrandChange: (b) => (highestDensityBrand = b),
-						count: highestDensityCount,
-						onCountChange: (n) => (highestDensityCount = n),
+					{@render metricRankSection({
+						rows: lowest ? lowestPpiRows : highestPpiRows,
+						allRows: ppiTablets,
+						types: DISPLAY_TYPE_OPTIONS,
+						type: lowest ? lowestPpiType : highestPpiType,
+						onTypeChange: (t) => (lowest ? (lowestPpiType = t) : (highestPpiType = t)),
+						brands: ppiBrands,
+						title: lowest ? 'Lowest Pixel Density' : 'Highest Pixel Density',
+						description:
+							'Pen displays and standalones ranked by pixel density: horizontal resolution over active-area width, in pixels per inch. Higher density gives sharper lines and text at the same viewing distance.',
+						emptyText: 'No pen displays with a recorded resolution and active-area width.',
+						filename: lowest
+							? 'analysis-display-pixel-density-lowest'
+							: 'analysis-display-pixel-density-highest',
+						valueLabel: 'Pixel Density',
+						unit: 'PPI',
+						format: (v) => v.toFixed(1),
+						brand: lowest ? lowestPpiBrand : highestPpiBrand,
+						onBrandChange: (b) => (lowest ? (lowestPpiBrand = b) : (highestPpiBrand = b)),
+						count: lowest ? lowestPpiCount : highestPpiCount,
+						onCountChange: (n) => (lowest ? (lowestPpiCount = n) : (highestPpiCount = n)),
 					})}
 				</section>
 			{/if}
