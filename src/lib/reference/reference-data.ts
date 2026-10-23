@@ -86,8 +86,8 @@ export function formatBandRange(b: SpecBand, unit: string): string {
 }
 
 // PMAX_BANDS is defined low→high force (for the chart axis); the table reads
-// better tier-first (best → excessive).
-export const MAX_RANK_ORDER = ['S', 'A', 'B', 'C', 'D', 'X'];
+// better tier-first (best → fail, then the excessive tail).
+export const MAX_RANK_ORDER = ['S', 'A', 'B', 'C', 'D', 'F', 'X'];
 
 // Generic over the band shape so a richer band type (e.g. bands.ts `Band`,
 // which carries an optional `name` and a nullable `max`) round-trips without

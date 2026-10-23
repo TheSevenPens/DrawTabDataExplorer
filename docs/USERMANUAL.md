@@ -125,10 +125,14 @@ collect measurement vocabularies other pages rely on:
 - **Display Resolutions** — Full HD / 2.5K / 3K / 4K categories with
   counts of how many tablets in the dataset fall into each.
 - **Piaf Ranking** — Piaf (Initial Activation Force) bands (gram-force)
-  for pen pressure, from EXCELLENT (≤ 1 gf) to AVOID (> 5 gf). Shown as a
-  number-line band chart and table.
+  for pen pressure, from S / SUPER (0 to 1 gf) to F / FAIL (10 gf and
+  over). Shown as a number-line band chart and table.
 - **Pmax Ranking** — Pmax (Maximum Force) digitizer saturation pressure
-  bands (gram-force), from LIMITED (100–200 gf) to EXCESSIVE (> 900 gf).
+  bands (gram-force), from F / FAIL (under 100 gf) through S / SUPER
+  (500 to 900 gf) to X / EXCESSIVE (900 gf and over).
+
+A band includes its lower value and excludes its upper value, so 4 gf of
+IAF is C and 300 gf of max pressure is B.
 
 Every section has an **Export** button that produces a CSV / TSV / HTML
 copy of the table.
@@ -156,8 +160,8 @@ are being incrementally folded back into the Explorer.
 
 Every pen and pen-family detail page has a **Pmax** (Maximum Force) tab
 that contextualises the pen's saturation force against the same band
-ranges used on the Reference page (LIMITED / OK / GOOD / EXCELLENT /
-EXCESSIVE, in gram-force):
+ranges used on the Reference page (FAIL / AVOID / OK / GOOD / GREAT /
+SUPER / EXCESSIVE, in gram-force):
 
 - _All Pmax values_ — one solid red marker per non-defective
   measurement session, plotted against the bands so you can see at a

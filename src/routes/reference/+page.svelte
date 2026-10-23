@@ -523,7 +523,7 @@
 					</p>
 					<PressureBandsChart
 						bands={piafBands}
-						axisMax={10}
+						axisMax={12}
 						axisStep={1}
 						unit="gf"
 						title="IAF Ranking"
