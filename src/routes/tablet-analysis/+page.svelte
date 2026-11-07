@@ -150,9 +150,22 @@
 	let ppiChartType = $state('');
 	let ppiChartBrand = $state('');
 
+	// Type and brand dropdowns on the Report Rate chart. '' = all.
+	let reportRateChartType = $state('');
+	let reportRateChartBrand = $state('');
+	let reportRateBrands = $derived(
+		rankBrands(
+			allTablets
+				.filter((t) => t.Digitizer?.ReportRate != null && t.Digitizer.ReportRate !== '')
+				.map((t) => ({ brand: t.Model.Brand as string })),
+			brandName,
+		),
+	);
+
 	let numericSections = $derived(
 		buildAnalysisSections(allTablets, penDisplays, yearFilters, {
 			'display-pixel-density': { type: ppiChartType, brand: ppiChartBrand },
+			'digitizer-report-rate': { type: reportRateChartType, brand: reportRateChartBrand },
 		}),
 	);
 
@@ -563,6 +576,21 @@
 	</div>
 {/snippet}
 
+{#snippet reportRateChartControls()}
+	<div class="rank-controls">
+		<div class="controls-left">
+			{@render typeBrandSelects({
+				types: TABLET_TYPE_OPTIONS,
+				type: reportRateChartType,
+				onTypeChange: (t) => (reportRateChartType = t),
+				brands: reportRateBrands,
+				brand: reportRateChartBrand,
+				onBrandChange: (b) => (reportRateChartBrand = b),
+			})}
+		</div>
+	</div>
+{/snippet}
+
 <ChromeLayout subNavTabs={tabletTabs}>
 	<h1 class="sr-only">Analysis</h1>
 
@@ -655,7 +683,11 @@
 						<section class="section">
 							<NumericMetricSection
 								{section}
-								controls={section.id === 'display-pixel-density' ? ppiChartControls : undefined}
+								controls={section.id === 'display-pixel-density'
+									? ppiChartControls
+									: section.id === 'digitizer-report-rate'
+										? reportRateChartControls
+										: undefined}
 								bind:compareYears={yearFilters[section.id]}
 								onExport={() =>
 									openExport(
