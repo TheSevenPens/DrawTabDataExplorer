@@ -20,6 +20,8 @@
 	import TabletInventoryTab from '$lib/components/tablet-detail/TabletInventoryTab.svelte';
 	import TabletSimilarTab from '$lib/components/tablet-detail/TabletSimilarTab.svelte';
 	import EntityLinksSection from '$lib/components/EntityLinksSection.svelte';
+	import RecommendationTab from '$lib/components/RecommendationTab.svelte';
+	import { formatPrice, recommendationView } from '$lib/recommendation-view.js';
 
 	let { data } = $props();
 	let tablet: Tablet = $derived(data.tablet);
@@ -30,9 +32,21 @@
 	let isoSizes: ISOPaperSize[] = $derived(data.isoSizes);
 	let family: TabletFamily | null = $derived(data.family);
 	let inventoryUnits: InventoryTablet[] = $derived(data.inventoryUnits ?? []);
+	let recs = $derived(
+		recommendationView(data.recs ?? { ratings: [], notes: [], lists: [], prices: [] }),
+	);
 
 	let activeTab = $state<
-		'model' | 'specs' | 'size' | 'force' | 'pens' | 'inventory' | 'similar' | 'links' | 'json'
+		| 'model'
+		| 'specs'
+		| 'size'
+		| 'force'
+		| 'pens'
+		| 'inventory'
+		| 'similar'
+		| 'recs'
+		| 'links'
+		| 'json'
 	>('model');
 
 	let isPenTablet = $derived(tablet.Model.Type === 'PENTABLET');
@@ -109,6 +123,18 @@
 				<dd>{tablet.Model.Audience}</dd>
 			</div>
 		{/if}
+		{#if recs.rating}
+			<div class="basics-item">
+				<dt>Seven Pens Rating</dt>
+				<dd>{recs.rating.rating}</dd>
+			</div>
+		{/if}
+		{#if recs.current}
+			<div class="basics-item">
+				<dt>Price (U.S.)</dt>
+				<dd>{formatPrice(recs.current.Amount, recs.current.Currency)}</dd>
+			</div>
+		{/if}
 		{#if includedPenItems.length > 0}
 			<div class="basics-item">
 				<dt>Included Pen</dt>
@@ -133,6 +159,7 @@
 		{ id: 'pens', label: 'Compatible Pens' },
 		{ id: 'inventory', label: 'Inventory', badge: inventoryUnits.length },
 		{ id: 'similar', label: 'Similar Tablets' },
+		{ id: 'recs', label: 'Rating & Price', visible: !recs.isEmpty },
 		{ id: 'links', label: 'Links', badge: links.length, visible: links.length > 0 },
 		{ id: 'json', label: 'JSON' },
 	] satisfies Tab[]}
@@ -158,6 +185,8 @@
 		<TabletInventoryTab {inventoryUnits} />
 	{:else if activeTab === 'similar'}
 		<TabletSimilarTab {tablet} {allTablets} />
+	{:else if activeTab === 'recs'}
+		<RecommendationTab view={recs} />
 	{:else if activeTab === 'links'}
 		<EntityLinksSection {links} name={tablet.Model.Id} />
 	{:else if activeTab === 'json'}
