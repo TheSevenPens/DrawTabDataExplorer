@@ -8,6 +8,8 @@
 	import type { InventoryPen } from '$data/lib/entities/inventory-pen-fields.js';
 	import DetailView from '$lib/components/DetailView.svelte';
 	import JsonTab from '$lib/components/JsonTab.svelte';
+	import RecommendationTab from '$lib/components/RecommendationTab.svelte';
+	import { formatPrice, recommendationView } from '$lib/recommendation-view.js';
 	import EntityLinksSection from '$lib/components/EntityLinksSection.svelte';
 	import CompatEntityTable, { type CompatRow } from '$lib/components/CompatEntityTable.svelte';
 	import Tabs, { type Tab } from '$lib/components/Tabs.svelte';
@@ -48,6 +50,9 @@
 	let tabletNameAndIdById = $derived(buildTabletNameAndIdMap(allTablets));
 	let pressureSessions: PressureResponse[] = $derived(data.pressureSessions ?? []);
 	let inventoryUnits: InventoryPen[] = $derived(data.inventoryUnits ?? []);
+	let recs = $derived(
+		recommendationView(data.recs ?? { ratings: [], notes: [], lists: [], prices: [] }),
+	);
 	// TabletEntityId → count of that model owned in inventory.
 	let inventoryTabletCounts: ReadonlyMap<string, number> = $derived(
 		data.inventoryTabletCounts ?? new Map(),
@@ -88,6 +93,7 @@
 		| 'pressure'
 		| 'iaf'
 		| 'max'
+		| 'recs'
 		| 'links'
 		| 'json'
 	>('model');
@@ -160,6 +166,18 @@
 				</dd>
 			</div>
 		{/if}
+		{#if recs.rating}
+			<div class="basics-item">
+				<dt>Seven Pens Rating</dt>
+				<dd>{recs.rating.rating}</dd>
+			</div>
+		{/if}
+		{#if recs.current}
+			<div class="basics-item">
+				<dt>Price (U.S.)</dt>
+				<dd>{formatPrice(recs.current.Amount, recs.current.Currency)}</dd>
+			</div>
+		{/if}
 		<div class="basics-item">
 			<dt>Units in Inventory</dt>
 			<dd>{inventoryUnits.length}</dd>
@@ -177,6 +195,7 @@
 		{ id: 'pressure', label: 'Pressure Response' },
 		{ id: 'iaf', label: 'IAF' },
 		{ id: 'max', label: 'MAX' },
+		{ id: 'recs', label: 'Rating & Price', visible: !recs.isEmpty },
 		{ id: 'links', label: 'Links', badge: links.length, visible: links.length > 0 },
 		{ id: 'json', label: 'JSON' },
 	] satisfies Tab[]}
@@ -251,6 +270,12 @@
 		{:else}
 			<EmptyState>You don't own a unit of this pen model.</EmptyState>
 		{/if}
+	</div>
+{/if}
+
+{#if activeTab === 'recs'}
+	<div class="tab-content">
+		<RecommendationTab view={recs} />
 	</div>
 {/if}
 

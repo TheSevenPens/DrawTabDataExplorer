@@ -51,6 +51,8 @@ const TABLET_METADATA = [
 	// tablets always have different URLs, and that tells you nothing.
 	'ModelProductLink',
 	'ModelUserManual',
+	// When the price below was checked.
+	'PriceUSDDate',
 ] as const;
 
 const TABLET_SPEC = [
@@ -68,6 +70,10 @@ const TABLET_SPEC = [
 	'ModelAudience',
 	'ModelFamily',
 	'ModelStatus',
+	// Seven Pens' current rating and the U.S. store price: what a buyer
+	// compares, so worth diffing.
+	'Rating',
+	'PriceUSD',
 	'LastSupportedWindowsDriver',
 	'LastSupportedMacOSDriver',
 	'ModelIncludedPen',
@@ -178,11 +184,14 @@ const PEN_METADATA = [
 	'UnitsInInventory',
 	// How many pressure sessions we have recorded — a measure of our coverage.
 	'PressureSessionCount',
+	'PriceUSDDate',
 ] as const;
 
 const PEN_SPEC = [
 	// See the ModelNotes note above — free text, but the pen's own.
 	'Notes',
+	'Rating',
+	'PriceUSD',
 	'PenFamily',
 	'PenTech',
 	'ReleaseYear',

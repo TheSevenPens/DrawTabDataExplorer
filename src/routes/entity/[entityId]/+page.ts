@@ -16,6 +16,7 @@ import {
 } from '$data/lib/driver-lookup.js';
 import { buildInventoryDefects } from '$data/lib/pressure/defects.js';
 import { buildTabletNameAndIdMap } from '$lib/tablet-helpers.js';
+import { recsFor, type DeviceRecs } from '$lib/recommendation-view.js';
 
 /** Count assigned (non-UNASSIGNED) inventory records per entity id, so the
  * compat tables can show "how many of this model you own". */
@@ -31,6 +32,25 @@ function countByEntity<T extends { InventoryId?: string }>(
 		counts.set(id, (counts.get(id) ?? 0) + 1);
 	}
 	return counts;
+}
+
+/** Ratings, notes, lists and prices for one tablet or pen. */
+async function loadRecs(
+	ds: {
+		Ratings: { toArray(): Promise<DeviceRecs['ratings']> };
+		RecommendationNotes: { toArray(): Promise<DeviceRecs['notes']> };
+		RecommendationLists: { toArray(): Promise<DeviceRecs['lists']> };
+		Prices: { toArray(): Promise<DeviceRecs['prices']> };
+	},
+	entityId: string,
+): Promise<DeviceRecs> {
+	const [ratings, notes, lists, prices] = await Promise.all([
+		ds.Ratings.toArray(),
+		ds.RecommendationNotes.toArray(),
+		ds.RecommendationLists.toArray(),
+		ds.Prices.toArray(),
+	]);
+	return recsFor(entityId, { ratings, notes, lists, prices });
 }
 
 export async function load({ params, parent }) {
@@ -88,6 +108,7 @@ export async function load({ params, parent }) {
 				inventoryUnits,
 				inventoryPenCounts,
 				lastDriverIds,
+				recs: await loadRecs(ds, entityId),
 			};
 		}
 
@@ -135,6 +156,7 @@ export async function load({ params, parent }) {
 				iafMeasurements,
 				maxMeasurements,
 				inventoryTabletCounts,
+				recs: await loadRecs(ds, entityId),
 			};
 		}
 
