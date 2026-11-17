@@ -5,6 +5,9 @@ import {
 	metricTabAliases,
 	metricTabFromHash,
 	metricTabHash,
+	metricTabs,
+	parseMetricNumber,
+	rankFilename,
 	rankMetric,
 } from '$lib/tablet-analysis/metric-tabs.js';
 
@@ -47,6 +50,27 @@ describe('metric tab hashes', () => {
 	});
 });
 
+describe('metricTabs / rankFilename', () => {
+	it('defaults to Lowest / Highest', () => {
+		expect(metricTabs().map((t) => t.label)).toEqual(['Distribution', 'Lowest', 'Highest']);
+	});
+
+	it('renames the rank tabs without changing their ids', () => {
+		const tabs = metricTabs('Smallest', 'Largest');
+		expect(tabs.map((t) => t.label)).toEqual(['Distribution', 'Smallest', 'Largest']);
+		expect(tabs.map((t) => t.id)).toEqual(['distribution', 'lowest', 'highest']);
+	});
+
+	it('builds the export filename from the base and the tab label', () => {
+		expect(rankFilename('analysis-digitizer-density', 'Lowest')).toBe(
+			'analysis-digitizer-density-lowest',
+		);
+		expect(rankFilename('analysis-pen-tablet-diagonal', 'Largest')).toBe(
+			'analysis-pen-tablet-diagonal-largest',
+		);
+	});
+});
+
 describe('rankMetric', () => {
 	const rows = [
 		row('x.tablet.c', 3),
@@ -86,5 +110,20 @@ describe('rankMetric', () => {
 		const f = defaultRankFilters();
 		f.lowest.brand = 'HUION';
 		expect(f.highest.brand).toBe('');
+	});
+});
+
+describe('parseMetricNumber', () => {
+	it('parses numeric strings and numbers', () => {
+		expect(parseMetricNumber('250')).toBe(250);
+		expect(parseMetricNumber('0.5')).toBe(0.5);
+		expect(parseMetricNumber(8)).toBe(8);
+	});
+
+	it('treats blank and non-numeric values as missing', () => {
+		expect(parseMetricNumber(undefined)).toBeNull();
+		expect(parseMetricNumber(null)).toBeNull();
+		expect(parseMetricNumber('')).toBeNull();
+		expect(parseMetricNumber('n/a')).toBeNull();
 	});
 });

@@ -10,6 +10,11 @@
 		id: string;
 		/** Attribute name, used as "Lowest <title>" / "Highest <title>". */
 		title: string;
+		/** Rank tab labels; default Lowest / Highest (e.g. Smallest / Largest). */
+		lowLabel?: string;
+		highLabel?: string;
+		/** Export filename stem; default `analysis-<id>`. The tab label is appended. */
+		filenameBase?: string;
 		description: string;
 		emptyText: string;
 		/** Every rankable row — the pool before the tab's filters. */
@@ -31,7 +36,7 @@
 	import Tabs from '$lib/components/Tabs.svelte';
 	import MetricRankTable from '$lib/tablet-analysis/MetricRankTable.svelte';
 	import {
-		METRIC_TABS,
+		metricTabs,
 		metricTabFromHash,
 		metricTabHash,
 		type MetricTab,
@@ -68,7 +73,11 @@
 </script>
 
 <h2>{heading}</h2>
-<Tabs tabs={METRIC_TABS} bind:active={() => tab, (v) => selectTab(v as MetricTab)} hashed={false} />
+<Tabs
+	tabs={metricTabs(metric.lowLabel, metric.highLabel)}
+	bind:active={() => tab, (v) => selectTab(v as MetricTab)}
+	hashed={false}
+/>
 {#if tab === 'distribution'}
 	{@render distribution()}
 {:else if tab === 'lowest'}

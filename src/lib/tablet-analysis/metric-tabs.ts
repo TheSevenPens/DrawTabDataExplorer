@@ -21,6 +21,26 @@ export const METRIC_TABS: { id: MetricTab; label: string }[] = [
 
 export const RANK_COUNT_OPTIONS = [10, 20, 30];
 
+/** Tab labels, with the rank tabs renamed where an attribute reads better
+ *  as e.g. Smallest / Largest. The tab ids (and so the hashes) don't change. */
+export function metricTabs(
+	lowLabel = 'Lowest',
+	highLabel = 'Highest',
+): { id: MetricTab; label: string }[] {
+	return METRIC_TABS.map((t) =>
+		t.id === 'lowest'
+			? { ...t, label: lowLabel }
+			: t.id === 'highest'
+				? { ...t, label: highLabel }
+				: t,
+	);
+}
+
+/** Export filename for a ranking: `<base>-<label>`, e.g. `analysis-pen-tablet-diagonal-largest`. */
+export function rankFilename(base: string, label: string): string {
+	return `${base}-${label.toLowerCase()}`;
+}
+
 /** The URL hash (without `#`) that opens `tab` of `sectionId`. */
 export function metricTabHash(sectionId: string, tab: MetricTab): string {
 	return tab === 'distribution' ? sectionId : `${sectionId}-${tab}`;
@@ -45,6 +65,13 @@ export function metricTabAliases(sectionIds: readonly string[]): Record<string, 
 		aliases[metricTabHash(id, 'highest')] = id;
 	}
 	return aliases;
+}
+
+/** A stored numeric-string spec value as a number; null when blank or not numeric. */
+export function parseMetricNumber(v: string | number | null | undefined): number | null {
+	if (v == null || v === '') return null;
+	const n = Number(v);
+	return Number.isFinite(n) ? n : null;
 }
 
 /** Filter state of one ranking tab. `''` = all. */

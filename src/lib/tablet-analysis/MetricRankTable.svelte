@@ -5,6 +5,7 @@
 	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
 	import {
 		RANK_COUNT_OPTIONS,
+		rankFilename,
 		rankMetric,
 		type RankDirection,
 		type RankFilter,
@@ -23,8 +24,11 @@
 	} = $props();
 
 	let rows = $derived(rankMetric(metric.rows, direction, filter));
-	let title = $derived(`${direction === 'lowest' ? 'Lowest' : 'Highest'} ${metric.title}`);
-	let filename = $derived(`analysis-${metric.id}-${direction}`);
+	let label = $derived(
+		direction === 'lowest' ? (metric.lowLabel ?? 'Lowest') : (metric.highLabel ?? 'Highest'),
+	);
+	let title = $derived(`${label} ${metric.title}`);
+	let filename = $derived(rankFilename(metric.filenameBase ?? `analysis-${metric.id}`, label));
 </script>
 
 <p class="description">{metric.description}</p>

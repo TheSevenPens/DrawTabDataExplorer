@@ -1,10 +1,7 @@
 <script lang="ts">
 	import { createExportDialogHost } from '$lib/export-dialog-host.svelte.js';
-	import { resolve } from '$app/paths';
 	import ChromeLayout from '$lib/components/ChromeLayout.svelte';
 	import ExportDialog from '$lib/components/ExportDialog.svelte';
-	import ExportTableButton from '$lib/components/ExportTableButton.svelte';
-	import EmptyState from '$lib/components/EmptyState.svelte';
 	import SectionedPage, { type Section } from '$lib/components/SectionedPage.svelte';
 	import { flaggedCount } from '$lib/flagged-store.js';
 	import {
@@ -30,20 +27,15 @@
 		countBy,
 		filterByYears,
 		pct,
-		diagonalRows,
-		topByDiagonal,
-		diagonalBrands,
 		metricRankRows,
 		rankBrands,
 		TABLET_TYPE_OPTIONS,
 		digitizerDensity,
 		displayPpi,
 		touchTabletRows,
-		type DiagonalRow,
-		type DiagonalDirection,
 		type TabletTypeValue,
 	} from '$lib/tablet-analysis/helpers.js';
-	import { buildAnalysisSections } from '$lib/tablet-analysis/metric-configs.js';
+	import { ANALYSIS_METRICS, buildAnalysisSections } from '$lib/tablet-analysis/metric-configs.js';
 	import AspectRatioRatioSection from '$lib/tablet-analysis/AspectRatioRatioSection.svelte';
 	import AspectRatioCategorySection from '$lib/tablet-analysis/AspectRatioCategorySection.svelte';
 	import NumericMetricSection from '$lib/tablet-analysis/NumericMetricSection.svelte';
@@ -58,6 +50,7 @@
 	import {
 		defaultRankFilters,
 		metricTabAliases,
+		parseMetricNumber,
 		type RankFilters,
 	} from '$lib/tablet-analysis/metric-tabs.js';
 	import type { NumericSection } from '$lib/tablet-analysis/numeric-sections.js';
@@ -166,52 +159,181 @@
 
 	// --- Ranked metrics: Distribution / Lowest / Highest tabs ---
 	//
-	// A numeric section listed here renders as one section with three tabs
-	// (RankedMetricSection) instead of a bare histogram. To give another
-	// attribute the same treatment, add its RankedMetric config here; its
-	// tabs, hash links and filter state follow from that.
+	// A section listed here renders as one section with three tabs
+	// (RankedMetricSection): its chart, then its lowest and highest tablets.
+	// To give another attribute the same treatment, add its RankedMetric
+	// config to `rankedMetrics`; its tabs, hash links and filter state follow.
+	//
+	// The rankings ignore the chart's compare-years and type/brand controls:
+	// each ranking tab has its own filters, over every tablet in the pool.
 
-	let densityTablets = $derived(metricRankRows(allTablets, digitizerDensity));
-	// Same pool as the Pixel Density histogram: pen displays and standalones.
-	let ppiTablets = $derived(metricRankRows(penDisplays, displayPpi));
-	let ppiBrands = $derived(rankBrands(ppiTablets, brandName));
+	/** A tablet's value for one of the numeric section configs, or null. */
+	function configNumber(id: string): (t: Tablet) => number | null {
+		const cfg = ANALYSIS_METRICS.find((m) => m.id === id);
+		if (!cfg) throw new Error(`No analysis metric ${id}`);
+		return (t) => parseMetricNumber(cfg.getValue(t));
+	}
+
+	/** One ranking config over `pool`; `rows`/`brands` filled in from it. */
+	function ranked(
+		pool: Tablet[],
+		getValue: (t: Tablet) => number | null,
+		cfg: Omit<RankedMetric, 'rows' | 'brands'>,
+	): RankedMetric {
+		const rows = metricRankRows(pool, getValue);
+		return { ...cfg, rows, brands: rankBrands(rows, brandName) };
+	}
+
+	const DISPLAYS_NOTE = 'Pen displays and standalones';
+
+	/** Active-area diagonal in the current unit, or null. */
+	function diagonalInUnit(t: Tablet): number | null {
+		const d = getDiagonal(t.Digitizer?.Dimensions);
+		return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
+	}
 
 	let rankedMetrics: Record<string, RankedMetric> = $derived({
-		'digitizer-density': {
+		'digitizer-density': ranked(allTablets, digitizerDensity, {
 			id: 'digitizer-density',
 			title: 'Digitizer Density',
 			description:
 				'Tablets ranked by digitizer density (lines per mm). Higher density gives finer positional resolution under the pen tip.',
 			emptyText: 'No tablets with a recorded digitizer density.',
-			rows: densityTablets,
-			brands: rankBrands(densityTablets, brandName),
 			valueLabel: 'Density',
 			unit: 'LPmm',
 			format: (v) => String(v),
-		},
-		'display-pixel-density': {
+		}),
+		'digitizer-report-rate': ranked(allTablets, configNumber('digitizer-report-rate'), {
+			id: 'digitizer-report-rate',
+			title: 'Report Rate',
+			description:
+				'Tablets ranked by report rate: how many pen positions per second the digitizer sends. A higher rate tracks fast strokes more smoothly.',
+			emptyText: 'No tablets with a recorded report rate.',
+			types: TABLET_TYPE_OPTIONS,
+			valueLabel: 'Report Rate',
+			unit: 'Hz',
+			format: (v) => v.toLocaleString(),
+		}),
+		'display-brightness': ranked(penDisplays, configNumber('display-brightness'), {
+			id: 'display-brightness',
+			title: 'Brightness',
+			description: `${DISPLAYS_NOTE} ranked by rated panel brightness.`,
+			emptyText: 'No pen displays with a recorded brightness.',
+			types: DISPLAY_TYPE_OPTIONS,
+			valueLabel: 'Brightness',
+			unit: 'cd/m²',
+			format: (v) => v.toLocaleString(),
+		}),
+		'display-contrast': ranked(penDisplays, configNumber('display-contrast'), {
+			id: 'display-contrast',
+			title: 'Contrast',
+			description: `${DISPLAYS_NOTE} ranked by rated contrast ratio. OLED panels rated 100,000:1 fill the top of the Highest list.`,
+			emptyText: 'No pen displays with a recorded contrast ratio.',
+			types: DISPLAY_TYPE_OPTIONS,
+			valueLabel: 'Contrast',
+			unit: ':1',
+			format: (v) => v.toLocaleString(),
+		}),
+		'display-refresh-rate': ranked(penDisplays, configNumber('display-refresh-rate'), {
+			id: 'display-refresh-rate',
+			title: 'Refresh Rate',
+			description: `${DISPLAYS_NOTE} ranked by panel refresh rate.`,
+			emptyText: 'No pen displays with a recorded refresh rate.',
+			types: DISPLAY_TYPE_OPTIONS,
+			valueLabel: 'Refresh Rate',
+			unit: 'Hz',
+			format: (v) => v.toLocaleString(),
+		}),
+		'display-response-time': ranked(penDisplays, configNumber('display-response-time'), {
+			id: 'display-response-time',
+			title: 'Response Time',
+			description: `${DISPLAYS_NOTE} ranked by rated panel response time. Lower is faster, so the best panels are on the Lowest tab.`,
+			emptyText: 'No pen displays with a recorded response time.',
+			types: DISPLAY_TYPE_OPTIONS,
+			valueLabel: 'Response Time',
+			unit: 'ms',
+			format: (v) => String(v),
+		}),
+		'display-bit-depth': ranked(penDisplays, configNumber('display-bit-depth'), {
+			id: 'display-bit-depth',
+			title: 'Bit Depth',
+			description: `${DISPLAYS_NOTE} ranked by native panel bit depth per colour channel (before any FRC dithering).`,
+			emptyText: 'No pen displays with a recorded bit depth.',
+			types: DISPLAY_TYPE_OPTIONS,
+			valueLabel: 'Bit Depth',
+			unit: 'bit',
+			format: (v) => String(v),
+		}),
+		'display-pixel-density': ranked(penDisplays, displayPpi, {
 			id: 'display-pixel-density',
 			title: 'Pixel Density',
 			description:
 				'Pen displays and standalones ranked by pixel density: horizontal resolution over active-area width, in pixels per inch. Higher density gives sharper lines and text at the same viewing distance.',
 			emptyText: 'No pen displays with a recorded resolution and active-area width.',
-			rows: ppiTablets,
-			brands: ppiBrands,
 			types: DISPLAY_TYPE_OPTIONS,
 			valueLabel: 'Pixel Density',
 			unit: 'PPI',
 			format: (v) => v.toFixed(1),
-		},
+		}),
+		'sizes-pen-tablet': ranked(penTablets, diagonalInUnit, {
+			id: 'sizes-pen-tablet',
+			title: 'pen tablets by diagonal',
+			lowLabel: 'Smallest',
+			highLabel: 'Largest',
+			filenameBase: 'analysis-pen-tablet-diagonal',
+			description:
+				'Pen tablets ranked by active-area diagonal, across every pen tablet with recorded dimensions.',
+			emptyText: 'No pen tablets with recorded active-area dimensions.',
+			valueLabel: 'Diagonal',
+			unit: isMetric ? 'cm' : 'in',
+			format: (v) => v.toFixed(1),
+		}),
+		// Standalones (iPads and the like) are left out of the ranking: they
+		// dominated the smallest end and are not pen displays in the sense
+		// this table is comparing. The chart still includes them.
+		'sizes-pen-display': ranked(
+			penDisplays.filter((t) => t.Model.Type === 'PENDISPLAY'),
+			diagonalInUnit,
+			{
+				id: 'sizes-pen-display',
+				title: 'pen displays by diagonal',
+				lowLabel: 'Smallest',
+				highLabel: 'Largest',
+				filenameBase: 'analysis-pen-display-diagonal',
+				description:
+					'Pen displays ranked by active-area diagonal, across every pen display with recorded dimensions. Standalone tablets are excluded, though the chart includes them.',
+				emptyText: 'No pen displays with recorded active-area dimensions.',
+				valueLabel: 'Diagonal',
+				unit: isMetric ? 'cm' : 'in',
+				format: (v) => v.toFixed(1),
+			},
+		),
 	});
+
+	// The chart's Type / Brand dropdowns on Pixel Density list the brands in
+	// its pool, the same list its ranking tabs use.
+	let ppiBrands = $derived(rankedMetrics['display-pixel-density'].brands);
+
+	const RANKED_IDS = [
+		'digitizer-density',
+		'digitizer-report-rate',
+		'display-brightness',
+		'display-contrast',
+		'display-refresh-rate',
+		'display-response-time',
+		'display-bit-depth',
+		'display-pixel-density',
+		'sizes-pen-tablet',
+		'sizes-pen-display',
+	];
 
 	// Lowest / Highest filters per ranked metric. Page-level so they survive
-	// switching sections, as the separate ranking sections' state did.
-	let rankFilters = $state<Record<string, RankFilters>>({
-		'digitizer-density': defaultRankFilters(),
-		'display-pixel-density': defaultRankFilters(),
-	});
+	// switching sections.
+	let rankFilters = $state<Record<string, RankFilters>>(
+		Object.fromEntries(RANKED_IDS.map((id) => [id, defaultRankFilters()])),
+	);
 
-	const sectionAliases = metricTabAliases(['digitizer-density', 'display-pixel-density']);
+	const sectionAliases = metricTabAliases(RANKED_IDS);
 
 	// --- Pressure Levels ---
 
@@ -303,149 +425,7 @@
 
 	let ptMarkers = $derived(markersFor(ptOverlay));
 	let pdMarkers = $derived(markersFor(pdOverlay));
-
-	// --- Largest by diagonal (per Sizes section) ---
-	//
-	// Ranks over every tablet of the type, not the histogram's year-filtered
-	// set: a top-N list that silently dropped older large tablets would be
-	// surprising, and it matches the digitizer-density rankings above.
-
-	const DIAGONAL_COUNT_OPTIONS = [10, 20, 30];
-
-	let ptDiagonalRows = $derived(diagonalRows(penTablets));
-	// Standalones (iPads and the like) are left out of the ranking: they
-	// dominated the smallest end and are not pen displays in the sense this
-	// table is comparing. The histogram above still includes them.
-	let pdDiagonalRows = $derived(
-		diagonalRows(penDisplays.filter((t) => t.Model.Type === 'PENDISPLAY')),
-	);
-	let ptDiagonalBrands = $derived(diagonalBrands(ptDiagonalRows, brandName));
-	let pdDiagonalBrands = $derived(diagonalBrands(pdDiagonalRows, brandName));
-
-	const DIAGONAL_DIRECTION_OPTIONS: { value: DiagonalDirection; label: string }[] = [
-		{ value: 'largest', label: 'Largest first' },
-		{ value: 'smallest', label: 'Smallest first' },
-	];
-
-	let ptTopBrand = $state('');
-	let pdTopBrand = $state('');
-	let ptTopCount = $state(10);
-	let pdTopCount = $state(10);
-	let ptTopDir = $state<DiagonalDirection>('largest');
-	let pdTopDir = $state<DiagonalDirection>('largest');
-
-	let ptTopRows = $derived(topByDiagonal(ptDiagonalRows, ptTopBrand, ptTopCount, ptTopDir));
-	let pdTopRows = $derived(topByDiagonal(pdDiagonalRows, pdTopBrand, pdTopCount, pdTopDir));
-
-	/** Diagonal in the active unit, to one decimal. */
-	function diagonalDisplay(mm: number): string {
-		return (isMetric ? mm * MM_TO_CM : mm * MM_TO_IN).toFixed(1);
-	}
 </script>
-
-{#snippet diagonalRankSection(p: {
-	rows: DiagonalRow[];
-	allRows: DiagonalRow[];
-	brands: string[];
-	filenameBase: string;
-	noun: string;
-	brand: string;
-	onBrandChange: (b: string) => void;
-	count: number;
-	onCountChange: (n: number) => void;
-	direction: DiagonalDirection;
-	onDirectionChange: (d: DiagonalDirection) => void;
-	/** Optional caveat appended to the description, e.g. when this table's
-	 *  population differs from the chart above it. */
-	note?: string;
-})}
-	{@const superlative = p.direction === 'largest' ? 'Largest' : 'Smallest'}
-	{@const title = `${superlative} ${p.noun} by diagonal`}
-	{@const filename = `${p.filenameBase}-${p.direction}`}
-	<h3>{title}</h3>
-	<p class="description">
-		The {superlative.toLowerCase()}
-		{p.noun} by active-area diagonal. Ranked across all {p.noun} with recorded dimensions — unlike the
-		chart above, this table ignores the compare-years control.
-		{#if p.note}{p.note}{/if}
-	</p>
-	{#if p.allRows.length === 0}
-		<EmptyState>No {p.noun} with recorded active-area dimensions.</EmptyState>
-	{:else}
-		<div class="rank-controls">
-			<div class="controls-left">
-				<label class="show-count">
-					Sort
-					<select onchange={(e) => p.onDirectionChange(e.currentTarget.value as DiagonalDirection)}>
-						{#each DIAGONAL_DIRECTION_OPTIONS as opt (opt.value)}
-							<option value={opt.value} selected={p.direction === opt.value}>{opt.label}</option>
-						{/each}
-					</select>
-				</label>
-				<label class="show-count">
-					Brand
-					<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
-						<option value="" selected={p.brand === ''}>All brands</option>
-						{#each p.brands as b (b)}
-							<option value={b} selected={p.brand === b}>{brandName(b)}</option>
-						{/each}
-					</select>
-				</label>
-				<label class="show-count">
-					Show
-					<select onchange={(e) => p.onCountChange(Number(e.currentTarget.value))}>
-						{#each DIAGONAL_COUNT_OPTIONS as n (n)}
-							<option value={n} selected={p.count === n}>{n}</option>
-						{/each}
-					</select>
-				</label>
-			</div>
-			<ExportTableButton
-				entityType="analysis"
-				{title}
-				{filename}
-				headers={['Rank', 'Tablet', 'Brand', 'Year', `Diagonal (${isMetric ? 'cm' : 'in'})`]}
-				rows={p.rows.map((r, i) => [
-					i + 1,
-					`${r.name} (${r.id})`,
-					brandName(r.brand),
-					r.year,
-					diagonalDisplay(r.diagonalMm),
-				])}
-			/>
-		</div>
-		{#if p.rows.length === 0}
-			<EmptyState>No {p.noun} match this brand.</EmptyState>
-		{:else}
-			<table class="rank-table">
-				<thead>
-					<tr>
-						<th class="num">#</th>
-						<th>Tablet</th>
-						<th>Brand</th>
-						<th class="num">Year</th>
-						<th class="num">Diagonal <span class="unit">({isMetric ? 'cm' : 'in'})</span></th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each p.rows as r, i (r.entityId)}
-						<tr>
-							<td class="num mono">{i + 1}</td>
-							<td>
-								<a href={resolve('/entity/[entityId]', { entityId: r.entityId })}>
-									{r.name} ({r.id})
-								</a>
-							</td>
-							<td>{brandName(r.brand)}</td>
-							<td class="num mono">{r.year || '—'}</td>
-							<td class="num mono">{diagonalDisplay(r.diagonalMm)}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		{/if}
-	{/if}
-{/snippet}
 
 {#snippet ppiChartControls()}
 	<div class="rank-controls">
@@ -643,64 +623,55 @@
 
 			{#if activeSection === 'sizes-pen-tablet'}
 				<section class="section">
-					<TabletDiagonalSection
-						title="Pen Tablet diagonal"
-						description="Distribution of pen-tablet active-area diagonals. Use the overlay control to project paper-size markers onto the chart."
-						histogramTitle="Pen tablet active area diagonal"
-						tablets={ptSizesTablets}
-						values={ptSizesValues}
-						ranges={ptSizesRanges}
-						unit={isMetric ? ' cm' : '"'}
-						binSize={isMetric ? 1 : 0.5}
-						bind:overlay={ptOverlay}
-						bind:compareYears={ptSizesYears}
-						markers={ptMarkers}
-					/>
-					{@render diagonalRankSection({
-						rows: ptTopRows,
-						allRows: ptDiagonalRows,
-						brands: ptDiagonalBrands,
-						filenameBase: 'analysis-pen-tablet-diagonal',
-						noun: 'pen tablets',
-						brand: ptTopBrand,
-						onBrandChange: (b) => (ptTopBrand = b),
-						count: ptTopCount,
-						onCountChange: (n) => (ptTopCount = n),
-						direction: ptTopDir,
-						onDirectionChange: (d) => (ptTopDir = d),
-					})}
+					<RankedMetricSection
+						heading={`Pen Tablet diagonal (${ptSizesValues.length})`}
+						metric={rankedMetrics['sizes-pen-tablet']}
+						bind:filters={rankFilters['sizes-pen-tablet']}
+					>
+						{#snippet distribution()}
+							<TabletDiagonalSection
+								headless
+								title="Pen Tablet diagonal"
+								description="Distribution of pen-tablet active-area diagonals. Use the overlay control to project paper-size markers onto the chart."
+								histogramTitle="Pen tablet active area diagonal"
+								tablets={ptSizesTablets}
+								values={ptSizesValues}
+								ranges={ptSizesRanges}
+								unit={isMetric ? ' cm' : '"'}
+								binSize={isMetric ? 1 : 0.5}
+								bind:overlay={ptOverlay}
+								bind:compareYears={ptSizesYears}
+								markers={ptMarkers}
+							/>
+						{/snippet}
+					</RankedMetricSection>
 				</section>
 			{/if}
 
 			{#if activeSection === 'sizes-pen-display'}
 				<section class="section">
-					<TabletDiagonalSection
-						title="Pen Display diagonal"
-						description="Distribution of pen-display (and standalone) active-area diagonals. Use the overlay control to project paper-size markers onto the chart."
-						histogramTitle="Pen display active area diagonal"
-						tablets={pdSizesTablets}
-						values={pdSizesValues}
-						ranges={pdSizesRanges}
-						unit={isMetric ? ' cm' : '"'}
-						binSize={isMetric ? 1 : 0.5}
-						bind:overlay={pdOverlay}
-						bind:compareYears={pdSizesYears}
-						markers={pdMarkers}
-					/>
-					{@render diagonalRankSection({
-						rows: pdTopRows,
-						allRows: pdDiagonalRows,
-						brands: pdDiagonalBrands,
-						filenameBase: 'analysis-pen-display-diagonal',
-						noun: 'pen displays',
-						brand: pdTopBrand,
-						onBrandChange: (b) => (pdTopBrand = b),
-						count: pdTopCount,
-						onCountChange: (n) => (pdTopCount = n),
-						direction: pdTopDir,
-						onDirectionChange: (d) => (pdTopDir = d),
-						note: 'Standalone tablets are excluded, though the chart above includes them.',
-					})}
+					<RankedMetricSection
+						heading={`Pen Display diagonal (${pdSizesValues.length})`}
+						metric={rankedMetrics['sizes-pen-display']}
+						bind:filters={rankFilters['sizes-pen-display']}
+					>
+						{#snippet distribution()}
+							<TabletDiagonalSection
+								headless
+								title="Pen Display diagonal"
+								description="Distribution of pen-display (and standalone) active-area diagonals. Use the overlay control to project paper-size markers onto the chart."
+								histogramTitle="Pen display active area diagonal"
+								tablets={pdSizesTablets}
+								values={pdSizesValues}
+								ranges={pdSizesRanges}
+								unit={isMetric ? ' cm' : '"'}
+								binSize={isMetric ? 1 : 0.5}
+								bind:overlay={pdOverlay}
+								bind:compareYears={pdSizesYears}
+								markers={pdMarkers}
+							/>
+						{/snippet}
+					</RankedMetricSection>
 				</section>
 			{/if}
 		{/snippet}
