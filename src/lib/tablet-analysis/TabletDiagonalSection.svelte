@@ -24,6 +24,7 @@
 		overlay = $bindable(),
 		compareYears = $bindable(),
 		markers,
+		headless = false,
 	}: {
 		title: string;
 		description: string;
@@ -36,11 +37,15 @@
 		overlay: Overlay;
 		compareYears: number | null;
 		markers: HistogramMarker[];
+		/** Leave out the h2 — the caller already titled the section. */
+		headless?: boolean;
 	} = $props();
 </script>
 
 <div class="section-header">
-	<h2>{title} ({values.length})</h2>
+	{#if !headless}
+		<h2>{title} ({values.length})</h2>
+	{/if}
 	<label class="overlay-select">
 		Overlay:
 		<select bind:value={overlay}>
@@ -77,6 +82,9 @@
 		justify-content: space-between;
 		gap: 12px;
 		margin-bottom: 8px;
+	}
+	.section-header label:only-child {
+		margin-left: auto;
 	}
 	.section-header h2 {
 		margin: 0;

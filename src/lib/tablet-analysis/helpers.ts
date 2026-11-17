@@ -1,5 +1,4 @@
 import type { Tablet } from '$data/lib/drawtab-loader.js';
-import { getDiagonal } from '$data/lib/drawtab-loader.js';
 import { aspectRatioCategory, ASPECT_RATIO_CATEGORIES } from '$data/lib/aspect-ratio.js';
 
 function gcd(a: number, b: number): number {
@@ -119,44 +118,7 @@ export function filterByYears(
 	});
 }
 
-// --- Diagonal ranking -------------------------------------------------------
-//
-// Backs the "Largest by diagonal" tables under the two Sizes sections. Ranking
-// is over every tablet of the type, deliberately independent of the
-// histogram's compare-years control above it: a top-N list that silently
-// dropped older large tablets would be surprising, and it matches how the
-// digitizer-density rankings on the same page already behave.
-
-export interface DiagonalRow {
-	entityId: string;
-	name: string;
-	id: string;
-	brand: string;
-	year: string;
-	/** Active-area diagonal in mm. Converted at render so the unit toggle stays reactive. */
-	diagonalMm: number;
-}
-
-/** Rows for the tablets that have a computable active-area diagonal. */
-export function diagonalRows(tablets: Tablet[]): DiagonalRow[] {
-	return tablets
-		.map((t) => {
-			const diagonalMm = getDiagonal(t.Digitizer?.Dimensions);
-			if (diagonalMm === null) return null;
-			return {
-				entityId: t.Meta.EntityId,
-				name: t.Model.Name,
-				id: t.Model.Id,
-				brand: t.Model.Brand as string,
-				year: t.Model.ReleaseYear ?? '',
-				diagonalMm,
-			};
-		})
-		.filter((r): r is DiagonalRow => r !== null);
-}
-
-/** Which end of the range a ranking table shows. */
-export type DiagonalDirection = 'largest' | 'smallest';
+// --- Ranking ----------------------------------------------------------------
 
 /**
  * The `count` rows with the highest (`desc`) or lowest (`asc`) value.
@@ -177,26 +139,6 @@ export function rankRows<T extends { entityId: string }>(
 				(a.entityId < b.entityId ? -1 : a.entityId > b.entityId ? 1 : 0),
 		)
 		.slice(0, count);
-}
-
-/**
- * The `count` rows at one end of the diagonal range, optionally limited to a
- * single brand. An empty `brand` means all brands. Defaults to 'largest',
- * which is what the tables opened with before the direction was selectable.
- */
-export function topByDiagonal(
-	rows: DiagonalRow[],
-	brand: string,
-	count: number,
-	direction: DiagonalDirection = 'largest',
-): DiagonalRow[] {
-	const filtered = brand ? rows.filter((r) => r.brand === brand) : rows;
-	return rankRows(filtered, (r) => r.diagonalMm, direction === 'largest' ? 'desc' : 'asc', count);
-}
-
-/** Brands present in `rows`, ordered by display name. */
-export function diagonalBrands(rows: DiagonalRow[], brandLabel: (b: string) => string): string[] {
-	return rankBrands(rows, brandLabel);
 }
 
 // --- Touch support listing --------------------------------------------------
