@@ -17,9 +17,14 @@
 		sections,
 		defaultSection,
 		content,
+		aliases = {},
 	}: {
 		sections: Section[];
 		defaultSection?: string;
+		/** Extra hashes that open a section: `{ hash: sectionId }`. Lets a
+		 *  section keep sub-state (e.g. an inner tab) in the hash, and keeps
+		 *  old links to merged sections working. */
+		aliases?: Record<string, string>;
 		/** Receives the currently-active section id; render the panel for it. */
 		content: Snippet<[string]>;
 	} = $props();
@@ -29,7 +34,9 @@
 
 	let activeSection: string = $derived.by(() => {
 		const hash = page.url.hash.slice(1);
-		return sectionIds.has(hash) ? hash : fallbackId;
+		if (sectionIds.has(hash)) return hash;
+		const alias = Object.hasOwn(aliases, hash) ? aliases[hash] : undefined;
+		return alias && sectionIds.has(alias) ? alias : fallbackId;
 	});
 
 	function setSection(id: string) {

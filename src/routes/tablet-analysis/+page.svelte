@@ -32,15 +32,12 @@
 		pct,
 		diagonalRows,
 		topByDiagonal,
-		rankRows,
 		diagonalBrands,
 		metricRankRows,
 		rankBrands,
-		matchesTypeBrand,
 		TABLET_TYPE_OPTIONS,
 		digitizerDensity,
 		displayPpi,
-		type MetricRankRow,
 		touchTabletRows,
 		type DiagonalRow,
 		type DiagonalDirection,
@@ -54,6 +51,16 @@
 	import PressureLevelsSection from '$lib/tablet-analysis/PressureLevelsSection.svelte';
 	import TouchSupportSection from '$lib/tablet-analysis/TouchSupportSection.svelte';
 	import TabletDiagonalSection from '$lib/tablet-analysis/TabletDiagonalSection.svelte';
+	import RankedMetricSection, {
+		type RankedMetric,
+	} from '$lib/tablet-analysis/RankedMetricSection.svelte';
+	import TypeBrandSelects from '$lib/tablet-analysis/TypeBrandSelects.svelte';
+	import {
+		defaultRankFilters,
+		metricTabAliases,
+		type RankFilters,
+	} from '$lib/tablet-analysis/metric-tabs.js';
+	import type { NumericSection } from '$lib/tablet-analysis/numeric-sections.js';
 	import { tabletSubNavTabs } from '$lib/nav/subnav-tabs.js';
 
 	let tabletTabs = $derived(tabletSubNavTabs({ flaggedCount: $flaggedCount }));
@@ -80,8 +87,6 @@
 			label: 'Pen Displays — by Category',
 		},
 		{ id: 'digitizer-density', category: 'Digitizer', label: 'Density' },
-		{ id: 'digitizer-density-lowest', category: 'Digitizer', label: 'Density — Lowest' },
-		{ id: 'digitizer-density-highest', category: 'Digitizer', label: 'Density — Highest' },
 		{ id: 'digitizer-accuracy-center', category: 'Digitizer', label: 'Accuracy (Center)' },
 		{ id: 'digitizer-accuracy-corner', category: 'Digitizer', label: 'Accuracy (Corner)' },
 		{ id: 'digitizer-report-rate', category: 'Digitizer', label: 'Report Rate' },
@@ -91,16 +96,6 @@
 		{ id: 'display-refresh-rate', category: 'Display Tech', label: 'Refresh Rate' },
 		{ id: 'display-response-time', category: 'Display Tech', label: 'Response Time' },
 		{ id: 'display-pixel-density', category: 'Display Tech', label: 'Pixel Density' },
-		{
-			id: 'display-pixel-density-lowest',
-			category: 'Display Tech',
-			label: 'Pixel Density — Lowest',
-		},
-		{
-			id: 'display-pixel-density-highest',
-			category: 'Display Tech',
-			label: 'Pixel Density — Highest',
-		},
 		{ id: 'display-bit-depth', category: 'Display Tech', label: 'Bit Depth' },
 		{ id: 'pressure-levels', category: 'Tablet Features', label: 'Pressure Levels' },
 		{ id: 'touch-support', category: 'Tablet Features', label: 'Touch Support' },
@@ -169,49 +164,54 @@
 		}),
 	);
 
-	// --- Density rankings (lowest / highest) ---
-
-	const RANK_COUNT_OPTIONS = [10, 20, 30];
-
-	function rankBy(
-		rows: MetricRankRow[],
-		type: string,
-		brand: string,
-		dir: 'asc' | 'desc',
-		count: number,
-	) {
-		const filtered = rows.filter((r) => matchesTypeBrand(r, type, brand));
-		return rankRows(filtered, (r) => r.value, dir, count);
-	}
+	// --- Ranked metrics: Distribution / Lowest / Highest tabs ---
+	//
+	// A numeric section listed here renders as one section with three tabs
+	// (RankedMetricSection) instead of a bare histogram. To give another
+	// attribute the same treatment, add its RankedMetric config here; its
+	// tabs, hash links and filter state follow from that.
 
 	let densityTablets = $derived(metricRankRows(allTablets, digitizerDensity));
-	let densityBrands = $derived(rankBrands(densityTablets, brandName));
-	let lowestDensityCount = $state(10);
-	let highestDensityCount = $state(10);
-	let lowestDensityBrand = $state('');
-	let highestDensityBrand = $state('');
-	let lowestDensityRows = $derived(
-		rankBy(densityTablets, '', lowestDensityBrand, 'asc', lowestDensityCount),
-	);
-	let highestDensityRows = $derived(
-		rankBy(densityTablets, '', highestDensityBrand, 'desc', highestDensityCount),
-	);
-
 	// Same pool as the Pixel Density histogram: pen displays and standalones.
 	let ppiTablets = $derived(metricRankRows(penDisplays, displayPpi));
 	let ppiBrands = $derived(rankBrands(ppiTablets, brandName));
-	let lowestPpiCount = $state(10);
-	let highestPpiCount = $state(10);
-	let lowestPpiType = $state('');
-	let highestPpiType = $state('');
-	let lowestPpiBrand = $state('');
-	let highestPpiBrand = $state('');
-	let lowestPpiRows = $derived(
-		rankBy(ppiTablets, lowestPpiType, lowestPpiBrand, 'asc', lowestPpiCount),
-	);
-	let highestPpiRows = $derived(
-		rankBy(ppiTablets, highestPpiType, highestPpiBrand, 'desc', highestPpiCount),
-	);
+
+	let rankedMetrics: Record<string, RankedMetric> = $derived({
+		'digitizer-density': {
+			id: 'digitizer-density',
+			title: 'Digitizer Density',
+			description:
+				'Tablets ranked by digitizer density (lines per mm). Higher density gives finer positional resolution under the pen tip.',
+			emptyText: 'No tablets with a recorded digitizer density.',
+			rows: densityTablets,
+			brands: rankBrands(densityTablets, brandName),
+			valueLabel: 'Density',
+			unit: 'LPmm',
+			format: (v) => String(v),
+		},
+		'display-pixel-density': {
+			id: 'display-pixel-density',
+			title: 'Pixel Density',
+			description:
+				'Pen displays and standalones ranked by pixel density: horizontal resolution over active-area width, in pixels per inch. Higher density gives sharper lines and text at the same viewing distance.',
+			emptyText: 'No pen displays with a recorded resolution and active-area width.',
+			rows: ppiTablets,
+			brands: ppiBrands,
+			types: DISPLAY_TYPE_OPTIONS,
+			valueLabel: 'Pixel Density',
+			unit: 'PPI',
+			format: (v) => v.toFixed(1),
+		},
+	});
+
+	// Lowest / Highest filters per ranked metric. Page-level so they survive
+	// switching sections, as the separate ranking sections' state did.
+	let rankFilters = $state<Record<string, RankFilters>>({
+		'digitizer-density': defaultRankFilters(),
+		'display-pixel-density': defaultRankFilters(),
+	});
+
+	const sectionAliases = metricTabAliases(['digitizer-density', 'display-pixel-density']);
 
 	// --- Pressure Levels ---
 
@@ -447,131 +447,17 @@
 	{/if}
 {/snippet}
 
-{#snippet typeBrandSelects(p: {
-	/** Type choices; the Type dropdown is left out when omitted. */
-	types?: { value: string; label: string }[];
-	type?: string;
-	onTypeChange?: (t: string) => void;
-	brands: string[];
-	brand: string;
-	onBrandChange: (b: string) => void;
-})}
-	{#if p.types}
-		<label class="show-count">
-			Type
-			<select onchange={(e) => p.onTypeChange?.(e.currentTarget.value)}>
-				<option value="" selected={p.type === ''}>All types</option>
-				{#each p.types as t (t.value)}
-					<option value={t.value} selected={p.type === t.value}>{t.label}</option>
-				{/each}
-			</select>
-		</label>
-	{/if}
-	<label class="show-count">
-		Brand
-		<select onchange={(e) => p.onBrandChange(e.currentTarget.value)}>
-			<option value="" selected={p.brand === ''}>All brands</option>
-			{#each p.brands as b (b)}
-				<option value={b} selected={p.brand === b}>{brandName(b)}</option>
-			{/each}
-		</select>
-	</label>
-{/snippet}
-
-{#snippet metricRankSection(p: {
-	rows: MetricRankRow[];
-	allRows: MetricRankRow[];
-	types?: { value: string; label: string }[];
-	type?: string;
-	onTypeChange?: (t: string) => void;
-	brands: string[];
-	title: string;
-	description: string;
-	emptyText: string;
-	filename: string;
-	valueLabel: string;
-	unit: string;
-	format: (v: number) => string;
-	brand: string;
-	onBrandChange: (b: string) => void;
-	count: number;
-	onCountChange: (n: number) => void;
-})}
-	<h2>{p.title}</h2>
-	<p class="description">{p.description}</p>
-	{#if p.allRows.length === 0}
-		<EmptyState>{p.emptyText}</EmptyState>
-	{:else}
-		<div class="rank-controls">
-			<div class="controls-left">
-				{@render typeBrandSelects(p)}
-				<label class="show-count">
-					Show
-					<select onchange={(e) => p.onCountChange(Number(e.currentTarget.value))}>
-						{#each RANK_COUNT_OPTIONS as n (n)}
-							<option value={n} selected={p.count === n}>{n}</option>
-						{/each}
-					</select>
-				</label>
-			</div>
-			<ExportTableButton
-				entityType="analysis"
-				title={p.title}
-				filename={p.filename}
-				headers={['Rank', 'Tablet', 'Brand', 'Year', `${p.valueLabel} (${p.unit})`]}
-				rows={p.rows.map((r, i) => [
-					i + 1,
-					`${r.name} (${r.id})`,
-					brandName(r.brand),
-					r.year,
-					p.format(r.value),
-				])}
-			/>
-		</div>
-		{#if p.rows.length === 0}
-			<EmptyState>No tablets match {p.types ? 'these filters' : 'this brand'}.</EmptyState>
-		{:else}
-			<table class="rank-table">
-				<thead>
-					<tr>
-						<th class="num">#</th>
-						<th>Tablet</th>
-						<th>Brand</th>
-						<th class="num">Year</th>
-						<th class="num">{p.valueLabel} <span class="unit">({p.unit})</span></th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each p.rows as r, i (r.entityId)}
-						<tr>
-							<td class="num mono">{i + 1}</td>
-							<td>
-								<a href={resolve('/entity/[entityId]', { entityId: r.entityId })}>
-									{r.name} ({r.id})
-								</a>
-							</td>
-							<td>{brandName(r.brand)}</td>
-							<td class="num mono">{r.year || '—'}</td>
-							<td class="num mono">{p.format(r.value)}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		{/if}
-	{/if}
-{/snippet}
-
 {#snippet ppiChartControls()}
 	<div class="rank-controls">
 		<div class="controls-left">
-			{@render typeBrandSelects({
-				types: DISPLAY_TYPE_OPTIONS,
-				type: ppiChartType,
-				onTypeChange: (t) => (ppiChartType = t),
-				brands: ppiBrands,
-				brand: ppiChartBrand,
-				onBrandChange: (b) => (ppiChartBrand = b),
-			})}
+			<TypeBrandSelects
+				types={DISPLAY_TYPE_OPTIONS}
+				type={ppiChartType}
+				onTypeChange={(t) => (ppiChartType = t)}
+				brands={ppiBrands}
+				brand={ppiChartBrand}
+				onBrandChange={(b) => (ppiChartBrand = b)}
+			/>
 		</div>
 	</div>
 {/snippet}
@@ -579,22 +465,42 @@
 {#snippet reportRateChartControls()}
 	<div class="rank-controls">
 		<div class="controls-left">
-			{@render typeBrandSelects({
-				types: TABLET_TYPE_OPTIONS,
-				type: reportRateChartType,
-				onTypeChange: (t) => (reportRateChartType = t),
-				brands: reportRateBrands,
-				brand: reportRateChartBrand,
-				onBrandChange: (b) => (reportRateChartBrand = b),
-			})}
+			<TypeBrandSelects
+				types={TABLET_TYPE_OPTIONS}
+				type={reportRateChartType}
+				onTypeChange={(t) => (reportRateChartType = t)}
+				brands={reportRateBrands}
+				brand={reportRateChartBrand}
+				onBrandChange={(b) => (reportRateChartBrand = b)}
+			/>
 		</div>
 	</div>
+{/snippet}
+
+{#snippet numericBody(section: NumericSection, headless: boolean)}
+	<NumericMetricSection
+		{section}
+		{headless}
+		controls={section.id === 'display-pixel-density'
+			? ppiChartControls
+			: section.id === 'digitizer-report-rate'
+				? reportRateChartControls
+				: undefined}
+		bind:compareYears={yearFilters[section.id]}
+		onExport={() =>
+			openExport(
+				section.title,
+				section.filename,
+				[section.title, 'Count', '%'],
+				section.data.rows.map((r) => [Number(r.label), r.count, pct(r.count, section.data.count)]),
+			)}
+	/>
 {/snippet}
 
 <ChromeLayout subNavTabs={tabletTabs}>
 	<h1 class="sr-only">Analysis</h1>
 
-	<SectionedPage sections={sectionDefs} defaultSection="aspect-pen-tablet">
+	<SectionedPage sections={sectionDefs} defaultSection="aspect-pen-tablet" aliases={sectionAliases}>
 		{#snippet content(activeSection: string)}
 			{#if activeSection === 'aspect-pen-tablet'}
 				<section class="section">
@@ -681,26 +587,19 @@
 				{#each numericSections as section (section.id)}
 					{#if activeSection === section.id}
 						<section class="section">
-							<NumericMetricSection
-								{section}
-								controls={section.id === 'display-pixel-density'
-									? ppiChartControls
-									: section.id === 'digitizer-report-rate'
-										? reportRateChartControls
-										: undefined}
-								bind:compareYears={yearFilters[section.id]}
-								onExport={() =>
-									openExport(
-										section.title,
-										section.filename,
-										[section.title, 'Count', '%'],
-										section.data.rows.map((r) => [
-											Number(r.label),
-											r.count,
-											pct(r.count, section.data.count),
-										]),
-									)}
-							/>
+							{#if rankedMetrics[section.id]}
+								<RankedMetricSection
+									heading={section.title}
+									metric={rankedMetrics[section.id]}
+									bind:filters={rankFilters[section.id]}
+								>
+									{#snippet distribution()}
+										{@render numericBody(section, true)}
+									{/snippet}
+								</RankedMetricSection>
+							{:else}
+								{@render numericBody(section, false)}
+							{/if}
 						</section>
 					{/if}
 				{/each}
@@ -739,59 +638,6 @@
 								touchSupportRows.map((r) => [r.label, r.count, pct(r.count, touchTotal)]),
 							)}
 					/>
-				</section>
-			{/if}
-
-			{#if activeSection === 'digitizer-density-lowest' || activeSection === 'digitizer-density-highest'}
-				{@const lowest = activeSection === 'digitizer-density-lowest'}
-				<section class="section">
-					{@render metricRankSection({
-						rows: lowest ? lowestDensityRows : highestDensityRows,
-						allRows: densityTablets,
-						brands: densityBrands,
-						title: lowest ? 'Lowest Digitizer Density' : 'Highest Digitizer Density',
-						description:
-							'Tablets ranked by digitizer density (lines per mm). Higher density gives finer positional resolution under the pen tip.',
-						emptyText: 'No tablets with a recorded digitizer density.',
-						filename: lowest
-							? 'analysis-digitizer-density-lowest'
-							: 'analysis-digitizer-density-highest',
-						valueLabel: 'Density',
-						unit: 'LPmm',
-						format: (v) => String(v),
-						brand: lowest ? lowestDensityBrand : highestDensityBrand,
-						onBrandChange: (b) => (lowest ? (lowestDensityBrand = b) : (highestDensityBrand = b)),
-						count: lowest ? lowestDensityCount : highestDensityCount,
-						onCountChange: (n) => (lowest ? (lowestDensityCount = n) : (highestDensityCount = n)),
-					})}
-				</section>
-			{/if}
-
-			{#if activeSection === 'display-pixel-density-lowest' || activeSection === 'display-pixel-density-highest'}
-				{@const lowest = activeSection === 'display-pixel-density-lowest'}
-				<section class="section">
-					{@render metricRankSection({
-						rows: lowest ? lowestPpiRows : highestPpiRows,
-						allRows: ppiTablets,
-						types: DISPLAY_TYPE_OPTIONS,
-						type: lowest ? lowestPpiType : highestPpiType,
-						onTypeChange: (t) => (lowest ? (lowestPpiType = t) : (highestPpiType = t)),
-						brands: ppiBrands,
-						title: lowest ? 'Lowest Pixel Density' : 'Highest Pixel Density',
-						description:
-							'Pen displays and standalones ranked by pixel density: horizontal resolution over active-area width, in pixels per inch. Higher density gives sharper lines and text at the same viewing distance.',
-						emptyText: 'No pen displays with a recorded resolution and active-area width.',
-						filename: lowest
-							? 'analysis-display-pixel-density-lowest'
-							: 'analysis-display-pixel-density-highest',
-						valueLabel: 'Pixel Density',
-						unit: 'PPI',
-						format: (v) => v.toFixed(1),
-						brand: lowest ? lowestPpiBrand : highestPpiBrand,
-						onBrandChange: (b) => (lowest ? (lowestPpiBrand = b) : (highestPpiBrand = b)),
-						count: lowest ? lowestPpiCount : highestPpiCount,
-						onCountChange: (n) => (lowest ? (lowestPpiCount = n) : (highestPpiCount = n)),
-					})}
 				</section>
 			{/if}
 
@@ -892,26 +738,26 @@
 		margin-bottom: 8px;
 	}
 
-	.rank-controls {
+	.section :global(.rank-controls) {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 12px;
 		margin-bottom: 4px;
 	}
-	.controls-left {
+	.section :global(.controls-left) {
 		display: flex;
 		align-items: center;
 		gap: 16px;
 	}
-	.show-count {
+	.section :global(.show-count) {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
 		font-size: 12px;
 		color: var(--text-muted);
 	}
-	.show-count select {
+	.section :global(.show-count select) {
 		font-size: 12px;
 		padding: 3px 6px;
 		border: 1px solid var(--border);
@@ -919,51 +765,51 @@
 		background: var(--bg-card);
 		color: var(--text);
 	}
-	.rank-controls :global(.table-export) {
+	.section :global(.rank-controls .table-export) {
 		margin-bottom: 0;
 	}
-	.rank-table {
+	.section :global(.rank-table) {
 		border-collapse: collapse;
 		font-size: 13px;
 		margin: 8px 0 16px;
 		width: fit-content;
 	}
-	.rank-table th {
+	.section :global(.rank-table th) {
 		text-align: left;
 		padding: 6px 14px;
 		font-weight: 600;
 		color: var(--text-muted);
 		border-bottom: 2px solid var(--border);
 	}
-	.rank-table th.num {
+	.section :global(.rank-table th.num) {
 		text-align: right;
 	}
-	.rank-table th .unit {
+	.section :global(.rank-table th .unit) {
 		font-size: 11px;
 		font-weight: 400;
 	}
-	.rank-table td {
+	.section :global(.rank-table td) {
 		padding: 5px 14px;
 		border-bottom: 1px solid var(--border);
 		font-variant-numeric: tabular-nums;
 	}
-	.rank-table td.num {
+	.section :global(.rank-table td.num) {
 		text-align: right;
 	}
-	.rank-table tr:last-child td {
+	.section :global(.rank-table tr:last-child td) {
 		border-bottom: none;
 	}
-	.rank-table tr:hover td {
+	.section :global(.rank-table tr:hover td) {
 		background: var(--hover-bg);
 	}
-	.rank-table a {
+	.section :global(.rank-table a) {
 		color: var(--link);
 		text-decoration: none;
 	}
-	.rank-table a:hover {
+	.section :global(.rank-table a:hover) {
 		text-decoration: underline;
 	}
-	.mono {
+	.section :global(.rank-table .mono) {
 		font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
 	}
 </style>

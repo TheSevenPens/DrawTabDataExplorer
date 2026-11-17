@@ -11,16 +11,22 @@
 		compareYears = $bindable(),
 		onExport,
 		controls,
+		headless = false,
 	}: {
 		section: NumericSection;
 		compareYears: number | null;
 		onExport: () => void;
 		/** Optional filter dropdowns, shown between the description and the chart. */
 		controls?: Snippet;
+		/** Leave out the h2 — the caller already titled the section (e.g.
+		 *  RankedMetricSection, where this is the Distribution tab). */
+		headless?: boolean;
 	} = $props();
 </script>
 
-<h2>{section.title}</h2>
+{#if !headless}
+	<h2>{section.title}</h2>
+{/if}
 <p class="description">
 	{section.data.count} of {section.pool}
 	{section.poolLabel} have {section.title.toLowerCase()}
