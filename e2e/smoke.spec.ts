@@ -161,6 +161,19 @@ test.describe('SectionedPage routes render their sections', () => {
 		expect(errors).toEqual([]);
 	});
 
+	test('/tablet-analysis Power sections render', async ({ page }) => {
+		const errors = await watchConsoleErrors(page);
+		await page.goto('/tablet-analysis#power-overview', { waitUntil: 'networkidle' });
+		await expect(page.locator('section.section h2').first()).toHaveText('Power Overview');
+		await expect(page.getByRole('cell', { name: 'Any power data', exact: true })).toBeVisible();
+		await page.goto('/tablet-analysis#power-display-input', { waitUntil: 'networkidle' });
+		await expect(page.locator('section.section h2').first()).toHaveText('Pen Display Rated Input');
+		await expect(page.locator('p.description').first()).toContainText(
+			/of \d+\s+pen displays have rated input/,
+		);
+		expect(errors).toEqual([]);
+	});
+
 	test('/data-quality renders sidebar and main panel', async ({ page }) => {
 		const errors = await watchConsoleErrors(page);
 		await page.goto('/data-quality', { waitUntil: 'networkidle' });

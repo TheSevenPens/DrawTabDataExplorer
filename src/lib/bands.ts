@@ -125,6 +125,50 @@ export const PIXEL_DENSITY_BANDS: SpecBand[] = [
 	{ label: 'Very High', min: 250, max: 350 },
 ];
 
+// --- Power ---
+//
+// Descriptive tiers for the /tablet-analysis Power histograms, not quality
+// judgements. The input-rating bands follow what a port can supply: a USB 2.0
+// port gives 2.5 W (5 V 0.5 A), USB 3.x 4.5 W (5 V 0.9 A), USB-C at 5 V up to
+// 15 W, and USB Power Delivery up to 100 W.
+
+/** Pen tablet rated input (W, voltage × current). */
+export const PEN_TABLET_INPUT_BANDS: SpecBand[] = [
+	{ label: 'USB 2.0', min: 0, max: 2.5 },
+	{ label: 'USB 3.x', min: 2.5, max: 4.5 },
+	{ label: 'Above 4.5 W', min: 4.5, max: 6 },
+];
+
+/** Pen display rated input (W, voltage × current). */
+export const PEN_DISPLAY_INPUT_BANDS: SpecBand[] = [
+	{ label: 'USB-C 5 V', min: 0, max: 15 },
+	{ label: 'USB PD', min: 15, max: 100 },
+	{ label: 'Above 100 W', min: 100, max: 170 },
+];
+
+/** Pen tablet typical consumption (W). */
+export const PEN_TABLET_CONSUMPTION_BANDS: SpecBand[] = [
+	{ label: 'Low', min: 0, max: 0.5 },
+	{ label: 'Moderate', min: 0.5, max: 1 },
+	{ label: 'High', min: 1, max: 2.5 },
+];
+
+/** Pen display maximum consumption (W). */
+export const PEN_DISPLAY_CONSUMPTION_BANDS: SpecBand[] = [
+	{ label: 'Low', min: 0, max: 15 },
+	{ label: 'Moderate', min: 15, max: 30 },
+	{ label: 'High', min: 30, max: 60 },
+	{ label: 'Very High', min: 60, max: 100 },
+];
+
+/** Pen display standby power (W). */
+export const STANDBY_BANDS: SpecBand[] = [
+	{ label: 'Very Low', min: 0, max: 0.5 },
+	{ label: 'Low', min: 0.5, max: 1 },
+	{ label: 'Moderate', min: 1, max: 2 },
+	{ label: 'High', min: 2, max: 5 },
+];
+
 // --- Digitizer ---
 
 export const DENSITY_BANDS: SpecBand[] = [

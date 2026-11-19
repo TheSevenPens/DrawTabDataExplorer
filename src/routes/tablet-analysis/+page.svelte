@@ -43,6 +43,15 @@
 	import PressureLevelsSection from '$lib/tablet-analysis/PressureLevelsSection.svelte';
 	import TouchSupportSection from '$lib/tablet-analysis/TouchSupportSection.svelte';
 	import TabletDiagonalSection from '$lib/tablet-analysis/TabletDiagonalSection.svelte';
+	import PowerOverviewSection from '$lib/tablet-analysis/PowerOverviewSection.svelte';
+	import {
+		inputSourceRows,
+		maxConsumptionWatts,
+		consumptionWatts,
+		powerCoverage,
+		ratedInputWatts,
+		standbyWatts,
+	} from '$lib/power.js';
 	import RankedMetricSection, {
 		type RankedMetric,
 	} from '$lib/tablet-analysis/RankedMetricSection.svelte';
@@ -92,6 +101,12 @@
 		{ id: 'display-bit-depth', category: 'Display Tech', label: 'Bit Depth' },
 		{ id: 'pressure-levels', category: 'Tablet Features', label: 'Pressure Levels' },
 		{ id: 'touch-support', category: 'Tablet Features', label: 'Touch Support' },
+		{ id: 'power-overview', category: 'Power', label: 'Overview' },
+		{ id: 'power-display-consumption', category: 'Power', label: 'Pen Display Consumption' },
+		{ id: 'power-display-standby', category: 'Power', label: 'Pen Display Standby' },
+		{ id: 'power-display-input', category: 'Power', label: 'Pen Display Rated Input' },
+		{ id: 'power-tablet-consumption', category: 'Power', label: 'Pen Tablet Consumption' },
+		{ id: 'power-tablet-input', category: 'Power', label: 'Pen Tablet Rated Input' },
 		{ id: 'sizes-pen-tablet', category: 'Sizes', label: 'Pen Tablet diagonal' },
 		{ id: 'sizes-pen-display', category: 'Sizes', label: 'Pen Display diagonal' },
 	];
@@ -120,18 +135,9 @@
 	// Per-section "tablets released within N years" filter. `null` = no filter.
 	// One entry per numericSections id; the value is two-way-bound through
 	// ValueHistogram's compareYears dropdown.
-	let yearFilters = $state<Record<string, number | null>>({
-		'display-brightness': null,
-		'display-contrast': null,
-		'display-refresh-rate': null,
-		'display-response-time': null,
-		'display-bit-depth': null,
-		'display-pixel-density': null,
-		'digitizer-density': null,
-		'digitizer-accuracy-center': null,
-		'digitizer-accuracy-corner': null,
-		'digitizer-report-rate': null,
-	});
+	let yearFilters = $state<Record<string, number | null>>(
+		Object.fromEntries(ANALYSIS_METRICS.map((m) => [m.id, null])),
+	);
 
 	// Type and brand dropdowns on the Pixel Density chart. '' = all.
 	const DISPLAY_TYPE_OPTIONS = TABLET_TYPE_OPTIONS.filter((o) => o.value !== 'PENTABLET');
@@ -190,6 +196,82 @@
 	function diagonalInUnit(t: Tablet): number | null {
 		const d = getDiagonal(t.Digitizer?.Dimensions);
 		return d ? (isMetric ? d * MM_TO_CM : d * MM_TO_IN) : null;
+	}
+
+	// --- Power ---
+	// Pen tablets and pen displays are ranked separately (their power is an
+	// order of magnitude apart), and input rating separately from consumption.
+
+	let powerPenDisplays = $derived(allTablets.filter((t) => t.Model.Type === 'PENDISPLAY'));
+	let powerRankedMetrics: Record<string, RankedMetric> = $derived({
+		'power-display-consumption': ranked(powerPenDisplays, maxConsumptionWatts, {
+			id: 'power-display-consumption',
+			title: 'Max Consumption',
+			description:
+				'Pen displays ranked by stated maximum power consumption: what the display draws at full brightness, as the manufacturer states it. This is draw, not the input rating.',
+			emptyText: 'No pen displays with a recorded maximum consumption.',
+			valueLabel: 'Max Consumption',
+			unit: 'W',
+			format: (v) => String(v),
+		}),
+		'power-display-standby': ranked(powerPenDisplays, standbyWatts, {
+			id: 'power-display-standby',
+			title: 'Standby Power',
+			description: 'Pen displays ranked by stated standby power. Lower is better.',
+			emptyText: 'No pen displays with a recorded standby power.',
+			valueLabel: 'Standby',
+			unit: 'W',
+			format: (v) => String(v),
+		}),
+		'power-display-input': ranked(powerPenDisplays, ratedInputWatts, {
+			id: 'power-display-input',
+			title: 'Rated Input',
+			description:
+				'Pen displays ranked by rated input power: the stated input watts, or input voltage × input current. This is what the power input accepts, a ceiling the supply must meet, not what the display draws. Displays with a voltage but no current have no rating and are not ranked.',
+			emptyText: 'No pen displays with a recorded input voltage and current.',
+			valueLabel: 'Rated Input',
+			unit: 'W',
+			format: (v) => String(v),
+		}),
+		'power-tablet-consumption': ranked(penTablets, consumptionWatts, {
+			id: 'power-tablet-consumption',
+			title: 'Consumption',
+			description:
+				'Pen tablets ranked by stated typical power consumption. This is draw, not the input rating.',
+			emptyText: 'No pen tablets with a recorded consumption.',
+			valueLabel: 'Consumption',
+			unit: 'W',
+			format: (v) => String(v),
+		}),
+		'power-tablet-input': ranked(penTablets, ratedInputWatts, {
+			id: 'power-tablet-input',
+			title: 'Rated Input',
+			description:
+				'Pen tablets ranked by rated input power: input voltage × input current. This is what the input accepts, not what the tablet draws.',
+			emptyText: 'No pen tablets with a recorded input voltage and current.',
+			valueLabel: 'Rated Input',
+			unit: 'W',
+			format: (v) => String(v),
+		}),
+	});
+
+	let powerCoverageRows = $derived(powerCoverage(penTablets, powerPenDisplays));
+	let standalones = $derived(allTablets.filter((t) => t.Model.Type === 'STANDALONE'));
+
+	function exportPowerCoverage() {
+		openExport(
+			'Power data coverage',
+			'analysis-power-coverage',
+			['Field', 'Kind', 'Pen tablets', 'Pen tablets %', 'Pen displays', 'Pen displays %'],
+			powerCoverageRows.map((r) => [
+				r.label,
+				r.kind,
+				r.penTablets,
+				pct(r.penTablets, penTablets.length),
+				r.penDisplays,
+				pct(r.penDisplays, powerPenDisplays.length),
+			]),
+		);
 	}
 
 	let rankedMetrics: Record<string, RankedMetric> = $derived({
@@ -308,6 +390,7 @@
 				format: (v) => v.toFixed(1),
 			},
 		),
+		...powerRankedMetrics,
 	});
 
 	// The chart's Type / Brand dropdowns on Pixel Density list the brands in
@@ -325,6 +408,11 @@
 		'display-pixel-density',
 		'sizes-pen-tablet',
 		'sizes-pen-display',
+		'power-display-consumption',
+		'power-display-standby',
+		'power-display-input',
+		'power-tablet-consumption',
+		'power-tablet-input',
 	];
 
 	// Lowest / Highest filters per ranked metric. Page-level so they survive
@@ -617,6 +705,21 @@
 								['Touch', 'Count', '%'],
 								touchSupportRows.map((r) => [r.label, r.count, pct(r.count, touchTotal)]),
 							)}
+					/>
+				</section>
+			{/if}
+
+			{#if activeSection === 'power-overview'}
+				<section class="section">
+					<PowerOverviewSection
+						coverage={powerCoverageRows}
+						penTabletCount={penTablets.length}
+						penDisplayCount={powerPenDisplays.length}
+						penTabletSources={inputSourceRows(penTablets)}
+						penDisplaySources={inputSourceRows(powerPenDisplays)}
+						standaloneWithPower={standalones.filter((t) => t.Power != null).length}
+						standaloneCount={standalones.length}
+						onExport={exportPowerCoverage}
 					/>
 				</section>
 			{/if}
