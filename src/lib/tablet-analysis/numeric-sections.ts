@@ -4,6 +4,8 @@ import { countBy, withinYears } from '$lib/tablet-analysis/helpers.js';
 
 export const DISPLAY_POOL_LABEL = 'pen displays and standalones';
 export const TABLET_POOL_LABEL = 'tablets';
+export const PEN_TABLET_POOL_LABEL = 'pen tablets';
+export const PEN_DISPLAY_ONLY_POOL_LABEL = 'pen displays';
 
 // Defaults shared by every histogram on the analysis page: unit shown
 // in the title (parenthesised), not on the bands or axis ticks.
@@ -34,6 +36,8 @@ export type MetricRowsResult = {
 export type NumericSection = {
 	id: string;
 	title: string;
+	/** What the coverage line names ("N of M … have <measureLabel> data"). */
+	measureLabel: string;
 	unit: string;
 	filename: string;
 	data: MetricRowsResult;
@@ -78,6 +82,8 @@ function rawNumericValues(
 export type MetricOptions = {
 	id: string;
 	title: string;
+	/** Coverage-line wording when the title doesn't read well there; default: title, lowercased. */
+	measureLabel?: string;
 	unit: string;
 	getValue: (t: Tablet) => string | null | undefined;
 	ranges?: SpecBand[];
@@ -100,6 +106,7 @@ export function buildMetric(
 	return {
 		id: opts.id,
 		title: opts.title,
+		measureLabel: opts.measureLabel ?? opts.title.toLowerCase(),
 		unit: opts.unit,
 		filename: `${filenamePrefix}${opts.id.replace(/^display-/, '')}`,
 		data: numericRows(source, opts.getValue, years),

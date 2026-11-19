@@ -29,7 +29,7 @@
 {/if}
 <p class="description">
 	{section.data.count} of {section.pool}
-	{section.poolLabel} have {section.title.toLowerCase()}
+	{section.poolLabel} have {section.measureLabel}
 	data.
 </p>
 {#if controls}

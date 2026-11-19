@@ -8,11 +8,19 @@ import {
 	ACCURACY_CORNER_BANDS as ACCURACY_CORNER_RANGES,
 	REPORT_RATE_BANDS as REPORT_RATE_RANGES,
 	PIXEL_DENSITY_BANDS as PIXEL_DENSITY_RANGES,
+	PEN_TABLET_INPUT_BANDS,
+	PEN_DISPLAY_INPUT_BANDS,
+	PEN_TABLET_CONSUMPTION_BANDS,
+	PEN_DISPLAY_CONSUMPTION_BANDS,
+	STANDBY_BANDS,
 } from '$lib/bands.js';
+import { ratedInputWatts } from '$lib/power.js';
 import { displayPpi, matchesTypeBrand } from '$lib/tablet-analysis/helpers.js';
 import {
 	buildMetric,
 	DISPLAY_POOL_LABEL,
+	PEN_DISPLAY_ONLY_POOL_LABEL,
+	PEN_TABLET_POOL_LABEL,
 	TABLET_POOL_LABEL,
 	type MetricOptions,
 	type NumericSection,
@@ -21,7 +29,19 @@ import {
 // One config per analysis section that renders a NumericMetricSection.
 // The `source` field tags which tablet pool the section uses; the array
 // order matches the order in which sections appear in the sidebar.
-type Source = 'displays' | 'all';
+//   displays     — pen displays and standalones
+//   all          — every tablet
+//   pen-tablets  — PENTABLET only
+//   pen-displays — PENDISPLAY only (the Power sections leave standalones
+//                  out: their power is a battery story, and almost none
+//                  record an input rating)
+type Source = 'displays' | 'all' | 'pen-tablets' | 'pen-displays';
+
+/** Rated input watts as a numeric string, for the distribution table. */
+function ratedInputValue(t: Tablet): string | null {
+	const w = ratedInputWatts(t);
+	return w === null ? null : String(w);
+}
 
 type AnalysisMetricConfig = MetricOptions & { source: Source };
 
@@ -133,6 +153,67 @@ export const ANALYSIS_METRICS: AnalysisMetricConfig[] = [
 		binSize: 20,
 		tickStep: 50,
 	},
+	// --- Power ---
+	// Input rating (what the input accepts) and consumption (what the tablet
+	// draws) are separate sections on purpose: a 19 V 3.42 A input is a 65 W
+	// ceiling, not a 65 W draw.
+	{
+		source: 'pen-displays',
+		id: 'power-display-consumption',
+		title: 'Pen Display Max Consumption',
+		measureLabel: 'max consumption',
+		unit: 'W',
+		getValue: (t) => t.Power?.ConsumptionMaxWatts,
+		ranges: PEN_DISPLAY_CONSUMPTION_BANDS,
+		binSize: 5,
+		tickStep: 10,
+	},
+	{
+		source: 'pen-displays',
+		id: 'power-display-standby',
+		title: 'Pen Display Standby',
+		measureLabel: 'standby power',
+		unit: 'W',
+		getValue: (t) => t.Power?.StandbyWatts,
+		ranges: STANDBY_BANDS,
+		binSize: 0.25,
+		tickStep: 0.5,
+	},
+	{
+		source: 'pen-displays',
+		id: 'power-display-input',
+		title: 'Pen Display Rated Input',
+		measureLabel: 'rated input',
+		unit: 'W',
+		getValue: ratedInputValue,
+		ranges: PEN_DISPLAY_INPUT_BANDS,
+		binSize: 5,
+		tickStep: 20,
+		note: 'Rated input is the stated input watts, or input voltage × input current. Band shading marks what a USB-C port at 5 V (15 W) and USB Power Delivery (100 W) can supply.',
+	},
+	{
+		source: 'pen-tablets',
+		id: 'power-tablet-consumption',
+		title: 'Pen Tablet Consumption',
+		measureLabel: 'typical consumption',
+		unit: 'W',
+		getValue: (t) => t.Power?.ConsumptionWatts,
+		ranges: PEN_TABLET_CONSUMPTION_BANDS,
+		binSize: 0.1,
+		tickStep: 0.5,
+	},
+	{
+		source: 'pen-tablets',
+		id: 'power-tablet-input',
+		title: 'Pen Tablet Rated Input',
+		measureLabel: 'rated input',
+		unit: 'W',
+		getValue: ratedInputValue,
+		ranges: PEN_TABLET_INPUT_BANDS,
+		binSize: 0.25,
+		tickStep: 0.5,
+		note: 'Rated input is input voltage × input current. Band shading marks what a USB 2.0 port (2.5 W), and a USB 3.x port (4.5 W) can supply.',
+	},
 ];
 
 /** A section's type and brand dropdown values; '' means "all". */
@@ -145,14 +226,26 @@ export function buildAnalysisSections(
 	poolFilters: Record<string, PoolFilter> = {},
 ): NumericSection[] {
 	return ANALYSIS_METRICS.map(({ source, ...opts }) => {
-		const base = source === 'displays' ? penDisplays : allTablets;
+		const base =
+			source === 'displays'
+				? penDisplays
+				: source === 'pen-tablets'
+					? allTablets.filter((t) => t.Model.Type === 'PENTABLET')
+					: source === 'pen-displays'
+						? allTablets.filter((t) => t.Model.Type === 'PENDISPLAY')
+						: allTablets;
 		const f = poolFilters[opts.id];
 		const tablets = f
 			? base.filter((t) =>
 					matchesTypeBrand({ type: t.Model.Type, brand: t.Model.Brand as string }, f.type, f.brand),
 				)
 			: base;
-		const poolLabel = source === 'displays' ? DISPLAY_POOL_LABEL : TABLET_POOL_LABEL;
+		const poolLabel = {
+			displays: DISPLAY_POOL_LABEL,
+			all: TABLET_POOL_LABEL,
+			'pen-tablets': PEN_TABLET_POOL_LABEL,
+			'pen-displays': PEN_DISPLAY_ONLY_POOL_LABEL,
+		}[source];
 		return buildMetric(opts, tablets, tablets.length, poolLabel, 'analysis-', yearFilters[opts.id]);
 	});
 }

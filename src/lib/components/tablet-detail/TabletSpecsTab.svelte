@@ -5,6 +5,7 @@
 	import { unitPreference, showAltUnits } from '$lib/unit-store.js';
 	import { stripUnit, formatValueWithAlt } from '$lib/field-display.js';
 	import { tabletBrandAndName } from '$lib/tablet-helpers.js';
+	import { powerSpecBlocks } from '$lib/power.js';
 
 	let { tablet, isoSizes }: { tablet: Tablet; isoSizes: ISOPaperSize[] } = $props();
 
@@ -26,6 +27,11 @@
 	function isUrl(val: string): boolean {
 		return val.startsWith('http://') || val.startsWith('https://');
 	}
+
+	// Power renders as sub-blocks (Input rating / Alternative input /
+	// Consumption / Adapter & output) rather than one flat list, so what the
+	// input accepts never reads as what the tablet draws. See $lib/power.ts.
+	let powerBlocks = $derived(powerSpecBlocks(tablet));
 
 	let closestISO = $derived.by(() => {
 		const diagMm = getDiagonal(tablet.Digitizer?.Dimensions);
@@ -53,6 +59,14 @@
 		const groups = ['Digitizer', 'Display', ...specsCol3Groups];
 		const rows: (string | number)[][] = [];
 		for (const group of groups) {
+			if (group === 'Power') {
+				for (const b of powerBlocks) {
+					for (const r of b.rows) {
+						rows.push([group, `${b.heading}: ${r.label}${r.unit ? ` (${r.unit})` : ''}`, r.value]);
+					}
+				}
+				continue;
+			}
 			for (const f of getGroupFields([group])) {
 				const v = f.getValue(tablet);
 				rows.push([group, f.label, v == null ? '' : String(v)]);
@@ -85,7 +99,31 @@
 					const v = f.getValue(tablet);
 					return v && v !== '-';
 				})}
-				{#if hasValues}
+				{#if group === 'Power'}
+					{#if powerBlocks.length > 0}
+						<section class="field-group" id="group-power">
+							<div class="group-header"><h2>Power</h2></div>
+							{#each powerBlocks as block (block.heading)}
+								<h3 class="sub-header">{block.heading}</h3>
+								<dl>
+									{#each block.rows as r (r.key)}
+										<div class="field-row">
+											<dt>{r.label}</dt>
+											<dd>
+												{r.unit ? `${r.value} ${r.unit}` : r.value}
+												{#if r.computed}
+													<span class="computed-badge" title="Input voltage × input current"
+														>computed</span
+													>
+												{/if}
+											</dd>
+										</div>
+									{/each}
+								</dl>
+							{/each}
+						</section>
+					{/if}
+				{:else if hasValues}
 					<section class="field-group" id="group-{group.toLowerCase().replace(/\s+/g, '-')}">
 						<div class="group-header"><h2>{group}</h2></div>
 						<dl>
@@ -165,6 +203,13 @@
 		font-weight: 600;
 		color: var(--text);
 		margin-bottom: 0;
+	}
+
+	.sub-header {
+		font-size: var(--type-caption);
+		font-weight: 600;
+		color: var(--text-dim);
+		margin: 8px 0 2px;
 	}
 
 	dl {
